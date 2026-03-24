@@ -1,0 +1,8 @@
+node_modules/
+.env
+*.json
+!package.json
+!syllabus.json
+!topics.json
+!questions.json
+*.log

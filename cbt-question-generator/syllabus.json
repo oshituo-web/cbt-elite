@@ -1,0 +1,260 @@
+{
+"JAMB": {
+"Mathematics": [
+"Number System",
+"Algebra",
+"Trigonometry",
+"Geometry",
+"Calculus",
+"Statistics"
+],
+"English": [
+"Comprehension",
+"Lexis and Structure",
+"Oral English",
+"Summary"
+],
+"Physics": [
+"Mechanics",
+"Heat",
+"Waves",
+"Electricity",
+"Magnetism",
+"Modern Physics"
+],
+"Chemistry": [
+"Atomic Structure",
+"Periodic Table",
+"Chemical Bonding",
+"Stoichiometry",
+"Organic Chemistry",
+"Acids Bases and Salts"
+],
+"Biology": [
+"Cell Structure",
+"Genetics",
+"Ecology",
+"Evolution",
+"Human Physiology"
+],
+"Government": [
+"Political Concepts",
+"Systems of Government",
+"Nigerian Government",
+"International Relations"
+],
+"Economics": [
+"Basic Concepts",
+"Demand and Supply",
+"Production",
+"Market Structures",
+"National Income"
+],
+"CRS": [
+"Creation",
+"Covenant",
+"Leadership",
+"Prophets",
+"Christian Living"
+],
+"Literature": [
+"Drama",
+"Poetry",
+"Prose",
+"Literary Appreciation"
+],
+"Commerce": [
+"Trade",
+"Business Units",
+"Transport",
+"Insurance",
+"Banking"
+],
+"Accounting": [
+"Principles",
+"Ledger",
+"Trial Balance",
+"Final Accounts"
+],
+"Geography": [
+"Physical Geography",
+"Human Geography",
+"Map Reading"
+],
+"Agriculture": [
+"Crop Production",
+"Animal Husbandry",
+"Soil Science"
+],
+"Citizenship and Heritage Study": [
+"Democracy",
+"Human Rights",
+"Citizenship"
+],
+"Marketing": [
+"Marketing Concepts",
+"Consumer Behavior",
+"Advertising"
+]
+},
+
+"WAEC": {
+"Mathematics": [
+"Number and Numeration",
+"Algebraic Processes",
+"Geometry",
+"Mensuration",
+"Statistics"
+],
+"English": [
+"Essay Writing",
+"Comprehension",
+"Summary",
+"Grammar",
+"Oral English"
+],
+"Physics": [
+"Mechanics",
+"Heat Energy",
+"Waves",
+"Electricity",
+"Light"
+],
+"Chemistry": [
+"Separation Techniques",
+"Atomic Structure",
+"Chemical Reactions",
+"Organic Chemistry"
+],
+"Biology": [
+"Cell Biology",
+"Ecology",
+"Genetics",
+"Evolution"
+],
+"Government": [
+"Pre-colonial Systems",
+"Colonial Administration",
+"Post-independence Government"
+],
+"Economics": [
+"Basic Concepts",
+"Demand and Supply",
+"Inflation",
+"Public Finance"
+],
+"CRS": [
+"Old Testament",
+"New Testament",
+"Christian Ethics"
+],
+"Literature": [
+"African Prose",
+"Non-African Prose",
+"Drama",
+"Poetry"
+],
+"Commerce": [
+"Trade",
+"Banking",
+"Insurance",
+"Transportation"
+],
+"Accounting": [
+"Bookkeeping",
+"Final Accounts",
+"Control Accounts"
+],
+"Geography": [
+"Map Reading",
+"Climate",
+"Settlement"
+],
+"Agriculture": [
+"Soil Science",
+"Crop Production",
+"Animal Production"
+],
+"Citizenship and Heritage Study": [
+"Human Rights",
+"Law and Order",
+"Democracy"
+],
+"Marketing": [
+"Marketing Principles",
+"Market Research",
+"Advertising"
+]
+},
+
+"NECO": {
+"Mathematics": [
+"Number System",
+"Algebra",
+"Geometry",
+"Statistics"
+],
+"English": [
+"Comprehension",
+"Essay Writing",
+"Grammar",
+"Oral English"
+],
+"Physics": [
+"Mechanics",
+"Heat",
+"Electricity",
+"Waves"
+],
+"Chemistry": [
+"Atomic Structure",
+"Chemical Bonding",
+"Organic Chemistry"
+],
+"Biology": [
+"Cell Structure",
+"Ecology",
+"Genetics"
+],
+"Government": [
+"Political Institutions",
+"Nigerian Government"
+],
+"Economics": [
+"Demand and Supply",
+"Market Structures"
+],
+"CRS": [
+"Biblical Studies",
+"Christian Ethics"
+],
+"Literature": [
+"Drama",
+"Poetry",
+"Prose"
+],
+"Commerce": [
+"Trade",
+"Business Organization"
+],
+"Accounting": [
+"Ledger",
+"Final Accounts"
+],
+"Geography": [
+"Map Reading",
+"Environment"
+],
+"Agriculture": [
+"Crop Production",
+"Livestock"
+],
+"Citizenship and Heritage Study": [
+"Citizenship",
+"Democracy"
+],
+"Marketing": [
+"Marketing Basics"
+]
+}
+}

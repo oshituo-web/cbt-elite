@@ -1,0 +1,61 @@
+{
+  "Mathematics": {
+    "Number System": ["Integers", "Fractions", "Decimals", "Percentages", "Ratio and Proportion"],
+    "Algebra": ["Linear Equations", "Quadratic Equations", "Polynomials", "Inequalities", "Simultaneous Equations"],
+    "Trigonometry": ["Sine Rule", "Cosine Rule", "Bearing and Distances", "Trigonometric Identities"],
+    "Geometry": ["Circle Theorems", "Line and Angle Properties", "Polygons", "Area and Volume"],
+    "Calculus": ["Differentiation", "Integration", "Limits", "Maximum and Minimum Values"],
+    "Statistics": ["Mean", "Median", "Mode", "Probability", "Standard Deviation"],
+    "Number and Numeration": ["Indices", "Logarithms", "Surds", "Sets"],
+    "Algebraic Processes": ["Factorization", "Variation", "Sequence and Series"],
+    "Mensuration": ["Surface Area", "Volume of Solids", "Length of Arcs"]
+  },
+  "Physics": {
+    "Mechanics": ["Motion", "Forces", "Energy", "Momentum", "Friction", "Projectile Motion"],
+    "Heat": ["Temperature", "Thermal Expansion", "Specific Heat Capacity", "Gas Laws"],
+    "Waves": ["Sound Waves", "Light Waves", "Reflection", "Refraction", "Diffraction"],
+    "Electricity": ["Electric Current", "Ohm's Law", "Capacitance", "Resistance in Circuits"],
+    "Magnetism": ["Magnetic Fields", "Electromagnets", "Magnetic Induction"],
+    "Modern Physics": ["Atomic Models", "Radioactivity", "Nucleon Structure", "Energy Levels"],
+    "Light": ["Lenses", "Mirrors", "Polarization", "Interference"]
+  },
+  "Chemistry": {
+    "Atomic Structure": ["Subatomic Particles", "Isotopes", "Orbitals", "Quantum Numbers"],
+    "Periodic Table": ["Periodic Trends", "Group Properties", "Period Properties"],
+    "Chemical Bonding": ["Covalent Bond", "Ionic Bond", "Metallic Bond", "Intermolecular Forces"],
+    "Stoichiometry": ["Mole Concept", "Chemical Equations", "Yield Calculations"],
+    "Organic Chemistry": ["Hydrocarbons", "Alkanols", "Alkanoic Acids", "Esters", "Polymers"],
+    "Acids Bases and Salts": ["pH Scale", "Titration", "Buffers", "Indicator Theory"],
+    "Chemical Reactions": ["Redox Reactions", "Rate of Reaction", "Chemical Equilibrium"]
+  },
+  "English": {
+    "Comprehension": ["Main Idea", "Supporting Details", "Inference", "Vocabulary in Context"],
+    "Lexis and Structure": ["Synonyms", "Antonyms", "Idioms", "Phrasal Verbs", "Sentence Completion"],
+    "Oral English": ["Vowels", "Consonants", "Stress", "Intonation", "Rhyme"],
+    "Summary": ["Condensing Text", "Identifying Key Points"],
+    "Essay Writing": ["Narrative", "Descriptive", "Argumentative", "Formal Letters"],
+    "Grammar": ["Tenses", "Prepositions", "Conjunctions", "Punctuation"]
+  },
+  "Biology": {
+    "Cell Structure": ["Organelles", "Plant vs Animal Cells", "Cell Division", "Cell Membrane"],
+    "Genetics": ["Heredity", "DNA Structure", "Mendelian Laws", "Mutations"],
+    "Ecology": ["Ecosystems", "Food Webs", "Biomes", "Energy Flow"],
+    "Evolution": ["Natural Selection", "Evidence for Evolution", "Human Evolution"],
+    "Human Physiology": ["Digestive System", "Respiratory System", "Circulatory System", "Excretory System"],
+    "Cell Biology": ["Photosynthesis", "Respiration", "Enzymes"]
+  },
+  "Government": {
+    "Political Concepts": ["Power", "Authority", "Legitimacy", "Sovereignty"],
+    "Systems of Government": ["Presidential", "Parliamentary", "Federalism", "Unitary"],
+    "Nigerian Government": ["Constitutional Development", "Local Government", "Public Service"],
+    "International Relations": ["Foreign Policy", "UNO", "AU", "ECOWAS"],
+    "Political Institutions": ["Legislature", "Executive", "Judiciary"]
+  },
+  "Economics": {
+    "Basic Concepts": ["Scarcity", "Choice", "Opportunity Cost", "Scale of Preference"],
+    "Demand and Supply": ["Price Elasticity", "Market Equilibrium", "Utility Theory"],
+    "Production": ["Factors of Production", "Division of Labor", "Costs and Revenue"],
+    "Market Structures": ["Perfect Competition", "Monopoly", "Oligopoly"],
+    "National Income": ["GDP", "GNP", "Inflation", "Deflation"]
+  }
+}
