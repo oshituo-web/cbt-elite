@@ -6,9 +6,9 @@ export const AdminComponent = {
     const container = document.getElementById('admin-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <header style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; border-bottom: 2px solid var(--accent-primary);">
+      <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem 0; border-bottom: 2px solid var(--accent-primary);">
         <h1 style="font-family: 'Outfit'; font-size: 1.5rem;">Admin Control Panel</h1>
-        <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
           <button id="admin-back-home" class="btn-secondary">← Back to Dashboard</button>
           <span>Logged as: <strong>${profile.role}</strong></span>
         </div>
@@ -26,7 +26,7 @@ export const AdminComponent = {
         <main id="admin-main">
           <!-- Analytics Tab (Phase 3) -->
           <div id="admin-analytics-tab" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
               <h2>Platform Analytics</h2>
               <div id="analytics-refresh" class="btn-secondary" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem;">Refresh Data</div>
             </div>
@@ -42,7 +42,7 @@ export const AdminComponent = {
           <!-- Questions Tab -->
           <div id="admin-questions-tab">
             <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2>Database Questions</h2>
                 <button id="add-question-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Question</button>
               </div>
@@ -53,9 +53,9 @@ export const AdminComponent = {
                 <select id="filter-topic" class="glass-select"><option value="">All Topics</option></select>
               </div>
             </div>
-            <div id="pagination-controls-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div id="pagination-controls-top" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
               <span id="question-count-display" style="font-size: 0.875rem;"></span>
-              <div style="display: flex; gap: 1rem;">
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <button id="prev-page-top" class="btn-secondary">Previous Page</button>
                 <button id="next-page-top" class="btn-secondary">Next Page</button>
               </div>
@@ -65,7 +65,7 @@ export const AdminComponent = {
 
           <!-- Syllabus Tab -->
           <div id="admin-syllabus-tab" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
               <h2>Exam Syllabus</h2>
               <button id="add-syllabus-btn" class="primary">+ Add Topic</button>
             </div>
@@ -274,20 +274,20 @@ export const AdminComponent = {
       
       list.innerHTML = Object.entries(hierarchy).map(([examName, subjects]) => `
         <div class="exam-group" style="margin-bottom: 1rem;">
-          <div class="glass syllabus-header exam-toggle" style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent-primary);">
+          <div class="glass syllabus-header exam-toggle" style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent-primary);">
             <strong style="font-size: 1.1rem; color: var(--accent-primary);">${examName}</strong>
             <span>▼</span>
           </div>
           <div class="subjects-container" style="display: none; padding-left: 1rem; margin-top: 0.5rem;">
             ${Object.entries(subjects).map(([subName, topics]) => `
               <div class="subject-group" style="margin-bottom: 0.5rem;">
-                <div class="glass syllabus-header subject-toggle" style="padding: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; background: rgba(255, 255, 255, 0.03);">
+                <div class="glass syllabus-header subject-toggle" style="padding: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; background: rgba(255, 255, 255, 0.03);">
                   <span style="font-weight: 600;">${subName}</span>
                   <span style="font-size: 0.8rem; color: #ffffff;">${topics.length} Topics ▼</span>
                 </div>
                 <div class="topics-container" style="display: none; padding: 0.5rem; border-left: 1px solid var(--glass-border); margin-left: 0.5rem;">
-                  <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-                    <input type="text" placeholder="New topic name..." class="glass-input add-topic-input" style="flex: 1; padding: 0.4rem; font-size: 0.8rem;">
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <input type="text" placeholder="New topic name..." class="glass-input add-topic-input" style="flex: 1; min-width: 150px; padding: 0.4rem; font-size: 0.8rem;">
                     <button class="primary add-topic-btn" data-exam="${examName}" data-subject="${subName}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Add</button>
                   </div>
                   ${topics.map(t => `
