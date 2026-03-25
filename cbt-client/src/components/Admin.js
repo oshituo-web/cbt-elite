@@ -221,8 +221,8 @@ export const AdminComponent = {
           </div>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0;">
-          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Edit</button>
-          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">Delete</button>
+          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">✏️ Edit</button>
+          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">🗑️ Delete</button>
         </div>
       </div>
     `).join('')
@@ -255,19 +255,19 @@ export const AdminComponent = {
   },
 
   openEditModal(question) {
-    const modalHtml = \`
+    const modalHtml = `
       <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
         <div class="glass card" style="width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; border: 1px solid var(--accent-primary);">
           <h3 style="margin-bottom: 1rem; font-family: 'Outfit';">Edit Question</h3>
           <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 0.5rem;">Question Text</p>
-          <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.5rem; font-size: 0.9rem;">\${question.question_text}</textarea>
+          <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.5rem; font-size: 0.9rem;">${question.question_text}</textarea>
           <div style="display: flex; gap: 1rem;">
             <button id="save-q-edit" class="primary" style="flex:1;">Save Changes</button>
             <button id="cancel-q-edit" class="btn-secondary" style="flex:1;">Cancel</button>
           </div>
         </div>
       </div>
-    \`
+    `
     document.body.insertAdjacentHTML('beforeend', modalHtml)
     
     document.getElementById('cancel-q-edit').onclick = () => document.getElementById('q-edit-overlay').remove()
