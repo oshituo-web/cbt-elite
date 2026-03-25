@@ -55,7 +55,10 @@ export const ResultsComponent = {
     })
 
     container.innerHTML = `
-      <div class="glass card results-container" style="max-width: 900px; width: 95%; margin: 2rem auto; padding: 2rem; text-align: center;">
+      <div class="glass card results-container" style="max-width: 900px; width: 95%; margin: 2rem auto; padding: 2rem; position: relative; text-align: center;">
+        <button id="results-back-btn" class="btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; padding: 0.4rem 0.6rem; border-radius: 8px;" title="Go Back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
         <h2 style="font-family: 'Outfit'; font-size: 1.75rem; margin-bottom: 2rem;">Exam Results</h2>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
@@ -99,6 +102,9 @@ export const ResultsComponent = {
     document.getElementById('restart-exam').onclick = onRestart
     document.getElementById('review-exam').onclick = onReview
     document.getElementById('back-home').onclick = () => {
+        if (onBack) onBack(); else location.reload();
+    }
+    document.getElementById('results-back-btn').onclick = () => {
         if (onBack) onBack(); else location.reload();
     }
 

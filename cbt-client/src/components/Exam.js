@@ -63,6 +63,9 @@ export class Exam {
         <!-- Phase 5: Persistent Top Bar -->
         <div class="exam-top-bar glass">
           <div class="top-bar-left">
+            <button id="exam-back-btn" class="btn-secondary" style="padding: 0.4rem 0.6rem; border-radius: 8px; margin-right: 0.5rem;" title="Go Back">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
             <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">...</span>
             <span id="display-subject" class="subject-title">...</span>
           </div>
@@ -210,6 +213,16 @@ export class Exam {
   }
 
   attachListeners(onFinish, onBack) {
+    const backBtn = document.getElementById('exam-back-btn')
+    if (backBtn) {
+      backBtn.onclick = () => {
+        if (!this.isReviewMode && !confirm("Are you sure you want to exit? Any unsaved progress will be lost.")) return;
+        document.getElementById('exam-container').style.display = 'none'
+        if (onBack) onBack()
+        else location.reload()
+      }
+    }
+
     document.getElementById('next-btn').onclick = () => {
       if (this.session.next()) this.updateUI()
     }

@@ -501,6 +501,22 @@ body.light-mode .q-grid-item.answered {
     padding: 1rem;
     min-height: 200px;
   }
+  .exam-footer {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 1rem;
+  }
+  .exam-footer > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    gap: 0.75rem;
+  }
+  .exam-footer button {
+    flex: 1;
+    min-width: 120px;
+  }
   .exam-top-bar {
     flex-wrap: wrap;
     padding: 0.75rem;
