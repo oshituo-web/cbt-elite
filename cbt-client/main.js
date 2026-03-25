@@ -24,6 +24,9 @@ async function initApp() {
     return
   }
 
+  // Phase 4: Check for Global Broadcast
+  checkBroadcast()
+
   // Check for profile
   const { data: profile, error } = await AuthService.getProfile(user.id)
   
@@ -88,6 +91,34 @@ function hideAll() {
   document.getElementById('dashboard-container').style.display = 'none'
   document.getElementById('exam-container').style.display = 'none'
   document.getElementById('admin-container').style.display = 'none'
+}
+
+async function checkBroadcast() {
+    try {
+        const { DataService } = await import('./src/services/data')
+        const { data: config } = await DataService.getSystemConfig('broadcast_message')
+        
+        let banner = document.getElementById('global-broadcast-banner')
+        if (config && config.value && config.value.trim()) {
+            if (!banner) {
+                banner = document.createElement('div')
+                banner.id = 'global-broadcast-banner'
+                banner.className = 'broadcast-banner'
+                document.body.prepend(banner)
+            }
+            banner.innerHTML = `
+                <div class="banner-content">
+                    <span class="banner-icon">📢</span>
+                    <span class="banner-text">${config.value}</span>
+                    <button class="banner-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+                </div>
+            `
+        } else if (banner) {
+            banner.remove()
+        }
+    } catch (e) {
+        console.error("Broadcast check failed", e)
+    }
 }
 
 initApp()

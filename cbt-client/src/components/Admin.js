@@ -5,6 +5,7 @@ export const AdminComponent = {
   render(profile, onBack) {
     const container = document.getElementById('admin-container')
     container.style.display = 'block'
+    this._adminProfile = profile // Store for auditing
     container.innerHTML = `
       <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem 0; border-bottom: 2px solid var(--accent-primary);">
         <h1 style="font-family: 'Outfit'; font-size: 1.5rem;">Admin Control Panel</h1>
@@ -20,7 +21,10 @@ export const AdminComponent = {
           <button class="nav-tab" data-tab="syllabus">Manage Syllabus</button>
           <button class="nav-tab" data-tab="users">Manage Users</button>
           <button class="nav-tab" data-tab="reports">Question Reports</button>
+          <button class="nav-tab" data-tab="marketing">💰 Marketing</button>
           <button class="nav-tab" data-tab="analytics" style="color: var(--accent-primary);">📈 Platform Analytics</button>
+          ${profile.email === 'oshituo@gmail.com' ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
+          ${profile.email === 'oshituo@gmail.com' ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
         </nav>
         
         <main id="admin-main">
@@ -33,9 +37,13 @@ export const AdminComponent = {
             <div id="analytics-summary" class="admin-stats-grid" style="margin-bottom: 2rem;">
               <!-- Quick Stats Cards -->
             </div>
-            <div class="glass card" style="padding: 2rem;">
+            <div class="glass card" style="padding: 2rem; margin-bottom: 2rem;">
               <h3 style="margin-bottom: 1.5rem;">Global Score Distribution</h3>
               <canvas id="global-scores-chart" height="300"></canvas>
+            </div>
+            <div class="glass card" style="padding: 2rem;">
+              <h3 style="margin-bottom: 1.5rem;">Estimated Revenue Growth (User Tiers)</h3>
+              <canvas id="revenue-growth-chart" height="300"></canvas>
             </div>
           </div>
 
@@ -44,7 +52,11 @@ export const AdminComponent = {
             <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2>Database Questions</h2>
-                <button id="add-question-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Question</button>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <button id="bulk-import-btn" class="btn-secondary" style="padding: 0.5rem 1rem;">📦 Bulk Import (.csv)</button>
+                  <button id="add-question-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Question</button>
+                  <input type="file" id="bulk-import-input" accept=".csv" style="display: none;">
+                </div>
               </div>
               <div class="admin-filters-grid">
                 <input type="text" id="question-search" placeholder="Search text..." class="glass-input">
@@ -84,6 +96,61 @@ export const AdminComponent = {
             <div id="reports-list" style="margin-top: 1rem;">Loading...</div>
           </div>
 
+          <!-- Marketing Tab -->
+          <div id="admin-marketing-tab" style="display: none;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+              <!-- Promo Codes -->
+              <div>
+                <h2 style="margin-bottom: 1.5rem;">Promo Codes</h2>
+                <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                  <h3 style="font-size: 1rem; margin-bottom: 1rem;">Create New Code</h3>
+                  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <input type="text" id="promo-code-input" placeholder="CODE (e.g. SAVE50)" class="glass-input">
+                    <input type="number" id="promo-percent-input" placeholder="Discount %" class="glass-input">
+                    <input type="date" id="promo-expiry-input" class="glass-input">
+                    <button id="add-promo-btn" class="primary" style="padding: 0.75rem;">Create Code</button>
+                  </div>
+                </div>
+                <div id="promo-codes-list">Loading codes...</div>
+              </div>
+              
+              <!-- Global Broadcast -->
+              <div>
+                <h2 style="margin-bottom: 1.5rem;">Global Broadcast</h2>
+                <div class="glass card" style="padding: 1.5rem;">
+                  <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Announcement Banner</h3>
+                  <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 1rem;">This message will appear at the top of all user dashboards.</p>
+                  <textarea id="broadcast-message-input" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1rem;" placeholder="Enter message or leave blank to clear..."></textarea>
+                  <button id="save-broadcast-btn" class="primary" style="width: 100%; padding: 0.75rem;">Push Broadcast</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audit Logs Tab (Super Admin Only) -->
+          <div id="admin-audit-tab" style="display: none;">
+            <h2>Administrative Audit Logs</h2>
+            <div id="audit-logs-list" style="margin-top: 1rem; font-family: monospace; font-size: 0.8rem;">Loading logs...</div>
+          </div>
+
+          <!-- Staff Tab (Super Admin Only) -->
+          <div id="admin-staff-tab" style="display: none;">
+            <h2>Staff Management</h2>
+            <div class="glass card" style="padding: 1.5rem; margin-top: 1rem;">
+              <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 1rem;">Promote a user by Gmail address.</p>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <input type="email" id="staff-email-input" placeholder="User email..." class="glass-input" style="flex: 1; min-width: 200px;">
+                <select id="staff-role-select" class="glass-select">
+                  <option value="moderator">Moderator</option>
+                  <option value="admin">Admin</option>
+                  <option value="user">Revoke (User)</option>
+                </select>
+                <button id="assign-staff-btn" class="primary">Assign Role</button>
+              </div>
+            </div>
+            <div id="staff-list" style="margin-top: 1.5rem;"></div>
+          </div>
+
         </main>
       </div>
     `
@@ -106,14 +173,23 @@ export const AdminComponent = {
         document.getElementById('admin-syllabus-tab').style.display = target === 'syllabus' ? 'block' : 'none'
         document.getElementById('admin-users-tab').style.display = target === 'users' ? 'block' : 'none'
         document.getElementById('admin-reports-tab').style.display = target === 'reports' ? 'block' : 'none'
-
+        document.getElementById('admin-marketing-tab').style.display = target === 'marketing' ? 'block' : 'none'
         document.getElementById('admin-analytics-tab').style.display = target === 'analytics' ? 'block' : 'none'
+        if (document.getElementById('admin-audit-tab')) {
+            document.getElementById('admin-audit-tab').style.display = target === 'audit' ? 'block' : 'none'
+        }
+        if (document.getElementById('admin-staff-tab')) {
+          document.getElementById('admin-staff-tab').style.display = target === 'staff' ? 'block' : 'none'
+        }
 
         if (target === 'questions') this.loadQuestions()
         else if (target === 'syllabus') this.loadSyllabus()
         else if (target === 'users') this.loadUsers()
         else if (target === 'reports') this.loadReports()
+        else if (target === 'marketing') this.loadMarketing()
         else if (target === 'analytics') this.loadGlobalAnalytics()
+        else if (target === 'audit') this.loadAuditLogs()
+        else if (target === 'staff') this.loadStaff()
       }
     })
 
@@ -180,6 +256,133 @@ export const AdminComponent = {
     }
     topFilt.onchange = triggerFilter
 
+    // Staff Events
+    const assignBtn = document.getElementById('assign-staff-btn')
+    if (assignBtn) {
+      assignBtn.onclick = async () => {
+        const email = document.getElementById('staff-email-input').value.trim()
+        const role = document.getElementById('staff-role-select').value
+        if (!email) return alert('Enter an email address.')
+        
+        assignBtn.disabled = true
+        assignBtn.textContent = 'Updating...'
+        const { error } = await DataService.updateUserRole(email, role)
+        if (error) {
+            alert('Error: ' + error.message)
+        } else {
+            await DataService.logAdminAction(this._adminProfile.email, 'Assign Role', email, role)
+            alert(`Successfully assigned ${role} role to ${email}`)
+            document.getElementById('staff-email-input').value = ''
+            this.loadStaff()
+        }
+        assignBtn.textContent = 'Assign Role'
+        assignBtn.disabled = false
+      }
+    }
+
+    // Marketing Events
+    const saveBroadcastBtn = document.getElementById('save-broadcast-btn')
+    if (saveBroadcastBtn) {
+        saveBroadcastBtn.onclick = async () => {
+            const msg = document.getElementById('broadcast-message-input').value.trim()
+            saveBroadcastBtn.textContent = 'Pushing...'
+            saveBroadcastBtn.disabled = true
+            const { error } = await DataService.updateSystemConfig('broadcast_message', msg)
+            if (error) alert('Error: ' + error.message)
+            else {
+                await DataService.logAdminAction(this._adminProfile.email, 'Update Broadcast', 'global', msg.substring(0, 50))
+                alert('Broadcast updated successfully!')
+            }
+            saveBroadcastBtn.textContent = 'Push Broadcast'
+            saveBroadcastBtn.disabled = false
+        }
+    }
+
+    const addPromoBtn = document.getElementById('add-promo-btn')
+    if (addPromoBtn) {
+        addPromoBtn.onclick = async () => {
+            const code = document.getElementById('promo-code-input').value.trim().toUpperCase()
+            const percent = parseInt(document.getElementById('promo-percent-input').value)
+            const expiry = document.getElementById('promo-expiry-input').value
+            
+            if (!code || isNaN(percent)) return alert('Enter code and valid percentage.')
+            
+            addPromoBtn.textContent = 'Creating...'
+            addPromoBtn.disabled = true
+            const { error } = await DataService.addPromoCode(code, percent, expiry)
+            if (error) alert('Error: ' + error.message)
+            else {
+                await DataService.logAdminAction(this._adminProfile.email, 'Create Promo', code, `${percent}% off`)
+                alert('Promo code created!')
+                document.getElementById('promo-code-input').value = ''
+                document.getElementById('promo-percent-input').value = ''
+                this.loadMarketing()
+            }
+            addPromoBtn.textContent = 'Create Code'
+            addPromoBtn.disabled = false
+        }
+    }
+    // Bulk Import Logic
+    const bulkBtn = document.getElementById('bulk-import-btn')
+    const bulkInput = document.getElementById('bulk-import-input')
+    if (bulkBtn && bulkInput) {
+      bulkBtn.onclick = () => bulkInput.click()
+      bulkInput.onchange = (e) => {
+        const file = e.target.files[0]
+        if (file) this.handleBulkUpload(file)
+      }
+    }
+  },
+
+  handleBulkUpload(file) {
+    const btn = document.getElementById('bulk-import-btn')
+    btn.textContent = '⏳ Processing...'
+    btn.disabled = true
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data
+        if (rows.length === 0) {
+            btn.textContent = '📦 Bulk Import (.csv)'
+            btn.disabled = false
+            return alert('CSV is empty or invalid.')
+        }
+
+        const questions = rows.map(row => ({
+          question_text: row.question_text || row.question,
+          exam_type: row.exam_type || 'JAMB',
+          subject: row.subject || 'General',
+          topic: row.topic || '',
+          explanation: row.explanation || '',
+          diagram_url: row.diagram_url || null,
+          answers: [
+            { text: row.option_a, is_correct: String(row.correct_option).trim().toUpperCase() === 'A' },
+            { text: row.option_b, is_correct: String(row.correct_option).trim().toUpperCase() === 'B' },
+            { text: row.option_c, is_correct: String(row.correct_option).trim().toUpperCase() === 'C' },
+            { text: row.option_d, is_correct: String(row.correct_option).trim().toUpperCase() === 'D' }
+          ].filter(a => a.text)
+        })).filter(q => q.question_text)
+
+        if (questions.length === 0) {
+            btn.textContent = '📦 Bulk Import (.csv)'
+            btn.disabled = false
+            return alert('No valid questions found in CSV.')
+        }
+
+        const { error, count } = await DataService.bulkAddQuestions(questions)
+        if (error) alert('Import Error: ' + error)
+        else {
+            await DataService.logAdminAction(this._adminProfile.email, 'Bulk Import', 'questions', `Imported ${count} questions`)
+            alert(`Success! Imported ${count} questions.`)
+        }
+        
+        btn.textContent = '📦 Bulk Import (.csv)'
+        btn.disabled = false
+        this.loadQuestions()
+      }
+    })
   },
 
 
@@ -240,6 +443,7 @@ export const AdminComponent = {
           btn.textContent = 'Delete'
           btn.disabled = false
         } else {
+          await DataService.logAdminAction(this._adminProfile.email, 'Delete Question', id, 'Manual deletion')
           this.loadQuestions()
         }
       }
@@ -249,9 +453,22 @@ export const AdminComponent = {
       btn.onclick = () => {
         const id = btn.getAttribute('data-id')
         const question = questions.find(q => q.id === id)
-        if (question) this.openEditModal(question)
+        this.openEditModal(question)
       }
     })
+
+    // Phase 2: Render LaTeX Math (KaTeX)
+    if (window.renderMathInElement) {
+        window.renderMathInElement(list, {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false},
+                {left: "\\(", right: "\\)", display: false},
+                {left: "\\[", right: "\\]", display: true}
+            ],
+            throwOnError: false
+        });
+    }
   },
 
   openEditModal(question) {
@@ -289,6 +506,17 @@ export const AdminComponent = {
         this.loadQuestions()
       }
     }
+
+    // Phase 2: Render LaTeX Math (KaTeX) in Modal
+    if (window.renderMathInElement) {
+        window.renderMathInElement(document.getElementById('q-edit-overlay'), {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false}
+            ],
+            throwOnError: false
+        });
+    }
   },
 
   async loadUsers() {
@@ -311,10 +539,91 @@ export const AdminComponent = {
         <div style="flex: 1; min-width: 200px; word-break: break-all;">
           <strong>${u.username || 'Unknown'}</strong> (${u.email})
           <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${u.tier === 'premium' ? 'var(--accent-secondary)' : '#666'}">${u.tier || 'free'}</span>
+          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: var(--accent-primary); opacity: 0.8;">${u.role || 'user'}</span>
         </div>
-        <div style="font-size: 0.8rem; color: #ffffff;">Credits: ${u.ai_credits || 0}</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="font-size: 0.8rem; color: #ffffff;">Credits: ${u.ai_credits || 0}</div>
+          <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem;">Edit User</button>
+        </div>
       </div>
     `).join('')
+
+    // Attach User Edit Listeners
+    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-id')
+        const user = users.find(u => u.id === id)
+        if (user) this.openUserEditModal(user)
+      }
+    })
+  },
+
+  openUserEditModal(user) {
+    const modalHtml = `
+      <div id="user-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
+        <div class="glass card" style="width: 100%; max-width: 500px; padding: 2rem; border: 1px solid var(--accent-primary);">
+          <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Edit User: ${user.username || user.email}</h3>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Subscription Tier</p>
+            <select id="edit-user-tier" class="glass-select" style="width: 100%;">
+              <option value="free" ${user.tier === 'free' ? 'selected' : ''}>Free Tier</option>
+              <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Premium Tier</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 2rem;">
+            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">AI Credits</p>
+            <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <button id="save-user-edit" class="primary" style="flex:1;">Save User</button>
+            <button id="cancel-user-edit" class="btn-secondary" style="flex:1;">Cancel</button>
+          </div>
+          <button id="flag-user-btn" class="glass" style="width: 100%; border-color: var(--error); color: var(--error); padding: 0.75rem;">🚩 Flag for Suspicious Activity</button>
+        </div>
+      </div>
+    `
+    document.body.insertAdjacentHTML('beforeend', modalHtml)
+
+    document.getElementById('cancel-user-edit').onclick = () => document.getElementById('user-edit-overlay').remove()
+    document.getElementById('save-user-edit').onclick = async () => {
+      const tier = document.getElementById('edit-user-tier').value
+      const ai_credits = parseInt(document.getElementById('edit-user-credits').value)
+      
+      const saveBtn = document.getElementById('save-user-edit')
+      saveBtn.textContent = 'Saving...'
+      saveBtn.disabled = true
+      
+      const { error } = await DataService.updateUser(user.id, { tier, ai_credits })
+      if (error) {
+        alert('Error: ' + error.message)
+        saveBtn.textContent = 'Save User'
+        saveBtn.disabled = false
+      } else {
+        // Log Action
+        await DataService.logAdminAction(this._adminProfile.email, 'Update User', user.id, `Tier: ${tier}, Credits: ${ai_credits}`)
+        document.getElementById('user-edit-overlay').remove()
+        this.loadUsers()
+      }
+    }
+
+    document.getElementById('flag-user-btn').onclick = async () => {
+        const reason = prompt('Reason for flagging (e.g. "Cheating - high scores"):')
+        if (!reason) return
+        const btn = document.getElementById('flag-user-btn')
+        btn.disabled = true
+        btn.textContent = 'Flagging...'
+        const { error } = await DataService.flagUser(user.id, reason)
+        if (error) alert('Error: ' + error.message)
+        else {
+            await DataService.logAdminAction(this._adminProfile.email, 'Flag User', user.id, reason)
+            alert('User has been flagged.')
+            document.getElementById('user-edit-overlay').remove()
+            this.loadUsers()
+        }
+    }
   },
 
   async loadSyllabus() {
@@ -334,7 +643,11 @@ export const AdminComponent = {
         if (!hierarchy[examName]) hierarchy[examName] = {}
         if (!hierarchy[examName][subjectName]) hierarchy[examName][subjectName] = []
         
-        hierarchy[examName][subjectName].push({ id: item.id, topic: item.topic })
+        hierarchy[examName][subjectName].push({ 
+          id: item.id, 
+          topic: item.topic,
+          importance: item.importance || 1 
+        })
       })
 
       // Fetch all Exams and Subjects for the "Add Topic" drop downs if needed, 
@@ -360,7 +673,14 @@ export const AdminComponent = {
                   </div>
                   ${topics.map(t => `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; margin-bottom: 2px; background: rgba(255,255,255,0.02); border-radius: 4px; font-size: 0.85rem;">
-                      <span>${t.topic}</span>
+                      <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                        <span title="Importance (1-5)">
+                            <select class="glass-select topic-weight-select" data-id="${t.id}" style="padding: 1px 4px; font-size: 0.7rem; border-color: rgba(255,255,255,0.1); width: auto;">
+                                ${[1,2,3,4,5].map(w => `<option value="${w}" ${t.importance == w ? 'selected' : ''}>${w}⭐</option>`).join('')}
+                            </select>
+                        </span>
+                        <span>${t.topic}</span>
+                      </div>
                       <button class="delete-topic-btn" data-id="${t.id}" style="background: none; border: none; cursor: pointer; font-size:1rem; opacity: 0.6; padding: 0;">🗑️</button>
                     </div>
                   `).join('')}
@@ -406,6 +726,22 @@ export const AdminComponent = {
       }
     })
 
+    // Update topic weight
+    document.querySelectorAll('.topic-weight-select').forEach(sel => {
+        sel.onchange = async () => {
+            const id = sel.getAttribute('data-id')
+            const weight = parseInt(sel.value)
+            sel.disabled = true
+            const { error } = await DataService.updateSyllabusTopic(id, { importance: weight })
+            if (error) {
+                alert('Error updating weight: ' + error.message)
+                sel.disabled = false
+            } else {
+                sel.disabled = false
+            }
+        }
+    })
+
     // Add topic
     document.querySelectorAll('.add-topic-btn').forEach(btn => {
       btn.onclick = async (e) => {
@@ -438,17 +774,52 @@ export const AdminComponent = {
   async loadReports() {
     const list = document.getElementById('reports-list')
     list.innerHTML = 'Loading reports...'
-    const { data } = await supabase.from('question_reports').select('*, questions(question_text)').order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('question_reports')
+      .select('*, questions(question_text, id)')
+      .order('status', { ascending: false }) // pending first usually
+      .order('created_at', { ascending: false })
+    
     list.innerHTML = data.map(r => `
-      <div class="glass" style="padding: 1rem; margin-bottom: 1rem;">
-        <div style="display: flex; justify-content: space-between;">
-          <strong style="color: var(--error);">${r.reason}</strong>
-          <span style="font-size: 0.7rem; color: #ffffff;">${new Date(r.created_at).toLocaleDateString()}</span>
+      <div class="glass" style="padding: 1.25rem; margin-bottom: 1rem; border-left: 4px solid ${r.status === 'resolved' ? 'var(--success)' : r.status === 'dismissed' ? '#666' : 'var(--error)'};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong style="color: ${r.status === 'resolved' ? 'var(--success)' : 'var(--error)'}; text-transform: uppercase; font-size: 0.75rem;">${r.reason}</strong>
+            <span class="badge" style="margin-left: 0.5rem; background: rgba(255,255,255,0.1); font-size: 0.65rem;">${r.status || 'pending'}</span>
+          </div>
+          <span style="font-size: 0.7rem; color: #aaa;">${new Date(r.created_at).toLocaleDateString()}</span>
         </div>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem;">${r.details || 'No details'}</p>
-        <div style="font-size: 0.75rem; color: #ffffff; margin-top: 4px;">Q: ${r.questions?.question_text.substring(0, 50)}...</div>
+        <p style="font-size: 0.9rem; margin: 0.75rem 0;">${r.details || 'No details provided.'}</p>
+        <div style="font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem;">
+          <strong>Target Question:</strong> ${r.questions?.question_text.substring(0, 100)}...
+        </div>
+        
+        ${r.status === 'pending' ? `
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="primary resolve-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Mark Resolved</button>
+            <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Dismiss</button>
+          </div>
+        ` : `<div style="font-size: 0.75rem; color: var(--success); font-style: italic;">Verified and ${r.status}</div>`}
       </div>
     `).join('')
+
+    // Attach Listeners
+    document.querySelectorAll('.resolve-report-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id')
+        btn.textContent = '...'
+        await DataService.updateReportStatus(id, 'resolved')
+        this.loadReports()
+      }
+    })
+    document.querySelectorAll('.dismiss-report-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id')
+        btn.textContent = '...'
+        await DataService.updateReportStatus(id, 'dismissed')
+        this.loadReports()
+      }
+    })
   },
 
   async loadGlobalAnalytics() {
@@ -506,6 +877,87 @@ export const AdminComponent = {
         }
       }
     })
+
+    // Phase 5: Revenue Chart
+    const revenueContainer = document.getElementById('revenue-growth-chart')
+    if (revenueContainer) {
+        const { data: users } = await DataService.getRevenueStats()
+        const tierCounts = { free: 0, premium: 0 }
+        users.forEach(u => {
+            if (u.tier === 'premium') tierCounts.premium++
+            else tierCounts.free++
+        })
+
+        if (this._revenueChart) this._revenueChart.destroy()
+        this._revenueChart = new Chart(revenueContainer.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Free Tier (0 NGN)', 'Premium Tier (1500 NGN)'],
+                datasets: [{
+                    data: [tierCounts.free, tierCounts.premium],
+                    backgroundColor: ['rgba(255, 255, 255, 0.1)', 'rgba(79, 70, 229, 0.6)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { color: '#ccc' } } }
+            }
+        })
+    }
+  },
+
+  async loadAuditLogs() {
+    const list = document.getElementById('audit-logs-list')
+    list.innerHTML = 'Loading system logs...'
+    const { data, error } = await DataService.getAuditLogs()
+    
+    if (error) {
+        list.innerHTML = `<div style="color: var(--error);">Error: ${error.message}</div>`
+        return
+    }
+
+    if (!data || data.length === 0) {
+        list.innerHTML = 'No logs available.'
+    } else {
+        list.innerHTML = data.map(log => `
+            <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ccc;">
+                <span style="color: var(--accent-primary); font-weight: 700;">[${new Date(log.created_at).toLocaleTimeString()}]</span>
+                <span style="color: #fff;">${log.admin_email}:</span>
+                <span style="color: var(--success);">${log.action}</span>
+                <span style="font-size: 0.7rem; opacity: 0.7;">(ID: ${log.target_id || 'N/A'})</span>
+                <div style="font-size: 0.7rem; margin-top: 2px; opacity: 0.5;">${log.details}</div>
+            </div>
+        `).join('')
+    }
+  },
+
+  async loadStaff() {
+    const list = document.getElementById('staff-list')
+    if (!list) return
+    list.innerHTML = 'Loading staff list...'
+    const { data: users } = await DataService.getAllUsers()
+    
+    // Filter for anyone with a role or the super admin
+    const staff = users.filter(u => 
+      (u.role && u.role !== 'user') || 
+      u.email === 'oshituo@gmail.com'
+    )
+    
+    list.innerHTML = `
+      <h3 style="margin-bottom: 1rem; font-family: 'Outfit'; font-size: 1rem;">Current Staff Members</h3>
+      ${staff.map(s => `
+        <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong>${s.username || 'Staff'}</strong> (${s.email})
+            <span class="badge" style="margin-left: 0.5rem; background: var(--accent-primary); padding: 2px 6px; font-size: 0.7rem;">${s.role || (s.email === 'oshituo@gmail.com' ? 'super-admin' : 'user')}</span>
+          </div>
+          ${s.email !== 'oshituo@gmail.com' ? `
+            <div style="font-size: 0.75rem; color: #aaa;">Use the form above to change role</div>
+          ` : '<em style="font-size: 0.75rem; color: var(--accent-secondary);">System Owner</em>'}
+        </div>
+      `).join('')}
+    `
   }
 }
 

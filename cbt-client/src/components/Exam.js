@@ -473,6 +473,19 @@ export class Exam {
     this.renderJambTabs()
     this.renderSidebar()
     this.updateBookmarkUI()
+
+    // Phase 2: Render LaTeX Math (KaTeX)
+    if (window.renderMathInElement) {
+        window.renderMathInElement(document.getElementById('exam-main-panel'), {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false},
+                {left: "\\(", right: "\\)", display: false},
+                {left: "\\[", right: "\\]", display: true}
+            ],
+            throwOnError: false
+        });
+    }
   }
 
   renderJambTabs() {

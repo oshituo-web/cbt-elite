@@ -28,9 +28,17 @@ export const DataService = {
   async addSyllabusTopic(examId, subjectId, topic) {
     const { data, error } = await supabase
       .from('syllabus_topics')
-      .insert({ exam_id: examId, subject_id: subjectId, topic: topic })
+      .insert({ exam_id: examId, subject_id: subjectId, topic })
       .select()
-      .single()
+    return { data, error }
+  },
+
+  async updateSyllabusTopic(id, updates) {
+    const { data, error } = await supabase
+      .from('syllabus_topics')
+      .update(updates)
+      .eq('id', id)
+      .select()
     return { data, error }
   },
 
@@ -40,6 +48,88 @@ export const DataService = {
       .delete()
       .eq('id', topicId)
     return { error }
+  },
+
+  // Phase 4: Marketing & Configuration
+  async getPromoCodes() {
+    return await supabase.from('promo_codes').select('*').order('created_at', { ascending: false })
+  },
+
+  async addPromoCode(code, percent, expiry) {
+    return await supabase.from('promo_codes').insert({ code, percent, expiry_date: expiry }).select()
+  },
+
+  async deletePromoCode(id) {
+    return await supabase.from('promo_codes').delete().eq('id', id)
+  },
+
+  async getSystemConfig(key) {
+    return await supabase.from('system_config').select('value').eq('key', key).single()
+  },
+
+  async updateSystemConfig(key, value) {
+    // Upsert logic
+    const { data: existing } = await supabase.from('system_config').select('id').eq('key', key).single()
+    if (existing) {
+      return await supabase.from('system_config').update({ value }).eq('key', key).select()
+    } else {
+      return await supabase.from('system_config').insert({ key, value }).select()
+    }
+  },
+
+  // Phase 5: Security & Analytics
+  async logAdminAction(adminEmail, action, targetId, details) {
+    return await supabase.from('admin_audit_logs').insert({
+        admin_email: adminEmail,
+        action,
+        target_id: targetId,
+        details: typeof details === 'object' ? JSON.stringify(details) : details
+    })
+  },
+
+  async getAuditLogs(limit = 100) {
+    return await supabase.from('admin_audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+  },
+
+  async getRevenueStats() {
+    // Aggregating tiers from users as a proxy for revenue if table not dedicated
+    return await supabase.from('users').select('tier, created_at')
+  },
+
+  async getFlaggedUsers() {
+    return await supabase.from('users').select('*').eq('is_flagged', true)
+  },
+
+  async flagUser(userId, reason) {
+    return await supabase.from('users').update({ is_flagged: true, flag_reason: reason }).eq('id', userId)
+  },
+
+  async getAllUsers() {
+    return await supabase.from('users').select('*').order('created_at', { ascending: false })
+  },
+
+  async updateUser(userId, updates) {
+    return await supabase.from('users').update(updates).eq('id', userId).select()
+  },
+
+  async updateUserRole(email, role) {
+    const { data, error } = await supabase.from('users').update({ role }).eq('email', email).select()
+    if (!error && (!data || data.length === 0)) {
+        return { error: { message: 'User not found with this email.' } }
+    }
+    return { data, error }
+  },
+
+  async deductCredit(userId, actionType) {
+    const costMap = { 'theory_grading': 5, 'explanation': 1 }
+    const cost = costMap[actionType] || 1
+    const { data: user } = await supabase.from('users').select('ai_credits').eq('id', userId).single()
+    if (!user) return { error: 'User not found' }
+    const newCredits = Math.max(0, (user.ai_credits || 0) - cost)
+    return await supabase.from('users').update({ ai_credits: newCredits }).eq('id', userId)
   },
 
   async getFullSyllabus() {
@@ -181,13 +271,6 @@ export const DataService = {
     return { data, error }
   },
 
-  async getAllUsers() {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false })
-    return { data, error }
-  },
 
   async deleteQuestion(id) {
     const { error } = await supabase
@@ -235,6 +318,56 @@ export const DataService = {
       })
       .select()
     return { data, error }
+  },
+
+  async updateReportStatus(reportId, status) {
+    const { data, error } = await supabase
+      .from('question_reports')
+      .update({ status })
+      .eq('id', reportId)
+      .select()
+    return { data, error }
+  },
+
+  async bulkAddQuestions(questions) {
+    let successCount = 0
+    let lastError = null
+
+    for (const q of questions) {
+      const { data: qData, error: qErr } = await supabase
+        .from('questions')
+        .insert({
+          question_text: q.question_text,
+          exam_type: q.exam_type,
+          subject: q.subject,
+          topic: q.topic,
+          explanation: q.explanation,
+          diagram_url: q.diagram_url
+        })
+        .select()
+
+      if (qErr) {
+        lastError = qErr.message
+        continue
+      }
+
+      if (qData && qData[0] && q.answers && q.answers.length > 0) {
+        const questionId = qData[0].id
+        const answersToInsert = q.answers.map(a => ({
+          question_id: questionId,
+          option_text: a.text,
+          is_correct: !!a.is_correct
+        }))
+
+        const { error: aErr } = await supabase.from('answers').insert(answersToInsert)
+        if (aErr) lastError = aErr.message
+        else successCount++
+      } else if (qData && qData[0]) {
+        successCount++
+      }
+    }
+
+    return { success: successCount > 0, count: successCount, error: lastError }
   },
 
   async getBookmarks(userId) {
@@ -678,56 +811,6 @@ export const DataService = {
     }
   },
 
-  async bulkInsertQuestions(questions) {
-    try {
-      const { data: suberes } = await supabase.from('subjects').select('*')
-      const subMap = new Map(suberes.map(s => [s.subject_name.toLowerCase(), s.id]))
-      
-      const results = { count: 0, errors: [] }
-      
-      for (const q of questions) {
-        // 1. Get or Create Subject
-        let subId = subMap.get(q.subject.toLowerCase())
-        if (!subId) {
-          const { data: newSub } = await supabase.from('subjects').insert({ subject_name: q.subject }).select().single()
-          subId = newSub.id
-          subMap.set(q.subject.toLowerCase(), subId)
-        }
-
-        // 2. Insert Question
-        const { data: qData, error: qErr } = await supabase.from('questions').insert({
-          subject_id: subId,
-          topic: q.topic,
-          question_text: q.question_text,
-          question_type: 'objective',
-          exam_type: 'Practice',
-          explanation: q.explanation
-        }).select().single()
-
-        if (qErr) {
-          results.errors.push(`Q: ${qErr.message}`)
-          continue
-        }
-
-        // 3. Insert Answers
-        const answers = [
-          { question_id: qData.id, answer_text: q.option_a, is_correct: q.correct_option?.toLowerCase() === 'a', option_letter: 'A' },
-          { question_id: qData.id, answer_text: q.option_b, is_correct: q.correct_option?.toLowerCase() === 'b', option_letter: 'B' },
-          { question_id: qData.id, answer_text: q.option_c, is_correct: q.correct_option?.toLowerCase() === 'c', option_letter: 'C' },
-          { question_id: qData.id, answer_text: q.option_d, is_correct: q.correct_option?.toLowerCase() === 'd', option_letter: 'D' }
-        ]
-
-        const { error: aErr } = await supabase.from('answers').insert(answers)
-        if (aErr) results.errors.push(`A: ${aErr.message}`)
-        else results.count++
-      }
-
-      return { success: true, count: results.count, errors: results.errors }
-    } catch (err) {
-      console.error("Bulk Insert Error:", err)
-      return { success: false, error: err.message }
-    }
-  },
 
 
   async getProfile(userId) {
