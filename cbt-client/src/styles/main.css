@@ -842,3 +842,53 @@ body.light-mode .option-btn .option-holder {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phase 31: Aggressive Admin Mobile Downscaling */
+@media (max-width: 600px) {
+  #admin-container {
+    padding: 0.5rem !important;
+    overflow-x: hidden !important;
+    width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+  
+  #admin-grid {
+    gap: 0.5rem !important;
+    margin-top: 1rem !important;
+  }
+
+  /* Aggressive downscaling of text */
+  #admin-container h1 { font-size: 1.25rem !important; }
+  #admin-container h2 { font-size: 1.1rem !important; }
+  #admin-container h3 { font-size: 1rem !important; }
+  #admin-container p, #admin-container span, #admin-container div { 
+    font-size: 0.8rem; 
+  }
+
+  /* Ensure nothing breaks the width */
+  #admin-main .glass, #admin-nav .nav-tab {
+    padding: 0.5rem !important;
+  }
+  
+  #admin-container button, #admin-container .btn-secondary, #admin-container .primary {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  #admin-container input, #admin-container select {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-width: 0 !important;
+  }
+  
+  /* Kill the min-widths causing overflow */
+  #admin-container [style*="min-width"] {
+    min-width: 0 !important;
+  }
+
+  #admin-main {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
+
