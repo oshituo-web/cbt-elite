@@ -783,3 +783,62 @@ body.light-mode .option-btn .option-holder {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Phase 30: Admin Panel Responsive Architecture */
+.admin-layout-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.admin-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.admin-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .admin-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .admin-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-nav .nav-tab {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-filters-grid {
+    grid-template-columns: 1fr 1fr; /* Wrap 4 cols to 2 on mobile */
+  }
+  .admin-two-col {
+    grid-template-columns: 1fr;
+  }
+}

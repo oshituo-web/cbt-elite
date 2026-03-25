@@ -14,8 +14,8 @@ export const AdminComponent = {
         </div>
       </header>
 
-      <div id="admin-grid" style="margin-top: 2rem; display: grid; grid-template-columns: 200px 1fr; gap: 2rem;">
-        <nav id="admin-nav" style="display: flex; flex-direction: column; gap: 10px;">
+      <div id="admin-grid" class="admin-layout-grid" style="margin-top: 2rem;">
+        <nav id="admin-nav" class="admin-nav">
           <button class="nav-tab active" data-tab="questions">Manage Questions</button>
           <button class="nav-tab" data-tab="syllabus">Manage Syllabus</button>
           <button class="nav-tab" data-tab="users">Manage Users</button>
@@ -30,7 +30,7 @@ export const AdminComponent = {
               <h2>Platform Analytics</h2>
               <div id="analytics-refresh" class="btn-secondary" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem;">Refresh Data</div>
             </div>
-            <div id="analytics-summary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+            <div id="analytics-summary" class="admin-stats-grid" style="margin-bottom: 2rem;">
               <!-- Quick Stats Cards -->
             </div>
             <div class="glass card" style="padding: 2rem;">
@@ -46,7 +46,7 @@ export const AdminComponent = {
                 <h2>Database Questions</h2>
                 <button id="add-question-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Question</button>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
+              <div class="admin-filters-grid">
                 <input type="text" id="question-search" placeholder="Search text..." class="glass-input">
                 <select id="filter-exam" class="glass-select"><option value="">All Exams</option></select>
                 <select id="filter-subject" class="glass-select"><option value="">All Subjects</option></select>
@@ -211,8 +211,8 @@ export const AdminComponent = {
     `
     
     list.innerHTML = questions.map(q => `
-      <div class="glass" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1;">
+      <div class="glass" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="flex: 1; min-width: 250px;">
           <div style="font-size: 0.9rem; font-weight: 700;">${q.question_text.substring(0, 100)}...</div>
           <div style="font-size: 0.75rem; color: #ffffff; margin-top: 0.25rem;">
             ${q.exam_type} | ${q.subject} | ${q.topic} | Type: ${q.question_type || 'objective'}
@@ -239,8 +239,8 @@ export const AdminComponent = {
     }
 
     list.innerHTML = users.map(u => `
-      <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-        <div>
+      <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="flex: 1; min-width: 200px; word-break: break-all;">
           <strong>${u.username || 'Unknown'}</strong> (${u.email})
           <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${u.tier === 'premium' ? 'var(--accent-secondary)' : '#666'}">${u.tier || 'free'}</span>
         </div>
