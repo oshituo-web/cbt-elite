@@ -63,17 +63,18 @@ export class Exam {
         <!-- Phase 5: Persistent Top Bar -->
         <div class="exam-top-bar glass">
           <div class="top-bar-left">
-            <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700;">...</span>
+            <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">...</span>
             <span id="display-subject" class="subject-title">...</span>
           </div>
           
           <div class="top-bar-center">
             <div id="q-meta" class="q-counter">1 of 0</div>
+            <span id="display-topic" class="badge" style="background: var(--accent-secondary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.7rem; margin-left: 0.5rem; display: none;">...</span>
           </div>
 
           <div class="top-bar-right">
-            <button id="toggle-calc" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 10px;">
-              🧮 Calculator
+            <button id="toggle-calc" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 8px;">
+              🧮 Calc
             </button>
             <div id="timer" class="timer-display">00:00</div>
           </div>
@@ -107,19 +108,19 @@ export class Exam {
             </div>
           </div>
 
-
-        <!-- Sidebar Navigation -->
-        <div class="exam-sidebar glass">
-          <div style="font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;">Question Map</div>
-          <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;"></div>
-          
-          <div style="margin-top: auto; padding-top: 1.5rem;">
-            <div class="progress-container" style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
-               <div id="progress-bar" style="height: 100%; background: var(--accent-primary); width: 0%; transition: width 0.3s;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.7rem;">
-               <span>PROGRESS</span>
-               <span id="progress-text">0%</span>
+          <!-- Sidebar Navigation -->
+          <div class="exam-sidebar glass">
+            <div style="font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;">Question Map</div>
+            <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;"></div>
+            
+            <div style="margin-top: auto; padding-top: 1.5rem;">
+              <div class="progress-container" style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
+                 <div id="progress-bar" style="height: 100%; background: var(--accent-primary); width: 0%; transition: width 0.3s;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.7rem;">
+                 <span>PROGRESS</span>
+                 <span id="progress-text">0%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -347,9 +348,13 @@ export class Exam {
     // Meta Info
     document.getElementById('display-subject').textContent = q.subject || this.subject || "CBT Practice"
     document.getElementById('display-exam-type').textContent = q.exam_type || this.examType || "Elite Assessment"
-    document.getElementById('display-topic').textContent = q.topic || "General"
+    const topicBadge = document.getElementById('display-topic')
+    if (topicBadge) {
+        topicBadge.textContent = q.topic || "General"
+        topicBadge.style.display = q.topic ? 'inline-block' : 'none'
+    }
 
-    if (this.examType === 'JAMB' && q.subject !== this.activeJambSubject) {
+    if (this.examType === 'JAMB' && q.subject && q.subject !== this.activeJambSubject) {
         this.activeJambSubject = q.subject;
         this.renderJambTabs();
     }

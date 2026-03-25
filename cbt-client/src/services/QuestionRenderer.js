@@ -68,7 +68,7 @@ export const QuestionRenderer = {
       }
       btn.dataset.id = ans.id;
       btn.innerHTML = `
-        <span style="font-weight: 700; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 50%;">${letter}</span>
+        <span class="option-holder">${letter}</span>
         <span style="flex: 1;">${ans.option_text || ans.answer_text || 'Missing Option'}</span>
         ${isReviewMode && isCorrect ? `
           <span style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700;">
