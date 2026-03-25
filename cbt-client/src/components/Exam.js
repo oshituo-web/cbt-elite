@@ -475,16 +475,23 @@ export class Exam {
     this.updateBookmarkUI()
 
     // Phase 2: Render LaTeX Math (KaTeX)
-    if (window.renderMathInElement) {
-        window.renderMathInElement(document.getElementById('exam-main-panel'), {
-            delimiters: [
-                {left: "$$", right: "$$", display: true},
-                {left: "$", right: "$", display: false},
-                {left: "\\(", right: "\\)", display: false},
-                {left: "\\[", right: "\\]", display: true}
-            ],
-            throwOnError: false
-        });
+    try {
+        if (window.renderMathInElement) {
+            const mathContainer = document.querySelector('.exam-main') || document.getElementById('exam-container');
+            if (mathContainer) {
+                window.renderMathInElement(mathContainer, {
+                    delimiters: [
+                        {left: "$$", right: "$$", display: true},
+                        {left: "$", right: "$", display: false},
+                        {left: "\\(", right: "\\)", display: false},
+                        {left: "\\[", right: "\\]", display: true}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("KaTeX rendering failed but skipping to enable navigation:", e);
     }
   }
 

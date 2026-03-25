@@ -71,7 +71,7 @@ export const AuthService = {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
     return { data, error }
   },
 

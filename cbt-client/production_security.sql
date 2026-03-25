@@ -100,6 +100,16 @@ CREATE POLICY "Users can insert theory submissions" ON theory_submissions FOR IN
 DROP POLICY IF EXISTS "Users can view their own theory submissions" ON theory_submissions;
 CREATE POLICY "Users can view their own theory submissions" ON theory_submissions FOR SELECT USING (auth.uid() = user_id);
 
+-- 5. USER PROFILE POLICIES
+DROP POLICY IF EXISTS "Users can view their own profile" ON users;
+CREATE POLICY "Users can view their own profile" ON users FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+CREATE POLICY "Users can update their own profile" ON users FOR UPDATE WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON users;
+CREATE POLICY "Users can insert their own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
+
 --------------------------------------------------------------------------------
 -- 4. STAFF & ADMIN POLICIES
 --------------------------------------------------------------------------------
