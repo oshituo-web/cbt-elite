@@ -60,61 +60,53 @@ export class Exam {
     
     container.innerHTML = `
       <div class="exam-layout">
-        <!-- Main Content -->
-        <div class="exam-main glass">
-
-          <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                  <span id="display-exam-type" class="badge" style="background: var(--accent-primary); color: #ffffff;">...</span>
-                  <span id="display-subject" style="font-weight: 700; font-size: 1.25rem;">...</span>
-                </div>
-                <div id="display-topic" style="font-size: 0.875rem;">...</div>
-              </div>
-              
-              <!-- Prominent Question Counter -->
-              <div style="text-align: center;">
-                <div id="q-meta" style="font-size: 1.25rem; font-weight: 800; color: #ffffff; background: rgba(255,255,255,0.1); padding: 0.4rem 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);">
-                  1 of 0
-                </div>
-              </div>
-
-              <div style="text-align: right; display: flex; align-items: center; gap: 1rem;">
-                <button id="toggle-calc" class="glass" style="padding: 0.5rem 1rem; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; border: 1px solid var(--accent-primary); color: var(--accent-primary);">
-                  🧮 Calculator
-                </button>
-                <div id="timer" class="timer-display" style="font-family: 'Outfit', monospace; font-size: 1.75rem; font-weight: 800;">00:00</div>
-              </div>
-            </div>
-
-            <!-- Subject Tabs placed securely inside the header block -->
-            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-top: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin; -webkit-overflow-scrolling: touch;"></div>
+        <!-- Phase 5: Persistent Top Bar -->
+        <div class="exam-top-bar glass">
+          <div class="top-bar-left">
+            <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700;">...</span>
+            <span id="display-subject" class="subject-title">...</span>
+          </div>
+          
+          <div class="top-bar-center">
+            <div id="q-meta" class="q-counter">1 of 0</div>
           </div>
 
-          <div id="question-area">
-            <div id="q-diagram" style="display: none;"></div>
-            <div id="q-text" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 500;">...</div>
-
-            <div id="options-container" style="display: flex; flex-direction: column; gap: 1rem;"></div>
-            <div id="explanation-container" class="glass" style="margin-top: 2rem; padding: 1.5rem; display: none; border-left: 4px solid var(--accent-primary);"></div>
-          </div>
-
-          <div class="exam-footer" style="margin-top: 3rem; pt: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 0.75rem;">
-              <button id="prev-btn" class="btn-secondary">Previous</button>
-              <button id="next-btn" class="btn-primary">Next Question</button>
-            </div>
-            
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-
-              <button id="report-btn" class="btn-secondary" style="padding: 0.5rem; color: var(--error); font-size: 0.8rem; background: transparent;">Report Issue</button>
-              <button id="toggle-bookmark" class="btn-secondary" style="padding: 0.5rem 1rem;">🔖 Bookmark</button>
-              ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary">Exit Review</button>' : '<button id="finish-btn" class="finish-btn">Finish Exam</button>'}
-            </div>
-
+          <div class="top-bar-right">
+            <button id="toggle-calc" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 10px;">
+              🧮 Calculator
+            </button>
+            <div id="timer" class="timer-display">00:00</div>
           </div>
         </div>
+
+        <div class="exam-content-wrapper">
+          <!-- Main Content -->
+          <div class="exam-main glass">
+            <!-- Subject Tabs placed at the top of content area -->
+            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin; -webkit-overflow-scrolling: touch;"></div>
+
+            <div id="question-area">
+              <div id="q-diagram" style="display: none;"></div>
+              <div id="q-text" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 500;">...</div>
+
+              <div id="options-container" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+              <div id="explanation-container" class="glass" style="margin-top: 2rem; padding: 1.5rem; display: none; border-left: 4px solid var(--primary);"></div>
+            </div>
+
+            <div class="exam-footer" style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 0.75rem;">
+                <button id="prev-btn" class="btn-secondary">Previous</button>
+                <button id="next-btn" class="btn-primary">Next Question</button>
+              </div>
+              
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button id="report-btn" class="btn-secondary" style="padding: 0.5rem; color: var(--error); font-size: 0.8rem; background: transparent; border: none;">Report Issue</button>
+                <button id="toggle-bookmark" class="btn-secondary" style="padding: 0.5rem 1rem;">🔖 Bookmark</button>
+                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary">Exit Review</button>' : '<button id="finish-btn" class="finish-btn">Finish Exam</button>'}
+              </div>
+            </div>
+          </div>
+
 
         <!-- Sidebar Navigation -->
         <div class="exam-sidebar glass">
@@ -137,12 +129,12 @@ export class Exam {
           <h3 style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
             Report Question <span id="close-report-x" style="cursor: pointer; color: var(--error);">✖</span>
           </h3>
-          <p style="font-size: 0.9rem; color: #ffffff; opacity: 0.9; margin-bottom: 1.5rem;">What's wrong with this question?</p>
+          <p style="font-size: 0.9rem; color: var(--text-primary); opacity: 0.9; margin-bottom: 1.5rem;">What's wrong with this question?</p>
           <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px;">Typo / Grammar error</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px;">Incorrect Answer / Missing Option</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px;">Image missing / broken</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px;">Other</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Typo / Grammar error</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Incorrect Answer / Missing Option</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Image missing / broken</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Other</button>
           </div>
           <button id="close-report" class="btn-secondary" style="margin-top: 1.5rem; width: 100%; border-radius: 8px;">Cancel</button>
         </div>
@@ -150,8 +142,8 @@ export class Exam {
       
       <div id="finish-modal" class="modal-overlay" style="display: none; align-items: flex-start; padding-top: 3rem;">
         <div class="modal-content glass" style="max-width: 450px; text-align: center;">
-          <h2 style="margin-bottom: 1rem; color: #ffffff;">End Session?</h2>
-          <p style="font-size: 1rem; color: #ffffff; opacity: 0.9; margin-bottom: 2.5rem;">Are you sure you want to finish and submit your answers? You cannot undo this action.</p>
+          <h2 style="margin-bottom: 1rem; color: var(--text-primary);">End Session?</h2>
+          <p style="font-size: 1rem; color: var(--text-primary); opacity: 0.9; margin-bottom: 2.5rem;">Are you sure you want to finish and submit your answers? You cannot undo this action.</p>
           <div style="display: flex; gap: 1rem;">
             <button id="cancel-finish" class="btn-secondary" style="flex: 1; border-radius: 8px; font-weight: bold;">Keep Working</button>
             <button id="confirm-finish" class="finish-btn" style="flex: 1; border-radius: 8px; font-weight: bold; font-size: 1.1rem;">Submit Now</button>

@@ -83,17 +83,17 @@ export const DashboardComponent = {
         <div id="exam-section" style="display: none;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Structured Mock Exams</h2>
           <div class="dashboard-grid">
-            <div class="glass card exam-tier" data-exam="JAMB" style="border-top: 4px solid var(--accent-primary); cursor: pointer;">
+            <div class="glass card exam-tier" data-exam="JAMB" style="border-top: 4px solid var(--primary); cursor: pointer;">
               <h3>JAMB Mock</h3>
-              <p style="font-size: 0.875rem; color: #ffffff;">180 Questions | 120 Mins</p>
+              <p style="font-size: 0.875rem; color: var(--text-primary);">180 Questions | 120 Mins</p>
             </div>
             <div class="glass card exam-tier" data-exam="WAEC" style="border-top: 4px solid var(--accent-secondary); cursor: pointer;">
               <h3>WAEC Mock</h3>
-              <p style="font-size: 0.875rem; color: #ffffff;">Standard Full Exam</p>
+              <p style="font-size: 0.875rem; color: var(--text-primary);">Standard Full Exam</p>
             </div>
             <div class="glass card exam-tier" data-exam="NECO" style="border-top: 4px solid var(--success); cursor: pointer;">
               <h3>NECO Mock</h3>
-              <p style="font-size: 0.875rem; color: #ffffff;">Standard Full Exam</p>
+              <p style="font-size: 0.875rem; color: var(--text-primary);">Standard Full Exam</p>
             </div>
           </div>
 
@@ -102,8 +102,8 @@ export const DashboardComponent = {
             <h3 id="exam-title" style="margin-bottom: 1.5rem;">Setup Mock Exam</h3>
             
             <div id="jamb-exam-config" style="display: none;">
-                <p style="margin-bottom: 1rem; color: var(--accent-primary);">English is mandatory. Select 3 additional subjects.</p>
-                <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; max-height: 200px; overflow-y: auto; padding: 1rem; background: var(--surface-color); border-radius: 8px;">
+                <p style="margin-bottom: 1rem; color: var(--primary);">English is mandatory. Select 3 additional subjects.</p>
+                <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; max-height: 200px; overflow-y: auto; padding: 1rem; background: var(--bg-color); border-radius: 8px;">
                     <!-- Checkboxes for subjects -->
                 </div>
             </div>
@@ -111,12 +111,12 @@ export const DashboardComponent = {
             <div id="waec-neco-exam-config" style="display: none;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <div>
-                        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem;">Subject</label>
-                        <select id="e-subject" class="glass" style="width: 100%; padding: 0.5rem;"></select>
+                        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-primary);">Subject</label>
+                        <select id="e-subject" class="glass-select" style="width: 100%;"></select>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem;">Type</label>
-                        <select id="e-type" class="glass" style="width: 100%; padding: 0.5rem;">
+                        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-primary);">Type</label>
+                        <select id="e-type" class="glass-select" style="width: 100%;">
                             <option value="objective">Objective</option>
                             <option value="theory">Theory</option>
                         </select>
@@ -130,15 +130,15 @@ export const DashboardComponent = {
 
         <!-- Saved & Rankings -->
         <div class="dashboard-grid" style="margin-top: 3rem;">
-          <div class="glass card" style="border-left: 4px solid var(--accent-primary);">
+          <div class="glass card" style="border-left: 4px solid var(--primary);">
             <h3>Saved Questions</h3>
-            <div id="bookmark-count" style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0;">0</div>
-            <button class="glass" id="start-saved" disabled>Review Saved</button>
+            <div id="bookmark-count" style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0; color: var(--text-primary);">0</div>
+            <button class="btn-secondary" id="start-saved" disabled>Review Saved</button>
           </div>
           <div class="glass card" style="border-left: 4px solid var(--success);">
             <h3>Leadership</h3>
-            <p style="margin: 1rem 0; font-size: 0.875rem; color: #ffffff;">See how you rank globally</p>
-            <button class="glass" id="view-leaderboard">View Ranking</button>
+            <p style="margin: 1rem 0; font-size: 0.875rem; color: var(--text-primary);">See how you rank globally</p>
+            <button class="btn-secondary" id="view-leaderboard">View Ranking</button>
           </div>
         </div>
 
@@ -392,11 +392,15 @@ export const DashboardComponent = {
   },
 
   async renderCharts(userId) {
-    const { data: profile } = await DataService.getProfile(userId)
-
     const { history, mastery, error } = await DataService.getUserAnalytics(userId)
-
     if (error) return
+
+    // Get current theme colors
+    const style = getComputedStyle(document.body)
+    const textPrimary = style.getPropertyValue('--text-primary').trim() || '#F9FAFB'
+    const successColor = style.getPropertyValue('--success').trim() || '#10B981'
+    const primaryColor = style.getPropertyValue('--primary').trim() || '#2563EB'
+    const borderColor = style.getPropertyValue('--border-color').trim() || '#334155'
 
     // 1. Score History Chart
     const historyCtx = document.getElementById('score-history-chart').getContext('2d')
@@ -407,8 +411,8 @@ export const DashboardComponent = {
         datasets: [{
           label: 'Score %',
           data: history.map(h => h.score_percentage),
-          borderColor: '#4caf50',
-          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          borderColor: successColor,
+          backgroundColor: successColor + '1A', // 10% opacity
           fill: true,
           tension: 0.4,
           borderWidth: 3,
@@ -418,10 +422,25 @@ export const DashboardComponent = {
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1E293B',
+            titleColor: '#F9FAFB',
+            bodyColor: '#CBD5F5'
+          }
+        },
         scales: {
-          y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
-          x: { grid: { display: false }, border: { display: false } }
+          y: { 
+            beginAtZero: true, 
+            max: 100, 
+            grid: { color: borderColor + '4D' }, // 30% opacity
+            ticks: { color: textPrimary }
+          },
+          x: { 
+            grid: { display: false }, 
+            ticks: { color: textPrimary }
+          }
         }
       }
     })
@@ -435,10 +454,10 @@ export const DashboardComponent = {
         datasets: [{
           label: 'Mastery %',
           data: mastery.map(m => m.average),
-          backgroundColor: 'rgba(33, 150, 243, 0.2)',
-          borderColor: '#2196f3',
+          backgroundColor: primaryColor + '33', // 20% opacity
+          borderColor: primaryColor,
           borderWidth: 2,
-          pointBackgroundColor: '#2196f3'
+          pointBackgroundColor: primaryColor
         }]
       },
       options: {
@@ -446,9 +465,9 @@ export const DashboardComponent = {
         plugins: { legend: { display: false } },
         scales: {
           r: {
-            angleLines: { color: 'rgba(255,255,255,0.1)' },
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            pointLabels: { color: '#ffffff', font: { size: 10 } },
+            angleLines: { color: borderColor + '4D' },
+            grid: { color: borderColor + '4D' },
+            pointLabels: { color: textPrimary, font: { size: 11, weight: 'bold' } },
             ticks: { display: false },
             suggestedMin: 0,
             suggestedMax: 100
