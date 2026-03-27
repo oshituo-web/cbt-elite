@@ -24,22 +24,16 @@ export const ResultsComponent = {
 
     const scorePercent = objQuestions.length > 0 ? Math.round((correct / objQuestions.length) * 100) : 0
     
-    // Save Session and get Theory results
-    let sessionResult = null
+    // Save Session and get Theory results (background)
     if (profile && profile.id) {
-        try {
-            const res = await DataService.saveExamSession(profile.id, {
-                session_type: mode,
-                subject: subject || 'Various',
-                total_questions: questions.length,
-                correct_answers: correct,
-                time_taken_seconds: timeTaken,
-                score_percentage: scorePercent
-            }, questions, userAnswers)
-            sessionResult = res.data
-        } catch (err) {
-            console.error("Result save error:", err)
-        }
+        DataService.saveExamSession(profile.id, {
+            session_type: mode,
+            subject: subject || 'Various',
+            total_questions: questions.length,
+            correct_answers: correct,
+            time_taken_seconds: timeTaken,
+            score_percentage: scorePercent
+        }, questions, userAnswers).catch(err => console.error("Result save error:", err))
     }
 
     const isJambMock = mode === 'exam' && examType === 'JAMB'

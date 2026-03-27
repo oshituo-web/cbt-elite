@@ -35,7 +35,7 @@ export const AuthComponent = {
             <button type="button" id="btn-forgot-password" style="background: none; border: none; color: var(--primary); font-size: 0.85rem; cursor: pointer; font-weight: 700; padding: 0;">Forgot Password?</button>
           </div>
 
-          <button type="submit" class="primary" style="width: 100%; margin-top: 0.5rem;">Sign In</button>
+          <button type="submit" class="primary" style="width: 100%; margin-top: 0.5rem;">Login</button>
           
           <button type="button" id="toggle-auth" style="background: none; color: var(--primary); font-size: 0.9rem; font-weight: 700; margin-top: 0.5rem; border: none; cursor: pointer;">Need an account? Sign Up</button>
         </form>
@@ -66,8 +66,8 @@ export const AuthComponent = {
       isSignUp = !isSignUp
       document.getElementById('auth-title').textContent = isSignUp ? 'Create Elite Account' : 'Welcome Back'
       document.getElementById('auth-subtitle').textContent = isSignUp ? 'Join thousands of students practicing for success' : 'Log in to your CBT practice account'
-      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Create Account & Sign Up' : 'Sign In'
-      toggleBtn.textContent = isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'
+      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Create Account & Sign Up' : 'Login'
+      toggleBtn.textContent = isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'
       
       confirmGroup.style.display = isSignUp ? 'flex' : 'none'
       forgotLink.style.display = isSignUp ? 'none' : 'block'
@@ -130,11 +130,9 @@ export const AuthComponent = {
       } else if (isSignUp && !data.session) {
         // Registration successful but email confirmation required
         successDiv.innerHTML = `
-          <div style="text-align: center;">
-            <strong>Success!</strong><br>
-            We've sent a confirmation link to <strong>${email}</strong>.<br>
-            <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.8;">Didn't receive it?</p>
-            <button id="resend-email" style="background: none; border: none; color: var(--primary); font-size: 0.875rem; text-decoration: underline; cursor: pointer; font-weight: 700;">Resend Link</button>
+          <div style="text-align: center; padding: 0.5rem;">
+            <p style="margin-bottom: 1rem; font-weight: 600;">We’ve sent a confirmation email.<br>Please check your inbox (and spam folder).</p>
+            <button id="resend-email" class="btn-secondary" style="width: 100%; border-style: dashed; font-weight: 800;">👉 Resend Email</button>
           </div>
         `
         successDiv.style.display = 'block'
@@ -143,12 +141,13 @@ export const AuthComponent = {
 
         document.getElementById('resend-email').onclick = async () => {
           const btn = document.getElementById('resend-email')
-          btn.textContent = 'Sending...'
+          const originalText = btn.innerHTML
+          btn.innerHTML = 'Sending...'
           btn.disabled = true
           await AuthService.resendConfirmationEmail(email)
-          btn.textContent = 'Email Sent!'
+          btn.innerHTML = '✅ Sent!'
           setTimeout(() => {
-            btn.textContent = 'Resend Link'
+            btn.innerHTML = originalText
             btn.disabled = false
           }, 5000)
         }
@@ -157,6 +156,7 @@ export const AuthComponent = {
       }
     }
 
+    // Google Sign In
     googleBtn.onclick = async () => {
       const { error } = await AuthService.signInWithGoogle()
       if (error) {

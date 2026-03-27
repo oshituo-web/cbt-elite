@@ -90,6 +90,7 @@ export class Exam {
             <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin; -webkit-overflow-scrolling: touch;"></div>
 
             <div id="question-area">
+              <div id="q-group-content" class="passage-container glass" style="display: none; margin-bottom: 2rem; padding: 1.5rem; font-size: 1.05rem; line-height: 1.8; border-left: 4px solid var(--accent-primary); background: var(--bg-secondary);"></div>
               <div id="q-diagram" style="display: none;"></div>
               <div id="q-text" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 500;">...</div>
 
@@ -378,6 +379,24 @@ export class Exam {
         document.getElementById('q-meta').textContent = `${localIndex + 1} of ${localQuestions.length}`
     } else {
         document.getElementById('q-meta').textContent = `${this.session.currentIndex + 1} of ${this.session.questions.length}`
+    }
+
+    // Passage / Question Group Handling
+    const groupContentDiv = document.getElementById('q-group-content')
+    if (q.question_groups && q.question_groups.content) {
+        groupContentDiv.style.display = 'block'
+        
+        let headerText = 'Reference Passage'
+        if (q.question_groups.type === 'instruction') headerText = 'Instruction'
+        if (q.question_groups.type === 'data_set') headerText = 'Data Set / Case Study'
+        if (q.question_groups.type === 'map' || q.question_groups.type === 'graph') headerText = 'Reference Materials'
+        
+        // Preserve line breaks for passages
+        const formattedContent = q.question_groups.content.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
+        groupContentDiv.innerHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${formattedContent}</div>`
+    } else {
+        groupContentDiv.style.display = 'none'
+        groupContentDiv.innerHTML = ''
     }
 
     // Diagram Handling

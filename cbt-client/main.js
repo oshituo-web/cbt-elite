@@ -9,7 +9,7 @@ import './src/styles/main.css'
 
 async function initApp() {
   // Global Theme Initialization
-  const savedTheme = localStorage.getItem('theme') || 'dark'
+  const savedTheme = localStorage.getItem('theme') || 'light'
   if (savedTheme === 'light') {
     document.body.classList.add('light-mode')
   } else {

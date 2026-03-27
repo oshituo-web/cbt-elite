@@ -209,7 +209,7 @@ export const DashboardComponent = {
             pConfig.style.display = 'block'
             document.getElementById('practice-title').textContent = `Structured ${selectedPracticeExam} Practice`
             document.getElementById('p-type-wrapper').style.display = (selectedPracticeExam === 'JAMB') ? 'none' : 'block'
-            document.getElementById('p-topic-wrapper').style.display = (selectedPracticeExam === 'JAMB') ? 'block' : 'none'
+            document.getElementById('p-topic-wrapper').style.display = 'block'
             pConfig.scrollIntoView({ behavior: 'smooth' })
         }
     })
@@ -254,11 +254,11 @@ export const DashboardComponent = {
 
         // Topic loader for JAMB Practice
         pSub.onchange = async () => {
-            if (selectedPracticeExam === 'JAMB') {
-                const { data: topics } = await DataService.getTopics(pSub.value)
-                const pTopic = document.getElementById('p-topic')
+            const { data: topics } = await DataService.getTopics(pSub.value)
+            const pTopic = document.getElementById('p-topic')
+            if (pTopic) {
                 pTopic.innerHTML = '<option value="">All Topics</option>'
-                topics.forEach(t => pTopic.appendChild(new Option(t, t)))
+                if (topics) topics.forEach(t => pTopic.appendChild(new Option(t, t)))
             }
         }
 

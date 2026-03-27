@@ -151,6 +151,7 @@ export const DataService = {
       .from('questions')
       .select(`
         *,
+        question_groups (*),
         question_answers (*),
         answers (*),
         theory_details (*)
@@ -172,7 +173,22 @@ export const DataService = {
     if (filters.search) query = query.ilike('question_text', `%${filters.search}%`)
 
     const isPaginated = filters.offset !== undefined && filters.offset !== null
-    if (isPaginated) {
+    let usingRandomOffset = false
+
+    if (filters.randomize) {
+        // Phase 8: Smart Randomization
+        // We fetch the total count first to pick a random page index
+        const { count: totalCount } = await DataService.getQuestionCount(filters)
+        const limit = filters.limit || 20
+        if (totalCount && totalCount > limit) {
+             const maxOffset = totalCount - limit
+             const randomOffset = Math.floor(Math.random() * maxOffset)
+             query = query.range(randomOffset, randomOffset + limit - 1)
+             usingRandomOffset = true
+        } else {
+             query = query.limit(limit)
+        }
+    } else if (isPaginated) {
       query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1)
     } else {
       query = query.limit(filters.limit || 20)
@@ -181,6 +197,11 @@ export const DataService = {
     const { data, error, count } = await query
     
     let finalQuestions = data || []
+    
+    // In-memory shuffle to break up sequential database groupings
+    if (filters.randomize && finalQuestions.length > 0) {
+        finalQuestions.sort(() => Math.random() - 0.5)
+    }
 
     finalQuestions.forEach(q => {
       if (q.question_type === 'theory') {
@@ -377,6 +398,7 @@ export const DataService = {
         *,
         questions (
           *,
+          question_groups (*),
           question_answers (*),
           answers (*)
         )
