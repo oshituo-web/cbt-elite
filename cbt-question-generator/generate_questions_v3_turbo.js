@@ -177,6 +177,24 @@ async function saveToDatabase(items) {
             supabase.from('question_answers').upsert(ansInserts, { onConflict: 'question_id' })
         );
 
+        // Also ensure this topic exists in syllabus_topics for the frontend selector
+        const uniqueTopicsInBatch = [...new Set(qsToInsert.map(q => q.topic))];
+        for (const topic of uniqueTopicsInBatch) {
+            try {
+                // We use a manual check since we might not have a unique constraint yet
+                const { data: existing } = await withDBRetry(() => 
+                    supabase.from('syllabus_topics').select('id').match({ subject_id: subjectId, exam_id: examId, topic }).maybeSingle()
+                );
+                if (!existing) {
+                    await withDBRetry(() => 
+                        supabase.from('syllabus_topics').insert({ subject_id: subjectId, exam_id: examId, topic })
+                    );
+                }
+            } catch (e) {
+                console.warn(`[Syllabus Sync] Failed to register topic: ${topic}`);
+            }
+        }
+
         if (!aErr) successCount += insertedQs.length;
     }
     
