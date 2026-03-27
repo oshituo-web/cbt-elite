@@ -21,7 +21,7 @@ export const DataService = {
     const { data, error } = await query
     if (error) return { data: [], error }
 
-    const uniqueTopics = data.map(q => ({ id: q.id, topic: q.topic }))
+    const uniqueTopics = [...new Set(data.map(q => q.topic).filter(Boolean))].sort()
     return { data: uniqueTopics, error: null }
   },
 
@@ -176,17 +176,18 @@ export const DataService = {
     let usingRandomOffset = false
 
     if (filters.randomize) {
-        // Phase 8: Smart Randomization
-        // We fetch the total count first to pick a random page index
-        const { count: totalCount } = await DataService.getQuestionCount(filters)
-        const limit = filters.limit || 20
-        if (totalCount && totalCount > limit) {
-             const maxOffset = totalCount - limit
-             const randomOffset = Math.floor(Math.random() * maxOffset)
-             query = query.range(randomOffset, randomOffset + limit - 1)
-             usingRandomOffset = true
+        const idQuery = supabase.from('questions').select('id').eq('is_active', true)
+        if (filters.subject_id) idQuery.eq('subject_id', filters.subject_id)
+        if (filters.exam_id) idQuery.eq('exam_id', filters.exam_id)
+        if (filters.exam_type) idQuery.eq('exam_type', filters.exam_type)
+        if (filters.topic) idQuery.eq('topic', filters.topic)
+
+        const { data: idPool } = await idQuery
+        if (idPool && idPool.length > 0) {
+            const sampledIds = idPool.sort(() => Math.random() - 0.5).slice(0, filters.limit || 20).map(i => i.id)
+            query = query.in('id', sampledIds)
         } else {
-             query = query.limit(limit)
+            query = query.limit(0)
         }
     } else if (isPaginated) {
       query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1)
@@ -195,15 +196,11 @@ export const DataService = {
     }
 
     const { data, error, count } = await query
-    
-    let finalQuestions = data || []
-    
-    // In-memory shuffle to break up sequential database groupings
-    if (filters.randomize && finalQuestions.length > 0) {
-        finalQuestions.sort(() => Math.random() - 0.5)
-    }
+    return { data: this._formatQuestions(data || []), error, count }
+  },
 
-    finalQuestions.forEach(q => {
+  _formatQuestions(questions) {
+    questions.forEach(q => {
       if (q.question_type === 'theory') {
         q.answers = []
         const details = q.theory_details?.[0] || q.theory_details
@@ -235,7 +232,7 @@ export const DataService = {
         }
       }
     })
-    return { data: finalQuestions, error, count }
+    return questions
   },
 
   async getQuestionCount(filters = {}) {
