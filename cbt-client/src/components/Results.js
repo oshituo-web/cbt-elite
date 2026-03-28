@@ -85,8 +85,8 @@ export const ResultsComponent = {
 
         <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem;">
           <button class="primary" id="restart-exam" style="flex: 1; min-width: 200px; padding: 1rem;">Retake Practice</button>
-          <button class="glass" id="review-exam" style="flex: 1; min-width: 200px; padding: 1rem; border-color: var(--accent-primary);">Review Detailed Answers</button>
-          <button class="glass" id="back-home" style="flex: 1; min-width: 200px; padding: 1rem;">← Back to Dashboard</button>
+          <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 200px; padding: 1rem; border-color: var(--accent-primary);">Review Detailed Answers</button>
+          <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; padding: 1rem;">← Back to Dashboard</button>
         </div>
 
       </div>

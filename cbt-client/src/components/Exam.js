@@ -106,7 +106,7 @@ export class Exam {
               
               <div style="display: flex; gap: 0.75rem; align-items: center;">
                 <button id="report-btn" class="btn-secondary" style="padding: 0.5rem; color: var(--error); font-size: 0.8rem; background: transparent; border: none;">Report Issue</button>
-                <button id="toggle-bookmark" class="btn-secondary" style="padding: 0.5rem 1rem;">🔖 Bookmark</button>
+                <button id="toggle-bookmark" class="btn-secondary" style="padding: 0.5rem 1rem;">💾 Save Question</button>
                 ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary">Exit Review</button>' : '<button id="finish-btn" class="finish-btn">Finish Exam</button>'}
               </div>
             </div>
@@ -611,8 +611,8 @@ export class Exam {
     if (!btn) return
     const q = this.session.getCurrentQuestion()
     const isBookmarked = this.bookmarks.includes(q.id)
-    btn.innerHTML = isBookmarked ? '⭐ Bookmarked' : '🔖 Bookmark'
-    btn.style.color = isBookmarked ? 'var(--accent-secondary)' : 'white'
+    btn.innerHTML = isBookmarked ? '⭐ Saved' : '💾 Save Question'
+    btn.style.color = isBookmarked ? 'var(--accent-secondary)' : 'var(--text-primary)'
   }
 
   showReportModal() {

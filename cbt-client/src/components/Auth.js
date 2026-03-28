@@ -26,10 +26,6 @@ export const AuthComponent = {
             </div>
           </div>
 
-          <div id="confirm-password-group" style="display: none; flex-direction: column; gap: 0.5rem;">
-            <label for="confirm-password" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Confirm Password</label>
-            <input type="password" id="confirm-password" placeholder="••••••••" class="glass-input" style="width: 100%; border-width: 2px;">
-          </div>
 
           <div id="forgot-password-link" style="text-align: right; margin-top: -0.5rem;">
             <button type="button" id="btn-forgot-password" style="background: none; border: none; color: var(--primary); font-size: 0.85rem; cursor: pointer; font-weight: 700; padding: 0;">Forgot Password?</button>
@@ -59,7 +55,6 @@ export const AuthComponent = {
     const errorDiv = document.getElementById('auth-error')
     const successDiv = document.getElementById('auth-success')
     const googleBtn = document.getElementById('google-signin')
-    const confirmGroup = document.getElementById('confirm-password-group')
     const forgotLink = document.getElementById('forgot-password-link')
 
     toggleBtn.onclick = () => {
@@ -69,7 +64,6 @@ export const AuthComponent = {
       form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Create Account & Sign Up' : 'Login'
       toggleBtn.textContent = isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'
       
-      confirmGroup.style.display = isSignUp ? 'flex' : 'none'
       forgotLink.style.display = isSignUp ? 'none' : 'block'
       
       errorDiv.style.display = 'none'
@@ -109,15 +103,6 @@ export const AuthComponent = {
       e.preventDefault()
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
-      
-      if (isSignUp) {
-        const confirmPassword = document.getElementById('confirm-password').value
-        if (password !== confirmPassword) {
-          errorDiv.textContent = 'Passwords do not match!'
-          errorDiv.style.display = 'block'
-          return
-        }
-      }
       
       const { data, error } = isSignUp 
         ? await AuthService.signUp(email, password)

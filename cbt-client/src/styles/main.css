@@ -125,16 +125,18 @@ button, .btn {
 }
 
 .btn-secondary, .glass-btn {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.85rem 1.75rem;
+  backdrop-filter: blur(4px);
 }
 
 .btn-secondary:hover, .glass-btn:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.2);
+  border-color: var(--primary);
+  color: #FFFFFF;
 }
 
 body.light-mode .btn-secondary, body.light-mode .glass-btn {

@@ -131,9 +131,9 @@ export const DashboardComponent = {
         <!-- Saved & Rankings -->
         <div class="dashboard-grid" style="margin-top: 3rem;">
           <div class="glass card" style="border-left: 4px solid var(--primary);">
-            <h3>Saved Questions</h3>
+            <h3 style="color: var(--text-primary);">Save Questions</h3>
             <div id="bookmark-count" style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0; color: var(--text-primary);">0</div>
-            <button class="btn-secondary" id="start-saved" disabled>Review Saved</button>
+            <button class="btn-secondary" id="start-saved" disabled>Review Question</button>
           </div>
           <div class="glass card" style="border-left: 4px solid var(--success);">
             <h3>Leadership</h3>
