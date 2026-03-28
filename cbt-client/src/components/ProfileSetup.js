@@ -76,7 +76,7 @@ export const ProfileSetupComponent = {
     }
 
     document.getElementById('back-to-login').onclick = () => {
-      AuthService.logout()
+      AuthService.signOut()
       location.reload()
     }
   }

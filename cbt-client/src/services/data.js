@@ -64,7 +64,7 @@ export const DataService = {
   },
 
   async getSystemConfig(key) {
-    return await supabase.from('system_config').select('value').eq('key', key).single()
+    return await supabase.from('system_config').select('value').eq('key', key).maybeSingle()
   },
 
   async updateSystemConfig(key, value) {
@@ -575,9 +575,6 @@ export const DataService = {
   },
 
   async gradeTheorySubmission(question, userAnswer) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-    
     let score = 0
     const details = question.theory_details?.[0] || question.theory_details || {}
     const markingScheme = details.marking_scheme || []
@@ -606,29 +603,12 @@ export const DataService = {
 
     score = Math.min(score, maxScore)
 
-    const prompt = `
-      As an expert examiner, provide constructive feedback for this student's answer.
-      The student was awarded ${score}/${maxScore} based on a rubric matching these points: ${JSON.stringify(matchedPoints)}.
-      
-      Question: ${question.question_text}
-      Model Answer: ${details.model_answer || 'N/A'}
-      Student's Answer: ${userAnswer}
-      
-      Requirements:
-      1. Explain WHY the student got this score.
-      2. Point out what they missed from the model answer.
-      3. Suggest how to improve the response for full marks.
-      
-      Return ONLY a JSON object: {"feedback": "detailed string"}
-    `
-
     try {
       const { data, error } = await supabase.functions.invoke('gemini-api', {
         body: { 
           action: 'grade', 
           payload: { 
             studentAnswer: userAnswer,
-            modelAnswer: question.model_answer,
             keyPoints: matchedPoints
           } 
         }
@@ -639,14 +619,13 @@ export const DataService = {
       const jsonMatch = text.match(/\{.*\}/s)
       const aiResult = JSON.parse(jsonMatch ? jsonMatch[0] : text)
 
-      
       const result = { 
         score: score, 
         feedback: aiResult.feedback || "Based on your answer, you matched " + matchedPoints.length + " key points."
       }
 
       // Deduct Credit
-      const userId = question.user_id // Assuming passed or available context
+      const userId = question.user_id 
       if (userId) await this.deductCredit(userId, 'theory_grading')
 
       return result
@@ -781,25 +760,9 @@ export const DataService = {
   },
 
   async getAIExplanation(question, selectedId = null) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-
     const correctAns = question.answers?.find(a => a.is_correct)
     const selectedAns = selectedId ? question.answers?.find(a => a.id === selectedId) : null
 
-    const prompt = `
-      As a friendly educational tutor for a CBT practice app, explain this question clearly.
-      Question: ${question.question_text}
-      Correct Answer: ${correctAns?.option_letter}: ${correctAns?.option_text}
-      ${selectedAns ? `The student selected: ${selectedAns.option_letter}: ${selectedAns.option_text}` : ''}
-      
-      Requirements:
-      1. Provide a simple, 2-3 sentence explanation of the concept.
-      2. If the student was wrong, gently explain the common mistake.
-      3. Keep it encouraging and high-fidelity.
-      
-      Return ONLY a JSON object: {"explanation": "string"}
-    `
 
     try {
       const { data, error } = await supabase.functions.invoke('gemini-api', {

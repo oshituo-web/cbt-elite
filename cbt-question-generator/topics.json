@@ -34,28 +34,13 @@
     "Oral English": ["Vowels", "Consonants", "Stress", "Intonation", "Rhyme"],
     "Summary": ["Condensing Text", "Identifying Key Points"],
     "Essay Writing": ["Narrative", "Descriptive", "Argumentative", "Formal Letters"],
-    "Grammar": ["Tenses", "Prepositions", "Conjunctions", "Punctuation"]
+    "Grammar": ["Tenses", "Prepositions", "Conjunctions", "Punctuation"],
+    "The Lekki Headmaster": ["Characters (Kabir, etc.)", "Themes of Education/Ethics", "Plot Summary", "Setting (Lekki/Lagos)", "Author's Style"]
   },
-  "Biology": {
-    "Cell Structure": ["Organelles", "Plant vs Animal Cells", "Cell Division", "Cell Membrane"],
-    "Genetics": ["Heredity", "DNA Structure", "Mendelian Laws", "Mutations"],
-    "Ecology": ["Ecosystems", "Food Webs", "Biomes", "Energy Flow"],
-    "Evolution": ["Natural Selection", "Evidence for Evolution", "Human Evolution"],
-    "Human Physiology": ["Digestive System", "Respiratory System", "Circulatory System", "Excretory System"],
-    "Cell Biology": ["Photosynthesis", "Respiration", "Enzymes"]
-  },
-  "Government": {
-    "Political Concepts": ["Power", "Authority", "Legitimacy", "Sovereignty"],
-    "Systems of Government": ["Presidential", "Parliamentary", "Federalism", "Unitary"],
-    "Nigerian Government": ["Constitutional Development", "Local Government", "Public Service"],
-    "International Relations": ["Foreign Policy", "UNO", "AU", "ECOWAS"],
-    "Political Institutions": ["Legislature", "Executive", "Judiciary"]
-  },
-  "Economics": {
-    "Basic Concepts": ["Scarcity", "Choice", "Opportunity Cost", "Scale of Preference"],
-    "Demand and Supply": ["Price Elasticity", "Market Equilibrium", "Utility Theory"],
-    "Production": ["Factors of Production", "Division of Labor", "Costs and Revenue"],
-    "Market Structures": ["Perfect Competition", "Monopoly", "Oligopoly"],
-    "National Income": ["GDP", "GNP", "Inflation", "Deflation"]
+  "Literature": {
+    "Drama": ["Lion and the Jewel (Soyinka)", "Let Me Die Alone (Kargbo)", "Midsummer Night's Dream (Shakespeare)", "Fences (Wilson)", "Look Back in Anger (Osborne)"],
+    "Prose": ["Second Class Citizen (Emecheta)", "Unexpected Joy at Dawn (Agyei-Agyiri)", "Wuthering Heights (Bronte)", "Invisible Man (Ellison)"],
+    "Poetry": ["Black Woman (Senghor)", "Leader and the Led (Osundare)", "The Grieved Lands (Neto)", "Caged Bird (Angelou)", "Good Morrow (Donne)"],
+    "Literary Appreciation": ["Figures of Speech", "Plots", "Characters", "Thematic Concerns"]
   }
 }

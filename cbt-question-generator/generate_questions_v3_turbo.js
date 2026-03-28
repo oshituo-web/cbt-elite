@@ -9,8 +9,8 @@ const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
 
 // Initialization
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
+const supabase = createClient((process.env.SUPABASE_URL || "").trim(), (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim());
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -63,6 +63,7 @@ async function withDBRetry(operation, maxRetries = 3) {
             if (error) throw error;
             return { data, error: null };
         } catch (err) {
+            console.error(`[DB Retry Error] Attempt ${attempt}:`, err.message, err.cause ? `| Cause: ${err.cause.message}` : '');
             if (attempt === maxRetries) return { data: null, error: err };
             await delay(Math.pow(2, attempt) * 500);
         }
@@ -71,26 +72,34 @@ async function withDBRetry(operation, maxRetries = 3) {
 
 async function loadKnowledgeBase() {
     console.log("Fetching database mappings and existing questions...");
-    const { data: exams } = await supabase.from('exams').select('id, exam_name');
-    const { data: subjects } = await supabase.from('subjects').select('id, subject_name');
-    
-    exams.forEach(e => examMap[e.exam_name.trim().toUpperCase()] = e.id);
-    subjects.forEach(s => subjectMap[s.subject_name.trim().toUpperCase()] = s.id);
-    subjects.forEach(s => subjectMap[s.subject_name.trim()] = s.id);
+    try {
+        const { data: exams, error: eErr } = await supabase.from('exams').select('id, exam_name');
+        if (eErr) throw eErr;
+        const { data: subjects, error: sErr } = await supabase.from('subjects').select('id, subject_name');
+        if (sErr) throw sErr;
+        
+        exams.forEach(e => examMap[e.exam_name.trim().toUpperCase()] = e.id);
+        subjects.forEach(s => subjectMap[s.subject_name.trim().toUpperCase()] = s.id);
+        subjects.forEach(s => subjectMap[s.subject_name.trim()] = s.id);
 
-    let hasMore = true;
-    let offset = 0;
-    while (hasMore) {
-        const { data: page } = await supabase.from('questions').select('question_text').range(offset, offset + 999);
-        if (page && page.length > 0) {
-            page.forEach(q => knowledgeBase.add(q.question_text.toLowerCase().trim()));
-            offset += page.length;
-            if (page.length < 1000) hasMore = false;
-        } else {
-            hasMore = false;
+        let hasMore = true;
+        let offset = 0;
+        while (hasMore) {
+            const { data: page, error: pErr } = await supabase.from('questions').select('question_text').range(offset, offset + 999);
+            if (pErr) throw pErr;
+            if (page && page.length > 0) {
+                page.forEach(q => knowledgeBase.add(q.question_text.toLowerCase().trim()));
+                offset += page.length;
+                if (page.length < 1000) hasMore = false;
+            } else {
+                hasMore = false;
+            }
         }
+        console.log(`Knowledge Base ready: ${knowledgeBase.size} existing questions.`);
+    } catch (err) {
+        console.error(`[Knowledge Base Error]:`, err.message, err.cause ? `| Cause: ${err.cause.message}` : '');
+        process.exit(1);
     }
-    console.log(`Knowledge Base ready: ${knowledgeBase.size} existing questions.`);
 }
 
 async function saveToDatabase(items) {
@@ -248,10 +257,9 @@ Deliver purely factual, perfectly formatted psychometric evaluations following t
         return [];
     } catch (error) {
         if (error.status === 429 || (error.message && error.message.includes('429'))) {
-            // Rate Limit
             return { rateLimit: true };
         }
-        console.error(`[AI Parser Error]:`, error.message.split('\n')[0]);
+        console.error(`[AI Parser Error]:`, error.message, error.cause ? `| Cause: ${error.cause.message}` : '');
         return [];
     }
 }

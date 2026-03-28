@@ -105,10 +105,20 @@ DROP POLICY IF EXISTS "Users can view their own profile" ON users;
 CREATE POLICY "Users can view their own profile" ON users FOR SELECT USING (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON users;
-CREATE POLICY "Users can update their own profile" ON users FOR UPDATE WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update their own profile" ON users 
+  FOR UPDATE 
+  WITH CHECK (
+    auth.uid() = id AND 
+    (
+      -- Prevent role escalation: current role must match new role unless the updater is an admin
+      role = (SELECT role FROM users WHERE id = auth.uid()) 
+      OR 
+      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    )
+  );
 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON users;
-CREATE POLICY "Users can insert their own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can insert their own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id AND role = 'student');
 
 --------------------------------------------------------------------------------
 -- 4. STAFF & ADMIN POLICIES
