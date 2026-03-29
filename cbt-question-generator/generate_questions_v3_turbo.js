@@ -4,9 +4,13 @@ const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 50000;
+const TOTAL_QUESTIONS_TO_GENERATE = 30; // Test Batch
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
+
+// TARGET FOCUS (Set to null for full run)
+const TARGET_EXAM = 'WAEC';
+const TARGET_SUBJECTS = ['Civic', 'Government', 'Mathematics', 'Physics', 'Chemistry']; 
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -46,7 +50,9 @@ const generationSchema = {
                         option_d: { type: Type.STRING },
                         correct_option: { type: Type.STRING, enum: ['A', 'B', 'C', 'D'] },
                         explanation: { type: Type.STRING },
-                        diagram_url: { type: Type.STRING, nullable: true }
+                        diagram_url: { type: Type.STRING, nullable: true },
+                        diagram_type: { type: Type.STRING, enum: ['none', 'graph', 'diagram', 'map', 'svg'], nullable: true },
+                        diagram_svg: { type: Type.STRING, nullable: true }
                     },
                     required: ["exam_type", "subject", "topic", "subtopic", "difficulty", "question", "option_a", "option_b", "option_c", "option_d", "correct_option", "explanation"]
                 }
@@ -149,6 +155,8 @@ async function saveToDatabase(items) {
                 exam_type: examName,
                 question_text: q.question,
                 diagram_url: q.diagram_url || null,
+                diagram_type: q.diagram_type || 'none',
+                diagram_svg: q.diagram_svg || null,
                 difficulty: (q.difficulty || 'Medium').charAt(0).toUpperCase() + (q.difficulty || 'Medium').slice(1),
                 group_id: groupId,
                 tags: q.tags || [],
@@ -229,9 +237,19 @@ EXAMPLE OF EXCELLENT QUALITY:
 }`;
 
     let instruction = `Generate exactly ${BATCH_SIZE} questions prioritizing strict standard curriculum validity. Make distractors scientifically/academically plausible.`;
+    
+    // Visual Integration Logic
+    instruction += `
+VISUAL CONTENT REQUIREMENT:
+For Mathematics, Physics, Chemistry, and Economics:
+- If a question requires a graph (e.g. Supply/Demand, Velocity-Time), set diagram_type='graph' and construct a QuickChart.io URL in diagram_url. 
+  Example: https://quickchart.io/chart?c={type:'line',data:{labels:[0,1,2,3],datasets:[{label:'Velocity',data:[0,10,20,30]}]}}
+- If a question requires a geometry or circuit diagram, set diagram_type='svg' and provide valid, minified SVG XML code in diagram_svg. Use viewBox='0 0 400 300' and ensure all elements are visible.
+- Ensure diagrams are mentioned in the question text (e.g. "From the diagram above...").`;
+
     if (topic === 'Comprehension') instruction = `CRITICAL: Generate ONE complete comprehension passage (approx 200-300 words). Set is_group=true, place passage in group_content, exactly 5 varying inference/vocabulary questions linked to it.`;
     if (topic === 'The Lekki Headmaster') instruction = `CRITICAL: Generate 5 questions testing exact plot details, character motives, and thematic inferences from the official 2025 JAMB novel "The Lekki Headmaster".`;
-    if (isScience) instruction += ` Occasionally generate a 'data_set' group block with experimental data mapped to 3 questions. Use clear 'diagram_url' placeholders where visually required.`;
+    if (isScience) instruction += ` Occasionally generate a 'data_set' group block with experimental data mapped to 3 questions. Use clear 'diagram_url' placeholders where visually required for biological illustrations.`;
 
     const prompt = `You are an elite, highly-paid Examination Setter for ${exam} ${subject}.
 Topic: ${topic}
@@ -240,7 +258,7 @@ Command: ${instruction}
 
 ${fewShotExample}
 
-Deliver purely factual, perfectly formatted psychometric evaluations following the schema explicitly.`;
+Deliver purely factual, perfectly formatted psychometric evaluations following the schema explicitly. Use diagram_type and diagram_svg/diagram_url whenever a visual aid improves the educational quality.`;
 
     try {
         const response = await ai.models.generateContent({
@@ -251,8 +269,10 @@ Deliver purely factual, perfectly formatted psychometric evaluations following t
                 responseSchema: generationSchema,
                 temperature: 0.8,
             }
-        });
-        const items = JSON.parse(response.text);
+        }, { timeout: 30000 }); // Explicit 30s timeout for stability
+        
+        const text = response.text;
+        const items = JSON.parse(text);
         if (Array.isArray(items)) return items;
         return [];
     } catch (error) {
@@ -280,8 +300,11 @@ async function turboCharge() {
 
     Object.keys(syllabus).forEach(exam => {
         if (exam === 'NECO') return; // Pause NECO as per user request
+        if (TARGET_EXAM && exam !== TARGET_EXAM) return; // Targeted Filter
         
         Object.keys(syllabus[exam]).forEach(subject => {
+            if (TARGET_SUBJECTS && TARGET_SUBJECTS.length > 0 && !TARGET_SUBJECTS.includes(subject)) return; // Targeted Filter
+            
             syllabus[exam][subject].forEach(topic => {
                 combinations.push({ 
                     exam, 

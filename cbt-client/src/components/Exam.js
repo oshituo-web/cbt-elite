@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { sanitizeContent } from '../utils/sanitize'
 import { TimerService } from '../services/TimerService'
 import { ExamSessionManager } from '../services/ExamSessionManager'
 import { QuestionRenderer } from '../services/QuestionRenderer'
@@ -52,11 +53,39 @@ export class Exam {
     }
 
     this.initialTime = initialTime
+    this.remainingTime = initialTime
   }
 
-  async render(onFinish, onBack) {
+  saveState() {
+    if (this.isReviewMode) return
+    const state = {
+      questions: this.session.questions,
+      userAnswers: this.session.userAnswers,
+      currentIndex: this.session.currentIndex,
+      remainingTime: TimerService.getRemainingTime(),
+      subject: this.subject,
+      examType: this.examType,
+      mode: this.mode,
+      activeJambSubject: this.activeJambSubject,
+      timestamp: Date.now()
+    }
+    localStorage.setItem('cbt_active_exam', JSON.stringify(state))
+  }
+
+  static clearState() {
+    localStorage.removeItem('cbt_active_exam')
+  }
+
+  async render(onFinish, onBack, resumeState = null) {
     const container = document.getElementById('exam-container')
     container.style.display = 'block'
+    
+    if (resumeState) {
+      this.session.userAnswers = resumeState.userAnswers || {}
+      this.session.currentIndex = resumeState.currentIndex || 0
+      this.activeJambSubject = resumeState.activeJambSubject || this.activeJambSubject
+      this.remainingTime = resumeState.remainingTime || this.initialTime
+    }
     
     container.innerHTML = `
       <div class="exam-layout">
@@ -66,6 +95,7 @@ export class Exam {
             <button id="exam-back-btn" class="btn-secondary" style="padding: 0.4rem 0.6rem; border-radius: 8px; margin-right: 0.5rem;" title="Go Back">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
+            <button id="mobile-map-toggle" class="btn-secondary mobile-only" style="padding: 0.4rem 0.6rem; border-radius: 8px; margin-right: 0.5rem; font-size: 0.8rem;" title="Question Map">🗺️ Map</button>
             <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">...</span>
             <span id="display-subject" class="subject-title">...</span>
           </div>
@@ -112,8 +142,9 @@ export class Exam {
             </div>
           </div>
 
-          <!-- Sidebar Navigation -->
-          <div class="exam-sidebar glass">
+          <!-- Sidebar Navigation for Desktop and Drawer for Mobile -->
+          <div class="drawer-overlay" id="exam-drawer-overlay"></div>
+          <div class="exam-sidebar glass" id="exam-sidebar">
             <div style="font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;">Question Map</div>
             <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;"></div>
             
@@ -192,11 +223,13 @@ export class Exam {
 
     // Start Services
     if (!this.isReviewMode && this.mode !== 'saved') {
-      TimerService.start(this.initialTime, (time) => {
+      TimerService.start(this.remainingTime, (time) => {
         const timerDiv = document.getElementById('timer')
         if (timerDiv) {
           timerDiv.textContent = TimerService.formatTime(time)
           if (time <= 300) timerDiv.style.color = 'var(--error)'
+          // Save state every 30 seconds to persist timer
+          if (time % 30 === 0) this.saveState()
         }
       }, () => this.finish(onFinish, true))
 
@@ -299,6 +332,20 @@ export class Exam {
       }
     }
 
+    const mapToggle = document.getElementById('mobile-map-toggle')
+    const sidebar = document.getElementById('exam-sidebar')
+    const overlay = document.getElementById('exam-drawer-overlay')
+    if (mapToggle && sidebar && overlay) {
+      mapToggle.onclick = () => {
+        sidebar.classList.add('drawer-open')
+        overlay.classList.add('drawer-open')
+      }
+      overlay.onclick = () => {
+        sidebar.classList.remove('drawer-open')
+        overlay.classList.remove('drawer-open')
+      }
+    }
+
     document.querySelectorAll('.calc-btn').forEach(btn => {
       btn.onclick = () => this.handleCalculator(btn.dataset.val)
     })
@@ -393,7 +440,7 @@ export class Exam {
         
         // Preserve line breaks for passages
         const formattedContent = q.question_groups.content.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
-        groupContentDiv.innerHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${formattedContent}</div>`
+        groupContentDiv.innerHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${sanitizeContent(formattedContent)}</div>`
     } else {
         groupContentDiv.style.display = 'none'
         groupContentDiv.innerHTML = ''
@@ -401,9 +448,21 @@ export class Exam {
 
     // Diagram Handling
     const diagramDiv = document.getElementById('q-diagram')
-    if (q.diagram_url) {
+    if (q.diagram_type === 'svg' && q.diagram_svg) {
         diagramDiv.style.display = 'block'
-        diagramDiv.innerHTML = `<div class="diagram-container"><img src="${q.diagram_url}" alt="Question Diagram" class="blur-up" onload="this.classList.add('loaded')"></div>`
+        // Sanitize check: Ensure it's reasonably clean SVG
+        const cleanSvg = q.diagram_svg.includes('<svg') ? q.diagram_svg : `<svg viewBox="0 0 400 300">${q.diagram_svg}</svg>`
+        diagramDiv.innerHTML = `
+          <div class="diagram-container svg-diagram" style="background: #fff; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: center;">
+            ${cleanSvg}
+          </div>`
+    } else if (q.diagram_url) {
+        diagramDiv.style.display = 'block'
+        const isGraph = q.diagram_type === 'graph'
+        diagramDiv.innerHTML = `
+          <div class="diagram-container ${isGraph ? 'graph-diagram' : ''}" style="margin-bottom: 1.5rem; text-align: center;">
+            <img src="${q.diagram_url}" alt="Question Diagram" class="blur-up" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onload="this.classList.add('loaded')">
+          </div>`
     } else {
         diagramDiv.style.display = 'none'
     }
@@ -425,7 +484,7 @@ export class Exam {
     
     // Create text node for question
     const textSpan = document.createElement('span')
-    textSpan.textContent = q.question_text || q.question
+    textSpan.innerHTML = sanitizeContent(q.question_text || q.question)
     
     qTextDiv.appendChild(numberSpan)
     qTextDiv.appendChild(textSpan)
@@ -440,6 +499,7 @@ export class Exam {
       if (theoryInput) {
         theoryInput.oninput = (e) => {
           this.session.setAnswer(this.session.currentIndex, e.target.value)
+          this.saveState()
           this.renderSidebar()
         }
         theoryInput.onpaste = (e) => {
@@ -455,6 +515,7 @@ export class Exam {
         document.querySelectorAll('.option-btn').forEach(btn => {
           btn.onclick = () => {
             this.session.setAnswer(this.session.currentIndex, btn.dataset.id)
+            this.saveState()
             this.updateUI()
             this.renderSidebar()
           }
@@ -472,17 +533,17 @@ export class Exam {
           <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">Grading Details:</div>
           <div style="margin-bottom: 1rem;">
               <strong style="color: var(--success);">Model Answer:</strong>
-              <p style="margin-top: 0.25rem;">${q.model_answer}</p>
+              <p style="margin-top: 0.25rem;">${sanitizeContent(q.model_answer || '')}</p>
           </div>
           <div>
               <strong style="color: var(--accent-secondary);">AI Feedback (Score: ${graded.score || 0}/5):</strong>
-              <p style="margin-top: 0.25rem;">${graded.feedback || 'Wait for grading...'}</p>
+              <p style="margin-top: 0.25rem;">${sanitizeContent(graded.feedback || 'Wait for grading...')}</p>
           </div>
         `
       } else {
         expDiv.innerHTML = `
           <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">Explanation:</div>
-          <div style="color: var(--text-secondary);">${q.explanation || 'No explanation available for this question.'}</div>
+          <div style="color: var(--text-secondary);">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
         `
       }
     } else {
@@ -584,7 +645,13 @@ export class Exam {
       const idx = e.target.dataset.index
       if (idx !== undefined) {
         this.session.currentIndex = parseInt(idx)
+        this.saveState()
         this.updateUI()
+        // Close mobile drawer on selection
+        const sidebar = document.getElementById('exam-sidebar')
+        const overlay = document.getElementById('exam-drawer-overlay')
+        if (sidebar) sidebar.classList.remove('drawer-open')
+        if (overlay) overlay.classList.remove('drawer-open')
       }
     }
 
@@ -669,11 +736,11 @@ export class Exam {
 export const ExamComponent = {
   _instance: null,
 
-  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null) {
+  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null) {
     this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers)
     return this._instance.render((userAnswers, timeTaken, actualQuestions) => {
         if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions)
-    }, onBack)
+    }, onBack, resumeState)
   },
 
   hide() {
