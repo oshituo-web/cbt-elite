@@ -38,28 +38,28 @@ export const DashboardComponent = {
         <div id="feature-carousel" class="glass card" style="position: relative; overflow: hidden; margin-bottom: 2rem; height: 180px; border: none; padding: 0;">
           <div id="carousel-slides" style="display: flex; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
              <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                <img src="src/img/app_tour_analysis.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <img src="/img/app_tour_analysis.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
                   <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Topic-Based Analysis</h3>
                   <p style="color: #e2e8f0; font-size: 0.8rem;">Master every subject with granular performance tracking.</p>
                 </div>
              </div>
              <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                <img src="src/img/app_tour_ai_tutor.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <img src="/img/app_tour_ai_tutor.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
                   <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">AI-Powered Insights</h3>
                   <p style="color: #e2e8f0; font-size: 0.8rem;">Located in 'Performance Insights' – get deep analysis on weak points.</p>
                 </div>
              </div>
              <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                <img src="src/img/testimonial_avatars.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <img src="/img/testimonial_avatars.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
                   <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Success Stories</h3>
                   <p style="color: #e2e8f0; font-size: 0.8rem;">Join thousands of students who aced JAMB & WAEC with CBT Elite.</p>
                 </div>
              </div>
              <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                <img src="src/img/app_tour_exam_setup.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <img src="/img/app_tour_exam_setup.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
                   <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Guided Professional Prep</h3>
                   <p style="color: #e2e8f0; font-size: 0.8rem;">Captions and snapshots to help you navigate the app effortlessly.</p>
@@ -732,10 +732,15 @@ export const DashboardComponent = {
 
     // Get current theme colors
     const style = getComputedStyle(document.body)
+    const isLightMode = document.body.classList.contains('light-mode')
+    
     const textPrimary = style.getPropertyValue('--text-primary').trim() || '#F9FAFB'
     const successColor = style.getPropertyValue('--success').trim() || '#10B981'
     const primaryColor = style.getPropertyValue('--primary').trim() || '#2563EB'
     const borderColor = style.getPropertyValue('--border-color').trim() || '#334155'
+    
+    // Grid color logic for better contrast in light mode
+    const chartGridColor = isLightMode ? 'rgba(0,0,0,0.15)' : borderColor + '4D'
 
     // 1. Score History Chart
     const historyCtx = document.getElementById('score-history-chart').getContext('2d')
@@ -747,12 +752,12 @@ export const DashboardComponent = {
           label: 'Score %',
           data: history.map(h => h.score_percentage),
           borderColor: successColor,
-          backgroundColor: successColor + '1A', // 10% opacity
+          backgroundColor: isLightMode ? successColor + '33' : successColor + '1A', 
           fill: true,
           tension: 0.4,
           borderWidth: 3,
           pointRadius: 4,
-          pointBackgroundColor: '#fff'
+          pointBackgroundColor: isLightMode ? successColor : '#fff'
         }]
       },
       options: {
@@ -760,17 +765,19 @@ export const DashboardComponent = {
         plugins: { 
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1E293B',
-            titleColor: '#F9FAFB',
-            bodyColor: '#CBD5F5'
+            backgroundColor: isLightMode ? '#fff' : '#1E293B',
+            titleColor: isLightMode ? '#111827' : '#F9FAFB',
+            bodyColor: isLightMode ? '#4B5563' : '#CBD5F5',
+            borderColor: isLightMode ? '#E5E7EB' : 'transparent',
+            borderWidth: 1
           }
         },
         scales: {
           y: { 
             beginAtZero: true, 
             max: 100, 
-            grid: { color: borderColor + '4D' }, // 30% opacity
-            ticks: { color: textPrimary }
+            grid: { color: chartGridColor }, 
+            ticks: { color: textPrimary, font: { weight: 'bold' } }
           },
           x: { 
             grid: { display: false }, 
@@ -789,10 +796,12 @@ export const DashboardComponent = {
         datasets: [{
           label: 'Mastery %',
           data: mastery.map(m => m.average),
-          backgroundColor: primaryColor + '33', // 20% opacity
+          backgroundColor: isLightMode ? primaryColor + '4D' : primaryColor + '33', // 30% vs 20%
           borderColor: primaryColor,
-          borderWidth: 2,
-          pointBackgroundColor: primaryColor
+          borderWidth: 3,
+          pointBackgroundColor: primaryColor,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1
         }]
       },
       options: {
@@ -800,9 +809,13 @@ export const DashboardComponent = {
         plugins: { legend: { display: false } },
         scales: {
           r: {
-            angleLines: { color: borderColor + '4D' },
-            grid: { color: borderColor + '4D' },
-            pointLabels: { color: textPrimary, font: { size: 11, weight: 'bold' } },
+            angleLines: { color: chartGridColor },
+            grid: { color: chartGridColor },
+            pointLabels: { 
+              color: textPrimary, 
+              font: { size: 12, weight: 'bold' },
+              padding: 10
+            },
             ticks: { display: false },
             suggestedMin: 0,
             suggestedMax: 100
