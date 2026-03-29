@@ -6,10 +6,10 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 async function makeAdmin() {
     const emailToFind = 'oshituo@gmail.com';
     
-    console.log(`Updating ${emailToFind} to admin...`);
+    console.log(`Updating ${emailToFind} to super-admin...`);
     const { data, error } = await supabase
         .from('users')
-        .update({ role: 'admin' })
+        .update({ role: 'super-admin' })
         .eq('email', emailToFind)
         .select();
 

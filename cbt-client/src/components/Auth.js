@@ -59,9 +59,9 @@ export const AuthComponent = {
 
     toggleBtn.onclick = () => {
       isSignUp = !isSignUp
-      document.getElementById('auth-title').textContent = isSignUp ? 'Create Elite Account' : 'Welcome Back'
-      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Join thousands of students practicing for success' : 'Log in to your CBT practice account'
-      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Create Account & Sign Up' : 'Login'
+      document.getElementById('auth-title').textContent = isSignUp ? 'Create CBT Elite Account' : 'Welcome Back'
+      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Join thousands of students practicing for success in JAMB, WAEC & NECO.' : 'Log in to your CBT practice account'
+      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Start My Success Journey' : 'Login'
       toggleBtn.textContent = isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'
       
       forgotLink.style.display = isSignUp ? 'none' : 'block'

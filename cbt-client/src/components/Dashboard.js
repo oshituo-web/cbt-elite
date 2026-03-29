@@ -18,19 +18,98 @@ export const DashboardComponent = {
         <h1 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-primary);">CBT Elite</h1>
 
         <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem;">
+          <button id="help-guide-btn" class="glass" style="padding: 0; font-size: 1.25rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-secondary); color: var(--accent-secondary);">❔</button>
           <button id="theme-toggle" class="glass" style="padding: 0; font-size: 1.25rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">🌓</button>
           ${(profile.role !== 'student' || profile.username === 'tester') ? '<button id="admin-panel-btn" class="btn-admin">Admin Control</button>' : ''}
           <div style="display: flex; gap: 1rem; align-items: center;">
+            <div id="user-tier-badge" style="padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background: ${profile.tier === 'premium' ? 'var(--accent-secondary)' : 'var(--border-color)'}; color: white;">
+              ${profile.tier || 'FREE'}
+            </div>
             <span style="font-size: 0.875rem;">Welcome, <strong>${profile.username}</strong></span>
+            ${profile.tier !== 'premium' ? '<button id="upgrade-btn" class="primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px;">✨ Upgrade</button>' : ''}
             <button id="logout-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</button>
           </div>
         </div>
       </header>
 
       <div id="dashboard-content" style="margin-top: 2rem;">
+        
+        <!-- Feature Carousel -->
+        <div id="feature-carousel" class="glass card" style="position: relative; overflow: hidden; margin-bottom: 2rem; height: 180px; border: none; padding: 0;">
+          <div id="carousel-slides" style="display: flex; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+             <div class="carousel-slide" style="min-width: 100%; position: relative;">
+                <img src="src/img/app_tour_analysis.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                  <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Topic-Based Analysis</h3>
+                  <p style="color: #e2e8f0; font-size: 0.8rem;">Master every subject with granular performance tracking.</p>
+                </div>
+             </div>
+             <div class="carousel-slide" style="min-width: 100%; position: relative;">
+                <img src="src/img/app_tour_ai_tutor.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                  <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">AI-Powered Insights</h3>
+                  <p style="color: #e2e8f0; font-size: 0.8rem;">Located in 'Performance Insights' – get deep analysis on weak points.</p>
+                </div>
+             </div>
+             <div class="carousel-slide" style="min-width: 100%; position: relative;">
+                <img src="src/img/testimonial_avatars.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                  <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Success Stories</h3>
+                  <p style="color: #e2e8f0; font-size: 0.8rem;">Join thousands of students who aced JAMB & WAEC with CBT Elite.</p>
+                </div>
+             </div>
+             <div class="carousel-slide" style="min-width: 100%; position: relative;">
+                <img src="src/img/app_tour_exam_setup.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.4;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                  <h3 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">Guided Professional Prep</h3>
+                  <p style="color: #e2e8f0; font-size: 0.8rem;">Captions and snapshots to help you navigate the app effortlessly.</p>
+                </div>
+             </div>
+          </div>
+          <div style="position: absolute; top: 50%; transform: translateY(-50%); width: 100%; display: flex; justify-content: space-between; padding: 0 0.5rem; pointer-events: none;">
+            <button id="prev-slide" class="glass" style="width: 32px; height: 32px; border-radius: 50%; pointer-events: auto; cursor: pointer; border: 1px solid var(--glass-border); font-size: 0.8rem;">←</button>
+            <button id="next-slide" class="glass" style="width: 32px; height: 32px; border-radius: 50%; pointer-events: auto; cursor: pointer; border: 1px solid var(--glass-border); font-size: 0.8rem;">→</button>
+          </div>
+        </div>
+
+        <!-- News Section -->
+        <div class="glass card" style="margin-bottom: 2rem; padding: 1.25rem; overflow: hidden; background: var(--bg-secondary)4D;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+              🔔 Latest Exam News
+            </h3>
+            <span style="font-size: 0.6rem; text-transform: uppercase; color: var(--accent-primary); font-weight: 800; letter-spacing: 0.05em;">Auto-updating</span>
+          </div>
+          <div id="news-ticker-container" style="height: 60px; position: relative;">
+            <div id="news-ticker" style="position: absolute; width: 100%; transition: top 0.5s ease-in-out; top: 0;">
+              <div class="news-item" style="padding: 0.75rem; border-radius: 8px; background: var(--bg-secondary); margin-bottom: 0.5rem; border-left: 4px solid var(--accent-primary); cursor: pointer;">
+                <p style="font-size: 0.75rem; margin-top: 0.25rem;"><strong style="color: var(--accent-primary);">JAMB 2026:</strong> Registration starts Jan 15th. Ensure NIN has been updated for verification.</p>
+              </div>
+              <div class="news-item" style="padding: 0.75rem; border-radius: 8px; background: var(--bg-secondary); margin-bottom: 0.5rem; border-left: 4px solid var(--accent-secondary); cursor: pointer;">
+                <p style="font-size: 0.75rem; margin-top: 0.25rem;"><strong style="color: var(--accent-secondary);">WAEC Timetable:</strong> Official Timetable available. Practice kicks off early April.</p>
+              </div>
+              <div class="news-item" style="padding: 0.75rem; border-radius: 8px; background: var(--bg-secondary); margin-bottom: 0.5rem; border-left: 4px solid var(--success); cursor: pointer;">
+                <p style="font-size: 0.75rem; margin-top: 0.25rem;"><strong style="color: var(--success);">NECO Registration:</strong> Schools to upload data before March 30th deadline.</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="dashboard-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
           <button id="view-practice" class="nav-tab active" style="flex: 1;">🎯 Practice Mode</button>
           <button id="view-exam" class="nav-tab" style="flex: 1;">🏆 Exam Mode</button>
+        </div>
+
+        <div id="resume-container" style="display: none; margin-bottom: 2rem;">
+          <div class="glass card" style="border-left: 4px solid var(--accent-secondary); background: var(--bg-secondary); display: flex; justify-content: space-between; align-items: center; padding: 1.5rem;">
+            <div>
+              <h3 style="margin-bottom: 0.25rem;">Resume Unfinished Session</h3>
+              <p id="resume-info" style="font-size: 0.85rem; color: var(--text-secondary);">You have a pending exam from 2 minutes ago.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <button id="discard-resume" class="btn-secondary" style="font-size: 0.8rem;">Discard</button>
+              <button id="confirm-resume" class="btn-primary">Resume Now</button>
+            </div>
+          </div>
         </div>
 
         <!-- Practice Mode Section -->
@@ -159,6 +238,80 @@ export const DashboardComponent = {
           </div>
         </div>
       </div>
+
+      <!-- Leaderboard Modal -->
+      <div id="leaderboard-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2rem;">
+          <button id="close-leaderboard" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 1.5rem; text-align: center; color: var(--accent-primary);">🏆 Global Rankings</h2>
+          <div id="leaderboard-list" style="margin-top: 1rem;">
+            <!-- Leaderboard items will be injected here -->
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading rankings...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade Modal -->
+      <div id="upgrade-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-content glass" style="max-width: 450px; width: 100%; position: relative; padding: 2.5rem; text-align: center;">
+          <button id="close-upgrade" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; color: var(--accent-secondary);">Go Premium</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">Unlock the complete curriculum, unlimited AI explanations, and theory grading.</p>
+          
+          <div class="glass" style="padding: 1.5rem; border: 2px solid var(--accent-secondary); border-radius: 12px; margin-bottom: 2rem; background: var(--accent-secondary)0D;">
+             <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">BEST VALUE</div>
+             <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit';">₦2,500 <span style="font-size: 1rem; font-weight: 400; opacity: 0.7;">/ lifetime</span></div>
+             <ul style="text-align: left; margin: 1rem 0; font-size: 0.85rem; padding-left: 1rem;">
+               <li>📌 Full Access to JAMB/WAEC/NECO</li>
+               <li>🤖 500 AI Assistant Credits</li>
+               <li>📈 Advanced Mastery Analytics</li>
+             </ul>
+          </div>
+          
+          <button id="paystack-btn" class="primary" style="width: 100%; padding: 1rem; font-size: 1rem;">Secure Upgrade with Paystack</button>
+          <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 1rem;">Instant activation upon successful payment.</p>
+        </div>
+      </div>
+
+      <!-- Help & Guide Modal -->
+      <div id="help-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
+        <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2.5rem; max-height: 85vh; overflow-y: auto;">
+          <button id="close-help" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 2rem; text-align: center; color: var(--accent-primary);">📖 How to Use CBT Elite</h2>
+          
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem; align-items: center; background: var(--bg-secondary)33; padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+               <img src="src/img/app_tour_exam_setup.png" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px;">
+               <div>
+                  <h4 style="color: var(--accent-secondary); margin-bottom: 0.25rem; font-size: 0.9rem;">🎯 Start Practice</h4>
+                  <p style="font-size: 0.75rem; opacity: 0.8;">Choose a subject, select a specific topic, and focus on mastering concepts.</p>
+               </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem; align-items: center; background: var(--bg-secondary)33; padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+               <img src="src/img/app_tour_ai_tutor.png" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px;">
+               <div>
+                  <h4 style="color: var(--primary); margin-bottom: 0.25rem; font-size: 0.9rem;">🏆 Mock Exams</h4>
+                  <p style="font-size: 0.75rem; opacity: 0.8;">Simulate real conditions. JAMB mocks include English and 3 chosen subjects.</p>
+               </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem; align-items: center; background: var(--bg-secondary)33; padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+               <img src="src/img/app_tour_analysis.png" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px;">
+               <div>
+                  <h4 style="color: var(--success); margin-bottom: 0.25rem; font-size: 0.9rem;">📈 Performance</h4>
+                  <p style="font-size: 0.75rem; opacity: 0.8;">Track subject mastery via the radar chart and score growth via the line chart below.</p>
+               </div>
+            </div>
+
+            <div style="background: var(--accent-secondary)1A; padding: 1.25rem; border-radius: 12px; border: 1px dashed var(--accent-secondary);">
+               <h4 style="font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--accent-secondary);">💡 Pro Tip: AI Explanations</h4>
+               <p style="font-size: 0.75rem; opacity: 0.8; line-height: 1.4;">During any practice session, click the AI icon for a detailed step-by-step breakdown of the solution!</p>
+            </div>
+          </div>
+        </div>
+      </div>
     `
 
 
@@ -191,6 +344,49 @@ export const DashboardComponent = {
 
     if (document.getElementById('admin-panel-btn')) {
       document.getElementById('admin-panel-btn').onclick = () => this.onOpenAdmin()
+    }
+
+    const upgradeBtn = document.getElementById('upgrade-btn')
+    const upgradeModal = document.getElementById('upgrade-modal')
+    const closeUpgrade = document.getElementById('close-upgrade')
+    const payBtn = document.getElementById('paystack-btn')
+
+    if (upgradeBtn) {
+       upgradeBtn.onclick = () => upgradeModal.style.display = 'flex'
+    }
+    if (closeUpgrade) {
+       closeUpgrade.onclick = () => upgradeModal.style.display = 'none'
+    }
+
+    if (payBtn) {
+      payBtn.onclick = () => {
+        // IMPORTANT: USER should update this KEY in settings or env
+        const PAYSTACK_PUBLIC_KEY = 'pk_test_placeholder_key_replace_me' 
+        
+        const handler = PaystackPop.setup({
+          key: PAYSTACK_PUBLIC_KEY,
+          email: profile.email,
+          amount: 250000, // 2500 Naira
+          currency: 'NGN',
+          callback: async (response) => {
+            payBtn.disabled = true
+            payBtn.textContent = 'Verifying Transaction...'
+            
+            // Logic: Upgrade user upon success
+            const { error } = await DataService.upgradeUserTier(profile.id, 'premium', 500)
+            if (!error) {
+               alert("✨ Congratulations! Your account has been upgraded to PREMIUM.")
+               location.reload()
+            } else {
+               alert("Upgrade synchronization failed. Please contact support with ref: " + response.reference)
+            }
+          },
+          onClose: () => {
+            alert('Transaction cancelled. Your practice session remains free tier.')
+          }
+        });
+        handler.openIframe();
+      }
     }
 
     // State for selections
@@ -375,9 +571,82 @@ export const DashboardComponent = {
         }
 
         // Leaderboard
-        document.getElementById('view-leaderboard').onclick = async () => {
-            const { data } = await DataService.getLeaderboard()
-            if (data) alert("Leaderboard feature active! Top player: " + (data[0]?.users?.username || 'N/A'))
+        const leaderboardBtn = document.getElementById('view-leaderboard')
+        const leaderboardModal = document.getElementById('leaderboard-modal')
+        const leaderboardList = document.getElementById('leaderboard-list')
+        const closeLeaderboard = document.getElementById('close-leaderboard')
+
+        // Resume Session Logic
+        const resumeContainer = document.getElementById('resume-container')
+        const savedStateJson = localStorage.getItem('cbt_active_exam')
+        if (savedStateJson) {
+           try {
+             const state = JSON.parse(savedStateJson)
+             // Only show if it's less than 24 hours old
+             if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
+                resumeContainer.style.display = 'block'
+                const timeAgo = Math.round((Date.now() - state.timestamp) / 60000)
+                document.getElementById('resume-info').textContent = `${state.examType} ${state.mode}: Last activity ${timeAgo}m ago.`
+                
+                document.getElementById('confirm-resume').onclick = () => {
+                  this.onStartExam(state.questions, state.mode, state.subject, state.examType, state, false)
+                }
+                
+                document.getElementById('discard-resume').onclick = () => {
+                   localStorage.removeItem('cbt_active_exam')
+                   resumeContainer.style.display = 'none'
+                }
+             } else {
+               localStorage.removeItem('cbt_active_exam')
+             }
+           } catch(e) { 
+             localStorage.removeItem('cbt_active_exam')
+           }
+        }
+
+        leaderboardBtn.onclick = async () => {
+          leaderboardModal.style.display = 'flex'
+          leaderboardList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading rankings...</div>'
+          
+          const { data, error } = await DataService.getLeaderboard()
+          if (error || !data || data.length === 0) {
+            leaderboardList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">No rankings available yet. Be the first!</div>'
+            return
+          }
+
+          leaderboardList.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--glass-border); text-align: left; color: var(--text-secondary); font-size: 0.8rem;">
+                  <th style="padding: 0.75rem;">RANK</th>
+                  <th style="padding: 0.75rem;">USER</th>
+                  <th style="padding: 0.75rem; text-align: right;">QUESTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map((entry, i) => `
+                  <tr style="border-bottom: 1px solid var(--glass-border); ${entry.users?.username === profile.username ? 'background: var(--primary)1A;' : ''}">
+                    <td style="padding: 1rem; font-weight: 700;">#${i + 1}</td>
+                    <td style="padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                      <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-secondary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">
+                        ${(entry.users?.username || 'U').substring(0, 1).toUpperCase()}
+                      </div>
+                      <span style="font-weight: 500;">${entry.users?.username || 'Unknown User'}</span>
+                    </td>
+                    <td style="padding: 1rem; text-align: right; font-weight: 600;">${entry.total_questions_answered.toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `
+        }
+
+        closeLeaderboard.onclick = () => {
+          leaderboardModal.style.display = 'none'
+        }
+        
+        window.onclick = (e) => {
+          if (e.target === leaderboardModal) leaderboardModal.style.display = 'none'
         }
 
         // Phase 3: Charts
@@ -388,12 +657,78 @@ export const DashboardComponent = {
       }
     }
 
+    // Help Modal Logic
+    const helpBtn = document.getElementById('help-guide-btn')
+    const helpModal = document.getElementById('help-modal')
+    const helpClose = document.getElementById('close-help')
+    if (helpBtn) helpBtn.onclick = () => helpModal.style.display = 'flex'
+    if (helpClose) helpClose.onclick = () => helpModal.style.display = 'none'
+
+    // Feature Carousel Logic
+    const carouselSlides = document.getElementById('carousel-slides')
+    const slides = document.querySelectorAll('.carousel-slide')
+    const nextBtn = document.getElementById('next-slide')
+    const prevBtn = document.getElementById('prev-slide')
+    let currentSlide = 0
+
+    const updateCarousel = () => {
+      if (!carouselSlides) return
+      carouselSlides.style.transform = `translateX(-${currentSlide * 100}%)`
+    }
+
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        currentSlide = (currentSlide + 1) % slides.length
+        updateCarousel()
+      }
+    }
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length
+        updateCarousel()
+      }
+    }
+
+    // Auto-slide carousel
+    const carouselInterval = setInterval(() => {
+      currentSlide = (currentSlide + 1) % slides.length
+      updateCarousel()
+    }, 5000)
+
+    // News Ticker Logic
+    const ticker = document.getElementById('news-ticker')
+    const newsItems = document.querySelectorAll('.news-item')
+    let currentNews = 0
+
+    const updateTicker = () => {
+      if (!ticker) return
+      ticker.style.top = `-${currentNews * 65}px` // ~65px height step
+      currentNews = (currentNews + 1) % newsItems.length
+    }
+
+    const tickerInterval = setInterval(updateTicker, 4000)
+
+    // Logic for news item clicks
+    newsItems.forEach(item => {
+      item.onclick = () => {
+        alert("Exam News Detail: " + item.innerText)
+      }
+    })
+
+    // Store intervals for cleanup if necessary (though Dashboard is mostly persistent)
+    this.activeIntervals = [carouselInterval, tickerInterval]
+
     initData()
   },
 
   async renderCharts(userId) {
     const { history, mastery, error } = await DataService.getUserAnalytics(userId)
-    if (error) return
+    if (error || (!history.length && !mastery.length)) {
+      // Show empty state if no data
+      document.getElementById('analytics-section').style.opacity = '0.5'
+      return
+    }
+    document.getElementById('analytics-section').style.opacity = '1'
 
     // Get current theme colors
     const style = getComputedStyle(document.body)

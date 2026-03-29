@@ -272,15 +272,33 @@ async function turboCharge() {
     const topicsData = JSON.parse(fs.readFileSync('topics.json', 'utf8'));
 
     const combinations = [];
+    const coverageReport = JSON.parse(fs.readFileSync('coverage_report.json', 'utf8'));
+    const coverageMap = {};
+    coverageReport.forEach(item => {
+        coverageMap[`${item.exam}|${item.subject}|${item.topic}`] = item.count;
+    });
+
     Object.keys(syllabus).forEach(exam => {
+        if (exam === 'NECO') return; // Pause NECO as per user request
+        
         Object.keys(syllabus[exam]).forEach(subject => {
             syllabus[exam][subject].forEach(topic => {
-                combinations.push({ exam, subject, topic });
+                combinations.push({ 
+                    exam, 
+                    subject, 
+                    topic, 
+                    currentCount: coverageMap[`${exam}|${subject}|${topic}`] || 0 
+                });
             });
         });
     });
 
-    combinations.sort(() => Math.random() - 0.5);
+    // Strategy: Prioritize "New Topics" (count: 0) first
+    combinations.sort((a, b) => {
+        if (a.currentCount === 0 && b.currentCount > 0) return -1;
+        if (a.currentCount > 0 && b.currentCount === 0) return 1;
+        return Math.random() - 0.5; // Shuffle within same priority
+    });
 
     let generatedSessionCount = 0;
     let comboIndex = 0;
