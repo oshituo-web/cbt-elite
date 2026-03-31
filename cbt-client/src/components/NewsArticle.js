@@ -7,10 +7,7 @@ export const NewsArticleComponent = {
       container = document.createElement('div')
       container.id = this.containerId
       container.className = 'fade-in'
-      container.style.maxWidth = '800px'
-      container.style.margin = '0 auto'
-      container.style.padding = '0 1rem 2rem 1rem'
-      document.body.appendChild(container)
+      document.getElementById('app').appendChild(container)
     }
 
     container.style.display = 'block'
@@ -35,13 +32,13 @@ export const NewsArticleComponent = {
     }
 
     container.innerHTML = `
-      <div style="margin-top: 2rem; margin-bottom: 2rem;">
-        <button id="back-to-dashboard-btn" class="glass" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--glass-border); transition: all 0.2s ease;">
-          ← Back to Dashboard
+      <div style="margin-top: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+        <button id="back-to-dashboard-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+          ← <span class="nav-text">Back to Dashboard</span>
         </button>
       </div>
       
-      <article class="glass card" style="padding: 2.5rem; border-top: 6px solid var(--accent-primary);">
+      <article class="news-article-card" style="border-top: 6px solid var(--accent-primary);">
         <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
             <span style="background: var(--accent-primary)1A; color: var(--accent-primary); padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase;">
                 ${article.category || 'EXAM UPDATE'}
@@ -51,12 +48,12 @@ export const NewsArticleComponent = {
             </span>
         </div>
         
-        <h1 style="font-family: 'Outfit'; font-size: 2.25rem; line-height: 1.2; margin-bottom: 2rem; color: var(--text-primary);">
+        <h1 class="news-article-title">
             ${article.title}
         </h1>
         
         ${article.attachment_url ? `
-        <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid var(--accent-primary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div class="attachment-box" style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid var(--accent-primary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--accent-primary); margin-bottom: 0.25rem;">📎 Attached Document</p>
                 <p style="font-size: 0.95rem; color: var(--text-primary);">${article.attachment_name || 'Official Exam Document'}</p>
