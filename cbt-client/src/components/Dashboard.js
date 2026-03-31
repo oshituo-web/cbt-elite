@@ -386,13 +386,17 @@ export const DashboardComponent = {
             📊 Performance Insights
           </h2>
           <div class="analytics-grid">
-            <div class="glass card" style="padding: 1.5rem;">
-              <h4 style="margin-bottom: 1rem; color: var(--accent-primary);">Score History (Last 20 Sessions)</h4>
-              <canvas id="score-history-chart" height="250"></canvas>
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+              <h4 style="margin-bottom: 1.25rem; color: var(--accent-primary); font-size: 0.9rem;">Score History (Past 50 Sessions)</h4>
+              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="score-history-chart" style="width: 100% !important; height: auto !important;"></canvas>
+              </div>
             </div>
-            <div class="glass card" style="padding: 1.5rem;">
-              <h4 style="margin-bottom: 1rem; color: var(--success);">Subject Mastery (%)</h4>
-              <canvas id="subject-mastery-chart" height="250"></canvas>
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+              <h4 style="margin-bottom: 1.25rem; color: var(--success); font-size: 0.9rem;">Subject Mastery (%)</h4>
+              <div style="flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 400px; margin: 0 auto;"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -997,9 +1001,12 @@ export const DashboardComponent = {
             angleLines: { color: chartGridColor },
             grid: { color: chartGridColor },
             pointLabels: { 
-              color: '#3B82F6', 
-              font: { size: 14, weight: '900' },
-              padding: 15
+              color: isLightMode ? '#2563EB' : '#3B82F6', 
+              font: { 
+                size: window.innerWidth < 600 ? 10 : 12, 
+                weight: 'bold' 
+              },
+              padding: window.innerWidth < 600 ? 10 : 15
             },
             ticks: { display: false },
             suggestedMin: 0,

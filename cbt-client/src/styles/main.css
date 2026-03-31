@@ -1185,3 +1185,4 @@ body.light-mode .option-btn .option-holder {
   }
 }
 
+@media (max-width: 600px) { .analytics-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; } .glass.card { padding: 1rem !important; } }

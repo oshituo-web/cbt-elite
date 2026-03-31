@@ -507,8 +507,8 @@ export const DataService = {
       .from('exam_sessions')
       .select('total_questions, correct_answers, created_at')
       .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-      .limit(20)
+      .order('created_at', { ascending: false })
+      .limit(50) // Increased limit to capture full day activity better
 
     const history = sessions ? sessions.map(s => ({
       total_questions: s.total_questions || 0,
@@ -594,6 +594,56 @@ export const DataService = {
     }
 
     return { data: { ...session, theoryResults }, error: null }
+  },
+
+  async syncPerformanceData(userId, sessionData, questions, userAnswers) {
+    try {
+      // 1. Group by Subject (Accuracy calculation)
+      const subStats = {}
+      questions.forEach((q, i) => {
+        const sub = q.subject || 'General'
+        if (!subStats[sub]) subStats[sub] = { total: 0, correct: 0 }
+        
+        subStats[sub].total++
+        if (q.question_type !== 'theory') {
+          const correctAns = q.answers?.find(a => a.is_correct)
+          if (userAnswers[i] === correctAns?.id) subStats[sub].correct++
+        }
+      })
+
+      // 2. Update Topic/Subject Mastery
+      for (const [sub, stats] of Object.entries(subStats)) {
+        const accuracy = Math.round((stats.correct / stats.total) * 100)
+        
+        // Fetch current mastery
+        const { data: current } = await supabase.from('topic_mastery').select('*').eq('user_id', userId).eq('subject', sub).maybeSingle()
+        
+        if (current) {
+          // Weighted Average (New Result = 30% weight, Old = 70%)
+          const newMastery = Math.round((current.mastery_percentage * 0.7) + (accuracy * 0.3))
+          await supabase.from('topic_mastery').update({ mastery_percentage: newMastery }).eq('id', current.id)
+        } else {
+          await supabase.from('topic_mastery').insert({ user_id: userId, subject: sub, mastery_percentage: accuracy })
+        }
+      }
+
+      // 3. Update Weekly Summary
+      const { data: summary } = await supabase.from('weekly_summaries').select('*').eq('user_id', userId).maybeSingle()
+      if (summary) {
+        await supabase.from('weekly_summaries').update({
+          total_questions_answered: (summary.total_questions_answered || 0) + sessionData.total_questions,
+          total_correct_answers: (summary.total_correct_answers || 0) + sessionData.correct_answers
+        }).eq('id', summary.id)
+      } else {
+        await supabase.from('weekly_summaries').insert({
+          user_id: userId,
+          total_questions_answered: sessionData.total_questions,
+          total_correct_answers: sessionData.correct_answers
+        })
+      }
+    } catch (err) {
+      console.error("Sync Performance Error:", err)
+    }
   },
 
   async submitTheoryAnswer(userId, questionId, userAnswer, sessionId) {
