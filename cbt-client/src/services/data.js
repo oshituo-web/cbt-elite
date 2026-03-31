@@ -99,6 +99,28 @@ export const DataService = {
     return await supabase.from('users').select('tier, created_at')
   },
 
+  async getQuestionReports() {
+    return await supabase
+      .from('question_reports')
+      .select('*, questions(question_text, id)')
+      .order('status', { ascending: false })
+      .order('created_at', { ascending: false })
+  },
+
+  async updateReportStatus(id, status) {
+    return await supabase
+      .from('question_reports')
+      .update({ status })
+      .eq('id', id)
+  },
+
+  async deactivateQuestion(id) {
+    return await supabase
+      .from('questions')
+      .update({ is_active: false })
+      .eq('id', id)
+  },
+
   async getFlaggedUsers() {
     return await supabase.from('users').select('*').eq('is_flagged', true)
   },
@@ -123,14 +145,6 @@ export const DataService = {
     return { data, error }
   },
 
-  async deductCredit(userId, actionType) {
-    const costMap = { 'theory_grading': 5, 'explanation': 1 }
-    const cost = costMap[actionType] || 1
-    const { data: user } = await supabase.from('users').select('ai_credits').eq('id', userId).single()
-    if (!user) return { error: 'User not found' }
-    const newCredits = Math.max(0, (user.ai_credits || 0) - cost)
-    return await supabase.from('users').update({ ai_credits: newCredits }).eq('id', userId)
-  },
 
   async getFullSyllabus() {
     const { data, error } = await supabase
@@ -223,10 +237,10 @@ export const DataService = {
         } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
           q.answers = q.answers.map(a => ({
             id: a.id || a.option_letter,
-            option_letter: a.option_letter,
+            option_letter: a.option_letter || '',
             option_text: a.option_text,
             is_correct: a.is_correct
-          })).sort((a, b) => a.option_letter.localeCompare(b.option_letter));
+          })).sort((a, b) => (a.option_letter || '').localeCompare(b.option_letter || ''));
         } else {
           q.answers = []
         }
@@ -261,15 +275,9 @@ export const DataService = {
 
   async getLeaderboard() {
     const { data, error } = await supabase
-      .from('exam_sessions')
-      .select(`
-        score_percentage,
-        total_questions,
-        users (
-          username
-        )
-      `)
-      .order('score_percentage', { ascending: false })
+      .from('weekly_summaries')
+      .select('total_questions_answered, users!inner(username)')
+      .order('total_questions_answered', { ascending: false })
       .limit(10)
 
     return { data, error }
@@ -417,10 +425,10 @@ export const DataService = {
       } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
         q.answers = q.answers.map(a => ({
           id: a.id || a.option_letter,
-          option_letter: a.option_letter,
+          option_letter: a.option_letter || '',
           option_text: a.option_text,
           is_correct: a.is_correct
-        })).sort((a, b) => a.option_letter.localeCompare(b.option_letter));
+        })).sort((a, b) => (a.option_letter || '').localeCompare(b.option_letter || ''));
       } else {
         q.answers = []
       }
@@ -483,6 +491,52 @@ export const DataService = {
       .order('mastery_percentage', { ascending: false })
 
     return { data, error }
+  },
+
+  async getLeaderboard() {
+    const { data, error } = await supabase
+      .from('weekly_summaries')
+      .select('total_questions_answered, users!inner(username)')
+      .order('total_questions_answered', { ascending: false })
+      .limit(10)
+    return { data, error }
+  },
+
+  async getUserAnalytics(userId) {
+    const { data: sessions, error: hError } = await supabase
+      .from('exam_sessions')
+      .select('total_questions, correct_answers, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    const history = sessions ? sessions.map(s => ({
+      total_questions: s.total_questions || 0,
+      correct_answers: s.correct_answers || 0,
+      score_percentage: s.total_questions > 0 ? Math.round(((s.correct_answers || 0) / (s.total_questions || 1)) * 100) : 0,
+      created_at: s.created_at
+    })) : []
+
+    const { data: masteryData, error: mError } = await supabase
+      .from('topic_mastery')
+      .select('subject, mastery_percentage')
+      .eq('user_id', userId)
+
+    const subjectMap = {}
+    if (masteryData && masteryData.length > 0) {
+      masteryData.forEach(m => {
+        const sub = m.subject || 'General'
+        if (!subjectMap[sub]) subjectMap[sub] = { sum: 0, count: 0 }
+        subjectMap[sub].sum += m.mastery_percentage || 0
+        subjectMap[sub].count += 1
+      })
+    }
+    const processedMastery = Object.keys(subjectMap).map(sub => ({
+      subject: sub,
+      average: Math.round(subjectMap[sub].sum / subjectMap[sub].count)
+    }))
+
+    return { history, mastery: processedMastery, error: hError || mError }
   },
 
   async saveExamSession(userId, sessionData, questions, userAnswers) {
@@ -619,16 +673,8 @@ export const DataService = {
       const jsonMatch = text.match(/\{.*\}/s)
       const aiResult = JSON.parse(jsonMatch ? jsonMatch[0] : text)
 
-      const result = { 
-        score: score, 
-        feedback: aiResult.feedback || "Based on your answer, you matched " + matchedPoints.length + " key points."
-      }
-
-      // Deduct Credit
-      const userId = question.user_id 
-      if (userId) await this.deductCredit(userId, 'theory_grading')
-
       return result
+
     } catch (err) {
       return { 
         score: score, 
@@ -781,15 +827,10 @@ export const DataService = {
       const jsonMatch = text.match(/\{.*\}/s)
       const aiResult = JSON.parse(jsonMatch ? jsonMatch[0] : text)
 
-      
-      // Deduct Credit (userId should be passed)
-      const userId = localStorage.getItem('cbt_user_id') // Fallback check or prefer explicit passing
-      if (userId) await this.deductCredit(userId, 'explanation')
-
       return { explanation: aiResult.explanation }
     } catch (err) {
       console.error("AI Explanation Error:", err)
-      return { error: "Could not generate explanation at this time." }
+      return { error: err?.message?.includes("Credit") ? err.message : "Could not generate explanation at this time." }
     }
   },
 
@@ -810,6 +851,222 @@ export const DataService = {
         .gte('completed_at', today)
     
     return { count: count || 0, error }
+  },
+
+  async getNewsUpdates(limit = 10) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    return { data, error }
+  },
+
+  async getNewsArticle(id) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+
+  async upgradeUserTier(userId, tier, creditsToAdd) {
+    // First get current credits to add onto them
+    const { data: user } = await supabase.from('users').select('ai_credits').eq('id', userId).single()
+    const newCredits = (user?.ai_credits || 0) + creditsToAdd
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ tier, ai_credits: newCredits })
+      .eq('id', userId)
+      .select()
+    return { data, error }
+  },
+
+  async getBookmarkCount(userId) {
+    const { count, error } = await supabase
+        .from('bookmarks')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+    return { count: count || 0, error }
+  },
+
+  async getBookmarks(userId) {
+    // Join with questions table to get the full question text
+    const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*, questions(*)')
+        .eq('user_id', userId)
+    
+    // Map it to match the standard questions structure used by the exam engine
+    const questions = data ? data.map(b => b.questions).filter(Boolean) : []
+    return { data: this._formatQuestions(questions), error }
+  },
+
+  async getGlobalStats(userId) {
+    try {
+      const { data: sessions, error } = await supabase
+        .from('exam_sessions')
+        .select('*')
+        .eq('user_id', userId)
+
+      if (error) throw error
+
+      const stats = {
+        overall: { total: 0, correct: 0, time: 0, accuracy: 0 },
+        byMode: {},
+        bySubject: {}
+      }
+
+      if (sessions && sessions.length > 0) {
+        sessions.forEach(s => {
+          const total = s.total_questions || 0
+          const correct = s.correct_answers || 0
+          const time = s.time_spent_seconds || 0
+          const mode = s.mode || 'practice'
+          const subject = s.subject || 'Unknown'
+
+          stats.overall.total += total
+          stats.overall.correct += correct
+          stats.overall.time += time
+
+          if (!stats.byMode[mode]) stats.byMode[mode] = { total: 0, correct: 0 }
+          stats.byMode[mode].total += total
+          stats.byMode[mode].correct += correct
+
+          if (!stats.bySubject[subject]) stats.bySubject[subject] = { total: 0, correct: 0 }
+          stats.bySubject[subject].total += total
+          stats.bySubject[subject].correct += correct
+        })
+
+        if (stats.overall.total > 0) {
+          stats.overall.accuracy = Math.round((stats.overall.correct / stats.overall.total) * 100)
+        }
+      }
+
+      return { data: stats, error: null }
+    } catch (err) {
+      console.error("Global Stats Error:", err)
+      return { data: null, error: err }
+    }
+  },
+
+  async updateUserStreak(userId) {
+    try {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('streak_count, last_active_at')
+        .eq('id', userId)
+        .single()
+      
+      if (error) throw error
+
+      const today = new Date().toISOString().split('T')[0]
+      const lastActive = user.last_active_at ? new Date(user.last_active_at).toISOString().split('T')[0] : null
+      
+      let newStreak = user.streak_count || 0
+      
+      if (!lastActive) {
+        newStreak = 1
+      } else if (lastActive === today) {
+        // Already active today, do nothing to streak
+      } else {
+        const diffInDays = (new Date(today) - new Date(lastActive)) / (1000 * 60 * 60 * 24)
+        if (diffInDays === 1) {
+          newStreak += 1
+        } else {
+          newStreak = 1 // Reset streak if missed a day
+        }
+      }
+
+      const { data, error: upError } = await supabase
+        .from('users')
+        .update({ streak_count: newStreak, last_active_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select()
+      
+      return { data, error: upError }
+    } catch (err) {
+      console.error("Streak Update Error:", err)
+      return { error: err }
+    }
+  },
+
+  async getNewsUpdates(limit = 10) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    return { data, error }
+  },
+
+  async getNewsArticle(id) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .select('*')
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+
+  async upgradeUserTier(userId, tier, creditsToAdd = 0) {
+    const { data: user } = await supabase.from('users').select('ai_credits').eq('id', userId).single()
+    const newCredits = (user?.ai_credits || 0) + creditsToAdd
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ tier, ai_credits: newCredits })
+      .eq('id', userId)
+      .select()
+    return { data, error }
+  },
+
+  // --- Admin News Management ---
+  async adminCreateNews(newsData) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .insert([newsData])
+      .select()
+    return { data, error }
+  },
+
+  async adminUpdateNews(id, newsData) {
+    const { data, error } = await supabase
+      .from('news_updates')
+      .update(newsData)
+      .eq('id', id)
+      .select()
+    return { data, error }
+  },
+
+  async adminDeleteNews(id) {
+    const { error } = await supabase
+      .from('news_updates')
+      .delete()
+      .eq('id', id)
+    return { error }
+  },
+
+  async adminUploadNewsAttachment(file) {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+    
+    // Upload to bucket
+    const { error: uploadError } = await supabase.storage
+      .from('news_attachments')
+      .upload(fileName, file)
+      
+    if (uploadError) return { url: null, error: uploadError }
+    
+    // Get public URL
+    const { data } = supabase.storage
+      .from('news_attachments')
+      .getPublicUrl(fileName)
+      
+    return { url: data.publicUrl, error: null }
   }
 }
 

@@ -5,6 +5,7 @@ import { DashboardComponent } from './src/components/Dashboard'
 import { ExamComponent } from './src/components/Exam'
 import { ResultsComponent } from './src/components/Results'
 import { AdminComponent } from './src/components/Admin'
+import { NewsArticleComponent } from './src/components/NewsArticle'
 import './src/styles/main.css'
 
 async function initApp() {
@@ -56,13 +57,20 @@ function showProfileSetup(user) {
 
 function showDashboard(profile) {
   hideAll()
-  DashboardComponent.render(profile, (questions, mode, subject, examType) => {
+  DashboardComponent.render(profile, (questions, mode, subject, examType, resumeState = null) => {
     DashboardComponent.hide()
-    showExam(questions, profile, false, {}, mode, subject, examType)
+    showExam(questions, profile, false, {}, mode, subject, examType, resumeState)
   }, () => {
     DashboardComponent.hide()
     showAdmin(profile)
+  }, (article) => {
+    showNewsArticle(article, profile)
   })
+}
+
+function showNewsArticle(article, profile) {
+  hideAll()
+  NewsArticleComponent.render(article, () => showDashboard(profile))
 }
 
 function showAdmin(profile) {
@@ -70,11 +78,11 @@ function showAdmin(profile) {
   AdminComponent.render(profile, () => showDashboard(profile))
 }
 
-function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '') {
+function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null) {
   hideAll()
   ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions) => {
     showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken)
-  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile))
+  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState)
 }
 
 function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0) {
@@ -91,6 +99,9 @@ function hideAll() {
   document.getElementById('dashboard-container').style.display = 'none'
   document.getElementById('exam-container').style.display = 'none'
   document.getElementById('admin-container').style.display = 'none'
+  if (document.getElementById('news-article-container')) {
+    document.getElementById('news-article-container').style.display = 'none'
+  }
 }
 
 async function checkBroadcast() {

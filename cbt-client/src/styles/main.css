@@ -140,13 +140,14 @@ button, .btn {
 }
 
 body.light-mode .btn-secondary, body.light-mode .glass-btn {
-  background: #F3F4F6; /* Light gray background to pop from white cards */
+  background: #E5E7EB; /* Darker gray background to pop from white cards safely */
   border-color: #D1D5DB;
   color: #111827;
+  font-weight: 700;
 }
 
 body.light-mode .btn-secondary:hover, body.light-mode .glass-btn:hover {
-  background: #E5E7EB;
+  background: #D1D5DB;
 }
 
 .finish-btn {
@@ -287,9 +288,37 @@ strong, h1, h2, h3, h4 {
   }
 
   .exam-sidebar {
-    height: auto;
-    padding: 1rem;
-    max-height: 300px;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 85%;
+    max-width: 350px;
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 2000;
+    background: var(--bg-color);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 20px 0 0 20px;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  
+  .exam-sidebar.drawer-open {
+    right: 0;
+  }
+  
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 1999;
+    backdrop-filter: blur(2px);
+  }
+  
+  .drawer-overlay.drawer-open {
+    display: block;
   }
 
   #admin-grid {
@@ -499,10 +528,7 @@ body.light-mode .q-grid-item.answered {
     min-height: auto;
     overflow: visible; /* Let parent handle scrolling */
   }
-  .exam-sidebar {
-    padding: 1rem;
-    min-height: 200px;
-  }
+
   .exam-footer {
     flex-direction: column;
     align-items: stretch !important;

@@ -23,6 +23,10 @@ export const TimerService = {
       this.timer = null;
     }
   },
+
+  getRemainingTime() {
+    return this.timeLeft;
+  },
   
   formatTime(seconds) {
     const mins = Math.floor(seconds / 60);

@@ -1,261 +1,193 @@
 {
-"JAMB": {
-"Mathematics": [
-"Number System",
-"Algebra",
-"Trigonometry",
-"Geometry",
-"Calculus",
-"Statistics"
-],
-"English": [
-"The Lekki Headmaster (Novel)",
-"Comprehension",
-"Lexis and Structure",
-"Oral English",
-"Summary"
-],
-"Physics": [
-"Mechanics",
-"Heat",
-"Waves",
-"Electricity",
-"Magnetism",
-"Modern Physics"
-],
-"Chemistry": [
-"Atomic Structure",
-"Periodic Table",
-"Chemical Bonding",
-"Stoichiometry",
-"Organic Chemistry",
-"Acids Bases and Salts"
-],
-"Biology": [
-"Cell Structure",
-"Genetics",
-"Ecology",
-"Evolution",
-"Human Physiology"
-],
-"Government": [
-"Political Concepts",
-"Systems of Government",
-"Nigerian Government",
-"International Relations"
-],
-"Economics": [
-"Basic Concepts",
-"Demand and Supply",
-"Production",
-"Market Structures",
-"National Income"
-],
-"CRS": [
-"Creation",
-"Covenant",
-"Leadership",
-"Prophets",
-"Christian Living"
-],
-"Literature": [
-"Drama (Lion & Jewel / Midsummer Night's Dream)",
-"Prose (Second Class Citizen / Wuthering Heights)",
-"Poetry (African & Non-African 2021-2025)",
-"Literary Appreciation"
-],
-"Commerce": [
-"Trade",
-"Business Units",
-"Transport",
-"Insurance",
-"Banking"
-],
-"Accounting": [
-"Principles",
-"Ledger",
-"Trial Balance",
-"Final Accounts"
-],
-"Geography": [
-"Physical Geography",
-"Human Geography",
-"Map Reading"
-],
-"Agriculture": [
-"Crop Production",
-"Animal Husbandry",
-"Soil Science"
-],
-"Citizenship and Heritage Study": [
-"Democracy",
-"Human Rights",
-"Citizenship"
-],
-"Marketing": [
-"Marketing Concepts",
-"Consumer Behavior",
-"Advertising"
-]
-},
-
-"WAEC": {
-"Mathematics": [
-"Number and Numeration",
-"Algebraic Processes",
-"Geometry",
-"Mensuration",
-"Statistics"
-],
-"English": [
-"Essay Writing",
-"Comprehension",
-"Summary",
-"Grammar",
-"Oral English"
-],
-"Physics": [
-"Mechanics",
-"Heat Energy",
-"Waves",
-"Electricity",
-"Light"
-],
-"Chemistry": [
-"Separation Techniques",
-"Atomic Structure",
-"Chemical Reactions",
-"Organic Chemistry"
-],
-"Biology": [
-"Cell Biology",
-"Ecology",
-"Genetics",
-"Evolution"
-],
-"Government": [
-"Pre-colonial Systems",
-"Colonial Administration",
-"Post-independence Government"
-],
-"Economics": [
-"Basic Concepts",
-"Demand and Supply",
-"Inflation",
-"Public Finance"
-],
-"CRS": [
-"Old Testament",
-"New Testament",
-"Christian Ethics"
-],
-"Literature": [
-"African Prose",
-"Non-African Prose",
-"Drama",
-"Poetry"
-],
-"Commerce": [
-"Trade",
-"Banking",
-"Insurance",
-"Transportation"
-],
-"Accounting": [
-"Bookkeeping",
-"Final Accounts",
-"Control Accounts"
-],
-"Geography": [
-"Map Reading",
-"Climate",
-"Settlement"
-],
-"Agriculture": [
-"Soil Science",
-"Crop Production",
-"Animal Production"
-],
-"Citizenship and Heritage Study": [
-"Human Rights",
-"Law and Order",
-"Democracy"
-],
-"Marketing": [
-"Marketing Principles",
-"Market Research",
-"Advertising"
-]
-},
-
-"NECO": {
-"Mathematics": [
-"Number System",
-"Algebra",
-"Geometry",
-"Statistics"
-],
-"English": [
-"Comprehension",
-"Essay Writing",
-"Grammar",
-"Oral English"
-],
-"Physics": [
-"Mechanics",
-"Heat",
-"Electricity",
-"Waves"
-],
-"Chemistry": [
-"Atomic Structure",
-"Chemical Bonding",
-"Organic Chemistry"
-],
-"Biology": [
-"Cell Structure",
-"Ecology",
-"Genetics"
-],
-"Government": [
-"Political Institutions",
-"Nigerian Government"
-],
-"Economics": [
-"Demand and Supply",
-"Market Structures"
-],
-"CRS": [
-"Biblical Studies",
-"Christian Ethics"
-],
-"Literature": [
-"Drama",
-"Poetry",
-"Prose"
-],
-"Commerce": [
-"Trade",
-"Business Organization"
-],
-"Accounting": [
-"Ledger",
-"Final Accounts"
-],
-"Geography": [
-"Map Reading",
-"Environment"
-],
-"Agriculture": [
-"Crop Production",
-"Livestock"
-],
-"Citizenship and Heritage Study": [
-"Citizenship",
-"Democracy"
-],
-"Marketing": [
-"Marketing Basics"
-]
-}
+  "JAMB": {
+    "Mathematics": [
+      "Number Bases", "Fractions, Decimals, Approximations and Percentages", "Indices, Logarithms and Surds", "Sets",
+      "Polynomials", "Variation", "Inequalities", "Progression", "Binary Operations", "Matrices and Determinants",
+      "Euclidean Geometry", "Mensuration", "Loci", "Coordinate Geometry", "Trigonometry", "Differentiation",
+      "Integration", "Representation of Data", "Measures of Location", "Measures of Dispersion", "Permutation and Combination", "Probability"
+    ],
+    "English": [
+        "The Lekki Headmaster (Novel)", "Comprehension and Summary", "Lexis and Structure (Synonyms/Antonyms)", "Sentence Patterns and Word Classes",
+        "Grammar (Tense/Aspect/Concord)", "Mechanics (Punctuation/Spelling)", "Oral Forms (Vowels/Consonants)", "Rhymes and Stress (Word/Emphatic)"
+    ],
+    "Physics": [
+      "Measurements and Units", "Scalars and Vectors", "Motion (Newton Laws/Projectiles)", "Gravitational Field", 
+      "Equilibrium of Forces", "Friction", "Work, Energy and Power", "Simple Machines", "Elasticity", "Pressure", 
+      "Liquids at Rest", "Temperature and Measurements", "Quantity of Heat", "Change of State", "Thermal Expansion", 
+      "Gas Laws", "Vapours", "Structure of Matter and Kinetic Theory", "Heat Transfer", "Waves", 
+      "Propagation of Sound Waves", "Characteristics of Sound Waves", "Light Energy", "Reflection of Light", 
+      "Refraction of Light", "Optical Instruments", "Dispersion and Colours", "Electrostatics", "Capacitors", 
+      "Electric Cells", "Current Electricity", "Electrical Energy and Power", "Magnets and Fields", 
+      "Force on Conductors", "Electromagnetic Induction", "Inductance", "Simple A.C. Circuits", 
+      "Conduction of Electricity", "Elementary Modern Physics", "Introductory Electronics", "Fibre Optics and Lasers"
+    ],
+    "Chemistry": [
+      "Separation of Mixtures", "Chemical Combination", "Kinetic Theory and Gas Laws", "Atomic Structure and Bonding", 
+      "The Periodic Table", "Nuclear Chemistry", "Air and Water", "Solubility", "Environmental Pollution", 
+      "Quantitative Analysis", "Energy Changes", "Rates of Reaction", "Chemical Equilibrium", "Acids, Bases and Salts", 
+      "Redox and Electrolysis", "Non-metals and Compounds", "Metals and Compounds", "Organic Chemistry", "Industrial Chemistry"
+    ],
+    "Biology": [
+      "Classification of Living Things", "Organization of Life", "Cell Structure", "Reproduction", "Nutrition", 
+      "Respiration", "Excretion", "Growth", "Irritability", "Coordination and Control", "Heredity and Genetics", 
+      "Ecology", "Evolution", "Variability and Adaptation"
+    ],
+    "Government": [
+      "Political Concepts", "Sovereignty", "Political Culture and Socialization", "Political Ideologies", 
+      "Constitution", "Forms of Government", "Arms of Government", "Decentralization", "The Electoral Process", 
+      "Political Parties and Pressure Groups", "Public Opinion and Civil Service", "Pre-Colonial Administration", 
+      "Colonial Administration", "Nationalism", "Constitutional Development", "Post-Independence Constitution", 
+      "Federalism", "Public Corporations", "Foreign Policy", "International Relations", "International Organizations"
+    ],
+    "Economics": [
+      "Basic Tools of Economic Analysis", "Theory of Consumer Behavior", "Demand and Supply", "Elasticity", 
+      "Production", "Costs and Revenue", "Market Structures", "Distribution Theory", "National Income", 
+      "Money and Banking", "Public Finance", "Economic Growth and Development", "Agriculture", 
+      "Industry and Industrialization", "Natural Resources", "International Trade", "International Economic Organizations", "Current Economic Problems"
+    ],
+    "CRS": [
+      "Themes from the Old Testament (Creation/Covenant)", "Leadership Qualities (Moses/Joshua)", 
+      "Divine Providence (Joseph/Gideon)", "Social Justice and Prophets", "Birth and Early Life of Jesus", 
+      "Baptism and Temptation", "Miracles and Teachings of Jesus", "Passion and Resurrection", 
+      "Fellowship in the Early Church", "Conversion and Travels of Paul", "Faith and Works (James/Peter)", 
+      "Christian Living in the Community", "Impartiality and Social Responsibility"
+    ],
+    "Literature": [
+      "Drama: Marriage of Anansewa / Anthony and Cleopatra",
+      "Prose: So the Path Does not Die / Redemption Road / Path of Lucas",
+      "African Poetry: Once Upon a Time / New Tongue / Night / Not my Business",
+      "African Poetry: Hearty Garlands / The Breast of the Sea",
+      "Non-African Poetry: She Walks in Beauty / The Nun's Priest Tale / The Telephone Call / The Stone",
+      "General Literary Terms and Principles",
+      "Dramatic/Narrative/Poetic Techniques",
+      "Literary Appreciation (Unseen Passages)"
+    ],
+    "Commerce": [
+      "Occupation and Production", "Business Units", "Trade (Home and Foreign)", "Aids-to-Trade (Banking/Insurance/Transport)",
+      "Money and Stock Exchange", "Marketing Elements and ICT", "Legal Aspects of Business", 
+      "Business Management", "Financial Institutions", "International Economic Organizations"
+    ],
+    "Accounting": [
+      "Accounting Concepts and Conventions", "Books of Prime Entry", "Ledger and Trial Balance", "Final Accounts of Sole Trader", 
+      "Adjustment to Final Accounts", "Bank Reconciliation Statement", "Capital and Revenue Expenditure", 
+      "Control Accounts and Errors", "Accounts of Non-profit Making Org", "Partnership Accounts", "Company Accounts", "Ethics/Computers in Accounting"
+    ],
+    "Geography": [
+      "The Earth and Solar System", "Rocks and Landforms", "Weather and Climate", "Environmental Resources and Hazards", 
+      "Population and Settlement", "Economic Activities (Agriculture/Mining/Power)", "Regional Geography of Nigeria", "Map Reading and Interpretation"
+    ],
+    "Agriculture": [
+      "General Agriculture (Importance/Problems)", "Agricultural Ecology and Engineering", "Soil Science", 
+      "Crop Production and Improvement", "Animal Science", "Forestry and Wildlife", "Fisheries", "Agricultural Economics and Extension"
+    ],
+    "Citizenship and Heritage Study": [
+      "National Values and Identity", "Citizenship Rights and Duties", "Human Rights and Rule of Law", 
+      "Democracy and Political Parties", "Civil Society/Public Service", "Environmental and Health Education (HIV/AIDS/Drugs)"
+    ],
+    "Marketing": [
+      "Fundamentals of Marketing", "Marketing Environment and Research", "Consumer Behavior and STP", 
+      "Marketing Mix (4Ps: Product/Price/Promo/Place)", "Salesmanship and Digital Marketing", "Marketing Ethics and Consumerism"
+    ]
+  },
+  "WAEC": {
+    "Mathematics": [
+      "Number and Numeration", "Algebraic Processes", "Geometry (Euclidean/Coordinate)", "Mensuration", "Trigonometry", "Statistics/Probability", "Calculus (Introductory)"
+    ],
+    "English": [
+      "Essay/Letter Writing", "Reading Comprehension", "Summary Writing", "Lexis and Structure", "Test of Oral"
+    ],
+    "Physics": [
+      "Mechanics", "Heat Energy", "Waves", "Electricity and Magnetism", "Atomic and Nuclear Physics"
+    ],
+    "Chemistry": [
+      "Atomic Structure", "States of Matter", "Chemical Bonding", "Quantitative/Qualitative Analysis", "Energy and Chemical Reactions", "Organic Chemistry", "Metals/Non-metals"
+    ],
+    "Biology": [
+      "Organization of Life", "Living Organisms (Nutrition/Transport/Respiration)", "Reproduction and Growth", "Heredity and Variation", "Ecology"
+    ],
+    "Government": [
+      "Political Institutions", "Rule of Law and Constitution", "Nigeria Political Development", "Foreign Policy and Organizations"
+    ],
+    "Economics": [
+      "Basic Economic Concepts", "Production and Distribution", "Price Determination", "National Income", "Public Finance", "International Economics"
+    ],
+    "CRS": [
+      "Themes from the Old/New Testaments", "The Acts of Apostles", "Christian Ethics and Teachings"
+    ],
+    "Literature": [
+      "Shakespearean Drama: Antony and Cleopatra",
+      "African Prose: So the Path Does Not Die / Redemption Road",
+      "Non-African Prose: To Kill a Mockingbird / Path of Lucas",
+      "African Drama: Once Upon an Elephant / The Marriage of Anansewa",
+      "Non-African Drama: An Inspector Calls / A Man for all Seasons",
+      "African Poetry: Once Upon a Time / New Tongue / Night / Not My Business",
+      "African Poetry: Hearty Garlands / The Breast of The Sea",
+      "Non-African Poetry: She Walks in Beauty / The Nun's Priest's Tale"
+    ],
+    "Commerce": [
+      "Commercial Activities", "Business Environments", "Marketing Mix", "Finance and Banking"
+    ],
+    "Accounting": [
+      "Accounting Framework", "Financial Accounting Methods", "Ledgers/Control Accounts", "Partnerships and Companies"
+    ],
+    "Geography": [
+        "Practical Geography (Maps/Stats)", "Physical Geography", "Human Geography", "Regional Geography of Africa/Nigeria"
+    ],
+    "Agriculture": [
+        "Agricultural Systems", "Soil and Crop Science", "Animal Production", "Land Use and Forestry"
+    ],
+    "Citizenship and Heritage Study": [
+        "Citizenship Education", "Governance and Rule of Law", "Social Issues and Interpersonal Relations"
+    ],
+    "Marketing": [
+        "Marketing Principles", "Product/Brand Management", "Market Research", "Consumer Behavior"
+    ]
+  },
+  "NECO": {
+    "Mathematics": [
+      "Number System", "Algebraic Methods", "Geometric Principles", "Statistics", "Trigonometry"
+    ],
+    "English": [
+      "Comprehension", "Summary", "Essay Writing", "Oral English", "Grammar"
+    ],
+    "Physics": [
+      "Mechanics", "Heat", "Waves", "Light", "Electricity", "Atomic Physics"
+    ],
+    "Chemistry": [
+      "Atomic Science", "Chemical Reactions", "Organic Compounds", "States of Matter"
+    ],
+    "Biology": [
+      "Cell Biology", "Ecology", "Genetics", "Physiology"
+    ],
+    "Government": [
+      "Political Administration", "History of Nigerian Government", "Global Relations"
+    ],
+    "Economics": [
+      "Microeconomics", "Macroeconomics", "International Economic Relations"
+    ],
+    "CRS": [
+      "Biblical History", "Christian Morality"
+    ],
+    "Literature": [
+      "Literary Analysis of Prescribed Texts (Drama/Poetry/Prose)"
+    ],
+    "Commerce": [
+      "Business Functions", "Trade Systems"
+    ],
+    "Accounting": [
+      "Financial Records", "Auditing and Control"
+    ],
+    "Geography": [
+      "Physical Environment", "Map Skills", "Economic Geography"
+    ],
+    "Agriculture": [
+      "Crop Science", "Livestock Management"
+    ],
+    "Citizenship and Heritage Study": [
+      "National Unity", "Rights and Responsibilities"
+    ],
+    "Marketing": [
+      "Market Systems", "Consumer Outreach"
+    ]
+  }
 }

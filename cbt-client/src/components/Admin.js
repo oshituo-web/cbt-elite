@@ -22,9 +22,10 @@ export const AdminComponent = {
           <button class="nav-tab" data-tab="users">Manage Users</button>
           <button class="nav-tab" data-tab="reports">Question Reports</button>
           <button class="nav-tab" data-tab="marketing">💰 Marketing</button>
+          <button class="nav-tab" data-tab="news">📰 Manage News</button>
           <button class="nav-tab" data-tab="analytics" style="color: var(--accent-primary);">📈 Platform Analytics</button>
-          ${profile.email === 'oshituo@gmail.com' ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
-          ${profile.email === 'oshituo@gmail.com' ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
+          ${(profile.role === 'admin' || profile.role === 'super-admin' || profile.email === 'oshituo@gmail.com') ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
+          ${(profile.role === 'admin' || profile.role === 'super-admin' || profile.email === 'oshituo@gmail.com') ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
         </nav>
         
         <main id="admin-main">
@@ -127,6 +128,15 @@ export const AdminComponent = {
             </div>
           </div>
 
+          <!-- News Management Tab -->
+          <div id="admin-news-tab" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <h2>Manage News & Updates</h2>
+              <button id="add-news-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Article</button>
+            </div>
+            <div id="admin-news-list">Loading news...</div>
+          </div>
+
           <!-- Audit Logs Tab (Super Admin Only) -->
           <div id="admin-audit-tab" style="display: none;">
             <h2>Administrative Audit Logs</h2>
@@ -174,6 +184,7 @@ export const AdminComponent = {
         document.getElementById('admin-users-tab').style.display = target === 'users' ? 'block' : 'none'
         document.getElementById('admin-reports-tab').style.display = target === 'reports' ? 'block' : 'none'
         document.getElementById('admin-marketing-tab').style.display = target === 'marketing' ? 'block' : 'none'
+        if(document.getElementById('admin-news-tab')) document.getElementById('admin-news-tab').style.display = target === 'news' ? 'block' : 'none'
         document.getElementById('admin-analytics-tab').style.display = target === 'analytics' ? 'block' : 'none'
         if (document.getElementById('admin-audit-tab')) {
             document.getElementById('admin-audit-tab').style.display = target === 'audit' ? 'block' : 'none'
@@ -187,6 +198,7 @@ export const AdminComponent = {
         else if (target === 'users') this.loadUsers()
         else if (target === 'reports') this.loadReports()
         else if (target === 'marketing') this.loadMarketing()
+        else if (target === 'news') this.loadNews()
         else if (target === 'analytics') this.loadGlobalAnalytics()
         else if (target === 'audit') this.loadAuditLogs()
         else if (target === 'staff') this.loadStaff()
@@ -774,11 +786,12 @@ export const AdminComponent = {
   async loadReports() {
     const list = document.getElementById('reports-list')
     list.innerHTML = 'Loading reports...'
-    const { data } = await supabase
-      .from('question_reports')
-      .select('*, questions(question_text, id)')
-      .order('status', { ascending: false }) // pending first usually
-      .order('created_at', { ascending: false })
+    const { data } = await DataService.getQuestionReports()
+    
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div style="padding: 2rem; text-align: center; color: #888;">No question reports found.</div>'
+      return
+    }
     
     list.innerHTML = data.map(r => `
       <div class="glass" style="padding: 1.25rem; margin-bottom: 1rem; border-left: 4px solid ${r.status === 'resolved' ? 'var(--success)' : r.status === 'dismissed' ? '#666' : 'var(--error)'};">
@@ -794,9 +807,10 @@ export const AdminComponent = {
           <strong>Target Question:</strong> ${r.questions?.question_text.substring(0, 100)}...
         </div>
         
-        ${r.status === 'pending' ? `
+        ${r.status === 'pending' || !r.status ? `
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button class="primary resolve-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Mark Resolved</button>
+            <button class="btn-secondary deactivate-question-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: var(--error);">Deactivate Question</button>
             <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Dismiss</button>
           </div>
         ` : `<div style="font-size: 0.75rem; color: var(--success); font-style: italic;">Verified and ${r.status}</div>`}
@@ -817,6 +831,17 @@ export const AdminComponent = {
         const id = btn.getAttribute('data-id')
         btn.textContent = '...'
         await DataService.updateReportStatus(id, 'dismissed')
+        this.loadReports()
+      }
+    })
+    document.querySelectorAll('.deactivate-question-btn').forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm('Are you sure you want to deactivate this question? It will no longer appear in exams.')) return
+        const qid = btn.getAttribute('data-qid')
+        const rid = btn.getAttribute('data-rid')
+        btn.textContent = '...'
+        await DataService.deactivateQuestion(qid)
+        await DataService.updateReportStatus(rid, 'resolved (question deactivated)')
         this.loadReports()
       }
     })
@@ -952,12 +977,183 @@ export const AdminComponent = {
             <strong>${s.username || 'Staff'}</strong> (${s.email})
             <span class="badge" style="margin-left: 0.5rem; background: var(--accent-primary); padding: 2px 6px; font-size: 0.7rem;">${s.role || (s.email === 'oshituo@gmail.com' ? 'super-admin' : 'user')}</span>
           </div>
-          ${s.email !== 'oshituo@gmail.com' ? `
+          ${(s.role !== 'super-admin' && s.email !== 'oshituo@gmail.com') ? `
             <div style="font-size: 0.75rem; color: #aaa;">Use the form above to change role</div>
           ` : '<em style="font-size: 0.75rem; color: var(--accent-secondary);">System Owner</em>'}
         </div>
       `).join('')}
     `
+  },
+
+  async loadNews() {
+    const list = document.getElementById('admin-news-list')
+    if (!list) return
+    list.innerHTML = 'Loading news...'
+    
+    // Add new article button listener
+    document.getElementById('add-news-btn').onclick = () => {
+      this.openNewsEditModal()
+    }
+
+    const { data: news, error } = await DataService.getNewsUpdates(50) // load up to 50 for admin
+    
+    if (error) {
+       list.innerHTML = `<div style="color: var(--error);">Error: ${error.message}</div>`
+       return
+    }
+
+    if (!news || news.length === 0) {
+      list.innerHTML = '<div style="color: #ffffff;">No news items found.</div>'
+      return
+    }
+
+    list.innerHTML = news.map(n => `
+      <div class="glass" style="padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid var(--accent-primary);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+          <div style="flex: 1; min-width: 250px;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+               <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3B82F6; font-size: 0.7rem;">${n.category}</span>
+               <span style="font-size: 0.75rem; color: #aaa;">${new Date(n.created_at).toLocaleDateString()}</span>
+            </div>
+            <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.5rem;">${n.title}</strong>
+            <p style="font-size: 0.85rem; color: #ccc;">${n.summary}</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">✏️ Edit</button>
+            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">🗑️ Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('')
+
+    // Attach Listeners
+    document.querySelectorAll('.edit-news-btn').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-id')
+        const item = news.find(n => n.id === id)
+        if (item) this.openNewsEditModal(item)
+      }
+    })
+
+    document.querySelectorAll('.delete-news-btn').forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm('Are you sure you want to permanently delete this news update?')) return
+        const id = btn.getAttribute('data-id')
+        btn.textContent = '...'
+        btn.disabled = true
+        const { error } = await DataService.adminDeleteNews(id)
+        if (error) {
+          alert('Failed to delete: ' + error.message)
+          btn.textContent = 'Delete'
+          btn.disabled = false
+        } else {
+          this.loadNews()
+        }
+      }
+    })
+  },
+
+  openNewsEditModal(news = null) {
+    const isEditing = !!news
+    const modalHtml = `
+      <div id="news-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
+        <div class="glass card" style="width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
+          <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">${isEditing ? 'Edit News Article' : 'Draft New Article'}</h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+               <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Title</p>
+               <input type="text" id="edit-news-title" class="glass-input" value="${news ? news.title.replace(/"/g, '&quot;') : ''}" style="width: 100%;">
+            </div>
+            <div>
+               <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Category</p>
+               <select id="edit-news-category" class="glass-select" style="width: 100%;">
+                 <option value="JAMB" ${news && news.category === 'JAMB' ? 'selected' : ''}>JAMB</option>
+                 <option value="WAEC" ${news && news.category === 'WAEC' ? 'selected' : ''}>WAEC</option>
+                 <option value="NECO" ${news && news.category === 'NECO' ? 'selected' : ''}>NECO</option>
+                 <option value="Admission" ${news && news.category === 'Admission' ? 'selected' : ''}>Admission</option>
+                 <option value="Trending" ${news && news.category === 'Trending' ? 'selected' : ''}>Trending / Tech</option>
+                 <option value="General" ${news && news.category === 'General' ? 'selected' : ''}>General</option>
+               </select>
+            </div>
+          </div>
+
+          <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Short Summary (Visible on Dashboard Cards)</p>
+          <textarea id="edit-news-summary" class="glass-input" style="width: 100%; min-height: 80px; margin-bottom: 1rem; font-size: 0.9rem;">${news ? news.summary : ''}</textarea>
+
+          <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Full Article Content (Visible in Reader Mode)</p>
+          <textarea id="edit-news-content" class="glass-input" style="width: 100%; min-height: 150px; margin-bottom: 1.5rem; font-size: 0.9rem;">${news ? news.content : ''}</textarea>
+
+          <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+            <p style="font-size: 0.8rem; color: var(--accent-primary); margin-bottom: 0.5rem; font-weight: bold;">📎 Optional PDF Attachment (e.g. Timetable)</p>
+            ${news && news.attachment_url ? `<div style="font-size: 0.8rem; margin-bottom: 0.5rem;">Current Attachment: <a href="${news.attachment_url}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${news.attachment_name || 'View File'}</a></div>` : ''}
+            <input type="file" id="edit-news-attachment" accept=".pdf" class="glass-input" style="width: 100%; font-size: 0.8rem; padding: 0.4rem;">
+          </div>
+
+          <div style="display: flex; gap: 1rem;">
+            <button id="save-news-edit" class="primary" style="flex:1;">${isEditing ? 'Save Changes' : 'Publish Article'}</button>
+            <button id="cancel-news-edit" class="btn-secondary" style="flex:1;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `
+    document.body.insertAdjacentHTML('beforeend', modalHtml)
+    
+    document.getElementById('cancel-news-edit').onclick = () => document.getElementById('news-edit-overlay').remove()
+    document.getElementById('save-news-edit').onclick = async () => {
+      const title = document.getElementById('edit-news-title').value.trim()
+      const category = document.getElementById('edit-news-category').value
+      const summary = document.getElementById('edit-news-summary').value.trim()
+      const content = document.getElementById('edit-news-content').value.trim()
+      
+      if (!title || !summary || !content) return alert('All fields are required.')
+      
+      const fileInput = document.getElementById('edit-news-attachment')
+      const file = fileInput.files[0]
+
+      const saveBtn = document.getElementById('save-news-edit')
+      saveBtn.textContent = file ? 'Uploading...' : (isEditing ? 'Saving...' : 'Publishing...')
+      saveBtn.disabled = true
+      
+      let attachment_url = news ? news.attachment_url : null
+      let attachment_name = news ? news.attachment_name : null
+
+      if (file) {
+        if (file.type !== 'application/pdf') {
+            alert('Only PDF files are allowed.')
+            saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
+            saveBtn.disabled = false
+            return
+        }
+        const { url, error } = await DataService.adminUploadNewsAttachment(file)
+        if (error) {
+            alert('File Upload failed: ' + error.message)
+            saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
+            saveBtn.disabled = false
+            return
+        }
+        attachment_url = url
+        attachment_name = file.name
+      }
+      
+      saveBtn.textContent = isEditing ? 'Saving...' : 'Publishing...'
+
+      let res;
+      if (isEditing) {
+         res = await DataService.adminUpdateNews(news.id, { title, category, summary, content, attachment_url, attachment_name })
+      } else {
+         res = await DataService.adminCreateNews({ title, category, summary, content, attachment_url, attachment_name })
+      }
+
+      if (res.error) {
+        alert('Error saving news: ' + res.error.message)
+        saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
+        saveBtn.disabled = false
+      } else {
+        document.getElementById('news-edit-overlay').remove()
+        this.loadNews()
+      }
+    }
   }
 }
 

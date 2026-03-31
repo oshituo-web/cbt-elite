@@ -32,12 +32,12 @@ export const WeeklyRecapComponent = {
         <div class="glass" style="padding: 1.25rem; margin-bottom: 1rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <span style="font-weight: 700; font-family: 'Outfit'; color: ${color};">${label.toUpperCase()}</span>
-            <span style="font-size: 1.1rem; font-weight: 800; color: #fff;">${accuracy}%</span>
+            <span style="font-size: 1.1rem; font-weight: 800; color: #3B82F6;">${accuracy}%</span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.8rem;">
-            <div style="color: var(--text-secondary);">Total: <strong style="color: #fff;">${total}</strong></div>
-            <div style="color: var(--success);">Correct: <strong style="color: #fff;">${correct}</strong></div>
-            <div style="color: var(--error);">Wrong: <strong style="color: #fff;">${wrong}</strong></div>
+            <div style="color: var(--text-secondary);">Total: <strong style="color: #3B82F6;">${total}</strong></div>
+            <div style="color: var(--success);">Correct: <strong style="color: #3B82F6;">${correct}</strong></div>
+            <div style="color: var(--error);">Wrong: <strong style="color: #3B82F6;">${wrong}</strong></div>
           </div>
           <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 0.75rem;">
             <div style="width: ${accuracy}%; height: 100%; background: ${color}; border-radius: 2px; transition: width 0.5s ease-out;"></div>
@@ -71,19 +71,19 @@ export const WeeklyRecapComponent = {
         <div class="glass" style="padding: 1.5rem; margin-bottom: 2.5rem; display: flex; justify-content: space-around; align-items: center;">
            <div style="text-align: center;">
              <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
-             <div style="font-size: 1.25rem; font-weight: 700;">${weeklySafe.total_questions_answered || 0}</div>
+             <div style="font-size: 1.25rem; font-weight: 700; color: #3B82F6;">${weeklySafe.total_questions_answered || 0}</div>
            </div>
            <div style="text-align: center;">
              <div style="font-size: 0.7rem; color: var(--success); text-transform: uppercase;">Correct</div>
-             <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);">${wCorrect}</div>
+             <div style="font-size: 1.25rem; font-weight: 700; color: #3B82F6;">${wCorrect}</div>
            </div>
            <div style="text-align: center;">
              <div style="font-size: 0.7rem; color: var(--error); text-transform: uppercase;">Wrong</div>
-             <div style="font-size: 1.25rem; font-weight: 700; color: var(--error);">${wWrong}</div>
+             <div style="font-size: 1.25rem; font-weight: 700; color: #3B82F6;">${wWrong}</div>
            </div>
            <div style="text-align: center;">
              <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Mode Rank</div>
-             <div style="font-size: 1.25rem; font-weight: 700; color: white;">#${weeklySafe.leaderboard_rank || '--'}</div>
+             <div style="font-size: 1.25rem; font-weight: 700; color: #3B82F6;">#${weeklySafe.leaderboard_rank || '--'}</div>
            </div>
         </div>
 

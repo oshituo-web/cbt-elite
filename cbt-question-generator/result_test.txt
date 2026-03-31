@@ -1,0 +1,21 @@
+[
+  {
+    "questions": [
+      {
+        "exam_type": "High School Math",
+        "subject": "Mathematics",
+        "topic": "Geometry",
+        "question": "If a triangle has angles measuring 30 degrees and 60 degrees, what is the measure of the third angle?",
+        "option_a": "90 degrees",
+        "option_b": "45 degrees",
+        "option_c": "30 degrees",
+        "option_d": "60 degrees",
+        "correct_option": "A",
+        "diagram_svg": "<svg></svg>",
+        "diagram_type": "svg",
+        "explanation": "The sum of angles in any triangle is 180 degrees. Given two angles are 30 degrees and 60 degrees, their sum is 90 degrees. Therefore, the third angle is 180 - 90 = 90 degrees.",
+        "subtopic": "Triangles and Angles"
+      }
+    ]
+  }
+]
