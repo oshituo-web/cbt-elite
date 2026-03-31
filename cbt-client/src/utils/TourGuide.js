@@ -4,9 +4,11 @@ export const TourGuide = {
   overlay: null,
   spotlight: null,
   bubble: null,
+  onFinish: null,
 
-  init(steps) {
+  init(steps, options = {}) {
     this.steps = steps;
+    this.onFinish = options.onFinish;
     this.currentStep = 0;
     this.createUI();
   },
@@ -80,6 +82,24 @@ export const TourGuide = {
 
   positionBubble(rect) {
     const margin = 20;
+    const isMobile = window.innerWidth <= 600;
+
+    if (isMobile) {
+      // Mobile "Bottom Dock" logic: Fixed bottom anchoring
+      this.bubble.style.position = 'fixed';
+      this.bubble.style.bottom = '20px';
+      this.bubble.style.top = 'auto';
+      this.bubble.style.left = '50%';
+      this.bubble.style.transform = 'translateX(-50%)';
+      this.bubble.style.width = 'calc(100% - 40px)';
+      this.bubble.style.maxWidth = '400px';
+      return;
+    }
+
+    // Reset mobile overrides if window resized
+    this.bubble.style.position = 'absolute';
+    this.bubble.style.bottom = 'auto';
+
     let top = rect.bottom + window.scrollY + margin;
     let left = rect.left + window.scrollX;
 
@@ -96,6 +116,7 @@ export const TourGuide = {
     this.bubble.style.top = `${top}px`;
     this.bubble.style.left = `${left}px`;
     this.bubble.style.transform = 'none';
+    this.bubble.style.width = '320px';
   },
 
   next() {
@@ -116,7 +137,7 @@ export const TourGuide = {
     this.overlay.style.opacity = '0';
     setTimeout(() => {
       this.overlay.style.visibility = 'hidden';
-      localStorage.setItem('hasSeenOnboarding', 'true');
+      if (this.onFinish) this.onFinish();
     }, 300);
   }
 };

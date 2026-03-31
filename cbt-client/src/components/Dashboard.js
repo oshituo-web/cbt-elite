@@ -40,7 +40,9 @@ export const DashboardComponent = {
       { element: "#upgrade-hero-btn", title: "Upgrade Section", text: "Unlock AI explanations and unlimited access with Premium." },
       { element: "#feature-review-item", title: "Review Questions", text: "After any test or practice, tap 'Review Questions' to see correct answers and detailed explanations." },
       { title: "You're all set", text: "You're ready to start your journey. Good luck!" }
-    ]);
+    ], {
+      onFinish: () => DataService.markTourAsSeen(profile.id)
+    });
     
     // Calculate Progress and Daily Goal
     const today = new Date().toDateString()
@@ -495,8 +497,8 @@ export const DashboardComponent = {
     }
 
     // Auto-trigger onboarding for new users
-    if (!localStorage.getItem('hasSeenOnboarding')) {
-      setTimeout(() => TourGuide.start(), 1000);
+    if (!profile.has_seen_tour) {
+      setTimeout(() => TourGuide.start(), 1500);
     }
 
     const upgradeHeroBtn = document.getElementById('upgrade-hero-btn')

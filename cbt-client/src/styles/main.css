@@ -1054,12 +1054,23 @@ body.light-mode .option-btn .option-holder {
 }
 
 /* Mobile Adjustments for Tour */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .tour-bubble {
-    width: calc(100vw - 40px);
-    left: 20px !important;
-    padding: 1rem;
+    border-radius: 16px 16px 12px 12px !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6) !important;
+    animation: tourSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
+
+  .tour-spotlight {
+    border-width: 3px !important;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+@keyframes tourSlideUp {
+  from { opacity: 0; transform: translate(-50%, 100%); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* ==========================================================================

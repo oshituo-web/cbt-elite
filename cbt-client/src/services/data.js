@@ -1067,6 +1067,14 @@ export const DataService = {
       .getPublicUrl(fileName)
       
     return { url: data.publicUrl, error: null }
+  },
+
+  async markTourAsSeen(userId) {
+    const { error } = await supabase
+      .from('users')
+      .update({ has_seen_tour: true })
+      .eq('id', userId)
+    return { error }
   }
 }
 
