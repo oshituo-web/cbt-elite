@@ -1,6 +1,7 @@
 import { DataService } from '../services/data'
 import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
+import { TourGuide } from '../utils/TourGuide'
 
 export const DashboardComponent = {
   profile: null,
@@ -29,6 +30,17 @@ export const DashboardComponent = {
     } catch (err) {
         console.error("Dashboard data fetch failed:", err)
     }
+
+    // Initialize Tour Guide
+    TourGuide.init([
+      { title: "Welcome to CBT Elite", text: "Your all-in-one platform to prepare for JAMB, WAEC, and NECO." },
+      { element: "#quick-practice-btn", title: "Practice Mode", text: "Start here. Practice Mode helps you improve topic by topic." },
+      { element: "#quick-exam-btn", title: "Exam Mode", text: "Simulate real exams with timers and scoring." },
+      { element: "#analytics-section", title: "Performance Insights", text: "Track your scores and identify weak subjects." },
+      { element: "#upgrade-hero-btn", title: "Upgrade Section", text: "Unlock AI explanations and unlimited access with Premium." },
+      { element: "#feature-review-item", title: "Review Questions", text: "After any test or practice, tap 'Review Questions' to see correct answers and detailed explanations." },
+      { title: "You're all set", text: "You're ready to start your journey. Good luck!" }
+    ]);
     
     // Calculate Progress and Daily Goal
     const today = new Date().toDateString()
@@ -90,26 +102,39 @@ export const DashboardComponent = {
           <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Start Practicing Now</h2>
           <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select your preferred mode to continue training.</p>
           <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-             <button id="quick-practice-btn" class="primary" style="padding: 1.25rem 2rem; font-size: 1.25rem; font-weight: 800; min-width: 200px;">🎯 Practice Mode</button>
-             <button id="quick-exam-btn" class="secondary" style="padding: 1.25rem 2rem; border: 2px solid var(--accent-secondary); background: transparent; color: var(--text-primary); font-size: 1.25rem; font-weight: 800; min-width: 200px; border-radius: 8px;">🏆 Mock Exam</button>
+             <button id="quick-practice-btn" class="primary" data-tooltip="Practice by topic to improve faster" style="padding: 1.25rem 2rem; font-size: 1.25rem; font-weight: 800; min-width: 200px;">🎯 Practice Mode</button>
+             <button id="quick-exam-btn" class="secondary" data-tooltip="Simulate real exam conditions" style="padding: 1.25rem 2rem; border: 2px solid var(--accent-secondary); background: transparent; color: var(--text-primary); font-size: 1.25rem; font-weight: 800; min-width: 200px; border-radius: 8px;">🏆 Mock Exam</button>
              <button id="start-saved" class="glass" style="padding: 1.25rem 2rem; border: 2.5px solid var(--accent-primary); font-size: 1.1rem; display: none; align-items: center; gap: 0.5rem; justify-content: center; min-width: 200px; font-weight: 700;">🔖 Saved (<span id="bookmark-count">0</span>)</button>
           </div>
         </div>
 
-        <!-- 🚀 2. Premium Upgrade Section -->
+        <!-- 🧭 2. Dashboard Guide Entry (Replayable) -->
+        <div class="glass card" style="margin-top: 1.5rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary);">
+           <div style="display: flex; align-items: center; gap: 1rem;">
+             <div style="font-size: 1.5rem;">📖</div>
+             <div>
+               <h3 style="font-size: 1rem; margin: 0;">New to CBT Elite?</h3>
+               <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Learn how to use the platform effectively.</p>
+             </div>
+           </div>
+           <button id="start-guide-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-color: var(--primary); color: var(--primary);">Start Guide</button>
+        </div>
+
+        <!-- 🚀 3. Premium Upgrade Section -->
         ${profile.tier !== 'premium' ? `
         <div class="glass card" style="margin-top: 1.5rem; padding: 2rem; border-left: 6px solid var(--accent-secondary); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; background: var(--accent-secondary)0D;">
            <div>
-             <h3 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">Unlock Premium CBT Elite</h3>
+             <h3 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">What You Get with Premium</h3>
              <ul style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; list-style: none; padding: 0;">
+                <li><strong style="color: var(--success);">✔</strong> AI Answer Explanations</li>
                 <li><strong style="color: var(--success);">✔</strong> Unlimited Subject Practice</li>
-                <li><strong style="color: var(--success);">✔</strong> Detailed AI Corrections & Step-by-Step Tutors</li>
-                <li><strong style="color: var(--success);">✔</strong> Full WAEC / JAMB Mock Engine Access (Unlimited)</li>
+                <li><strong style="color: var(--success);">✔</strong> Full Question Bank Access</li>
+                <li><strong style="color: var(--success);">✔</strong> Advanced Mastery Analytics</li>
              </ul>
            </div>
            <div style="text-align: right;">
              <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.8;">${profile.ai_credits || 5} Free AI Credits Remaining</div>
-             <button id="upgrade-hero-btn" class="primary" style="background: var(--accent-secondary); box-shadow: 0 4px 15px var(--accent-secondary)4D;">Upgrade Now</button>
+             <button id="upgrade-hero-btn" class="primary" data-tooltip="Unlock AI explanations and unlimited access" style="background: var(--accent-secondary); box-shadow: 0 4px 15px var(--accent-secondary)4D;">Upgrade Now</button>
            </div>
         </div>
         ` : ''}
@@ -141,10 +166,17 @@ export const DashboardComponent = {
                 <h3 style="font-size: 0.9rem; color: var(--text-secondary);">Daily Practice Goal</h3>
                 <span style="font-size: 0.8rem; font-weight: 800; color: var(--success);">${todayQuestions} / ${dailyGoalLimit}</span>
              </div>
-             <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1rem;">Complete ${dailyGoalLimit} questions every day to master the syllabus.</p>
-             <div style="width: 100%; height: 12px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden; border: 1px solid var(--glass-border);">
-                <div style="height: 100%; width: ${dailyGoalPct}%; background: var(--success); border-radius: 6px; transition: width 0.5s ease;"></div>
-             </div>
+             ${history.length === 0 ? `
+              <div class="empty-state-card" style="padding: 1rem;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">You haven’t started practicing yet.</p>
+                <button id="empty-start-btn" class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Start Practice</button>
+              </div>
+             ` : `
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1rem;">Complete ${dailyGoalLimit} questions every day to master the syllabus.</p>
+              <div style="width: 100%; height: 12px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden; border: 1px solid var(--glass-border);">
+                  <div style="height: 100%; width: ${dailyGoalPct}%; background: var(--success); border-radius: 6px; transition: width 0.5s ease;"></div>
+              </div>
+             `}
            </div>
         </div>
 
@@ -182,7 +214,56 @@ export const DashboardComponent = {
           </div>
         </div>
 
-        <!-- 📚 7. Exam Selection (Existing) -->
+        <!-- 🧭 7. Explore CBT Elite (Feature Map) -->
+        <div class="glass card" style="margin-top: 1.5rem; padding: 1.5rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--accent-primary);">Explore CBT Elite</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+            <div style="display: flex; gap: 1rem;">
+              <div style="font-size: 1.25rem;">🎯</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Practice Mode</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Practice questions by topic and improve gradually</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+              <div style="font-size: 1.25rem;">🏆</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Exam Mode</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Take full CBT exams with real timing</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+              <div style="font-size: 1.25rem;">📊</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Performance Insights</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">See your progress and score trends</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+              <div style="font-size: 1.25rem;">🧠</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">AI Explanations</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Get detailed corrections after answering (Premium)</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem;" id="feature-review-item">
+              <div style="font-size: 1.25rem;">📌</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Review Questions</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">After finishing a test, tap 'Review Questions' to see corrections</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+              <div style="font-size: 1.25rem;">📰</div>
+              <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">News & Updates</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Stay informed about JAMB, WAEC, and NECO</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📚 8. Exam Selection (Existing) -->
         <div style="margin-top: 3rem; border-top: 1px dashed var(--glass-border); padding-top: 2rem;">
             <div class="dashboard-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
               <button id="view-practice" class="nav-tab active" style="flex: 1;">🎯 Practice Mode</button>
@@ -400,6 +481,22 @@ export const DashboardComponent = {
 
     if (document.getElementById('admin-panel-btn')) {
       document.getElementById('admin-panel-btn').onclick = () => this.onOpenAdmin()
+    }
+
+    if (document.getElementById('start-guide-btn')) {
+      document.getElementById('start-guide-btn').onclick = () => TourGuide.start();
+    }
+
+    if (document.getElementById('empty-start-btn')) {
+      document.getElementById('empty-start-btn').onclick = () => {
+        document.getElementById('view-practice').click();
+        document.getElementById('dashboard-content').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Auto-trigger onboarding for new users
+    if (!localStorage.getItem('hasSeenOnboarding')) {
+      setTimeout(() => TourGuide.start(), 1000);
     }
 
     const upgradeHeroBtn = document.getElementById('upgrade-hero-btn')

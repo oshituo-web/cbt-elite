@@ -527,7 +527,17 @@ export class Exam {
     const expDiv = document.getElementById('explanation-container')
     if (this.isReviewMode) {
       expDiv.style.display = 'block'
-      if (q.question_type === 'theory') {
+      
+      if (this.profile && this.profile.tier !== 'premium') {
+        expDiv.innerHTML = `
+          <div class="premium-lock-container">
+            <div class="lock-icon">🔒</div>
+            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Premium Feature</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Upgrade to Premium to view detailed explanations and AI-powered corrections for every question.</p>
+            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">Upgrade Now</button>
+          </div>
+        `
+      } else if (q.question_type === 'theory') {
         const graded = q.graded || {}
         expDiv.innerHTML = `
           <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">Grading Details:</div>

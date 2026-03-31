@@ -83,10 +83,13 @@ export const ResultsComponent = {
           }).join('')}
         </div>
 
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem;">
-          <button class="primary" id="restart-exam" style="flex: 1; min-width: 200px; padding: 1rem;">Retake Practice</button>
-          <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 200px; padding: 1rem; border-color: var(--accent-primary);">Review Detailed Answers</button>
-          <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; padding: 1rem;">← Back to Dashboard</button>
+        <div style="margin-bottom: 2rem;">
+          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600;">View your performance and explanations</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+            <button class="primary" id="restart-exam" style="flex: 1; min-width: 200px; padding: 1rem;">Retake Practice</button>
+            <button class="btn-secondary" id="review-exam" data-tooltip="Tap here after a test to see explanations and corrections" style="flex: 1; min-width: 200px; padding: 1rem; border-color: var(--accent-primary);">Review Questions</button>
+            <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; padding: 1rem;">← Back to Dashboard</button>
+          </div>
         </div>
 
       </div>
