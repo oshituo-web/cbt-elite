@@ -41,7 +41,10 @@ export const DashboardComponent = {
       { element: "#feature-review-item", title: "Review Questions", text: "After any test or practice, tap 'Review Questions' to see correct answers and detailed explanations." },
       { title: "You're all set", text: "You're ready to start your journey. Good luck!" }
     ], {
-      onFinish: () => DataService.markTourAsSeen(profile.id)
+      onFinish: () => {
+        DataService.markTourAsSeen(profile.id)
+        sessionStorage.removeItem('isFreshSignup')
+      }
     });
     
     // Calculate Progress and Daily Goal
@@ -496,8 +499,9 @@ export const DashboardComponent = {
       }
     }
 
-    // Auto-trigger onboarding for new users
-    if (!profile.has_seen_tour) {
+    // Auto-trigger onboarding ONLY for new users that JUST signed up
+    const isFreshSignup = sessionStorage.getItem('isFreshSignup') === 'true'
+    if (!profile.has_seen_tour && isFreshSignup) {
       setTimeout(() => TourGuide.start(), 1500);
     }
 

@@ -71,6 +71,8 @@ export const ProfileSetupComponent = {
         errorDiv.textContent = error.message
         errorDiv.style.display = 'block'
       } else {
+        // Mark this as a fresh signup so the tour triggers once
+        sessionStorage.setItem('isFreshSignup', 'true')
         onComplete(data[0])
       }
     }
