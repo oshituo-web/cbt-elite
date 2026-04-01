@@ -450,18 +450,25 @@ export class Exam {
     const diagramDiv = document.getElementById('q-diagram')
     if (q.diagram_type === 'svg' && q.diagram_svg) {
         diagramDiv.style.display = 'block'
-        // Sanitize check: Ensure it's reasonably clean SVG
-        const cleanSvg = q.diagram_svg.includes('<svg') ? q.diagram_svg : `<svg viewBox="0 0 400 300">${q.diagram_svg}</svg>`
+        const cleanSvg = q.diagram_svg.includes('<svg') ? q.diagram_svg : `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">${q.diagram_svg}</svg>`
         diagramDiv.innerHTML = `
-          <div class="diagram-container svg-diagram" style="background: #fff; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: center;">
+          <div class="diagram-container svg-diagram" style="background: #fff; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); border: 1px solid var(--border-color);">
             ${cleanSvg}
           </div>`
-    } else if (q.diagram_url) {
+    } else if (q.diagram_url && q.diagram_url.length > 5) {
         diagramDiv.style.display = 'block'
         const isGraph = q.diagram_type === 'graph'
         diagramDiv.innerHTML = `
-          <div class="diagram-container ${isGraph ? 'graph-diagram' : ''}" style="margin-bottom: 1.5rem; text-align: center;">
-            <img src="${q.diagram_url}" alt="Question Diagram" class="blur-up" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onload="this.classList.add('loaded')">
+          <div class="diagram-container ${isGraph ? 'graph-diagram' : ''}" style="margin-bottom: 2rem; text-align: center;">
+            <img src="${q.diagram_url}" 
+                 alt="Question Diagram" 
+                 class="blur-up" 
+                 style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 2px solid #fff;" 
+                 onload="this.classList.add('loaded')"
+                 onerror="this.parentElement.innerHTML = '<div class=\\'glass\\' style=\\'padding: 2rem; color: var(--error);\\'>⚠️ Visual aid could not be loaded. Please check your connection or report this question.</div>'">
+            <div style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.7;">
+                <a href="${q.diagram_url}" target="_blank" style="color: var(--primary); text-decoration: none;">🔍 View Full Diagram</a>
+            </div>
           </div>`
     } else {
         diagramDiv.style.display = 'none'
