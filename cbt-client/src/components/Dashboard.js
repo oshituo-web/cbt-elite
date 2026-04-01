@@ -2,13 +2,16 @@ import { DataService } from '../services/data'
 import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { TourGuide } from '../utils/TourGuide'
+import { SubscriptionService } from '../services/subscriptionService'
 
 export const DashboardComponent = {
   profile: null,
   onStartExam: null,
 
   async render(profile, onStartExam, onOpenAdmin, onReadNews) {
-    this.profile = profile
+    // Handle Tier Transitions & Daily Resets
+    const updatedUser = await SubscriptionService.handleTierTransition(profile)
+    this.profile = updatedUser || profile
     this.onStartExam = onStartExam
     this.onOpenAdmin = onOpenAdmin
     this.onReadNews = onReadNews
@@ -100,7 +103,29 @@ export const DashboardComponent = {
         </div>
       </header>
 
-      <div id="dashboard-content" style="margin-top: 2rem;">
+      <div id="dashboard-content" class="dashboard-scroll-area">
+        
+        <!-- Premium CTA Banner -->
+        ${profile.tier !== 'premium' ? `
+          <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.25rem 2rem; background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border: 1px solid var(--accent-primary); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1.25rem;">
+              <div style="font-size: 2rem;">${profile.is_activated ? '🚀' : '✨'}</div>
+              <div>
+                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">${profile.is_activated ? 'Go Monthly Pro' : 'Activate Lifetime Access'}</h4>
+                <p style="font-size: 0.85rem; color: #ccc;">
+                  ${profile.is_activated 
+                    ? 'Unlock Unlimited AI, Unlimited Mocks, and Theory Grading for just \u20A61,000.' 
+                    : 'Activate for \u20A61,500. Get 30 Days Pro + Lifetime access + 15 Monthly AI credits.'}
+                </p>
+              </div>
+            </div>
+            <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+              ${profile.is_activated ? 'Renew Premium' : 'Activate Now'}
+            </button>
+          </div>
+        ` : ''}
+
+        <header class="dashboard-header fade-in">
         
         <!-- 🔥 1. Quick Action Section -->
         <div class="glass card" style="text-align: center; padding: 3rem 1.5rem; border: 2px solid var(--accent-primary); background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 100%);">
@@ -129,17 +154,21 @@ export const DashboardComponent = {
         ${profile.tier !== 'premium' ? `
         <div class="glass card" style="margin-top: 1.5rem; padding: 2rem; border-left: 6px solid var(--accent-secondary); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; background: var(--accent-secondary)0D;">
            <div>
-             <h3 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">What You Get with Premium</h3>
+             <h3 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">${profile.is_activated ? 'Renew Premium Benefits' : 'What You Get with Activation'}</h3>
              <ul style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; list-style: none; padding: 0;">
-                <li><strong style="color: var(--success);">✔</strong> AI Answer Explanations</li>
-                <li><strong style="color: var(--success);">✔</strong> Unlimited Subject Practice</li>
+                <li><strong style="color: var(--success);">✔</strong> ${profile.is_activated ? 'Unlimited' : '30 Days'} AI Answer Explanations</li>
+                <li><strong style="color: var(--success);">✔</strong> Unlimited Mock Exams & Practice</li>
+                <li><strong style="color: var(--success);">✔</strong> AI-Powered Theory Grading</li>
                 <li><strong style="color: var(--success);">✔</strong> Full Question Bank Access</li>
-                <li><strong style="color: var(--success);">✔</strong> Advanced Mastery Analytics</li>
              </ul>
            </div>
            <div style="text-align: right;">
-             <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.8;">${profile.ai_credits || 5} Free AI Credits Remaining</div>
-             <button id="upgrade-hero-btn" class="primary" data-tooltip="Unlock AI explanations and unlimited access" style="background: var(--accent-secondary); box-shadow: 0 4px 15px var(--accent-secondary)4D;">Upgrade Now</button>
+             <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.8;">
+              ${profile.tier === 'medium' ? `${profile.ai_credits || 0} AI Credits Remaining` : '0 AI Access (Free)'}
+             </div>
+             <button id="upgrade-hero-btn" class="primary" style="background: var(--accent-secondary); box-shadow: 0 4px 15px var(--accent-secondary)4D;">
+              ${profile.is_activated ? 'Renew Pro \u20A61,000' : 'Activate \u20A61,500'}
+             </button>
            </div>
         </div>
         ` : ''}
@@ -413,25 +442,44 @@ export const DashboardComponent = {
         </div>
       </div>
 
-      <!-- Upgrade Modal (Moved to 🚀 Premium Section logic visually but physically kept modal logic intact) -->
+      <!-- Upgrade Modal -->
       <div id="upgrade-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
         <div class="modal-content glass" style="max-width: 450px; width: 100%; position: relative; padding: 2.5rem; text-align: center;">
           <button id="close-upgrade" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; color: var(--accent-secondary);">Go Premium</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">Unlock the complete curriculum, unlimited AI explanations, and theory grading.</p>
+          <div style="font-size: 3rem; margin-bottom: 1rem;">${profile.is_activated ? '🚀' : '✨'}</div>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; color: var(--accent-secondary);">${profile.is_activated ? 'Renew Premium' : 'Activate Account'}</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+            ${profile.is_activated 
+               ? 'Renew your monthly subscription to continue enjoying Unlimited AI and Mock Exams.' 
+               : 'Complete your one-time lifetime activation to unlock the full syllabus and 30 days of Premium access.'}
+          </p>
           
-          <div class="glass" style="padding: 1.5rem; border: 2px solid var(--accent-secondary); border-radius: 12px; margin-bottom: 2rem; background: var(--accent-secondary)0D;">
-             <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">BEST VALUE</div>
-             <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit';">₦2,500 <span style="font-size: 1rem; font-weight: 400; opacity: 0.7;">/ lifetime</span></div>
-             <ul style="text-align: left; margin: 1rem 0; font-size: 0.85rem; padding-left: 1rem;">
-               <li>📌 Full Access to JAMB/WAEC/NECO</li>
-               <li>🤖 500 AI Assistant Credits</li>
-               <li>📈 Advanced Mastery Analytics</li>
-             </ul>
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+            ${!profile.is_activated ? `
+              <div class="glass card" style="padding: 1.5rem; border: 2px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05);">
+                <h4 style="margin-bottom: 0.5rem; color: #fff;">Lifetime Activation</h4>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.5rem;">₦1,500</div>
+                <ul style="text-align: left; font-size: 0.8rem; color: #ccc; margin-bottom: 1.5rem; list-style: none; padding: 0;">
+                  <li>✔ Includes 30 Days Premium</li>
+                  <li>✔ Lifetime Medium Access</li>
+                  <li>✔ 15 Monthly AI Credits</li>
+                </ul>
+                <button id="pay-lifetime-btn" class="primary" style="width: 100%; padding: 0.75rem;">Activate Now</button>
+              </div>
+            ` : `
+              <div class="glass card" style="padding: 1.5rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
+                <h4 style="margin-bottom: 0.5rem; color: #fff;">Monthly Pro</h4>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-secondary); margin-bottom: 0.5rem;">₦1,000</div>
+                <ul style="text-align: left; font-size: 0.8rem; color: #ccc; margin-bottom: 1.5rem; list-style: none; padding: 0;">
+                  <li>✔ Unlimited AI Explanations</li>
+                  <li>✔ Unlimited Mock Exams</li>
+                  <li>✔ AI Theory Grading</li>
+                </ul>
+                <button id="pay-monthly-btn" class="primary" style="width: 100%; padding: 0.75rem; background: var(--accent-secondary);">Renew Pro</button>
+              </div>
+            `}
           </div>
           
-          <button id="paystack-btn" class="primary" style="width: 100%; padding: 1rem; font-size: 1rem;">Secure Upgrade with Paystack</button>
           <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 1rem;">Instant activation upon successful payment.</p>
         </div>
       </div>
@@ -504,6 +552,7 @@ export const DashboardComponent = {
     }
 
     // Auto-trigger onboarding ONLY for new users that JUST signed up
+    // Auto-trigger onboarding ONLY for new users that JUST signed up
     const isFreshSignup = sessionStorage.getItem('isFreshSignup') === 'true'
     if (!profile.has_seen_tour && isFreshSignup) {
       setTimeout(() => TourGuide.start(), 1500);
@@ -512,7 +561,8 @@ export const DashboardComponent = {
     const upgradeHeroBtn = document.getElementById('upgrade-hero-btn')
     const upgradeModal = document.getElementById('upgrade-modal')
     const closeUpgrade = document.getElementById('close-upgrade')
-    const payBtn = document.getElementById('paystack-btn')
+    const payLifetime = document.getElementById('pay-lifetime-btn')
+    const payMonthly = document.getElementById('pay-monthly-btn')
 
     if (upgradeHeroBtn) {
        upgradeHeroBtn.onclick = () => upgradeModal.style.display = 'flex'
@@ -521,36 +571,37 @@ export const DashboardComponent = {
        closeUpgrade.onclick = () => upgradeModal.style.display = 'none'
     }
 
-    if (payBtn) {
-      payBtn.onclick = () => {
-        // IMPORTANT: USER should update this KEY in settings or env
-        const PAYSTACK_PUBLIC_KEY = 'pk_test_placeholder_key_replace_me' 
-        
+    const triggerPayment = (amount, planName) => {
         const handler = PaystackPop.setup({
-          key: PAYSTACK_PUBLIC_KEY,
-          email: profile.email,
-          amount: 250000, // 2500 Naira
-          currency: 'NGN',
-          callback: async (response) => {
-            payBtn.disabled = true
-            payBtn.textContent = 'Verifying Transaction...'
-            
-            // Logic: Upgrade user upon success
-            const { error } = await DataService.upgradeUserTier(profile.id, 'premium', 500)
-            if (!error) {
-               alert("✨ Congratulations! Your account has been upgraded to PREMIUM.")
-               location.reload()
-            } else {
-               alert("Upgrade synchronization failed. Please contact support with ref: " + response.reference)
+            key: 'pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 
+            email: profile.email,
+            amount: amount,
+            currency: 'NGN',
+            callback: async (response) => {
+                // Logic: 1,500 = Activation + 30 Days. 1,000 = 30 Days.
+                const isFirstTime = !profile.is_activated
+                const { error } = await DataService.updateUser(profile.id, { 
+                    tier: 'premium',
+                    is_activated: true, // Permanent
+                    ai_credits: isFirstTime ? 15 : profile.ai_credits, // Set 15 on first activation
+                    premium_until: new Date(Date.now() + 30*24*60*60*1000).toISOString()
+                })
+                if (!error) {
+                    alert(`\u2728 Congratulations! Your account has been ${isFirstTime ? 'ACTIVATED and upgraded' : 'RENEWED'} to PREMIUM.`)
+                    location.reload()
+                } else {
+                    alert("Upgrade synchronization failed. Please contact support.")
+                }
+            },
+            onClose: () => {
+                alert('Transaction cancelled.')
             }
-          },
-          onClose: () => {
-            alert('Transaction cancelled. Your practice session remains free tier.')
-          }
-        });
-        handler.openIframe();
-      }
+        })
+        handler.openIframe()
     }
+
+    if (payLifetime) payLifetime.onclick = () => triggerPayment(150000, 'activation')
+    if (payMonthly) payMonthly.onclick = () => triggerPayment(100000, 'monthly')
 
     // State for selections
     let selectedPracticeExam = null

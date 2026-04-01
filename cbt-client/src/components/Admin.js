@@ -115,9 +115,19 @@ export const AdminComponent = {
                 <div id="promo-codes-list">Loading codes...</div>
               </div>
               
-              <!-- Global Broadcast -->
+              <!-- Global Settings & Broadcast -->
               <div>
-                <h2 style="margin-bottom: 1.5rem;">Global Broadcast</h2>
+                <h2 style="margin-bottom: 1.5rem;">System Controls</h2>
+                
+                <!-- NEW: Explanations Toggle -->
+                <div class="glass card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
+                  <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">🔓 Explanations Access</h3>
+                  <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 1rem;">Turn this ON to allow ALL users (including Free) to view question explanations.</p>
+                  <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="toggle-explanations-btn" class="glass" style="padding: 0.6rem 1.2rem; font-weight: 700; border-color: var(--accent-secondary); color: var(--accent-secondary);">Loading...</button>
+                  </div>
+                </div>
+
                 <div class="glass card" style="padding: 1.5rem;">
                   <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Announcement Banner</h3>
                   <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 1rem;">This message will appear at the top of all user dashboards.</p>
@@ -307,6 +317,24 @@ export const AdminComponent = {
             }
             saveBroadcastBtn.textContent = 'Push Broadcast'
             saveBroadcastBtn.disabled = false
+        }
+    }
+
+    const toggleExplBtn = document.getElementById('toggle-explanations-btn')
+    if (toggleExplBtn) {
+        toggleExplBtn.onclick = async () => {
+            const currentState = toggleExplBtn.dataset.state === 'true'
+            const newState = !currentState
+            toggleExplBtn.disabled = true
+            toggleExplBtn.textContent = 'Updating...'
+            
+            const { error } = await DataService.updateSystemConfig('explanations_free_access', newState)
+            if (error) alert('Error: ' + error.message)
+            else {
+                await DataService.logAdminAction(this._adminProfile.email, 'Toggle Explanations Free', 'global', `New State: ${newState}`)
+                this.loadMarketing()
+            }
+            toggleExplBtn.disabled = false
         }
     }
 
@@ -550,7 +578,8 @@ export const AdminComponent = {
       <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <div style="flex: 1; min-width: 200px; word-break: break-all;">
           <strong>${u.username || 'Unknown'}</strong> (${u.email})
-          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${u.tier === 'premium' ? 'var(--accent-secondary)' : '#666'}">${u.tier || 'free'}</span>
+          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${u.tier === 'premium' ? 'var(--accent-secondary)' : (u.tier === 'medium' ? 'var(--accent-primary)' : '#666')}">${u.tier || 'freemium'}</span>
+          ${u.is_activated ? '<span class="badge" style="margin-left: 0.25rem; font-size: 0.65rem; padding: 1px 5px; background: var(--success); opacity: 0.9;">LIFETIME</span>' : ''}
           <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: var(--accent-primary); opacity: 0.8;">${u.role || 'user'}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -576,17 +605,34 @@ export const AdminComponent = {
         <div class="glass card" style="width: 100%; max-width: 500px; padding: 2rem; border: 1px solid var(--accent-primary);">
           <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Edit User: ${user.username || user.email}</h3>
           
-          <div style="margin-bottom: 1.5rem;">
+          <div style="margin-bottom: 1.25rem;">
             <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Subscription Tier</p>
             <select id="edit-user-tier" class="glass-select" style="width: 100%;">
-              <option value="free" ${user.tier === 'free' ? 'selected' : ''}>Free Tier</option>
-              <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Premium Tier</option>
+              <option value="freemium" ${user.tier === 'freemium' || user.tier === 'free' ? 'selected' : ''}>Freemium (Basic)</option>
+              <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated)</option>
+              <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Premium (Monthly Pro)</option>
             </select>
           </div>
 
-          <div style="margin-bottom: 2rem;">
-            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">AI Credits</p>
-            <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
+          <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <input type="checkbox" id="edit-user-activated" ${user.is_activated ? 'checked' : ''} style="width: 18px; height: 18px;">
+            <label for="edit-user-activated" style="font-size: 0.85rem; color: #fff; cursor: pointer;">Lifetime Activated (₦1,500 Paid)</label>
+          </div>
+
+          <div style="margin-bottom: 1.25rem;">
+            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Premium Expiration (premium_until)</p>
+            <input type="datetime-local" id="edit-user-premium-until" class="glass-input" value="${user.premium_until ? new Date(user.premium_until).toISOString().slice(0, 16) : ''}" style="width: 100%;">
+          </div>
+
+          <div style="margin-bottom: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">AI Monthly Credits</p>
+              <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
+            </div>
+            <div>
+              <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Today's AI Usage</p>
+              <input type="number" id="edit-user-ai-usage" class="glass-input" value="${user.ai_daily_usage || 0}" style="width: 100%;">
+            </div>
           </div>
 
           <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
@@ -602,13 +648,17 @@ export const AdminComponent = {
     document.getElementById('cancel-user-edit').onclick = () => document.getElementById('user-edit-overlay').remove()
     document.getElementById('save-user-edit').onclick = async () => {
       const tier = document.getElementById('edit-user-tier').value
+      const is_activated = document.getElementById('edit-user-activated').checked
       const ai_credits = parseInt(document.getElementById('edit-user-credits').value)
+      const ai_daily_usage = parseInt(document.getElementById('edit-user-ai-usage').value)
+      const premium_until_val = document.getElementById('edit-user-premium-until').value
+      const premium_until = premium_until_val ? new Date(premium_until_val).toISOString() : null
       
       const saveBtn = document.getElementById('save-user-edit')
       saveBtn.textContent = 'Saving...'
       saveBtn.disabled = true
       
-      const { error } = await DataService.updateUser(user.id, { tier, ai_credits })
+      const { error } = await DataService.updateUser(user.id, { tier, is_activated, ai_credits, ai_daily_usage, premium_until })
       if (error) {
         alert('Error: ' + error.message)
         saveBtn.textContent = 'Save User'
@@ -1153,6 +1203,47 @@ export const AdminComponent = {
         document.getElementById('news-edit-overlay').remove()
         this.loadNews()
       }
+    }
+  },
+
+  async loadMarketing() {
+    const codeList = document.getElementById('promo-codes-list')
+    if (codeList) {
+        codeList.innerHTML = 'Loading codes...'
+        const { data } = await DataService.getPromoCodes()
+        if (!data || data.length === 0) {
+            codeList.innerHTML = '<p style="font-size: 0.8rem; color: #888;">No active codes.</p>'
+        } else {
+            codeList.innerHTML = data.map(c => `
+                <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 0.25rem; border-radius: 4px; display: flex; justify-content: space-between;">
+                    <span><strong>${c.code}</strong> - ${c.percent}%</span>
+                    <button class="delete-promo-btn" data-id="${c.id}" style="background: none; border: none; color: #ff6b6b; cursor: pointer;">🗑️</button>
+                </div>
+            `).join('')
+            
+            document.querySelectorAll('.delete-promo-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    await DataService.deletePromoCode(btn.dataset.id)
+                    this.loadMarketing()
+                }
+            })
+        }
+    }
+
+    const broadcastInput = document.getElementById('broadcast-message-input')
+    if (broadcastInput) {
+        const { data } = await DataService.getSystemConfig('broadcast_message')
+        if (data) broadcastInput.value = data.value || ''
+    }
+
+    const toggleExplBtn = document.getElementById('toggle-explanations-btn')
+    if (toggleExplBtn) {
+        const { data } = await DataService.getSystemConfig('explanations_free_access')
+        const isFree = data?.value === true || data?.value === 'true'
+        toggleExplBtn.dataset.state = isFree
+        toggleExplBtn.textContent = isFree ? '✅ ENABLED (Free)' : '🔒 DISABLED (Locked)'
+        toggleExplBtn.style.background = isFree ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)'
+        toggleExplBtn.style.color = isFree ? '#4caf50' : 'var(--accent-secondary)'
     }
   }
 }

@@ -3,6 +3,7 @@ import { sanitizeContent } from '../utils/sanitize'
 import { TimerService } from '../services/TimerService'
 import { ExamSessionManager } from '../services/ExamSessionManager'
 import { QuestionRenderer } from '../services/QuestionRenderer'
+import { SubscriptionService } from '../services/subscriptionService'
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview)
@@ -85,7 +86,23 @@ export class Exam {
       this.session.currentIndex = resumeState.currentIndex || 0
       this.activeJambSubject = resumeState.activeJambSubject || this.activeJambSubject
       this.remainingTime = resumeState.remainingTime || this.initialTime
+    } else if (!this.isReviewMode) {
+      // Enforcement: Session Limits
+      if (!SubscriptionService.canStartSession(this.profile, this.mode)) {
+        const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
+        alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
+        onBack()
+        return
+      }
+      await SubscriptionService.incrementSessionCount(this.profile)
     }
+
+    // Cache global settings
+    this._explanationsFreeAccess = false;
+    DataService.getSystemConfig('explanations_free_access').then(({ data }) => {
+      this._explanationsFreeAccess = data?.value === true || data?.value === 'true';
+      if (this.isReviewMode) this.updateUI();
+    });
     
     container.innerHTML = `
       <div class="exam-layout">
@@ -535,33 +552,71 @@ export class Exam {
     if (this.isReviewMode) {
       expDiv.style.display = 'block'
       
-      if (this.profile && this.profile.tier !== 'premium') {
+      const aiStatus = SubscriptionService.canUseAI(this.profile)
+      const isFreeAccess = this._explanationsFreeAccess
+      const isPremium = this.profile && this.profile.tier === 'premium'
+
+      if (!isPremium && !isFreeAccess && !aiStatus.canUse) {
         expDiv.innerHTML = `
           <div class="premium-lock-container">
             <div class="lock-icon">🔒</div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Premium Feature</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Upgrade to Premium to view detailed explanations and AI-powered corrections for every question.</p>
-            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">Upgrade Now</button>
-          </div>
-        `
-      } else if (q.question_type === 'theory') {
-        const graded = q.graded || {}
-        expDiv.innerHTML = `
-          <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">Grading Details:</div>
-          <div style="margin-bottom: 1rem;">
-              <strong style="color: var(--success);">Model Answer:</strong>
-              <p style="margin-top: 0.25rem;">${sanitizeContent(q.model_answer || '')}</p>
-          </div>
-          <div>
-              <strong style="color: var(--accent-secondary);">AI Feedback (Score: ${graded.score || 0}/5):</strong>
-              <p style="margin-top: 0.25rem;">${sanitizeContent(graded.feedback || 'Wait for grading...')}</p>
+            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">${this.profile.is_activated ? 'Renew Pro Status' : 'Activate Account'}</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">${aiStatus.reason || 'Upgrade to Premium to view detailed explanations and AI-powered corrections.'}</p>
+            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
+              ${this.profile.is_activated ? 'Renew Premium \u20A61,000' : 'Activate Now \u20A61,500'}
+            </button>
           </div>
         `
       } else {
-        expDiv.innerHTML = `
-          <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem;">Explanation:</div>
-          <div style="color: var(--text-secondary);">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
-        `
+        // If allowed, we might need to deduct credit if it's the first view of this question's explanation in this session
+        const qId = q.id
+        if (!this._deductedQuestions) this._deductedQuestions = new Set()
+        
+        if (!isPremium && !isFreeAccess && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
+          SubscriptionService.useAICredit(this.profile).then(success => {
+            if (success) {
+               this._deductedQuestions.add(qId)
+            }
+          })
+        } else if (isPremium && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
+          SubscriptionService.useAICredit(this.profile).then(() => this._deductedQuestions.add(qId))
+        }
+
+        if (q.question_type === 'theory') {
+          const graded = q.graded || {}
+          expDiv.innerHTML = `
+            <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+              <span>Grading Details:</span>
+              ${isPremium ? '<span style="font-size: 0.75rem; color: var(--success); opacity: 0.8;">\u2728 AI THEORY ENABLED</span>' : ''}
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--success);">Model Answer:</strong>
+                <p style="margin-top: 0.25rem;">${sanitizeContent(q.model_answer || '')}</p>
+            </div>
+            <div>
+                <strong style="color: var(--accent-secondary);">AI Feedback (Score: ${graded.score || 0}/5):</strong>
+                <p style="margin-top: 0.25rem;">${sanitizeContent(graded.feedback || 'Wait for grading...')}</p>
+            </div>
+          `
+        } else {
+          const ctaHtml = (!isPremium && (isFreeAccess || aiStatus.canUse)) ? `
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-secondary-rgb, 255, 152, 0), 0.1); border-radius: 8px; border: 1px dashed var(--accent-secondary); text-align: center;">
+              <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Get unlimited Mock Exams and AI Theory Grading for just \u20A61,000/month.</p>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-secondary); color: var(--accent-secondary);" onclick="location.reload()">Renew Premium</button>
+            </div>
+          ` : ''
+
+          expDiv.innerHTML = `
+            <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+              <span>Explanation:</span>
+              ${aiStatus.credits ? `<span style="font-size: 0.75rem; color: var(--accent-secondary); opacity: 0.8;">${aiStatus.credits} Credits Left</span>` : ''}
+              ${aiStatus.usage ? `<span style="font-size: 0.75rem; color: var(--accent-secondary); opacity: 0.8;">${aiStatus.usage}/30 Daily AI Used</span>` : ''}
+            </div>
+            <div style="color: var(--text-secondary);">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
+            ${ctaHtml}
+          `
+        }
       }
     } else {
       expDiv.style.display = 'none'
