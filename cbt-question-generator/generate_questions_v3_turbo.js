@@ -177,20 +177,32 @@ async function saveToDatabase(items) {
                 for (let i = 0; i < qsToInsert.length; i++) {
                    const { data: singleQ, error: sErr } = await supabase.from('questions').insert(qsToInsert[i]).select();
                    if (!sErr && singleQ && singleQ.length > 0) {
-                       // Successfully inserted unique question
-                       try {
-                           const orig = originals[i];
-                           await supabase.from('question_answers').upsert({
-                               question_id: singleQ[0].id,
-                               option_a: orig.option_a,
-                               option_b: orig.option_b,
-                               option_c: orig.option_c,
-                               option_d: orig.option_d,
-                               correct_option: orig.correct_option,
-                               explanation: orig.explanation
-                           }, { onConflict: 'question_id' });
-                           successCount++;
-                       } catch (e) { /* ignore single error */ }
+                        // Successfully inserted unique question
+                        try {
+                            const orig = originals[i];
+                            const qId = singleQ[0].id;
+                            
+                            // Insert into legacy/joined answers table
+                            await supabase.from('question_answers').upsert({
+                                question_id: qId,
+                                option_a: orig.option_a,
+                                option_b: orig.option_b,
+                                option_c: orig.option_c,
+                                option_d: orig.option_d,
+                                correct_option: orig.correct_option,
+                                explanation: orig.explanation
+                            }, { onConflict: 'question_id' });
+
+                            // Insert into partitioned explanation table for optimized gating
+                            if (orig.explanation) {
+                                await supabase.from('question_explanations').upsert({
+                                    question_id: qId,
+                                    explanation: orig.explanation
+                                }, { onConflict: 'question_id' });
+                            }
+                            
+                            successCount++;
+                        } catch (e) { /* ignore single error */ }
                    }
                 }
             } else {
@@ -217,6 +229,22 @@ async function saveToDatabase(items) {
         const { error: aErr } = await withDBRetry(() => 
             supabase.from('question_answers').upsert(ansInserts, { onConflict: 'question_id' })
         );
+
+        // Map explanations for the partitioned table
+        const expInserts = insertedQs.map((insQ, idx) => {
+            const orig = originals[idx];
+            if (!orig.explanation) return null;
+            return {
+                question_id: insQ.id,
+                explanation: orig.explanation
+            };
+        }).filter(Boolean);
+
+        if (expInserts.length > 0) {
+            await withDBRetry(() => 
+                supabase.from('question_explanations').upsert(expInserts, { onConflict: 'question_id' })
+            );
+        }
 
         // Also ensure this topic exists in syllabus_topics for the frontend selector
         const uniqueTopicsInBatch = [...new Set(qsToInsert.map(q => q.topic))];
@@ -320,6 +348,9 @@ Deliver purely factual, perfectly formatted psychometric evaluations following t
         if (error.status === 429 || (error.message && error.message.includes('429'))) {
             return { rateLimit: true };
         }
+        if (error.message && (error.message.toLowerCase().includes('quota') || error.message.toLowerCase().includes('exhausted'))) {
+            return { quotaLimit: true, message: error.message };
+        }
         console.error(`[AI Parser Error]:`, error.message, error.cause ? `| Cause: ${error.cause.message}` : '');
         return [];
     }
@@ -387,7 +418,13 @@ async function turboCharge() {
             if (items.rateLimit) {
                 console.warn(`[Worker ${workerId}] 🚦 Rate Limit Hit. Backing off 30s...`);
                 await delay(30000);
-                continue; // retry loop inherently
+                continue; 
+            }
+
+            if (items.quotaLimit) {
+                console.error(`\n\x1b[41m\x1b[37m[CRITICAL] 🛑 QUOTA EXHAUSTED: ${items.message}\x1b[0m`);
+                console.error(`\x1b[1mPlease update your GEMINI_API_KEY in .env and restart the generator.\x1b[0m\n`);
+                process.exit(1); // Hard stop so user sees the message
             }
 
             if (!items || items.length === 0) {

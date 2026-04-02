@@ -200,19 +200,34 @@ export const DataService = {
     let usingRandomOffset = false
 
     if (filters.randomize) {
-        const idQuery = supabase.from('questions').select('id').eq('is_active', true)
-        if (filters.subject_id) idQuery.eq('subject_id', filters.subject_id)
-        if (filters.exam_id) idQuery.eq('exam_id', filters.exam_id)
-        if (filters.exam_type) idQuery.eq('exam_type', filters.exam_type)
-        if (filters.topic) idQuery.eq('topic', filters.topic)
+      const idQuery = supabase.from('questions').select('id').eq('is_active', true)
+      if (filters.subject_id) idQuery.eq('subject_id', filters.subject_id)
+      if (filters.exam_id) idQuery.eq('exam_id', filters.exam_id)
+      if (filters.exam_type) idQuery.eq('exam_type', filters.exam_type)
+      if (filters.topic) idQuery.eq('topic', filters.topic)
 
-        const { data: idPool } = await idQuery
+      try {
+        const { data: idPool, error: idError } = await idQuery
+        if (idError) throw idError
+
         if (idPool && idPool.length > 0) {
-            const sampledIds = idPool.sort(() => Math.random() - 0.5).slice(0, filters.limit || 20).map(i => i.id)
+          const sampledIds = idPool
+            .sort(() => Math.random() - 0.5)
+            .slice(0, filters.limit || 20)
+            .map(i => i.id)
+
+          if (sampledIds.length > 0) {
             query = query.in('id', sampledIds)
-        } else {
+          } else {
             query = query.limit(0)
+          }
+        } else {
+          query = query.limit(0)
         }
+      } catch (err) {
+        console.error("DataService.getQuestions Randomization Error:", err)
+        return { data: [], error: err, count: 0 }
+      }
     } else if (isPaginated) {
       query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1)
     } else {
@@ -224,10 +239,13 @@ export const DataService = {
   },
 
   _formatQuestions(questions) {
+    if (!Array.isArray(questions)) return []
+    
     questions.forEach(q => {
       if (q.question_type === 'theory') {
         q.answers = []
-        const details = q.theory_details?.[0] || q.theory_details
+        // Partitioned theory details (usually joins return arrays)
+        const details = Array.isArray(q.theory_details) ? q.theory_details[0] : q.theory_details
         if (details) {
           q.model_answer = details.model_answer
           q.key_points = details.key_points
@@ -235,16 +253,19 @@ export const DataService = {
           q.marking_scheme = details.marking_scheme
         }
       } else {
-        const qa = q.question_answers?.[0] || q.question_answers
-        if (qa && qa.option_a) {
+        // Partitioned question answers (usually joins return arrays)
+        const qa = Array.isArray(q.question_answers) ? q.question_answers[0] : q.question_answers
+        
+        if (qa && (qa.option_a || qa.option_A)) {
           q.answers = [
-            { id: 'A', option_letter: 'A', option_text: qa.option_a, is_correct: qa.correct_option === 'A' },
-            { id: 'B', option_letter: 'B', option_text: qa.option_b, is_correct: qa.correct_option === 'B' },
-            { id: 'C', option_letter: 'C', option_text: qa.option_c, is_correct: qa.correct_option === 'C' },
-            { id: 'D', option_letter: 'D', option_text: qa.option_d, is_correct: qa.correct_option === 'D' }
+            { id: 'A', option_letter: 'A', option_text: qa.option_a || qa.option_A, is_correct: qa.correct_option === 'A' },
+            { id: 'B', option_letter: 'B', option_text: qa.option_b || qa.option_B, is_correct: qa.correct_option === 'B' },
+            { id: 'C', option_letter: 'C', option_text: qa.option_c || qa.option_C, is_correct: qa.correct_option === 'C' },
+            { id: 'D', option_letter: 'D', option_text: qa.option_d || qa.option_D, is_correct: qa.correct_option === 'D' }
           ]
-          // Prefer partitioned explanation if present (from gated join)
-          q.explanation = q.question_explanations?.explanation || qa.explanation
+          // Partitioned explanation (usually joins return arrays)
+          const qe = Array.isArray(q.question_explanations) ? q.question_explanations[0] : q.question_explanations
+          q.explanation = qe?.explanation || qa.explanation || q.explanation
         } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
           q.answers = q.answers.map(a => ({
             id: a.id || a.option_letter,

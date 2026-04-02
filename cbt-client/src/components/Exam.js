@@ -33,8 +33,17 @@ export class Exam {
     this.bookmarks = []
     
     if (this.examType === 'JAMB') {
-      this.jambSubjects = [...new Set(questions.map(q => q.subject))].map(s => s || 'General')
-      this.activeJambSubject = this.jambSubjects[0]
+      try {
+        const subjects = questions
+          .map(q => q.subject || q.subjects?.subject_name || 'General')
+          .filter(Boolean)
+        this.jambSubjects = [...new Set(subjects)]
+        this.activeJambSubject = this.jambSubjects[0] || 'General'
+      } catch (err) {
+        console.error("Exam constructor failed to map JAMB subjects:", err)
+        this.jambSubjects = ['General']
+        this.activeJambSubject = 'General'
+      }
     }
 
     // Timer Initialization
@@ -88,13 +97,17 @@ export class Exam {
       this.remainingTime = resumeState.remainingTime || this.initialTime
     } else if (!this.isReviewMode) {
       // Enforcement: Session Limits
-      if (!SubscriptionService.canStartSession(this.profile, this.mode)) {
-        const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
-        alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
-        onBack()
-        return
+      try {
+        if (!SubscriptionService.canStartSession(this.profile, this.mode)) {
+          const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
+          alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
+          onBack()
+          return
+        }
+        await SubscriptionService.incrementSessionCount(this.profile)
+      } catch (err) {
+        console.warn("Subscription check failed, allowing session to start in bypass mode:", err)
       }
-      await SubscriptionService.incrementSessionCount(this.profile)
     }
 
     // Cache global settings
