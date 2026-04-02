@@ -10,8 +10,9 @@ export const SubscriptionService = {
     const premiumUntil = user.premium_until ? new Date(user.premium_until) : null
 
     // 1. Check Tier Transition
-    if (user.tier === 'premium' && premiumUntil && premiumUntil < now) {
-      updates.tier = user.is_activated ? 'medium' : 'freemium'
+    const resolvedTier = this.resolveUserTier(user)
+    if (user.tier !== resolvedTier) {
+      updates.tier = resolvedTier
     }
 
     // 2. Check Daily Reset (AI Usage and Sessions)
@@ -96,5 +97,20 @@ export const SubscriptionService = {
     }
 
     return false
+  },
+
+  resolveUserTier(user) {
+    if (!user) return "freemium";
+    const now = new Date();
+
+    if (user.premium_until && new Date(user.premium_until) > now) {
+      return "premium";
+    }
+
+    if (user.is_activated) {
+      return "medium";
+    }
+
+    return "freemium";
   }
 }
