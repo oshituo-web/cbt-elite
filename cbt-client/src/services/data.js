@@ -176,7 +176,7 @@ export const DataService = {
         *,
         question_groups (*),
         question_answers (*),
-        question_explanations (explanation), -- Partitioned explanation table
+        question_explanations (explanation),
         answers (*),
         theory_details (*)
       `, { count: 'exact' })
