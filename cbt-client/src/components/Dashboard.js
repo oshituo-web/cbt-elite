@@ -736,9 +736,10 @@ export const DashboardComponent = {
                     alert("No questions found for this selection.")
                 }
             } catch (err) {
-                console.error("Practice Start Error:", err)
+                console.error("Dashboard Practice session start failed:", err)
                 btn.textContent = 'Start Practice Session'
-                alert("An error occurred while preparing the session. Please try again.")
+                const errorStr = `Session Error: ${err.message || err.name || 'Unknown'}\n\nStack: ${err.stack || 'No stack trace available'}`
+                alert("An error occurred while preparing the session.\n\n" + errorStr)
             }
         })
 

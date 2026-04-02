@@ -68,22 +68,30 @@ export class Exam {
 
   saveState() {
     if (this.isReviewMode) return
-    const state = {
-      questions: this.session.questions,
-      userAnswers: this.session.userAnswers,
-      currentIndex: this.session.currentIndex,
-      remainingTime: TimerService.getRemainingTime(),
-      subject: this.subject,
-      examType: this.examType,
-      mode: this.mode,
-      activeJambSubject: this.activeJambSubject,
-      timestamp: Date.now()
+    try {
+        const state = {
+          questions: this.session.questions,
+          userAnswers: this.session.userAnswers,
+          currentIndex: this.session.currentIndex,
+          remainingTime: TimerService.getRemainingTime(),
+          subject: this.subject,
+          examType: this.examType,
+          mode: this.mode,
+          activeJambSubject: this.activeJambSubject,
+          timestamp: Date.now()
+        }
+        localStorage.setItem('cbt_active_exam', JSON.stringify(state))
+    } catch (err) {
+        console.warn("Could not save exam state to localStorage (Quota likely exceeded):", err)
     }
-    localStorage.setItem('cbt_active_exam', JSON.stringify(state))
   }
 
   static clearState() {
-    localStorage.removeItem('cbt_active_exam')
+    try {
+        localStorage.removeItem('cbt_active_exam')
+    } catch (err) {
+        console.warn("Failed to clear localStorage:", err)
+    }
   }
 
   async render(onFinish, onBack, resumeState = null) {
