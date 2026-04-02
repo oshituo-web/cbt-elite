@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { SubscriptionService } from '../services/subscriptionService'
 import { supabase } from '../utils/supabase'
 
 export const AdminComponent = {
@@ -578,7 +579,7 @@ export const AdminComponent = {
       <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <div style="flex: 1; min-width: 200px; word-break: break-all;">
           <strong>${u.username || 'Unknown'}</strong> (${u.email})
-          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${u.tier === 'premium' ? 'var(--accent-secondary)' : (u.tier === 'medium' ? 'var(--accent-primary)' : '#666')}">${u.tier || 'freemium'}</span>
+          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${SubscriptionService.resolveUserTier(u) === 'premium' ? 'var(--accent-secondary)' : (SubscriptionService.resolveUserTier(u) === 'medium' ? 'var(--accent-primary)' : '#666')}">${SubscriptionService.resolveUserTier(u).toUpperCase()}</span>
           ${u.is_activated ? '<span class="badge" style="margin-left: 0.25rem; font-size: 0.65rem; padding: 1px 5px; background: var(--success); opacity: 0.9;">LIFETIME</span>' : ''}
           <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: var(--accent-primary); opacity: 0.8;">${u.role || 'user'}</span>
         </div>

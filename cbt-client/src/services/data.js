@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase'
+import { IndexedDbService } from './indexedDbService'
 
 export const DataService = {
   async getExams() {
@@ -51,7 +52,15 @@ export const DataService = {
   },
 
   // Phase 4: Marketing & Configuration
+  async validatePromoCode(code) {
+    const { data, error } = await supabase.rpc('validate_promo_code', { p_code: code })
+    if (error) return { data: null, error }
+    const result = data?.[0]
+    return { data: result, error: null }
+  },
+
   async getPromoCodes() {
+    // Note: This will now only work for Admins due to new RLS policies
     return await supabase.from('promo_codes').select('*').order('created_at', { ascending: false })
   },
 
@@ -167,6 +176,7 @@ export const DataService = {
         *,
         question_groups (*),
         question_answers (*),
+        question_explanations (explanation), -- Partitioned explanation table
         answers (*),
         theory_details (*)
       `, { count: 'exact' })
@@ -233,7 +243,8 @@ export const DataService = {
             { id: 'C', option_letter: 'C', option_text: qa.option_c, is_correct: qa.correct_option === 'C' },
             { id: 'D', option_letter: 'D', option_text: qa.option_d, is_correct: qa.correct_option === 'D' }
           ]
-          q.explanation = qa.explanation
+          // Prefer partitioned explanation if present (from gated join)
+          q.explanation = q.question_explanations?.explanation || qa.explanation
         } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
           q.answers = q.answers.map(a => ({
             id: a.id || a.option_letter,
@@ -540,13 +551,14 @@ export const DataService = {
   },
 
   async saveExamSession(userId, sessionData, questions, userAnswers) {
-    const { data: session, error: sError } = await supabase
-      .from('exam_sessions')
-      .insert({ user_id: userId, ...sessionData, completed_at: new Date().toISOString() })
-      .select()
-      .single()
+    try {
+      const { data: session, error: sError } = await supabase
+        .from('exam_sessions')
+        .insert({ user_id: userId, ...sessionData, completed_at: new Date().toISOString() })
+        .select()
+        .single()
 
-    if (sError) throw sError
+      if (sError) throw sError
 
     const responses = questions.map((q, i) => {
       const isTheory = q.question_type === 'theory'
@@ -587,62 +599,43 @@ export const DataService = {
       }
     }
 
-    try {
       await this.syncPerformanceData(userId, sessionData, questions, userAnswers)
+      return { session, theoryResults, error: null }
     } catch (err) {
-      console.error("Analytics sync failed:", err)
+      console.warn("Retrying session save via Offline Queue:", err)
+      await IndexedDbService.queueOfflineSession({ userId, sessionData, questions, userAnswers })
+      return { session: null, error: "Network lost. Result saved locally and will sync when online." }
     }
-
-    return { data: { ...session, theoryResults }, error: null }
   },
 
   async syncPerformanceData(userId, sessionData, questions, userAnswers) {
     try {
-      // 1. Group by Subject (Accuracy calculation)
-      const subStats = {}
-      questions.forEach((q, i) => {
-        const sub = q.subject || 'General'
-        if (!subStats[sub]) subStats[sub] = { total: 0, correct: 0 }
-        
-        subStats[sub].total++
+      // Prepare topic aggregates for RPC
+      const topicsPayload = questions.map((q, i) => {
+        let isCorrect = false
         if (q.question_type !== 'theory') {
-          const correctAns = q.answers?.find(a => a.is_correct)
-          if (userAnswers[i] === correctAns?.id) subStats[sub].correct++
+            const correctAnswer = q.answers?.find(a => a.is_correct)
+            isCorrect = (userAnswers[i] === correctAnswer?.id)
+        }
+        return {
+            topic: q.topic || 'General',
+            subject: q.subject || 'General',
+            is_correct: isCorrect
         }
       })
 
-      // 2. Update Topic/Subject Mastery
-      for (const [sub, stats] of Object.entries(subStats)) {
-        const accuracy = Math.round((stats.correct / stats.total) * 100)
-        
-        // Fetch current mastery
-        const { data: current } = await supabase.from('topic_mastery').select('*').eq('user_id', userId).eq('subject', sub).maybeSingle()
-        
-        if (current) {
-          // Weighted Average (New Result = 30% weight, Old = 70%)
-          const newMastery = Math.round((current.mastery_percentage * 0.7) + (accuracy * 0.3))
-          await supabase.from('topic_mastery').update({ mastery_percentage: newMastery }).eq('id', current.id)
-        } else {
-          await supabase.from('topic_mastery').insert({ user_id: userId, subject: sub, mastery_percentage: accuracy })
-        }
-      }
+      // Call Atomic Database RPC
+      const { error } = await supabase.rpc('sync_user_performance', {
+          p_user_id: userId,
+          p_total_questions: sessionData.total_questions,
+          p_score_percentage: sessionData.score_percentage,
+          p_time_taken: sessionData.time_taken_seconds || 0,
+          p_topics: topicsPayload
+      })
 
-      // 3. Update Weekly Summary
-      const { data: summary } = await supabase.from('weekly_summaries').select('*').eq('user_id', userId).maybeSingle()
-      if (summary) {
-        await supabase.from('weekly_summaries').update({
-          total_questions_answered: (summary.total_questions_answered || 0) + sessionData.total_questions,
-          total_correct_answers: (summary.total_correct_answers || 0) + sessionData.correct_answers
-        }).eq('id', summary.id)
-      } else {
-        await supabase.from('weekly_summaries').insert({
-          user_id: userId,
-          total_questions_answered: sessionData.total_questions,
-          total_correct_answers: sessionData.correct_answers
-        })
-      }
+      if (error) throw error
     } catch (err) {
-      console.error("Sync Performance Error:", err)
+      console.error("Atomic Sync Performance Error:", err)
     }
   },
 
@@ -733,65 +726,7 @@ export const DataService = {
     }
   },
 
-  async syncPerformanceData(userId, sessionData, questions, userAnswers) {
-    const topicUpdates = {}
-    questions.forEach((q, i) => {
-      const topic = q.topic || 'General'
-      if (!topicUpdates[topic]) topicUpdates[topic] = { subject: q.subject || 'General', total: 0, correct: 0 }
-      topicUpdates[topic].total++
-
-      if (q.question_type !== 'theory') {
-        const correctAnswer = q.answers?.find(a => a.is_correct)
-        if (userAnswers[i] === correctAnswer?.id) topicUpdates[topic].correct++
-      }
-    })
-
-    for (const [topic, stats] of Object.entries(topicUpdates)) {
-      const { data: current } = await supabase
-        .from('topic_mastery')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('topic', topic)
-        .maybeSingle()
-
-      const total_attempted = (current?.total_attempted || 0) + stats.total
-      const total_correct = (current?.total_correct || 0) + stats.correct
-      const mastery_percentage = Math.round((total_correct / total_attempted) * 100)
-
-      await supabase.from('topic_mastery').upsert({
-        user_id: userId,
-        subject: stats.subject,
-        topic: topic,
-        total_attempted,
-        total_correct,
-        mastery_percentage,
-        last_practiced_at: new Date().toISOString()
-      })
-    }
-
-    const now = new Date()
-    const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0]
-
-    const { data: currentWeekly } = await supabase
-      .from('weekly_summaries')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('week_start_date', weekStart)
-      .maybeSingle()
-
-    const total_questions_answered = (currentWeekly?.total_questions_answered || 0) + sessionData.total_questions
-    const prevTotal = currentWeekly?.total_questions_answered || 0
-    const currentAvg = currentWeekly?.average_score_percentage || 0
-    const newAvg = Math.round(((currentAvg * prevTotal) + (sessionData.score_percentage * sessionData.total_questions)) / total_questions_answered)
-
-    await supabase.from('weekly_summaries').upsert({
-      user_id: userId,
-      week_start_date: weekStart,
-      total_questions_answered,
-      average_score_percentage: newAvg,
-      total_study_duration_seconds: (currentWeekly?.total_study_duration_seconds || 0) + sessionData.time_taken_seconds
-    })
-  },
+  // (Duplicate syncPerformanceData removed)
 
   async getUserAnalytics(userId) {
     try {
@@ -1125,6 +1060,74 @@ export const DataService = {
       .update({ has_seen_tour: true })
       .eq('id', userId)
     return { error }
+  },
+
+  // --- Phase 3: AI Recommendations & Offline Pool ---
+  async getRecommendedQuestions(userId) {
+    try {
+      // 1. Get Topic Mastery gaps
+      const { data: mastery } = await supabase
+        .from('topic_mastery')
+        .select('*')
+        .eq('user_id', userId)
+        .order('mastery_percentage', { ascending: true })
+        .limit(3)
+
+      if (!mastery || mastery.length === 0) return null
+
+      // 2. Fetch questions from weak topics
+      const weakTopics = mastery.map(m => m.topic)
+      const { data: weakQs } = await supabase
+        .from('questions')
+        .select('*, answers(*)')
+        .in('topic', weakTopics)
+        .eq('is_active', true)
+        .limit(15)
+
+      // 3. Fetch "Maintenance" questions (high mastery)
+      const { data: strongMastery } = await supabase
+        .from('topic_mastery')
+        .select('topic')
+        .eq('user_id', userId)
+        .order('mastery_percentage', { ascending: false })
+        .limit(1)
+
+      let strongQs = []
+      if (strongMastery?.[0]) {
+        const { data } = await supabase
+          .from('questions')
+          .select('*, answers(*)')
+          .eq('topic', strongMastery[0].topic)
+          .eq('is_active', true)
+          .limit(5)
+        strongQs = data || []
+      }
+
+      const combined = [...(weakQs || []), ...strongQs]
+      return this._formatQuestions(combined)
+    } catch (err) {
+      console.error("AI Recommendation Error:", err)
+      return null
+    }
+  },
+
+  async syncOfflinePool() {
+    try {
+      // Fetch a safety pool of 100 questions
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*, answers(*)')
+        .eq('is_active', true)
+        .limit(100)
+      
+      if (error) throw error
+      if (data) {
+        await IndexedDbService.saveQuestions(this._formatQuestions(data))
+        console.log("Offline Pool Synced: 100 questions cached.")
+      }
+    } catch (err) {
+      console.error("Offline Sync Error:", err)
+    }
   }
 }
 

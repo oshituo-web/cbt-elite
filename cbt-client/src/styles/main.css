@@ -107,7 +107,8 @@ button, .btn {
   gap: 0.6rem;
   border: 1px solid transparent;
   outline: none;
-  font-size: 0.95rem;
+  height: 42px;
+  font-size: 14px;
 }
 
 .primary, .btn-primary {
@@ -196,10 +197,15 @@ html, body {
 /* UI Polish: Global Text & Form Styles */
 p, span, label {
   color: var(--text-secondary);
+  font-size: 13px;
 }
 
 strong, h1, h2, h3, h4 {
   color: var(--text-primary);
+}
+
+h1 {
+  font-size: 18px;
 }
 
 .glass-input, .glass-select {

@@ -6,6 +6,8 @@ import { ExamComponent } from './src/components/Exam'
 import { ResultsComponent } from './src/components/Results'
 import { AdminComponent } from './src/components/Admin'
 import { NewsArticleComponent } from './src/components/NewsArticle'
+import { IndexedDbService } from './src/services/indexedDbService'
+import { DataService } from './src/services/data'
 import './src/styles/main.css'
 
 async function initApp() {
@@ -17,6 +19,10 @@ async function initApp() {
     document.body.classList.remove('light-mode')
   }
   localStorage.setItem('theme', savedTheme)
+  
+  // Phase 3: Setup Offline Listeners
+  window.addEventListener('online', () => syncOfflineData())
+  syncOfflineData() // Initial attempt
 
   const user = await AuthService.getCurrentUser()
   
@@ -129,6 +135,35 @@ async function checkBroadcast() {
         }
     } catch (e) {
         console.error("Broadcast check failed", e)
+    }
+}
+async function syncOfflineData() {
+    try {
+        const sessions = await IndexedDbService.getUnsyncedSessions()
+        if (sessions.length === 0) return
+
+        console.log(`[Sync] Found ${sessions.length} unsynced sessions. Uploading...`)
+        let successCount = 0
+        
+        for (const session of sessions) {
+            const { error } = await DataService.saveExamSession(
+                session.userId, 
+                session.sessionData, 
+                session.questions, 
+                session.userAnswers
+            )
+            
+            if (!error) {
+                await IndexedDbService.markSessionSynced(session.id)
+                successCount++
+            }
+        }
+
+        if (successCount > 0) {
+            console.log(`[Sync] Successfully uploaded ${successCount} sessions.`)
+        }
+    } catch (e) {
+        console.warn("[Sync] Background sync failed:", e)
     }
 }
 

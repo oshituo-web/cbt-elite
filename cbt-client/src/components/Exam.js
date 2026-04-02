@@ -552,18 +552,29 @@ export class Exam {
     if (this.isReviewMode) {
       expDiv.style.display = 'block'
       
+      const tier = SubscriptionService.resolveUserTier(this.profile)
       const aiStatus = SubscriptionService.canUseAI(this.profile)
       const isFreeAccess = this._explanationsFreeAccess
-      const isPremium = this.profile && this.profile.tier === 'premium'
 
-      if (!isPremium && !isFreeAccess && !aiStatus.canUse) {
+      if (tier === 'freemium' && !isFreeAccess) {
         expDiv.innerHTML = `
           <div class="premium-lock-container">
             <div class="lock-icon">🔒</div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">${this.profile.is_activated ? 'Renew Pro Status' : 'Activate Account'}</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">${aiStatus.reason || 'Upgrade to Premium to view detailed explanations and AI-powered corrections.'}</p>
+            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Activate Full Access</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Pay \u20A61,500 once to unlock more features + 30 days Premium access.</p>
             <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
-              ${this.profile.is_activated ? 'Renew Premium \u20A61,000' : 'Activate Now \u20A61,500'}
+              Activate Now
+            </button>
+          </div>
+        `
+      } else if (tier === 'medium' && !isFreeAccess && !aiStatus.canUse) {
+        expDiv.innerHTML = `
+          <div class="premium-lock-container">
+            <div class="lock-icon">🚀</div>
+            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Renew Premium Access</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Get AI explanations, unlimited exams and full access for \u20A61,000/month.</p>
+            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
+              Renew Premium
             </button>
           </div>
         `
@@ -572,6 +583,7 @@ export class Exam {
         const qId = q.id
         if (!this._deductedQuestions) this._deductedQuestions = new Set()
         
+        const isPremium = tier === 'premium'
         if (!isPremium && !isFreeAccess && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
           SubscriptionService.useAICredit(this.profile).then(success => {
             if (success) {

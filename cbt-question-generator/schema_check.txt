@@ -1,0 +1,35 @@
+Checking columns in 'questions' table...
+[
+  "id",
+  "subject",
+  "topic",
+  "exam_type",
+  "exam_year",
+  "question_text",
+  "explanation",
+  "diagram_url",
+  "difficulty",
+  "tags",
+  "is_active",
+  "created_at",
+  "exam_id",
+  "subject_id",
+  "subtopic",
+  "question_type",
+  "group_id",
+  "diagram_type",
+  "diagram_svg"
+]
+
+Checking columns in 'question_answers' table...
+[
+  "id",
+  "question_id",
+  "option_a",
+  "option_b",
+  "option_c",
+  "option_d",
+  "correct_option",
+  "explanation",
+  "created_at"
+]

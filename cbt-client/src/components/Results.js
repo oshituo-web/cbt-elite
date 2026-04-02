@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { SubscriptionService } from '../services/subscriptionService'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
@@ -64,15 +65,21 @@ export const ResultsComponent = {
         </div>
 
         <!-- Premium CTA for Results -->
-        ${(profile && profile.tier !== 'premium') ? `
-          <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-secondary); background: rgba(255, 152, 0, 0.05); border-radius: 12px;">
-            <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-family: 'Outfit';">${profile.is_activated ? 'Keep the Momentum! \u26A1' : 'Boost your score by 40%! \uD83D\uDE80'}</h4>
-            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 1rem;">${profile.is_activated ? 'Your monthly Premium has expired. Renew now to continue enjoying AI explanations and unlimited sessions.' : 'Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.'}</p>
-            <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
-               ${profile.is_activated ? 'Renew Premium - \u20A61,000' : 'Unlock Lifetime Activation - \u20A61,500'}
-            </button>
-          </div>
-        ` : ''}
+        ${(() => {
+          const tier = SubscriptionService.resolveUserTier(profile);
+          if (tier === 'premium') return '';
+
+          const isActivated = profile?.is_activated;
+          return `
+            <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-secondary); background: rgba(255, 152, 0, 0.05); border-radius: 12px;">
+              <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-family: 'Outfit';">${isActivated ? 'Keep the Momentum! \u26A1' : 'Boost your score by 40%! \uD83D\uDE80'}</h4>
+              <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 1rem;">${isActivated ? 'Your monthly Premium has expired. Renew now to continue enjoying AI explanations and unlimited sessions.' : 'Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.'}</p>
+              <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
+                 ${isActivated ? 'Renew Premium - \u20A61,000' : 'Unlock Lifetime Activation - \u20A61,500'}
+              </button>
+            </div>
+          `;
+        })()}
 
         <h3 style="text-align: left; font-family: 'Outfit'; margin-bottom: 1rem; font-size: 1.25rem;">
             ${isJambMock ? 'Performance by Subject' : 'Performance by Topic'}

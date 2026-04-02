@@ -4,13 +4,13 @@ const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 30; // Test Batch
+const TOTAL_QUESTIONS_TO_GENERATE = 1000; 
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
 
 // TARGET FOCUS (Set to null for full run)
-const TARGET_EXAM = 'WAEC';
-const TARGET_SUBJECTS = ['Civic', 'Government', 'Mathematics', 'Physics', 'Chemistry']; 
+const TARGET_EXAM = null;
+const TARGET_SUBJECTS = []; 
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -88,18 +88,16 @@ async function loadKnowledgeBase() {
         subjects.forEach(s => subjectMap[s.subject_name.trim().toUpperCase()] = s.id);
         subjects.forEach(s => subjectMap[s.subject_name.trim()] = s.id);
 
-        let hasMore = true;
-        let offset = 0;
-        while (hasMore) {
-            const { data: page, error: pErr } = await supabase.from('questions').select('question_text').range(offset, offset + 999);
-            if (pErr) throw pErr;
-            if (page && page.length > 0) {
-                page.forEach(q => knowledgeBase.add(q.question_text.toLowerCase().trim()));
-                offset += page.length;
-                if (page.length < 1000) hasMore = false;
-            } else {
-                hasMore = false;
-            }
+        // OPTIMIZATION: Only load the most recent 2,000 questions to speed up startup.
+        // Checking against 2k recent questions is usually enough to catch duplicates in a session.
+        const { data: recentQs, error: pErr } = await supabase.from('questions')
+            .select('question_text')
+            .order('created_at', { ascending: false })
+            .limit(2000);
+            
+        if (pErr) throw pErr;
+        if (recentQs) {
+            recentQs.forEach(q => knowledgeBase.add(q.question_text.toLowerCase().trim()));
         }
         console.log(`Knowledge Base ready: ${knowledgeBase.size} existing questions.`);
     } catch (err) {
@@ -172,10 +170,36 @@ async function saveToDatabase(items) {
             supabase.from('questions').insert(qsToInsert).select()
         );
         
-        if (qErr || !insertedQs) {
-            console.error(`[DB Error] Questions Insert Failed:`, qErr?.message);
+        if (qErr) {
+            // Handle Postgres error code 23505 (Unique Violation)
+            if (qErr.code === '23505') {
+                console.warn(`[DB Status] Batch contains duplicate(s) - Switching to safe per-question insert...`);
+                for (let i = 0; i < qsToInsert.length; i++) {
+                   const { data: singleQ, error: sErr } = await supabase.from('questions').insert(qsToInsert[i]).select();
+                   if (!sErr && singleQ && singleQ.length > 0) {
+                       // Successfully inserted unique question
+                       try {
+                           const orig = originals[i];
+                           await supabase.from('question_answers').upsert({
+                               question_id: singleQ[0].id,
+                               option_a: orig.option_a,
+                               option_b: orig.option_b,
+                               option_c: orig.option_c,
+                               option_d: orig.option_d,
+                               correct_option: orig.correct_option,
+                               explanation: orig.explanation
+                           }, { onConflict: 'question_id' });
+                           successCount++;
+                       } catch (e) { /* ignore single error */ }
+                   }
+                }
+            } else {
+                console.error(`[DB Error] Questions Insert Failed:`, qErr?.message);
+            }
             continue;
         }
+
+        if (!insertedQs) continue;
 
         const ansInserts = insertedQs.map((insQ, idx) => {
             const orig = originals[idx];
@@ -242,9 +266,10 @@ EXAMPLE OF EXCELLENT QUALITY:
     instruction += `
 VISUAL CONTENT REQUIREMENT:
 For Mathematics, Physics, Chemistry, and Economics:
-- If a question requires a graph (e.g. Supply/Demand, Velocity-Time), set diagram_type='graph' and construct a QuickChart.io URL in diagram_url. 
+- If a question requires a graph (e.g. Supply/Demand, Velocity-Time, Waveforms), set diagram_type='graph' and construct a valid QuickChart.io URL in diagram_url. 
   Example: https://quickchart.io/chart?c={type:'line',data:{labels:[0,1,2,3],datasets:[{label:'Velocity',data:[0,10,20,30]}]}}
-- If a question requires a geometry or circuit diagram, set diagram_type='svg' and provide valid, minified SVG XML code in diagram_svg. Use viewBox='0 0 400 300' and ensure all elements are visible.
+- If a question requires a geometry or circuit diagram, set diagram_type='svg' and provide valid, minified SVG XML code in diagram_svg. 
+- IMPORTANT: Use viewBox='0 0 400 300' for SVGs and ensure stroke='black' or similar dark colors for visibility.
 - Ensure diagrams are mentioned in the question text (e.g. "From the diagram above...").`;
 
     if (topic === 'Comprehension') instruction = `CRITICAL: Generate ONE complete comprehension passage (approx 200-300 words). Set is_group=true, place passage in group_content, exactly 5 varying inference/vocabulary questions linked to it.`;
@@ -262,7 +287,7 @@ Deliver purely factual, perfectly formatted psychometric evaluations following t
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.5-flash-lite',
             contents: prompt,
             config: {
                 responseMimeType: 'application/json',
@@ -272,9 +297,25 @@ Deliver purely factual, perfectly formatted psychometric evaluations following t
         }, { timeout: 30000 }); // Explicit 30s timeout for stability
         
         const text = response.text;
-        const items = JSON.parse(text);
-        if (Array.isArray(items)) return items;
-        return [];
+        try {
+            const items = JSON.parse(text);
+            if (Array.isArray(items)) return items;
+            return [];
+        } catch (jsonError) {
+            console.error(`[AI Parser Error]: JSON parsing failed. Attempting cleanup...`);
+            // Attempt to extract JSON from markdown blocks if they exist
+            const jsonMatch = text.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                try {
+                    const extracted = JSON.parse(jsonMatch[0]);
+                    return Array.isArray(extracted) ? extracted : [];
+                } catch (e) {
+                    console.error("[AI Parser Error]: Manual cleanup failed.");
+                }
+            }
+            console.error(`[AI Parser Error Detail]:`, jsonError.message, "\nRaw Text Preview:", text.slice(0, 100) + "...");
+            return [];
+        }
     } catch (error) {
         if (error.status === 429 || (error.message && error.message.includes('429'))) {
             return { rateLimit: true };
@@ -368,8 +409,8 @@ async function turboCharge() {
                 console.log(`[Worker ${workerId}] ⚠️ Ignored batch (Total Duplicates).`);
             }
 
-            // Stagger workers to prevent simultaneous burst calls
-            await delay(4500); // Wait 4.5 seconds between batches to ensure we never cross 15 RPM
+            // 10s delay + ~10s AI processing time = ~20s per request. Very Safe.
+            await delay(10000); 
         }
     }
 

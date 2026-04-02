@@ -72,6 +72,13 @@ export const DashboardComponent = {
     const dailyGoalLimit = 50
     const dailyGoalPct = Math.min((todayQuestions / dailyGoalLimit) * 100, 100)
     
+    // Determine Achievements
+    const badges = [];
+    if (profile.streak_count >= 7) badges.push({ emoji: '🔥', title: '7-Day Streak' });
+    if (totalQuestions >= 500) badges.push({ emoji: '🛡️', title: 'Veteran' });
+    if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '🎯', title: 'Sharpshooter' });
+    if (profile.is_activated) badges.push({ emoji: '💎', title: 'Activated' });
+
     // Determine Weak Subject
     let weakSubject = null
     if (mastery && mastery.length > 0) {
@@ -94,9 +101,15 @@ export const DashboardComponent = {
             <div id="streak-badge" style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255, 107, 0, 0.15); color: #FF6B00; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255, 107, 0, 0.3);">
                🔥 ${profile.streak_count || 0} DAY STREAK
             </div>
-            <div id="user-tier-badge" style="padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; background: ${profile.tier === 'premium' ? 'var(--accent-secondary)' : '#475569'}; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
-              ${profile.tier || 'FREE'}
+            <div id="user-tier-badge" style="padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; background: ${SubscriptionService.resolveUserTier(profile) === 'premium' ? 'var(--accent-secondary)' : '#475569'}; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
+              ${SubscriptionService.resolveUserTier(profile).toUpperCase()}
             </div>
+            
+            <!-- 🏆 New Achievement Badges -->
+            <div id="achievement-badges" style="display: flex; gap: 0.5rem; margin-right: 0.5rem;">
+              ${badges.map(b => `<span title="${b.title}" style="cursor: help; opacity: 0.9; font-size: 1.1rem;">${b.emoji}</span>`).join('')}
+            </div>
+
             <span style="font-size: 0.875rem;">Welcome, <strong>${profile.username}</strong></span>
             <button id="logout-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</button>
           </div>
@@ -105,25 +118,78 @@ export const DashboardComponent = {
 
       <div id="dashboard-content" class="dashboard-scroll-area">
         
-        <!-- Premium CTA Banner -->
-        ${profile.tier !== 'premium' ? `
-          <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.25rem 2rem; background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border: 1px solid var(--accent-primary); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div style="display: flex; align-items: center; gap: 1.25rem;">
-              <div style="font-size: 2rem;">${profile.is_activated ? '🚀' : '✨'}</div>
+        <!-- 🔖 0. FEATURED: High-Priority Resume Card -->
+        <div class="glass card scale-in" style="margin-bottom: 2rem; border-left: 5px solid var(--accent-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <div>
+                <h3 style="font-family: 'Outfit'; margin-bottom: 0.25rem;">\u2728 AI Custom Workout</h3>
+                <p id="ai-workout-hint" style="font-size: 0.8rem; color: var(--text-secondary);">Targeting your mastery gaps automatically...</p>
+            </div>
+            <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">RECOMMENDED</span>
+          </div>
+          <button id="start-ai-workout" class="primary" style="width: 100%; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span>\uD83D\uDE80 Start Personalized Session</span>
+          </button>
+        </div>
+
+        <div id="resume-container" style="display: none; margin-bottom: 2rem;">
+              <div class="glass card scale-in" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, var(--bg-secondary) 100%); display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <div style="font-size: 2rem;">⏳</div>
+                  <div>
+                    <h3 style="margin-bottom: 0.25rem; font-family: 'Outfit'; color: var(--accent-secondary);">Continue Your Session</h3>
+                    <p id="resume-info" style="font-size: 0.85rem; color: var(--text-secondary);">Pick up exactly where you left off.</p>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                  <button id="discard-resume" class="btn-secondary" style="font-size: 0.8rem; border: none; background: transparent; opacity: 0.6;">Discard</button>
+                  <button id="confirm-resume" class="btn-primary" style="background: var(--accent-secondary); box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);">Resume Now</button>
+                </div>
+              </div>
+        </div>
+
+        <!-- Dynamic Tier-Based UI -->
+        ${(() => {
+          const tier = SubscriptionService.resolveUserTier(profile);
+          const ActivationCard = () => `
+            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.5rem 2rem; border: 1.5px solid var(--accent-primary); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div style="flex: 1; min-width: 250px;">
+                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem; font-size: 1.1rem;">🔓 Activate Full Access</h4>
+                <p style="font-size: 0.85rem; color: #ccc;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
+              </div>
+              <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                Activate Now
+              </button>
+            </div>
+          `;
+
+          const RenewalCard = () => `
+            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.5rem 2rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div style="flex: 1; min-width: 250px;">
+                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem; font-size: 1.1rem;">🚀 Renew Premium Access</h4>
+                <p style="font-size: 0.85rem; color: #ccc;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
+              </div>
+              <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background: var(--accent-secondary);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                Renew Premium
+              </button>
+            </div>
+          `;
+
+          const PremiumBadge = () => `
+            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--success); background: rgba(34, 197, 94, 0.05); border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+              <div style="font-size: 1.5rem;">👑</div>
               <div>
-                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem;">${profile.is_activated ? 'Go Monthly Pro' : 'Activate Lifetime Access'}</h4>
-                <p style="font-size: 0.85rem; color: #ccc;">
-                  ${profile.is_activated 
-                    ? 'Unlock Unlimited AI, Unlimited Mocks, and Theory Grading for just \u20A61,000.' 
-                    : 'Activate for \u20A61,500. Get 30 Days Pro + Lifetime access + 15 Monthly AI credits.'}
-                </p>
+                <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1rem;">Premium Active</h4>
+                <p style="font-size: 0.75rem; color: #ccc; margin: 0;">You have full access to all AI features and mock exams.</p>
               </div>
             </div>
-            <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-              ${profile.is_activated ? 'Renew Premium' : 'Activate Now'}
-            </button>
-          </div>
-        ` : ''}
+          `;
+
+          if (tier === "freemium") return ActivationCard();
+          if (tier === "medium") return RenewalCard();
+          if (tier === "premium") return PremiumBadge();
+          return '';
+        })()}
 
         <header class="dashboard-header fade-in">
         
@@ -150,28 +216,6 @@ export const DashboardComponent = {
            <button id="start-guide-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-color: var(--primary); color: var(--primary);">Start Guide</button>
         </div>
 
-        <!-- 🚀 3. Premium Upgrade Section -->
-        ${profile.tier !== 'premium' ? `
-        <div class="glass card" style="margin-top: 1.5rem; padding: 2rem; border-left: 6px solid var(--accent-secondary); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; background: var(--accent-secondary)0D;">
-           <div>
-             <h3 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">${profile.is_activated ? 'Renew Premium Benefits' : 'What You Get with Activation'}</h3>
-             <ul style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; list-style: none; padding: 0;">
-                <li><strong style="color: var(--success);">✔</strong> ${profile.is_activated ? 'Unlimited' : '30 Days'} AI Answer Explanations</li>
-                <li><strong style="color: var(--success);">✔</strong> Unlimited Mock Exams & Practice</li>
-                <li><strong style="color: var(--success);">✔</strong> AI-Powered Theory Grading</li>
-                <li><strong style="color: var(--success);">✔</strong> Full Question Bank Access</li>
-             </ul>
-           </div>
-           <div style="text-align: right;">
-             <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.8;">
-              ${profile.tier === 'medium' ? `${profile.ai_credits || 0} AI Credits Remaining` : '0 AI Access (Free)'}
-             </div>
-             <button id="upgrade-hero-btn" class="primary" style="background: var(--accent-secondary); box-shadow: 0 4px 15px var(--accent-secondary)4D;">
-              ${profile.is_activated ? 'Renew Pro \u20A61,000' : 'Activate \u20A61,500'}
-             </button>
-           </div>
-        </div>
-        ` : ''}
 
         <!-- 📊 3. Progress Summary & 🎯 4. Daily Goal Tracker -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
@@ -304,18 +348,7 @@ export const DashboardComponent = {
               <button id="view-exam" class="nav-tab" style="flex: 1;">🏆 Exam Mode</button>
             </div>
             
-            <div id="resume-container" style="display: none; margin-bottom: 2rem;">
-              <div class="glass card" style="border-left: 4px solid var(--accent-secondary); background: var(--bg-secondary); display: flex; justify-content: space-between; align-items: center; padding: 1.5rem;">
-                <div>
-                  <h3 style="margin-bottom: 0.25rem;">Resume Unfinished Session</h3>
-                  <p id="resume-info" style="font-size: 0.85rem; color: var(--text-secondary);">You have a pending exam from 2 minutes ago.</p>
-                </div>
-                <div style="display: flex; gap: 0.75rem;">
-                  <button id="discard-resume" class="btn-secondary" style="font-size: 0.8rem;">Discard</button>
-                  <button id="confirm-resume" class="btn-primary">Resume Now</button>
-                </div>
-              </div>
-            </div>
+            <!-- (Resume Container moved to top) -->
 
             <!-- Practice Mode Section -->
             <div id="practice-section">
@@ -958,6 +991,28 @@ export const DashboardComponent = {
     this.activeIntervals = []
 
     initData()
+    
+    // Phase 3: Sync Offline Pool in background
+    DataService.syncOfflinePool().catch(e => console.warn("Offline pool sync not possible:", e))
+
+    // Phase 3: AI Workout Logic
+    const aiWorkoutBtn = document.getElementById('start-ai-workout')
+    const aiWorkoutHint = document.getElementById('ai-workout-hint')
+    if (aiWorkoutBtn) {
+        aiWorkoutBtn.onclick = async () => {
+            aiWorkoutBtn.disabled = true
+            aiWorkoutBtn.innerHTML = '<div class="loader-spinner" style="width:16px; height:16px; border-width:2px;"></div> Analyzing Gaps...'
+            
+            const questions = await DataService.getRecommendedQuestions(profile.id)
+            if (questions && questions.length > 0) {
+                this.onStartExam(questions, 'practice', 'AI Workout', 'Personalized')
+            } else {
+                alert("AI needs more of your performance data to build a workout. Try a few regular practices first!")
+                aiWorkoutBtn.disabled = false
+                aiWorkoutBtn.innerHTML = '<span>\uD83D\uDE80 Start Personalized Session</span>'
+            }
+        }
+    }
   },
 
   async renderCharts(userId) {
@@ -1036,28 +1091,37 @@ export const DashboardComponent = {
         datasets: [{
           label: 'Mastery %',
           data: mastery.map(m => m.average),
-          backgroundColor: isLightMode ? primaryColor + '4D' : primaryColor + '33', // 30% vs 20%
+          backgroundColor: isLightMode ? primaryColor + '4D' : primaryColor + '33', 
           borderColor: primaryColor,
           borderWidth: 3,
           pointBackgroundColor: primaryColor,
           pointBorderColor: '#fff',
-          pointBorderWidth: 1
+          pointBorderWidth: 1,
+          fill: true // Ensure background is filled for the radar
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isLightMode ? '#fff' : '#1E293B',
+            borderWidth: 1,
+            displayColors: false
+          }
+        },
         scales: {
           r: {
-            angleLines: { color: chartGridColor },
-            grid: { color: chartGridColor },
+            angleLines: { color: chartGridColor, lineWidth: 1 },
+            grid: { color: chartGridColor, circular: true },
             pointLabels: { 
-              color: isLightMode ? '#2563EB' : '#3B82F6', 
+              color: isLightMode ? '#2563EB' : '#60A5FA', 
               font: { 
-                size: window.innerWidth < 600 ? 10 : 12, 
-                weight: 'bold' 
+                size: window.innerWidth < 600 ? 11 : 13, 
+                weight: '700',
+                family: 'Outfit'
               },
-              padding: window.innerWidth < 600 ? 10 : 15
+              padding: 15
             },
             ticks: { display: false },
             suggestedMin: 0,
