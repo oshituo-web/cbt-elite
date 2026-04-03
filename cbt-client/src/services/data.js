@@ -537,35 +537,37 @@ export const DataService = {
   async getUserAnalytics(userId) {
     const { data: sessions, error: hError } = await supabase
       .from('exam_sessions')
-      .select('total_questions, correct_answers, created_at')
+      .select('total_questions, correct_answers, completed_at')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('completed_at', { ascending: false })
       .limit(50) // Increased limit to capture full day activity better
 
     const history = sessions ? sessions.map(s => ({
       total_questions: s.total_questions || 0,
       correct_answers: s.correct_answers || 0,
       score_percentage: s.total_questions > 0 ? Math.round(((s.correct_answers || 0) / (s.total_questions || 1)) * 100) : 0,
-      created_at: s.created_at
+      created_at: s.completed_at
     })) : []
 
     const { data: masteryData, error: mError } = await supabase
       .from('topic_mastery')
-      .select('subject, mastery_percentage')
+      .select('subject, mastery_percentage, total_attempted')
       .eq('user_id', userId)
 
     const subjectMap = {}
     if (masteryData && masteryData.length > 0) {
       masteryData.forEach(m => {
         const sub = m.subject || 'General'
-        if (!subjectMap[sub]) subjectMap[sub] = { sum: 0, count: 0 }
+        if (!subjectMap[sub]) subjectMap[sub] = { sum: 0, count: 0, total_attempted: 0 }
         subjectMap[sub].sum += m.mastery_percentage || 0
         subjectMap[sub].count += 1
+        subjectMap[sub].total_attempted += m.total_attempted || 0
       })
     }
     const processedMastery = Object.keys(subjectMap).map(sub => ({
       subject: sub,
-      average: Math.round(subjectMap[sub].sum / subjectMap[sub].count)
+      average: Math.round(subjectMap[sub].sum / subjectMap[sub].count),
+      total_attempted: subjectMap[sub].total_attempted
     }))
 
     return { history, mastery: processedMastery, error: hError || mError }

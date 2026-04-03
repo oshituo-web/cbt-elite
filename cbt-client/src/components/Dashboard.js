@@ -59,19 +59,46 @@ export const DashboardComponent = {
     const today = new Date().toDateString()
     let todayQuestions = 0
     let totalQuestions = 0
-    let totalScore = 0
+    let totalCorrect = 0
     let accuracy = 0
+    let trendStr = "🎯 Target: 80%"
     
     if (history && history.length > 0) {
+        let recentQuestions = 0
+        let recentCorrect = 0
+        let pastQuestions = 0
+        let pastCorrect = 0
+        
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
         history.forEach(s => {
             if (s && s.created_at) {
-                const hDate = new Date(s.created_at).toDateString()
-                if (hDate === today) todayQuestions += (s.total_questions || 0)
+                const sDate = new Date(s.created_at)
+                if (sDate.toDateString() === today) todayQuestions += (s.total_questions || 0)
+                
                 totalQuestions += (s.total_questions || 0)
-                totalScore += (s.score_percentage || 0)
+                totalCorrect += (s.correct_answers || 0)
+                
+                if (sDate >= sevenDaysAgo) {
+                    recentQuestions += (s.total_questions || 0)
+                    recentCorrect += (s.correct_answers || 0)
+                } else {
+                    pastQuestions += (s.total_questions || 0)
+                    pastCorrect += (s.correct_answers || 0)
+                }
             }
         })
-        accuracy = history.length > 0 ? Math.round(totalScore / history.length) : 0
+        accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
+        
+        if (pastQuestions > 0 && recentQuestions > 0) {
+            const recentAcc = Math.round((recentCorrect / recentQuestions) * 100)
+            const pastAcc = Math.round((pastCorrect / pastQuestions) * 100)
+            const diff = recentAcc - pastAcc
+            if (diff > 0) trendStr = `<span style="color:var(--success)">📈 +${diff}% this week</span>`
+            else if (diff < 0) trendStr = `<span style="color:var(--error)">📉 ${diff}% this week</span>`
+            else trendStr = `<span style="color:var(--text-secondary)">🔄 Stable this week</span>`
+        }
     }
     
     const dailyGoalLimit = 50
@@ -84,11 +111,14 @@ export const DashboardComponent = {
     if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '🎯', title: 'Sharpshooter' });
     if (profile.is_activated) badges.push({ emoji: '💎', title: 'Activated' });
 
-    // Determine Weak Subject
+    // Determine Weak Subject (Threshold: min 5 attempts, < 50% average)
     let weakSubject = null
     if (mastery && mastery.length > 0) {
         try {
-            weakSubject = mastery.reduce((prev, curr) => (prev.average < curr.average) ? prev : curr)
+            const potentialWeakSubjects = mastery.filter(m => m.total_attempted >= 5 && m.average < 50)
+            if (potentialWeakSubjects.length > 0) {
+                weakSubject = potentialWeakSubjects.reduce((prev, curr) => (prev.average < curr.average) ? prev : curr)
+            }
         } catch (e) {
             console.error("Weak subject determination failed", e)
         }
@@ -256,15 +286,17 @@ export const DashboardComponent = {
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
            <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary);">
              <h3 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
-             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                <div>
                   <div style="font-size: 1.75rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Questions</div>
+                  <div style="font-size: 0.65rem; color: var(--success); margin-top: 0.25rem; font-weight: 600;">${totalCorrect} Correct <span style="color: var(--error)">| ${totalQuestions - totalCorrect} Failed</span></div>
                </div>
                 <div style="text-align: right;">
-                   <div style="font-size: 1.25rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
-                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                      Avg Accuracy <span style="opacity: 0.6; font-size: 0.65rem;">(Global: 68%)</span>
+                   <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
+                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">True Accuracy</div>
+                   <div style="font-size: 0.65rem; font-weight: 600; margin-top: 0.25rem;">
+                      ${trendStr}
                    </div>
                 </div>
              </div>
@@ -293,37 +325,49 @@ export const DashboardComponent = {
            </div>
         </div>
 
-        <!-- 📈 Analytics Section (Score History & Mastery) -->
-        <div id="analytics-section" style="margin-top: 1.5rem; transition: opacity 0.3s ease;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
-              <h4 style="margin-bottom: 1.25rem; color: var(--accent-primary); font-size: 0.9rem;">Score History (Past 50 Sessions)</h4>
-              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="score-history-chart" style="width: 100% !important; height: auto !important; max-height: 250px;"></canvas>
-              </div>
-            </div>
-            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
-              <h4 style="margin-bottom: 1.25rem; color: var(--success); font-size: 0.9rem;">Subject Mastery (%)</h4>
-              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 300px; max-height: 250px; margin: 0 auto;"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ⚠️ 5. Weak Subject Alert -->
-        ${weakSubject ? `
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--warning); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--warning)0D;">
-          <div>
-             <h3 style="font-size: 1rem; margin-bottom: 0.25rem; color: var(--warning); display: flex; align-items: center; gap: 0.5rem;">⚠️ Weak Area Detected: ${weakSubject.subject}</h3>
-             <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Your average score in this subject is ${weakSubject.average}%. Focus on this area to boost your overall ranking.</p>
-             <div style="font-size: 0.75rem; color: var(--accent-primary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 0.5rem; border-radius: 4px; display: inline-block;">
-                🤖 AI Pro Tip: ${weakSubject.subject === 'English' ? 'Focus on Comprehension and Lexis.' : 'Review your fundamental definitions and recent past questions.'}
+        <!-- 🤖 5. AI Performance Analysis -->
+        ${history.length < 5 ? `
+          <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+             <div>
+               <h3 style="font-size: 1rem; margin-bottom: 0.25rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.5rem;">🤖 AI Analytics Calibration</h3>
+               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">Complete at least ${5 - history.length} more practice sessions or exams to unlock personalized AI performance insights.</p>
              </div>
+             <div class="loader-spinner" style="width:24px; height:24px; border-width:3px; border-color: var(--accent-secondary) transparent transparent transparent;"></div>
           </div>
-          <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="primary" style="background: #2563EB; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 800; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">Practice Now</button>
-        </div>
-        ` : ''}
+        ` : `
+          <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.05); display: flex; flex-direction: column; gap: 0.75rem;">
+             <h3 style="font-size: 1rem; margin: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">🧠 AI Performance Analysis</h3>
+             <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                ${(() => {
+                    const sorted = [...(mastery || [])].sort((a,b) => b.average - a.average);
+                    if (sorted.length === 0) return "You've completed sessions but haven't recorded topic mastery yet. Keep practicing!";
+                    
+                    const best = sorted[0];
+                    const worst = sorted[sorted.length - 1];
+                    let insight = "Based on your last " + history.length + " trials, your strongest area is <strong>" + best.subject + "</strong> (" + best.average + "%). ";
+                    
+                    if (worst && worst.subject !== best.subject) {
+                        insight += "However, your mastery in <strong>" + worst.subject + "</strong> is currently at " + worst.average + "%. ";
+                        if (worst.average < 40) {
+                             insight += "This is a critical weak point. You should dedicate your next few sessions strictly to " + worst.subject + " before attempting full mock exams.";
+                        } else if (worst.average < 70) {
+                             insight += "You have a decent foundation, but targeted practice in " + worst.subject + " will significantly boost your overall ranking.";
+                        } else {
+                             insight += "You are performing exceptionally well across the board. Focus on speed and edge-case questions to guarantee an excellent score.";
+                        }
+                    } else {
+                        insight += "Keep up the consistent practice to build enough data for a multi-subject comparison.";
+                    }
+                    return insight;
+                })()}
+             </p>
+             ${(weakSubject) ? `
+             <div style="margin-top: 0.5rem;">
+                <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 800;"><span style="color: #ffffff !important;">🎯 Target ${weakSubject.subject}</span></button>
+             </div>
+             ` : ''}
+          </div>
+        `}
 
         <!-- 📰 6. News & Updates System -->
         <div class="glass card" style="margin-top: 1.5rem; padding: 1rem;">
@@ -1076,12 +1120,19 @@ export const DashboardComponent = {
 
   async renderCharts(userId) {
     const { history, mastery, error } = await DataService.getUserAnalytics(userId)
+    const analyticsSection = document.getElementById('analytics-section')
     if (error || (!history.length && !mastery.length)) {
-      // Show empty state if no data
-      document.getElementById('analytics-section').style.opacity = '0.5'
+      analyticsSection.innerHTML = `
+        <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">📊 Performance Insights</h2>
+        <div class="glass card" style="padding: 3rem 1rem; text-align: center; border: 1px dashed var(--glass-border);">
+           <div style="font-size: 2.5rem; margin-bottom: 1rem;">📈</div>
+           <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">No Analytics Data Yet</h3>
+           <p style="font-size: 0.85rem; color: var(--text-secondary);">Start taking practice sessions or mock exams. Your performance charts and subject mastery will appear here automatically.</p>
+        </div>
+      `
       return
     }
-    document.getElementById('analytics-section').style.opacity = '1'
+    analyticsSection.style.opacity = '1'
 
     // Get current theme colors
     const style = getComputedStyle(document.body)

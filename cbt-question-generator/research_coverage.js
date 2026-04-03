@@ -27,7 +27,7 @@ async function checkCoverage() {
             syllabus[exam][subject].forEach(topic => {
                 const key = `${exam}|${subject}|${topic}`;
                 const count = coverageMap[key] || 0;
-                if (count < 20) { // arbitrary threshold for "needs more"
+                if (count === 0) { // Strictly leave only topics WITHOUT questions
                     report.push({ exam, subject, topic, count });
                 }
             });
@@ -38,7 +38,7 @@ async function checkCoverage() {
     report.sort((a, b) => a.count - b.count);
     
     fs.writeFileSync('coverage_report.json', JSON.stringify(report, null, 2));
-    console.log(`Research complete. Found ${report.length} topics with < 20 questions. Report saved to coverage_report.json`);
+    console.log(`Research complete. Found ${report.length} topics with 0 questions. Report saved to coverage_report.json`);
 }
 
 checkCoverage().catch(console.error);
