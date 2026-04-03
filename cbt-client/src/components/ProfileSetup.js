@@ -13,10 +13,10 @@ export const ProfileSetupComponent = {
 
         <form id="setup-form" style="display: flex; flex-direction: column; gap: 1rem;">
           <div style="position: relative;">
-            <input type="text" id="username" placeholder="Username" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+            <input type="text" id="username" placeholder="Username" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary);">
             <div id="availability-check" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.75rem;"></div>
           </div>
-          <input type="text" id="full_name" placeholder="Full Name" value="${user.user_metadata?.full_name || ''}" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+          <input type="text" id="full_name" placeholder="Full Name" value="${user.user_metadata?.full_name || ''}" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary);">
           <button type="submit" class="primary" id="save-profile" disabled>Save Profile</button>
           <button type="button" class="glass" id="back-to-login" style="margin-top: 0.5rem;">← Back to Login</button>
         </form>

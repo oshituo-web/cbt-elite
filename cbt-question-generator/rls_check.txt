@@ -1,0 +1,8 @@
+RLS Checks for Student (Anon Role):
+Table questions: ✅ OK (Rows: 1)
+Table answers: ✅ OK (Rows: 1)
+Table question_answers: ✅ OK (Rows: 1)
+Table question_groups: ✅ OK (Rows: 1)
+Table question_explanations: ✅ OK (Rows: 0)
+Table theory_details: ✅ OK (Rows: 1)
+Table syllabus_topics: ✅ OK (Rows: 1)

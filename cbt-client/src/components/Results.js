@@ -1,15 +1,23 @@
 import { DataService } from '../services/data'
 import { SubscriptionService } from '../services/subscriptionService'
+import { SubscriptionManager } from '../utils/subscriptionManager'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
+    let isSystemFree = false;
+    try {
+        const configResp = await DataService.getSystemConfig('explanations_free_access');
+        isSystemFree = configResp.data?.value === true || configResp.data?.value === 'true';
+    } catch (err) {
+        console.warn("Failed to fetch global config:", err);
+    }
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     container.innerHTML = `
       <div class="glass card" style="max-width: 800px; margin: 50px auto; padding: 3rem; text-align: center;">
         <div class="loader-spinner" style="margin: 2rem auto;"></div>
         <h2 style="font-family: 'Outfit';">Finalizing Results...</h2>
-        <p style="color: #ffffff;">Saving your progress and generating your performance report.</p>
+        <p style="color: var(--text-primary);">Saving your progress and generating your performance report.</p>
       </div>
     `
 
@@ -58,27 +66,39 @@ export const ResultsComponent = {
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
           <div class="result-card" style="text-align: center; padding: 1rem;">
-            <div style="font-size: 0.75rem; color: #ffffff; margin-bottom: 0.5rem; letter-spacing: 0.1em;">OBJECTIVE SCORE</div>
+            <div style="font-size: 0.75rem; color: var(--text-primary); margin-bottom: 0.5rem; letter-spacing: 0.1em;">OBJECTIVE SCORE</div>
             <div style="font-size: 3.5rem; font-weight: 800; color: var(--accent-primary); line-height: 1;">${correct} / ${objQuestions.length}</div>
-            <div style="font-size: 1.15rem; color: #ffffff; margin-top: 0.75rem; font-weight: 700;">${scorePercent}% Correct</div>
+            <div style="font-size: 1.15rem; color: var(--text-primary); margin-top: 0.75rem; font-weight: 700;">${scorePercent}% Correct</div>
           </div>
         </div>
 
         <!-- Premium CTA for Results -->
         ${(() => {
-          const tier = SubscriptionService.resolveUserTier(profile);
-          if (tier === 'premium') return '';
+          const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
+          if (subState.tier === 'premium' && !subState.shouldShowRenewCTA) return '';
 
-          const isActivated = profile?.is_activated;
-          return `
-            <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-secondary); background: rgba(255, 152, 0, 0.05); border-radius: 12px;">
-              <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-family: 'Outfit';">${isActivated ? 'Keep the Momentum! \u26A1' : 'Boost your score by 40%! \uD83D\uDE80'}</h4>
-              <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 1rem;">${isActivated ? 'Your monthly Premium has expired. Renew now to continue enjoying AI explanations and unlimited sessions.' : 'Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.'}</p>
-              <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
-                 ${isActivated ? 'Renew Premium - \u20A61,000' : 'Unlock Lifetime Activation - \u20A61,500'}
-              </button>
-            </div>
-          `;
+          if (subState.shouldShowActivateCTA) {
+            return `
+              <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05); border-radius: 12px;">
+                <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem; font-family: 'Outfit';">Boost your score by 40%! \uD83D\uDE80</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.</p>
+                <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
+                   Activate Lifetime Access – ₦1,500
+                </button>
+              </div>
+            `;
+          } else if (subState.shouldShowRenewCTA) {
+            return `
+              <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-secondary); background: rgba(255, 152, 0, 0.05); border-radius: 12px;">
+                <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-family: 'Outfit';">Keep the Momentum! \u26A1</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Renew Premium to continue enjoying AI explanations and unlimited mock exams.</p>
+                <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
+                   Renew Premium – ₦1,000/month
+                </button>
+              </div>
+            `;
+          }
+          return '';
         })()}
 
         <h3 style="text-align: left; font-family: 'Outfit'; margin-bottom: 1rem; font-size: 1.25rem;">

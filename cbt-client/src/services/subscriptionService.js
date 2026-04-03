@@ -1,4 +1,5 @@
 import { DataService } from './data'
+import { SubscriptionManager } from '../utils/subscriptionManager'
 
 export const SubscriptionService = {
   // Logic: Demote if premium expired, and reset daily counts if date changed
@@ -35,9 +36,9 @@ export const SubscriptionService = {
     return user
   },
 
-  canStartSession(user, type = 'practice') {
+  canStartSession(user, type = 'practice', isSystemFree = false) {
     if (!user) return false
-    if (user.tier === 'premium') return true
+    if (isSystemFree || user.tier === 'premium') return true
     
     const dailyLimit = (user.tier === 'medium') 
       ? (type === 'practice' ? 5 : 2) 
@@ -54,8 +55,10 @@ export const SubscriptionService = {
     return !error
   },
 
-  canUseAI(user) {
+  canUseAI(user, isSystemFree = false) {
     if (!user) return { canUse: false, reason: 'Please login to use AI' }
+    if (isSystemFree) return { canUse: true, usage: 0, limit: 'Unlimited' }
+
     if (user.tier === 'freemium' || user.tier === 'free') {
        return { canUse: false, reason: 'Activate your account for \u20A61,500 to unlock AI access' }
     }
@@ -99,18 +102,8 @@ export const SubscriptionService = {
     return false
   },
 
-  resolveUserTier(user) {
-    if (!user) return "freemium";
-    const now = new Date();
-
-    if (user.premium_until && new Date(user.premium_until) > now) {
-      return "premium";
-    }
-
-    if (user.is_activated) {
-      return "medium";
-    }
-
-    return "freemium";
+  resolveUserTier(user, isSystemFree = false) {
+    const state = SubscriptionManager.getUserSubscriptionState(user, isSystemFree);
+    return state.tier;
   }
 }

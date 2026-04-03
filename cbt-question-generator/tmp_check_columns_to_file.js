@@ -1,20 +1,17 @@
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
-require('dotenv').config();
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-async function checkSchema() {
-    let result = "Checking columns in 'questions' table...\n";
+async function checkColumnsToFile() {
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const { data, error } = await supabase.from('questions').select('*').limit(1);
-    if (data && data.length > 0) result += JSON.stringify(Object.keys(data[0]), null, 2) + "\n";
-
-    result += "\nChecking columns in 'question_answers' table...\n";
-    const { data: qans } = await supabase.from('question_answers').select('*').limit(1);
-    if (qans && qans.length > 0) result += JSON.stringify(Object.keys(qans[0]), null, 2) + "\n";
-
-    fs.writeFileSync('schema_check.txt', result);
-    console.log("Done. Results in schema_check.txt");
+    if (error) {
+        fs.writeFileSync('schema_check.txt', "Error: " + error.message);
+    } else if (data && data.length > 0) {
+        fs.writeFileSync('schema_check.txt', Object.keys(data[0]).sort().join(', '));
+    } else {
+        fs.writeFileSync('schema_check.txt', "No questions found.");
+    }
 }
 
-checkSchema();
+checkColumnsToFile().catch(console.error);

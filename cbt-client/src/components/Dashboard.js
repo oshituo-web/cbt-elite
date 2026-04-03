@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { TourGuide } from '../utils/TourGuide'
 import { SubscriptionService } from '../services/subscriptionService'
+import { SubscriptionManager } from '../utils/subscriptionManager'
 
 export const DashboardComponent = {
   profile: null,
@@ -21,6 +22,7 @@ export const DashboardComponent = {
     let history = []
     let mastery = []
     let newsItems = []
+    let isSystemFree = false
 
     try {
         // Preliminary data fetch for synchronous render injection
@@ -30,6 +32,9 @@ export const DashboardComponent = {
         
         const news = await DataService.getNewsUpdates(5)
         newsItems = news.data || []
+
+        const configResp = await DataService.getSystemConfig('explanations_free_access')
+        isSystemFree = configResp.data?.value === true || configResp.data?.value === 'true'
     } catch (err) {
         console.error("Dashboard data fetch failed:", err)
     }
@@ -101,8 +106,8 @@ export const DashboardComponent = {
             <div id="streak-badge" style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255, 107, 0, 0.15); color: #FF6B00; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255, 107, 0, 0.3);">
                🔥 ${profile.streak_count || 0} DAY STREAK
             </div>
-            <div id="user-tier-badge" style="padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; background: ${SubscriptionService.resolveUserTier(profile) === 'premium' ? 'var(--accent-secondary)' : '#475569'}; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
-              ${SubscriptionService.resolveUserTier(profile).toUpperCase()}
+            <div id="user-tier-badge" style="padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; background: ${SubscriptionService.resolveUserTier(profile, isSystemFree) === 'premium' ? 'var(--accent-secondary)' : '#475569'}; color: var(--text-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
+              ${SubscriptionService.resolveUserTier(profile, isSystemFree).toUpperCase()}
             </div>
             
             <!-- 🏆 New Achievement Badges -->
@@ -127,13 +132,13 @@ export const DashboardComponent = {
             </div>
             <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">RECOMMENDED</span>
           </div>
-          <button id="start-ai-workout" class="primary" style="width: 100%; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-            <span>\uD83D\uDE80 Start Personalized Session</span>
+          <button id="start-ai-workout" class="primary" style="width: 100%; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #ffffff !important;">
+            <span style="color: #ffffff !important;">\uD83D\uDE80 Start Personalized Session</span>
           </button>
         </div>
 
         <div id="resume-container" style="display: none; margin-bottom: 2rem;">
-              <div class="glass card scale-in" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, var(--bg-secondary) 100%); display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+              <div class="glass card scale-in" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, var(--bg-secondary) 100%); display: flex; justify-content: space-between; align-items: center; padding: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <div style="font-size: 2rem;">⏳</div>
                   <div>
@@ -150,44 +155,74 @@ export const DashboardComponent = {
 
         <!-- Dynamic Tier-Based UI -->
         ${(() => {
-          const tier = SubscriptionService.resolveUserTier(profile);
+          const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
           const ActivationCard = () => `
-            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.5rem 2rem; border: 1.5px solid var(--accent-primary); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-primary); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem; font-size: 1.1rem;">🔓 Activate Full Access</h4>
-                <p style="font-size: 0.85rem; color: #ccc;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">🔓 Activate Full Access</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
               </div>
               <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                Activate Now
+                Activate Lifetime Access – ₦1,500
               </button>
             </div>
           `;
 
           const RenewalCard = () => `
-            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.5rem 2rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: #fff; margin-bottom: 0.25rem; font-size: 1.1rem;">🚀 Renew Premium Access</h4>
-                <p style="font-size: 0.85rem; color: #ccc;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">🚀 Renew Premium Access</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
               </div>
               <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background: var(--accent-secondary);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                Renew Premium
+                Renew Premium – ₦1,000/month
               </button>
             </div>
           `;
 
-          const PremiumBadge = () => `
-            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--success); background: rgba(34, 197, 94, 0.05); border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
-              <div style="font-size: 1.5rem;">👑</div>
-              <div>
-                <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1rem;">Premium Active</h4>
-                <p style="font-size: 0.75rem; color: #ccc; margin: 0;">You have full access to all AI features and mock exams.</p>
-              </div>
-            </div>
-          `;
+          if (subState.tier === "premium") {
+            if (subState.daysRemaining <= 5) {
+              return `
+                <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--warning); background: rgba(255, 152, 0, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                  <div style="flex: 1;">
+                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.25rem 0; font-size: 1rem;">⚠️ Expiring Soon</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing premium access.</p>
+                  </div>
+                  <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--warning);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                    Renew Premium – ₦1,000/month
+                  </button>
+                </div>
+              `;
+            } else {
+              return `
+                <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--success); background: rgba(34, 197, 94, 0.05); border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                  <div style="font-size: 1.5rem;">👑</div>
+                  <div>
+                    <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1rem;">Premium Active</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days.</p>
+                  </div>
+                </div>
+              `;
+            }
+          }
 
-          if (tier === "freemium") return ActivationCard();
-          if (tier === "medium") return RenewalCard();
-          if (tier === "premium") return PremiumBadge();
+          if (subState.isExpired) {
+            return `
+              <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--error); background: rgba(239, 68, 68, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1;">
+                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.25rem 0; font-size: 1rem;">⚠️ Premium Expired</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Premium expired – you are now on Medium plan.</p>
+                </div>
+                <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--error);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                  Renew Premium – ₦1,000/month
+                </button>
+              </div>
+            `;
+          }
+
+          if (subState.shouldShowActivateCTA) return ActivationCard();
+          if (subState.shouldShowRenewCTA) return RenewalCard();
+          
           return '';
         })()}
 
@@ -205,7 +240,7 @@ export const DashboardComponent = {
         </div>
 
         <!-- 🧭 2. Dashboard Guide Entry (Replayable) -->
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary);">
+        <div class="glass card" style="margin-top: 1.5rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary);">
            <div style="display: flex; align-items: center; gap: 1rem;">
              <div style="font-size: 1.5rem;">📖</div>
              <div>
@@ -218,16 +253,16 @@ export const DashboardComponent = {
 
 
         <!-- 📊 3. Progress Summary & 🎯 4. Daily Goal Tracker -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-           <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--primary);">
-             <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">Your Progress Overview</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
+           <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary);">
+             <h3 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
              <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                <div>
-                  <div style="font-size: 2.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
-                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Questions</div>
+                  <div style="font-size: 1.75rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Questions</div>
                </div>
                 <div style="text-align: right;">
-                   <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
+                   <div style="font-size: 1.25rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
                       Avg Accuracy <span style="opacity: 0.6; font-size: 0.65rem;">(Global: 68%)</span>
                    </div>
@@ -239,7 +274,7 @@ export const DashboardComponent = {
               </div>
            </div>
 
-           <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--success);">
+           <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--success);">
              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <h3 style="font-size: 0.9rem; color: var(--text-secondary);">Daily Practice Goal</h3>
                 <span style="font-size: 0.8rem; font-weight: 800; color: var(--success);">${todayQuestions} / ${dailyGoalLimit}</span>
@@ -258,6 +293,24 @@ export const DashboardComponent = {
            </div>
         </div>
 
+        <!-- 📈 Analytics Section (Score History & Mastery) -->
+        <div id="analytics-section" style="margin-top: 1.5rem; transition: opacity 0.3s ease;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
+              <h4 style="margin-bottom: 1.25rem; color: var(--accent-primary); font-size: 0.9rem;">Score History (Past 50 Sessions)</h4>
+              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="score-history-chart" style="width: 100% !important; height: auto !important; max-height: 250px;"></canvas>
+              </div>
+            </div>
+            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
+              <h4 style="margin-bottom: 1.25rem; color: var(--success); font-size: 0.9rem;">Subject Mastery (%)</h4>
+              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 300px; max-height: 250px; margin: 0 auto;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- ⚠️ 5. Weak Subject Alert -->
         ${weakSubject ? `
         <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--warning); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--warning)0D;">
@@ -273,7 +326,7 @@ export const DashboardComponent = {
         ` : ''}
 
         <!-- 📰 6. News & Updates System -->
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1.5rem;">
+        <div class="glass card" style="margin-top: 1.5rem; padding: 1rem;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
             <span>📢 Exam Updates & News</span>
           </h2>
@@ -293,52 +346,57 @@ export const DashboardComponent = {
         </div>
 
         <!-- 🧭 7. Explore CBT Elite (Feature Map) -->
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1.5rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--accent-primary);">Explore CBT Elite</h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
-            <div style="display: flex; gap: 1rem;">
-              <div style="font-size: 1.25rem;">🎯</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Practice Mode</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">Practice questions by topic and improve gradually</p>
+        <div class="scale-in" style="margin-top: 1.5rem; width: 100%;">
+          <details style="width: 100%;">
+            <summary class="primary" style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff !important; background: var(--primary); padding: 1rem 1.5rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+              <span style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff !important;"><span>🚀</span> Explore CBT Elite Features</span>
+              <span style="font-size: 0.85rem; opacity: 0.9; font-weight: normal; color: #ffffff !important;">Click to reveal ▼</span>
+            </summary>
+            <div class="glass card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; padding: 1.5rem; margin-top: 0.5rem; border-left: 4px solid var(--primary);">
+              <div style="display: flex; gap: 1rem;">
+                <div style="font-size: 1.25rem;">🎯</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Practice Mode</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Practice questions by topic and improve gradually</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <div style="font-size: 1.25rem;">🏆</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Exam Mode</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Take full CBT exams with real timing</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <div style="font-size: 1.25rem;">📊</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Performance Insights</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">See your progress and score trends</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <div style="font-size: 1.25rem;">🧠</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">AI Explanations</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Get detailed corrections after answering (Premium)</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem;" id="feature-review-item">
+                <div style="font-size: 1.25rem;">📌</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Review Questions</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">After finishing a test, tap 'Review Questions' to see corrections</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <div style="font-size: 1.25rem;">📰</div>
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">News & Updates</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Stay informed about JAMB, WAEC, and NECO</p>
+                </div>
               </div>
             </div>
-            <div style="display: flex; gap: 1rem;">
-              <div style="font-size: 1.25rem;">🏆</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Exam Mode</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">Take full CBT exams with real timing</p>
-              </div>
-            </div>
-            <div style="display: flex; gap: 1rem;">
-              <div style="font-size: 1.25rem;">📊</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Performance Insights</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">See your progress and score trends</p>
-              </div>
-            </div>
-            <div style="display: flex; gap: 1rem;">
-              <div style="font-size: 1.25rem;">🧠</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">AI Explanations</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">Get detailed corrections after answering (Premium)</p>
-              </div>
-            </div>
-            <div style="display: flex; gap: 1rem;" id="feature-review-item">
-              <div style="font-size: 1.25rem;">📌</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Review Questions</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">After finishing a test, tap 'Review Questions' to see corrections</p>
-              </div>
-            </div>
-            <div style="display: flex; gap: 1rem;">
-              <div style="font-size: 1.25rem;">📰</div>
-              <div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">News & Updates</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">Stay informed about JAMB, WAEC, and NECO</p>
-              </div>
-            </div>
-          </div>
+          </details>
         </div>
 
         <!-- 📚 8. Exam Selection (Existing) -->
@@ -448,13 +506,13 @@ export const DashboardComponent = {
             📊 Performance Insights
           </h2>
           <div class="analytics-grid">
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
               <h4 style="margin-bottom: 1.25rem; color: var(--accent-primary); font-size: 0.9rem;">Score History (Past 50 Sessions)</h4>
               <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="score-history-chart" style="width: 100% !important; height: auto !important;"></canvas>
               </div>
             </div>
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
               <h4 style="margin-bottom: 1.25rem; color: var(--success); font-size: 0.9rem;">Subject Mastery (%)</h4>
               <div style="flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 400px; margin: 0 auto;"></canvas>
@@ -489,10 +547,10 @@ export const DashboardComponent = {
           
           <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
             ${!profile.is_activated ? `
-              <div class="glass card" style="padding: 1.5rem; border: 2px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05);">
-                <h4 style="margin-bottom: 0.5rem; color: #fff;">Lifetime Activation</h4>
+              <div class="glass card" style="padding: 1rem; border: 2px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05);">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Lifetime Activation</h4>
                 <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.5rem;">₦1,500</div>
-                <ul style="text-align: left; font-size: 0.8rem; color: #ccc; margin-bottom: 1.5rem; list-style: none; padding: 0;">
+                <ul style="text-align: left; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; list-style: none; padding: 0;">
                   <li>✔ Includes 30 Days Premium</li>
                   <li>✔ Lifetime Medium Access</li>
                   <li>✔ 15 Monthly AI Credits</li>
@@ -500,10 +558,10 @@ export const DashboardComponent = {
                 <button id="pay-lifetime-btn" class="primary" style="width: 100%; padding: 0.75rem;">Activate Now</button>
               </div>
             ` : `
-              <div class="glass card" style="padding: 1.5rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
-                <h4 style="margin-bottom: 0.5rem; color: #fff;">Monthly Pro</h4>
+              <div class="glass card" style="padding: 1rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Monthly Pro</h4>
                 <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-secondary); margin-bottom: 0.5rem;">₦1,000</div>
-                <ul style="text-align: left; font-size: 0.8rem; color: #ccc; margin-bottom: 1.5rem; list-style: none; padding: 0;">
+                <ul style="text-align: left; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; list-style: none; padding: 0;">
                   <li>✔ Unlimited AI Explanations</li>
                   <li>✔ Unlimited Mock Exams</li>
                   <li>✔ AI Theory Grading</li>

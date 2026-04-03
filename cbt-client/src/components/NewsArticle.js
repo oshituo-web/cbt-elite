@@ -58,7 +58,7 @@ export const NewsArticleComponent = {
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--accent-primary); margin-bottom: 0.25rem;">📎 Attached Document</p>
                 <p style="font-size: 0.95rem; color: var(--text-primary);">${article.attachment_name || 'Official Exam Document'}</p>
             </div>
-            <a href="${article.attachment_url}" target="_blank" download style="background: var(--accent-primary); color: #fff; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">
+            <a href="${article.attachment_url}" target="_blank" download style="background: var(--accent-primary); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">
                 📥 Download PDF
             </a>
         </div>

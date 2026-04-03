@@ -22,14 +22,16 @@
 
 body.light-mode {
   /* LIGHT THEME */
-  --bg-color: #F9FAFB;
+  --bg-color: #F4F7FB;
   --card-bg: #FFFFFF;
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --border-color: #E5E7EB;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border-color: #E2E8F0;
   
   /* Overrides for light mode glass effects */
-  --surface-color: rgba(255, 255, 255, 0.9);
+  --surface-color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #F8FAFC 0%, #EDF2F7 100%) !important;
+  background-attachment: fixed !important;
 }
 
 * {
@@ -50,11 +52,11 @@ body {
 
 .glass {
   background: var(--surface-color);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 /* Modals */
@@ -137,7 +139,27 @@ button, .btn {
 .btn-secondary:hover, .glass-btn:hover {
   background: rgba(148, 163, 184, 0.2);
   border-color: var(--primary);
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+}
+
+/* Hard-code to ensure ANY element acting as a primary blue/purple button MUST have white text, resisting light mode CSS variable overrides */
+.primary, .btn-primary, 
+[style*="background: var(--primary)"], 
+[style*="background: var(--accent-primary)"],
+[style*="background: var(--accent-secondary)"],
+[style*="background: #2563EB"], 
+[style*="background: #8B5CF6"],
+button[style*="background: #3B82F6"],
+button[style*="background: var(--primary)"],
+button[style*="background: var(--accent-secondary)"] {
+  color: #FFFFFF !important;
+}
+
+/* Force child elements (e.g. spans) inside these buttons to inherit the white color, overriding any external span CSS */
+.primary *, .btn-primary *,
+button[style*="background: var(--primary)"] *,
+button[style*="background: var(--accent-secondary)"] * {
+  color: inherit !important;
 }
 
 body.light-mode .btn-secondary, body.light-mode .glass-btn {
@@ -1024,26 +1046,28 @@ body.light-mode .option-btn .option-holder {
 .tour-bubble {
   position: absolute;
   width: 320px;
-  background: var(--bg-primary);
+  background: var(--text-primary) !important;
+  color: var(--bg-color) !important;
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 1.5rem;
   z-index: 10001;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
   animation: tourFadeIn 0.3s ease-out;
   pointer-events: auto;
 }
 
 .tour-bubble h3 {
   margin-bottom: 0.5rem;
-  color: var(--accent-primary);
+  color: var(--bg-color) !important;
   font-family: 'Outfit';
   font-size: 1.1rem;
 }
 
 .tour-bubble p {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--bg-color) !important;
+  opacity: 0.85;
   line-height: 1.5;
   margin-bottom: 1.5rem;
 }
@@ -1052,6 +1076,23 @@ body.light-mode .option-btn .option-holder {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.tour-step-counter {
+  color: var(--bg-color) !important;
+  opacity: 0.7;
+}
+
+.tour-prev {
+  background: transparent !important;
+  color: var(--bg-color) !important;
+  border-color: var(--bg-color) !important;
+}
+
+.tour-next {
+  background: var(--accent-primary) !important;
+  color: white !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
 }
 
 @keyframes tourFadeIn {
@@ -1191,4 +1232,8 @@ body.light-mode .option-btn .option-holder {
   }
 }
 
-@media (max-width: 600px) { .analytics-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; } .glass.card { padding: 1rem !important; } }
+@media (max-width: 600px) { 
+  .analytics-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; } 
+  .glass.card { padding: 1rem !important; } 
+  div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
+}

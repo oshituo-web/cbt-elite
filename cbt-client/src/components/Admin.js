@@ -104,7 +104,7 @@ export const AdminComponent = {
               <!-- Promo Codes -->
               <div>
                 <h2 style="margin-bottom: 1.5rem;">Promo Codes</h2>
-                <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <div class="glass card" style="padding: 1rem; margin-bottom: 2rem;">
                   <h3 style="font-size: 1rem; margin-bottom: 1rem;">Create New Code</h3>
                   <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <input type="text" id="promo-code-input" placeholder="CODE (e.g. SAVE50)" class="glass-input">
@@ -121,17 +121,17 @@ export const AdminComponent = {
                 <h2 style="margin-bottom: 1.5rem;">System Controls</h2>
                 
                 <!-- NEW: Explanations Toggle -->
-                <div class="glass card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
+                <div class="glass card" style="padding: 1rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
                   <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">🔓 Explanations Access</h3>
-                  <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 1rem;">Turn this ON to allow ALL users (including Free) to view question explanations.</p>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Turn this ON to allow ALL users (including Free) to view question explanations.</p>
                   <div style="display: flex; align-items: center; gap: 1rem;">
                     <button id="toggle-explanations-btn" class="glass" style="padding: 0.6rem 1.2rem; font-weight: 700; border-color: var(--accent-secondary); color: var(--accent-secondary);">Loading...</button>
                   </div>
                 </div>
 
-                <div class="glass card" style="padding: 1.5rem;">
+                <div class="glass card" style="padding: 1rem;">
                   <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Announcement Banner</h3>
-                  <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 1rem;">This message will appear at the top of all user dashboards.</p>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">This message will appear at the top of all user dashboards.</p>
                   <textarea id="broadcast-message-input" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1rem;" placeholder="Enter message or leave blank to clear..."></textarea>
                   <button id="save-broadcast-btn" class="primary" style="width: 100%; padding: 0.75rem;">Push Broadcast</button>
                 </div>
@@ -157,8 +157,8 @@ export const AdminComponent = {
           <!-- Staff Tab (Super Admin Only) -->
           <div id="admin-staff-tab" style="display: none;">
             <h2>Staff Management</h2>
-            <div class="glass card" style="padding: 1.5rem; margin-top: 1rem;">
-              <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 1rem;">Promote a user by Gmail address.</p>
+            <div class="glass card" style="padding: 1rem; margin-top: 1rem;">
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Promote a user by Gmail address.</p>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <input type="email" id="staff-email-input" placeholder="User email..." class="glass-input" style="flex: 1; min-width: 200px;">
                 <select id="staff-role-select" class="glass-select">
@@ -449,16 +449,16 @@ export const AdminComponent = {
 
     counter.innerHTML = `
       <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 8px; border-left: 4px solid var(--accent-primary);">
-        <span style="font-size: 1.1rem; font-weight: 800; color: #ffffff;">Total Questions: ${count || 0}</span>
-        <span style="font-size: 0.8rem; color: #ffffff; margin-left: 1rem;">(Showing 20)</span>
+        <span style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Total Questions: ${count || 0}</span>
+        <span style="font-size: 0.8rem; color: var(--text-primary); margin-left: 1rem;">(Showing 20)</span>
       </div>
     `
     
     list.innerHTML = questions.map(q => `
-      <div class="glass q-item" style="padding: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-left: 3px solid var(--accent-primary); margin-bottom: 0.75rem;">
+      <div class="glass q-item" style="padding: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-left: 3px solid var(--accent-primary); margin-bottom: 0.75rem;">
         <div style="flex: 1; min-width: 0; word-break: break-word;">
           <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.4;">${q.question_text.substring(0, 150)}...</div>
-          <div style="font-size: 0.75rem; color: #ccc; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.exam_type}</span>
             <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.subject}</span>
             <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.topic}</span>
@@ -515,7 +515,7 @@ export const AdminComponent = {
   openEditModal(question) {
     const modalHtml = `
       <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
-        <div class="glass card" style="width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; border: 1px solid var(--accent-primary);">
+        <div class="glass card" style="width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 1rem; border: 1px solid var(--accent-primary);">
           <h3 style="margin-bottom: 1rem; font-family: 'Outfit';">Edit Question</h3>
           <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 0.5rem;">Question Text</p>
           <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.5rem; font-size: 0.9rem;">${question.question_text}</textarea>
@@ -571,7 +571,7 @@ export const AdminComponent = {
     }
     
     if (!users || users.length === 0) {
-      list.innerHTML = '<div style="color: #ffffff;">No users found.</div>'
+      list.innerHTML = '<div style="color: var(--text-primary);">No users found.</div>'
       return
     }
 
@@ -584,7 +584,7 @@ export const AdminComponent = {
           <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: var(--accent-primary); opacity: 0.8;">${u.role || 'user'}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="font-size: 0.8rem; color: #ffffff;">Credits: ${u.ai_credits || 0}</div>
+          <div style="font-size: 0.8rem; color: var(--text-primary);">Credits: ${u.ai_credits || 0}</div>
           <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem;">Edit User</button>
         </div>
       </div>
@@ -607,7 +607,7 @@ export const AdminComponent = {
           <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Edit User: ${user.username || user.email}</h3>
           
           <div style="margin-bottom: 1.25rem;">
-            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Subscription Tier</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Subscription Tier</p>
             <select id="edit-user-tier" class="glass-select" style="width: 100%;">
               <option value="freemium" ${user.tier === 'freemium' || user.tier === 'free' ? 'selected' : ''}>Freemium (Basic)</option>
               <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated)</option>
@@ -617,21 +617,21 @@ export const AdminComponent = {
 
           <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
             <input type="checkbox" id="edit-user-activated" ${user.is_activated ? 'checked' : ''} style="width: 18px; height: 18px;">
-            <label for="edit-user-activated" style="font-size: 0.85rem; color: #fff; cursor: pointer;">Lifetime Activated (₦1,500 Paid)</label>
+            <label for="edit-user-activated" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">Lifetime Activated (₦1,500 Paid)</label>
           </div>
 
           <div style="margin-bottom: 1.25rem;">
-            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Premium Expiration (premium_until)</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Premium Expiration (premium_until)</p>
             <input type="datetime-local" id="edit-user-premium-until" class="glass-input" value="${user.premium_until ? new Date(user.premium_until).toISOString().slice(0, 16) : ''}" style="width: 100%;">
           </div>
 
           <div style="margin-bottom: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
-              <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">AI Monthly Credits</p>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">AI Monthly Credits</p>
               <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
             </div>
             <div>
-              <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem;">Today's AI Usage</p>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Today's AI Usage</p>
               <input type="number" id="edit-user-ai-usage" class="glass-input" value="${user.ai_daily_usage || 0}" style="width: 100%;">
             </div>
           </div>
@@ -727,7 +727,7 @@ export const AdminComponent = {
               <div class="subject-group" style="margin-bottom: 0.5rem;">
                 <div class="glass syllabus-header subject-toggle" style="padding: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; background: rgba(255, 255, 255, 0.03);">
                   <span style="font-weight: 600;">${subName}</span>
-                  <span style="font-size: 0.8rem; color: #ffffff;">${topics.length} Topics ▼</span>
+                  <span style="font-size: 0.8rem; color: var(--text-primary);">${topics.length} Topics ▼</span>
                 </div>
                 <div class="topics-container" style="display: none; padding: 0.5rem; border-left: 1px solid var(--glass-border); margin-left: 0.5rem;">
                   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
@@ -845,7 +845,7 @@ export const AdminComponent = {
     }
     
     list.innerHTML = data.map(r => `
-      <div class="glass" style="padding: 1.25rem; margin-bottom: 1rem; border-left: 4px solid ${r.status === 'resolved' ? 'var(--success)' : r.status === 'dismissed' ? '#666' : 'var(--error)'};">
+      <div class="glass" style="padding: 0.75rem; margin-bottom: 1rem; border-left: 4px solid ${r.status === 'resolved' ? 'var(--success)' : r.status === 'dismissed' ? '#666' : 'var(--error)'};">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
           <div>
             <strong style="color: ${r.status === 'resolved' ? 'var(--success)' : 'var(--error)'}; text-transform: uppercase; font-size: 0.75rem;">${r.reason}</strong>
@@ -911,15 +911,15 @@ export const AdminComponent = {
 
     summary.innerHTML = `
       <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: #ffffff;">Total Students</div>
+        <div style="font-size: 0.8rem; color: var(--text-primary);">Total Students</div>
         <div style="font-size: 2rem; font-weight: 700; color: var(--accent-primary);">${stats.totalUsers}</div>
       </div>
       <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: #ffffff;">Database Size</div>
+        <div style="font-size: 0.8rem; color: var(--text-primary);">Database Size</div>
         <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${stats.totalQuestions} Questions</div>
       </div>
       <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: #ffffff;">Avg Performance</div>
+        <div style="font-size: 0.8rem; color: var(--text-primary);">Avg Performance</div>
         <div style="font-size: 2rem; font-weight: 700; color: #ffeb3b;">${stats.averagePerformance}%</div>
       </div>
     `
@@ -997,9 +997,9 @@ export const AdminComponent = {
         list.innerHTML = 'No logs available.'
     } else {
         list.innerHTML = data.map(log => `
-            <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ccc;">
+            <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary);">
                 <span style="color: var(--accent-primary); font-weight: 700;">[${new Date(log.created_at).toLocaleTimeString()}]</span>
-                <span style="color: #fff;">${log.admin_email}:</span>
+                <span style="color: var(--text-primary);">${log.admin_email}:</span>
                 <span style="color: var(--success);">${log.action}</span>
                 <span style="font-size: 0.7rem; opacity: 0.7;">(ID: ${log.target_id || 'N/A'})</span>
                 <div style="font-size: 0.7rem; margin-top: 2px; opacity: 0.5;">${log.details}</div>
@@ -1054,12 +1054,12 @@ export const AdminComponent = {
     }
 
     if (!news || news.length === 0) {
-      list.innerHTML = '<div style="color: #ffffff;">No news items found.</div>'
+      list.innerHTML = '<div style="color: var(--text-primary);">No news items found.</div>'
       return
     }
 
     list.innerHTML = news.map(n => `
-      <div class="glass" style="padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid var(--accent-primary);">
+      <div class="glass" style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--accent-primary);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
           <div style="flex: 1; min-width: 250px;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
@@ -1067,7 +1067,7 @@ export const AdminComponent = {
                <span style="font-size: 0.75rem; color: #aaa;">${new Date(n.created_at).toLocaleDateString()}</span>
             </div>
             <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.5rem;">${n.title}</strong>
-            <p style="font-size: 0.85rem; color: #ccc;">${n.summary}</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">${n.summary}</p>
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">✏️ Edit</button>
@@ -1113,11 +1113,11 @@ export const AdminComponent = {
           
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
             <div>
-               <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Title</p>
+               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Title</p>
                <input type="text" id="edit-news-title" class="glass-input" value="${news ? news.title.replace(/"/g, '&quot;') : ''}" style="width: 100%;">
             </div>
             <div>
-               <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Category</p>
+               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Category</p>
                <select id="edit-news-category" class="glass-select" style="width: 100%;">
                  <option value="JAMB" ${news && news.category === 'JAMB' ? 'selected' : ''}>JAMB</option>
                  <option value="WAEC" ${news && news.category === 'WAEC' ? 'selected' : ''}>WAEC</option>
@@ -1129,10 +1129,10 @@ export const AdminComponent = {
             </div>
           </div>
 
-          <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Short Summary (Visible on Dashboard Cards)</p>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Short Summary (Visible on Dashboard Cards)</p>
           <textarea id="edit-news-summary" class="glass-input" style="width: 100%; min-height: 80px; margin-bottom: 1rem; font-size: 0.9rem;">${news ? news.summary : ''}</textarea>
 
-          <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.25rem;">Full Article Content (Visible in Reader Mode)</p>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Full Article Content (Visible in Reader Mode)</p>
           <textarea id="edit-news-content" class="glass-input" style="width: 100%; min-height: 150px; margin-bottom: 1.5rem; font-size: 0.9rem;">${news ? news.content : ''}</textarea>
 
           <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">

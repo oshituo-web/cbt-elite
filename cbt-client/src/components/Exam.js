@@ -4,6 +4,7 @@ import { TimerService } from '../services/TimerService'
 import { ExamSessionManager } from '../services/ExamSessionManager'
 import { QuestionRenderer } from '../services/QuestionRenderer'
 import { SubscriptionService } from '../services/subscriptionService'
+import { SubscriptionManager } from '../utils/subscriptionManager'
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview)
@@ -98,6 +99,14 @@ export class Exam {
     const container = document.getElementById('exam-container')
     container.style.display = 'block'
     
+    this._explanationsFreeAccess = false;
+    try {
+        const configResp = await DataService.getSystemConfig('explanations_free_access');
+        this._explanationsFreeAccess = configResp.data?.value === true || configResp.data?.value === 'true';
+    } catch (err) {
+        console.warn("Failed to fetch global config:", err);
+    }
+    
     if (resumeState) {
       this.session.userAnswers = resumeState.userAnswers || {}
       this.session.currentIndex = resumeState.currentIndex || 0
@@ -106,7 +115,7 @@ export class Exam {
     } else if (!this.isReviewMode) {
       // Enforcement: Session Limits
       try {
-        if (!SubscriptionService.canStartSession(this.profile, this.mode)) {
+        if (!SubscriptionService.canStartSession(this.profile, this.mode, this._explanationsFreeAccess)) {
           const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
           alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
           onBack()
@@ -117,13 +126,6 @@ export class Exam {
         console.warn("Subscription check failed, allowing session to start in bypass mode:", err)
       }
     }
-
-    // Cache global settings
-    this._explanationsFreeAccess = false;
-    DataService.getSystemConfig('explanations_free_access').then(({ data }) => {
-      this._explanationsFreeAccess = data?.value === true || data?.value === 'true';
-      if (this.isReviewMode) this.updateUI();
-    });
     
     container.innerHTML = `
       <div class="exam-layout">
@@ -573,29 +575,29 @@ export class Exam {
     if (this.isReviewMode) {
       expDiv.style.display = 'block'
       
-      const tier = SubscriptionService.resolveUserTier(this.profile)
-      const aiStatus = SubscriptionService.canUseAI(this.profile)
+      const subState = SubscriptionManager.getUserSubscriptionState(this.profile, this._explanationsFreeAccess)
+      const aiStatus = SubscriptionService.canUseAI(this.profile, this._explanationsFreeAccess)
       const isFreeAccess = this._explanationsFreeAccess
 
-      if (tier === 'freemium' && !isFreeAccess) {
+      if (subState.shouldShowActivateCTA && !isFreeAccess) {
         expDiv.innerHTML = `
           <div class="premium-lock-container">
             <div class="lock-icon">🔒</div>
             <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Activate Full Access</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Pay \u20A61,500 once to unlock more features + 30 days Premium access.</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Activate for ₦1,500 to unlock explanations</p>
             <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
-              Activate Now
+              Activate Lifetime Access – ₦1,500
             </button>
           </div>
         `
-      } else if (tier === 'medium' && !isFreeAccess && !aiStatus.canUse) {
+      } else if (subState.shouldShowRenewCTA && !isFreeAccess && !aiStatus.canUse) {
         expDiv.innerHTML = `
           <div class="premium-lock-container">
             <div class="lock-icon">🚀</div>
             <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Renew Premium Access</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Get AI explanations, unlimited exams and full access for \u20A61,000/month.</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Renew Premium (₦1,000) to unlock AI explanations</p>
             <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
-              Renew Premium
+              Renew Premium – ₦1,000/month
             </button>
           </div>
         `
@@ -604,7 +606,7 @@ export class Exam {
         const qId = q.id
         if (!this._deductedQuestions) this._deductedQuestions = new Set()
         
-        const isPremium = tier === 'premium'
+        const isPremium = subState.tier === 'premium'
         if (!isPremium && !isFreeAccess && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
           SubscriptionService.useAICredit(this.profile).then(success => {
             if (success) {
@@ -632,13 +634,26 @@ export class Exam {
             </div>
           `
         } else {
-          const ctaHtml = (!isPremium && (isFreeAccess || aiStatus.canUse)) ? `
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-secondary-rgb, 255, 152, 0), 0.1); border-radius: 8px; border: 1px dashed var(--accent-secondary); text-align: center;">
-              <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
-              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Get unlimited Mock Exams and AI Theory Grading for just \u20A61,000/month.</p>
-              <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-secondary); color: var(--accent-secondary);" onclick="location.reload()">Renew Premium</button>
-            </div>
-          ` : ''
+          let ctaHtml = '';
+          if (!isPremium && (isFreeAccess || aiStatus.canUse)) {
+             if (subState.shouldShowActivateCTA) {
+                ctaHtml = `
+                  <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border: 1px dashed var(--accent-primary); text-align: center;">
+                    <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Activate for ₦1,500 to unlock unlimited explanations.</p>
+                    <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-primary); color: var(--accent-primary);" onclick="location.reload()">Activate Lifetime Access – ₦1,500</button>
+                  </div>
+                `;
+             } else if (subState.shouldShowRenewCTA) {
+                ctaHtml = `
+                  <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-secondary-rgb, 255, 152, 0), 0.1); border-radius: 8px; border: 1px dashed var(--accent-secondary); text-align: center;">
+                    <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Renew Premium (₦1,000) to unlock AI explanations.</p>
+                    <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-secondary); color: var(--accent-secondary);" onclick="location.reload()">Renew Premium – ₦1,000/month</button>
+                  </div>
+                `;
+             }
+          }
 
           expDiv.innerHTML = `
             <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">

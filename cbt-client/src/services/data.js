@@ -749,44 +749,6 @@ export const DataService = {
 
   // (Duplicate syncPerformanceData removed)
 
-  async getUserAnalytics(userId) {
-    try {
-      const { data: history, error: hError } = await supabase
-        .from('exam_sessions')
-        .select('completed_at, score_percentage, session_type')
-        .eq('user_id', userId)
-        .order('completed_at', { ascending: true })
-        .limit(20)
-
-      const { data: mastery, error: mError } = await supabase
-        .from('topic_mastery')
-        .select('subject, mastery_percentage')
-        .eq('user_id', userId)
-
-      if (hError || mError) throw (hError || mError)
-
-      const subjectAverages = {}
-      mastery.forEach(m => {
-        if (!subjectAverages[m.subject]) subjectAverages[m.subject] = []
-        subjectAverages[m.subject].push(m.mastery_percentage)
-      })
-
-      const processedMastery = Object.entries(subjectAverages).map(([subject, scores]) => ({
-        subject,
-        average: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      }))
-
-      return {
-        history: history || [],
-        mastery: processedMastery,
-        error: null
-      }
-    } catch (err) {
-      console.error("Analytics Error:", err)
-      return { error: err.message }
-    }
-  },
-
   async getGlobalAnalytics() {
     try {
       const { count: users } = await supabase.from('users').select('*', { count: 'exact', head: true })

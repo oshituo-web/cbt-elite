@@ -22,13 +22,13 @@ export const CalculatorComponent = {
     `
     calc.innerHTML = `
       <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.75rem;">
-        <span style="color: white;">Calculator</span>
+        <span style="color: var(--text-primary);">Calculator</span>
         <button id="close-calc" style="padding: 2px 5px; background: none; color: var(--error); border: none; cursor: pointer;">X</button>
       </div>
-      <input type="text" id="calc-display" readonly style="width: 100%; padding: 0.5rem; background: #000; border: 1px solid #444; color: white; text-align: right; margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem;">
+      <input type="text" id="calc-display" readonly style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: var(--text-primary); text-align: right; margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem;">
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
         ${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+','C'].map(btn => `
-          <button class="calc-btn" data-val="${btn}" style="padding: 0.75rem; font-size: 0.875rem; background: #444; color: white; border: none; cursor: pointer;">${btn}</button>
+          <button class="calc-btn" data-val="${btn}" style="padding: 0.75rem; font-size: 0.875rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer;">${btn}</button>
         `).join('')}
       </div>
     `
