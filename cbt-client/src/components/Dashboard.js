@@ -282,29 +282,44 @@ export const DashboardComponent = {
         </div>
 
 
-        <!-- 📊 3. Progress Summary & 🎯 4. Daily Goal Tracker -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
-           <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary);">
-             <h3 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
-             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-               <div>
-                  <div style="font-size: 1.75rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
+         <!-- 📊 3. Progress Summary & 🎯 4. Daily Goal Tracker -->
+         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
+            <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary); display: flex; flex-direction: column;">
+              <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
+              
+              <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem;">
+                 <!-- Readiness Gauge -->
+                 <div id="readiness-gauge-container" style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+                    <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="3" />
+                      <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" style="transition: stroke-dasharray 1s ease;" />
+                    </svg>
+                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 0.9rem; color: var(--primary);">0%</div>
+                 </div>
+                 
+                 <div style="flex: 1;">
+                    <div id="readiness-label" style="font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Exam Readiness</div>
+                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 700; color: var(--text-primary);">...</div>
+                    <div id="readiness-status" style="font-size: 0.65rem; font-weight: 600; color: var(--success); margin-top: 0.15rem;">Beginner</div>
+                 </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Questions</div>
-                  <div style="font-size: 0.65rem; color: var(--success); margin-top: 0.25rem; font-weight: 600;">${totalCorrect} Correct <span style="color: var(--error)">| ${totalQuestions - totalCorrect} Failed</span></div>
-               </div>
+                </div>
                 <div style="text-align: right;">
                    <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
-                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">True Accuracy</div>
-                   <div style="font-size: 0.65rem; font-weight: 600; margin-top: 0.25rem;">
-                      ${trendStr}
-                   </div>
+                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Overall Accuracy</div>
                 </div>
-             </div>
-             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem;">
-                <button id="view-leaderboard" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-primary); color: var(--accent-primary); border-radius: 6px;">🏆 GLOBAL RANKINGS</button>
-                <button id="performance-insights-btn" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); border-radius: 6px;">📊 PERFORMANCE INSIGHTS</button>
               </div>
-           </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem;">
+                <button id="view-leaderboard" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-primary); color: var(--accent-primary); border-radius: 6px;">🏆 GLOBAL RANKINGS</button>
+                <button id="performance-insights-btn" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); border-radius: 6px;">📊 INSIGHTS</button>
+              </div>
+            </div>
 
            <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--success);">
              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -1192,54 +1207,42 @@ export const DashboardComponent = {
       }
     })
 
-    // 2. Subject Mastery Chart
-    const masteryCtx = document.getElementById('subject-mastery-chart').getContext('2d')
-    new Chart(masteryCtx, {
-      type: 'radar',
-      data: {
-        labels: mastery.map(m => m.subject),
-        datasets: [{
-          label: 'Mastery %',
-          data: mastery.map(m => m.average),
-          backgroundColor: isLightMode ? primaryColor + '4D' : primaryColor + '33', 
-          borderColor: primaryColor,
-          borderWidth: 3,
-          pointBackgroundColor: primaryColor,
-          pointBorderColor: '#fff',
-          pointBorderWidth: 1,
-          fill: true // Ensure background is filled for the radar
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { 
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: isLightMode ? '#fff' : '#1E293B',
-            borderWidth: 1,
-            displayColors: false
-          }
-        },
-        scales: {
-          r: {
-            angleLines: { color: chartGridColor, lineWidth: 1 },
-            grid: { color: chartGridColor, circular: true },
-            pointLabels: { 
-              color: isLightMode ? '#2563EB' : '#60A5FA', 
-              font: { 
-                size: window.innerWidth < 600 ? 11 : 13, 
-                weight: '700',
-                family: 'Outfit'
-              },
-              padding: 15
-            },
-            ticks: { display: false },
-            suggestedMin: 0,
-            suggestedMax: 100
-          }
+    // 3. Exam Readiness Gauge Initialization
+    const initReadinessGauge = async () => {
+      const gaugePath = document.getElementById('readiness-progress-path')
+      const gaugeText = document.getElementById('readiness-percentage')
+      const gaugeSub = document.getElementById('readiness-subject')
+      const gaugeStat = document.getElementById('readiness-status')
+      
+      if (!gaugePath || !mastery || mastery.length === 0) {
+        if (gaugeSub) gaugeSub.textContent = "Start Practicing";
+        return
+      }
+
+      // Find top subject by total attempted or average
+      const topSub = mastery.reduce((prev, curr) => (prev.total_attempted > curr.total_attempted) ? prev : curr)
+      gaugeSub.textContent = topSub.subject
+      
+      const { data: score, error } = await DataService.getReadinessScore(profile.id, topSub.subject)
+      
+      if (!error) {
+        gaugePath.style.strokeDasharray = `${score}, 100`
+        gaugeText.textContent = `${score}%`
+        
+        if (score < 30) {
+          gaugeStat.textContent = "Beginner"
+          gaugeStat.style.color = "var(--text-secondary)"
+        } else if (score < 70) {
+          gaugeStat.textContent = "Intermediate"
+          gaugeStat.style.color = "var(--accent-secondary)"
+        } else {
+          gaugeStat.textContent = "Ready for JAMB"
+          gaugeStat.style.color = "var(--success)"
         }
       }
-    })
+    }
+    
+    initReadinessGauge()
   },
 
   hide() {

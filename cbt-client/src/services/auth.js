@@ -67,6 +67,11 @@ export const AuthService = {
   },
 
   async getProfile(userId) {
+    if (!userId || typeof userId !== 'string' || userId.length < 30) {
+      console.warn("AuthService.getProfile: Invalid or missing userId", userId)
+      return { data: null, error: { message: "Invalid UUID format" } }
+    }
+    
     const { data, error } = await supabase
       .from('users')
       .select('*')

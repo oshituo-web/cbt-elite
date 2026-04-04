@@ -153,14 +153,20 @@ export class Exam {
           </div>
         </div>
 
-        <div class="exam-content-wrapper">
+        <div class="exam-content-wrapper" id="exam-wrapper" style="display: flex; gap: 1rem; flex: 1; overflow: hidden; height: calc(100vh - 80px);">
+          <!-- Left side: Pinned Content (Passage) -->
+          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 1.5rem; border-right: 1px solid var(--glass-border); min-width: 300px; scrollbar-width: thin;">
+             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.1rem; line-height: 1.8; color: var(--text-primary);"></div>
+          </div>
+
           <!-- Main Content -->
-          <div class="exam-main glass">
+          <div class="exam-main glass" style="flex: 1.2; overflow-y: auto; padding: 1.5rem 2rem; scrollbar-width: thin; display: flex; flex-direction: column;">
             <!-- Subject Tabs placed at the top of content area -->
             <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin; -webkit-overflow-scrolling: touch;"></div>
 
-            <div id="question-area">
-              <div id="q-group-content" class="passage-container glass" style="display: none; margin-bottom: 2rem; padding: 1.5rem; font-size: 1.05rem; line-height: 1.8; border-left: 4px solid var(--accent-primary); background: var(--bg-secondary);"></div>
+            <div id="question-area" style="flex: 1;">
+              <!-- Inline passage for mobile or fallback -->
+              <div id="q-group-content-inline" class="passage-container glass" style="display: none; margin-bottom: 2rem; padding: 1.5rem; font-size: 1.05rem; line-height: 1.8; border-left: 4px solid var(--accent-primary); background: var(--bg-secondary);"></div>
               <div id="q-diagram" style="display: none;"></div>
               <div id="q-text" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 500;">...</div>
 
@@ -469,21 +475,36 @@ export class Exam {
     }
 
     // Passage / Question Group Handling
-    const groupContentDiv = document.getElementById('q-group-content')
+    const pinnedArea = document.getElementById('pinned-content-area')
+    const inlineArea = document.getElementById('q-group-content-inline')
+    const pinnedContent = document.getElementById('q-group-content-pinned')
+
     if (q.question_groups && q.question_groups.content) {
-        groupContentDiv.style.display = 'block'
+        const isDesktop = window.innerWidth > 900
+        
+        if (isDesktop) {
+            pinnedArea.style.display = 'block'
+            inlineArea.style.display = 'none'
+        } else {
+            pinnedArea.style.display = 'none'
+            inlineArea.style.display = 'block'
+        }
         
         let headerText = 'Reference Passage'
         if (q.question_groups.type === 'instruction') headerText = 'Instruction'
         if (q.question_groups.type === 'data_set') headerText = 'Data Set / Case Study'
         if (q.question_groups.type === 'map' || q.question_groups.type === 'graph') headerText = 'Reference Materials'
         
-        // Preserve line breaks for passages
         const formattedContent = q.question_groups.content.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
-        groupContentDiv.innerHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${sanitizeContent(formattedContent)}</div>`
+        const fullHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${sanitizeContent(formattedContent)}</div>`
+        
+        if (pinnedContent) pinnedContent.innerHTML = fullHTML
+        if (inlineArea) inlineArea.innerHTML = fullHTML
     } else {
-        groupContentDiv.style.display = 'none'
-        groupContentDiv.innerHTML = ''
+        pinnedArea.style.display = 'none'
+        inlineArea.style.display = 'none'
+        if (pinnedContent) pinnedContent.innerHTML = ''
+        if (inlineArea) inlineArea.innerHTML = ''
     }
 
     // Diagram Handling

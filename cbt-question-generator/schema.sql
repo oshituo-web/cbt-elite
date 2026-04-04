@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS public.user_responses (
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE,
     selected_answer_id UUID REFERENCES public.answers(id), -- Null if they skipped it
+    user_answer_text TEXT, -- NEW: Stores the actual text or theory response
     is_correct BOOLEAN, -- Stored here for fast Analytics querying
     time_spent_seconds INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

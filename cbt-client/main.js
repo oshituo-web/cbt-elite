@@ -35,6 +35,12 @@ async function initApp() {
   checkBroadcast()
 
   // Check for profile
+  if (!user?.id) {
+    console.error("User identified but ID missing. Re-authenticating.")
+    showAuth()
+    return
+  }
+
   const { data: profile, error } = await AuthService.getProfile(user.id)
   
   if (error || !profile || !profile.username) {

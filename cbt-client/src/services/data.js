@@ -258,22 +258,23 @@ export const DataService = {
         
         if (qa && (qa.option_a || qa.option_A)) {
           q.answers = [
-            { id: 'A', option_letter: 'A', option_text: qa.option_a || qa.option_A, is_correct: qa.correct_option === 'A' },
-            { id: 'B', option_letter: 'B', option_text: qa.option_b || qa.option_B, is_correct: qa.correct_option === 'B' },
-            { id: 'C', option_letter: 'C', option_text: qa.option_c || qa.option_C, is_correct: qa.correct_option === 'C' },
-            { id: 'D', option_letter: 'D', option_text: qa.option_d || qa.option_D, is_correct: qa.correct_option === 'D' }
+            { id: 'A', db_id: qa.id_a || null, option_letter: 'A', option_text: qa.option_a || qa.option_A, is_correct: qa.correct_option === 'A' },
+            { id: 'B', db_id: qa.id_b || null, option_letter: 'B', option_text: qa.option_b || qa.option_B, is_correct: qa.correct_option === 'B' },
+            { id: 'C', db_id: qa.id_c || null, option_letter: 'C', option_text: qa.option_c || qa.option_C, is_correct: qa.correct_option === 'C' },
+            { id: 'D', db_id: qa.id_d || null, option_letter: 'D', option_text: qa.option_d || qa.option_D, is_correct: qa.correct_option === 'D' }
           ]
           // Partitioned explanation (usually joins return arrays)
           const qe = Array.isArray(q.question_explanations) ? q.question_explanations[0] : q.question_explanations
           q.explanation = qe?.explanation || qa.explanation || q.explanation
-        } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
-          q.answers = q.answers.map(a => ({
-            id: a.id || a.option_letter,
-            option_letter: a.option_letter || '',
-            option_text: a.option_text,
-            is_correct: a.is_correct
-          })).sort((a, b) => (a.option_letter || '').localeCompare(b.option_letter || ''));
-        } else {
+      } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
+        q.answers = q.answers.map(a => ({
+          id: a.option_letter || a.id,
+          db_id: a.id,
+          option_letter: a.option_letter || '',
+          option_text: a.option_text,
+          is_correct: a.is_correct
+        })).sort((a, b) => (a.option_letter || '').localeCompare(b.option_letter || ''));
+      } else {
           q.answers = []
         }
       }
@@ -525,6 +526,42 @@ export const DataService = {
     return { data, error }
   },
 
+  async getReadinessScore(userId, subjectName) {
+    if (!userId || !subjectName) return { data: 0, error: "Missing params" }
+
+    try {
+      // 1. Get total topics for this subject from syllabus
+      const { data: topics, error: tError } = await supabase
+        .from('syllabus_topics')
+        .select(`
+          topic,
+          subjects!inner(subject_name)
+        `)
+        .eq('subjects.subject_name', subjectName)
+      
+      if (tError) throw tError
+
+      // 2. Get user's mastery for these topics
+      const { data: mastery, error: mError } = await supabase
+        .from('topic_mastery')
+        .select('topic, mastery_percentage')
+        .eq('user_id', userId)
+        .eq('subject', subjectName)
+        .gt('mastery_percentage', 70) // Threshold for "Ready"
+
+      if (mError) throw mError
+
+      const totalTopics = [...new Set(topics.map(t => t.topic))].length
+      const masteredTopics = mastery ? mastery.length : 0
+      
+      const score = totalTopics > 0 ? Math.round((masteredTopics / totalTopics) * 100) : 0
+      return { data: score, error: null }
+    } catch (err) {
+      console.error("DataService.getReadinessScore error:", err)
+      return { data: 0, error: err.message }
+    }
+  },
+
   async getLeaderboard() {
     const { data, error } = await supabase
       .from('weekly_summaries')
@@ -585,14 +622,19 @@ export const DataService = {
 
     const responses = questions.map((q, i) => {
       const isTheory = q.question_type === 'theory'
+      const selectedAnswerObj = isTheory ? null : q.answers.find(a => a.id === userAnswers[i] || a.option_letter === userAnswers[i])
       const isCorrect = isTheory ? false : (userAnswers[i] === q.answers.find(a => a.is_correct)?.id)
+      
+      // Defensively resolve DB ID: Only use it if it's a long UUID-like string
+      const finalAnswerId = (selectedAnswerObj?.db_id && selectedAnswerObj.db_id.length > 20) ? selectedAnswerObj.db_id : 
+                            (selectedAnswerObj?.id && selectedAnswerObj.id.length > 20) ? selectedAnswerObj.id : null;
 
       return {
         session_id: session.id,
         user_id: userId,
         question_id: q.id,
-        selected_answer_id: isTheory ? null : userAnswers[i],
-        user_answer_text: isTheory ? userAnswers[i] : null,
+        selected_answer_id: finalAnswerId,
+        user_answer_text: userAnswers[i]?.toString() || (isTheory ? "No answer provided." : null),
         is_correct: isCorrect,
         time_spent_seconds: 0
       }
