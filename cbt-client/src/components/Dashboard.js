@@ -551,7 +551,7 @@ export const DashboardComponent = {
       </div>
 
       <!-- Leaderboard Modal -->
-      <div id="leaderboard-modal" class="modal-overlay">
+      <div id="leaderboard-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2.5rem; border-radius: var(--radius-lg);">
           <button id="close-leaderboard" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
           <h2 style="font-family: 'Outfit'; margin-bottom: 2.5rem; font-weight: 900; text-align: center; display: flex; justify-content: center; align-items: center; gap: 0.75rem; color: var(--accent-primary); font-size: 1.75rem;"><i data-lucide="trophy" style="width: 28px; height: 28px;"></i> Global Rankings</h2>
@@ -565,7 +565,7 @@ export const DashboardComponent = {
       </div>
 
       <!-- Upgrade Modal -->
-      <div id="upgrade-modal" class="modal-overlay">
+      <div id="upgrade-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass" style="max-width: 480px; width: 100%; position: relative; padding: 3rem; text-align: center; border-radius: var(--radius-lg);">
           <button id="close-upgrade" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
           <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
@@ -609,7 +609,7 @@ export const DashboardComponent = {
       </div>
 
       <!-- Help & Guide Modal -->
-      <div id="help-modal" class="modal-overlay">
+      <div id="help-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass" style="max-width: 520px; width: 100%; position: relative; padding: 3rem; max-height: 85vh; overflow-y: auto; border-radius: var(--radius-lg);">
           <button id="close-help" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
           <h2 style="font-family: 'Outfit'; margin-bottom: 2.5rem; font-weight: 900; display: flex; justify-content: center; align-items: center; gap: 0.75rem; color: var(--accent-primary); font-size: 1.75rem;"><i data-lucide="book-open"></i> Mastery Guide</h2>
