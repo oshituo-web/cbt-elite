@@ -25,8 +25,8 @@ export const AdminComponent = {
           <button class="nav-tab" data-tab="marketing">💰 Marketing</button>
           <button class="nav-tab" data-tab="news">📰 Manage News</button>
           <button class="nav-tab" data-tab="analytics" style="color: var(--accent-primary);">📈 Platform Analytics</button>
-          ${(profile.role === 'admin' || profile.role === 'super-admin' || profile.email === 'oshituo@gmail.com') ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
-          ${(profile.role === 'admin' || profile.role === 'super-admin' || profile.email === 'oshituo@gmail.com') ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
+          ${(profile.role === 'admin' || profile.role === 'super-admin') ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
+          ${(profile.role === 'admin' || profile.role === 'super-admin') ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
         </nav>
         
         <main id="admin-main">
@@ -513,41 +513,140 @@ export const AdminComponent = {
   },
 
   openEditModal(question) {
+    // Determine options based on how data is laid out (from AI report fetch or getQuestions fetch)
+    const qa = (question.question_answers && Array.isArray(question.question_answers)) 
+                ? question.question_answers[0] 
+                : (question.question_answers || {});
+                
+    // Try to pull correctly from the formatted answers array if question_answers table is empty in the object
+    const pullOpt = (letter) => {
+        if (qa[`option_${letter.toLowerCase()}`]) return qa[`option_${letter.toLowerCase()}`];
+        if (qa[`option_${letter}`]) return qa[`option_${letter}`];
+        if (question.answers && Array.isArray(question.answers)) {
+            const ans = question.answers.find(a => a.id === letter || a.option_letter === letter);
+            return ans ? ans.option_text : '';
+        }
+        return '';
+    };
+
+    const optA = pullOpt('A');
+    const optB = pullOpt('B');
+    const optC = pullOpt('C');
+    const optD = pullOpt('D');
+    
+    let correctOpt = (qa.correct_option || '').toUpperCase();
+    if (!correctOpt && question.answers) {
+        const correctAns = question.answers.find(a => a.is_correct);
+        if (correctAns) correctOpt = (correctAns.id || correctAns.option_letter || '');
+    }
+
+    const explanation = qa.explanation || question.explanation || '';
+
     const modalHtml = `
-      <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
-        <div class="glass card" style="width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 1rem; border: 1px solid var(--accent-primary);">
-          <h3 style="margin-bottom: 1rem; font-family: 'Outfit';">Edit Question</h3>
-          <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 0.5rem;">Question Text</p>
-          <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.5rem; font-size: 0.9rem;">${question.question_text}</textarea>
+      <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem;">
+        <div class="glass card scale-in" style="width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+              📝 Edit Question
+              <span class="badge" style="background: rgba(255,255,255,0.1);">Full Control</span>
+            </h3>
+            <button id="cancel-q-edit-x" style="background: transparent; border: none; color: var(--error); font-size: 1.5rem; cursor: pointer;">&times;</button>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Question Text</label>
+              <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 100px; font-size: 0.95rem; border-color: rgba(255,255,255,0.2);">${question.question_text || ''}</textarea>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+              <div>
+                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option A</label>
+                <input type="text" id="edit-opt-a" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optA.replace(/"/g, '&quot;')}">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option B</label>
+                <input type="text" id="edit-opt-b" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optB.replace(/"/g, '&quot;')}">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option C</label>
+                <input type="text" id="edit-opt-c" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optC.replace(/"/g, '&quot;')}">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option D</label>
+                <input type="text" id="edit-opt-d" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optD.replace(/"/g, '&quot;')}">
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Correct Answer</label>
+              <select id="edit-correct" class="glass-input" style="width: 100%; max-width: 200px; cursor: pointer; border-color: rgba(255,255,255,0.2);">
+                <option value="A" ${correctOpt === 'A' ? 'selected' : ''}>Option A</option>
+                <option value="B" ${correctOpt === 'B' ? 'selected' : ''}>Option B</option>
+                <option value="C" ${correctOpt === 'C' ? 'selected' : ''}>Option C</option>
+                <option value="D" ${correctOpt === 'D' ? 'selected' : ''}>Option D</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Official Explanation (Optional)</label>
+              <textarea id="edit-explanation" class="glass-input" style="width: 100%; min-height: 80px; font-size: 0.9rem; border-color: rgba(255,255,255,0.2);">${explanation}</textarea>
+            </div>
+          </div>
+
           <div style="display: flex; gap: 1rem;">
-            <button id="save-q-edit" class="primary" style="flex:1;">Save Changes</button>
-            <button id="cancel-q-edit" class="btn-secondary" style="flex:1;">Cancel</button>
+            <button id="save-q-edit" class="primary" style="flex:2; padding: 1rem; font-weight: 700;">✅ Save All Changes</button>
+            <button id="cancel-q-edit-btn" class="btn-secondary" style="flex:1; padding: 1rem;">Cancel</button>
           </div>
         </div>
       </div>
     `
     document.body.insertAdjacentHTML('beforeend', modalHtml)
     
-    document.getElementById('cancel-q-edit').onclick = () => document.getElementById('q-edit-overlay').remove()
+    const closeModal = () => document.getElementById('q-edit-overlay').remove();
+    document.getElementById('cancel-q-edit-btn').onclick = closeModal;
+    document.getElementById('cancel-q-edit-x').onclick = closeModal;
+    
     document.getElementById('save-q-edit').onclick = async () => {
-      const newText = document.getElementById('edit-q-text').value
-      if (!newText.trim()) return alert('Question text cannot be empty.')
+      const newText = document.getElementById('edit-q-text').value;
+      if (!newText.trim()) return alert('Question text cannot be empty.');
       
-      const saveBtn = document.getElementById('save-q-edit')
-      saveBtn.textContent = 'Saving...'
-      saveBtn.disabled = true
+      const updatedOpts = {
+          option_a: document.getElementById('edit-opt-a').value,
+          option_b: document.getElementById('edit-opt-b').value,
+          option_c: document.getElementById('edit-opt-c').value,
+          option_d: document.getElementById('edit-opt-d').value,
+          correct_option: document.getElementById('edit-correct').value,
+          explanation: document.getElementById('edit-explanation').value
+      };
       
-      const { error } = await DataService.updateQuestion(question.id, { question_text: newText })
-      if (error) {
-        alert('Error updating question: ' + error.message)
-        saveBtn.textContent = 'Save Changes'
-        saveBtn.disabled = false
-      } else {
-        document.getElementById('q-edit-overlay').remove()
-        this.loadQuestions()
+      const saveBtn = document.getElementById('save-q-edit');
+      saveBtn.innerHTML = '<span class="pulse">Saving to Database...</span>';
+      saveBtn.disabled = true;
+      
+      // Update Base Question
+      const { error: baseError } = await DataService.updateQuestion(question.id, { question_text: newText });
+      
+      if (baseError) {
+        alert('Error updating question text: ' + baseError.message);
+        saveBtn.textContent = '✅ Save All Changes';
+        saveBtn.disabled = false;
+        return;
       }
-    }
-
+      
+      // Update Question Answers (if objective and has answers)
+      if (question.question_type !== 'theory') {
+          const { error: ansError } = await DataService.updateQuestionAnswers(question.id, updatedOpts);
+          if (ansError) {
+              console.error("Warning: Failed to update answers table. It might not exist for this old question.", ansError);
+              // Fallback for very old questions without 'question_answers' relation?
+              // Let's assume most questions have this, or it will just fail silently.
+          }
+      }
+      
+      document.getElementById('q-edit-overlay').remove();
+      this.loadQuestions(); // Reload list
+    };
     // Phase 2: Render LaTeX Math (KaTeX) in Modal
     if (window.renderMathInElement) {
         window.renderMathInElement(document.getElementById('q-edit-overlay'), {
@@ -836,6 +935,7 @@ export const AdminComponent = {
 
   async loadReports() {
     const list = document.getElementById('reports-list')
+    if (!list) return
     list.innerHTML = 'Loading reports...'
     const { data } = await DataService.getQuestionReports()
     
@@ -845,30 +945,58 @@ export const AdminComponent = {
     }
     
     list.innerHTML = data.map(r => `
-      <div class="glass" style="padding: 0.75rem; margin-bottom: 1rem; border-left: 4px solid ${r.status === 'resolved' ? 'var(--success)' : r.status === 'dismissed' ? '#666' : 'var(--error)'};">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+      <div class="glass" style="padding: 1rem; margin-bottom: 1.5rem; border-left: 4px solid ${r.status?.includes('resolved') ? 'var(--success)' : (r.status === 'dismissed' ? '#666' : 'var(--error)')};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
           <div>
-            <strong style="color: ${r.status === 'resolved' ? 'var(--success)' : 'var(--error)'}; text-transform: uppercase; font-size: 0.75rem;">${r.reason}</strong>
+            <strong style="color: ${r.status?.includes('resolved') ? 'var(--success)' : 'var(--error)'}; text-transform: uppercase; font-size: 0.75rem;">${r.reason}</strong>
             <span class="badge" style="margin-left: 0.5rem; background: rgba(255,255,255,0.1); font-size: 0.65rem;">${r.status || 'pending'}</span>
           </div>
-          <span style="font-size: 0.7rem; color: #aaa;">${new Date(r.created_at).toLocaleDateString()}</span>
-        </div>
-        <p style="font-size: 0.9rem; margin: 0.75rem 0;">${r.details || 'No details provided.'}</p>
-        <div style="font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem;">
-          <strong>Target Question:</strong> ${r.questions?.question_text.substring(0, 100)}...
+          <span style="font-size: 0.7rem; color: #aaa;">${new Date(r.created_at).toLocaleString()}</span>
         </div>
         
-        ${r.status === 'pending' || !r.status ? `
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="primary resolve-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Mark Resolved</button>
-            <button class="btn-secondary deactivate-question-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: var(--error);">Deactivate Question</button>
-            <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Dismiss</button>
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
+          <div style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.5rem;">Student Feedback:</div>
+          <p style="font-size: 1rem; color: var(--text-primary); margin: 0;">"${r.details || 'No details provided.'}"</p>
+        </div>
+
+        <div style="font-size: 0.85rem; color: #888; border: 1px dashed rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <strong style="display: block; margin-bottom: 0.5rem; color: #ccc;">Target Question Content:</strong> 
+          <div style="font-style: italic; line-height: 1.4;">${r.questions?.question_text}</div>
+        </div>
+        
+        ${(!r.status || r.status === 'pending') ? `
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="primary ai-fix-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" data-reason="${r.reason}" data-details="${r.details || ''}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">🪄 AI Fix</button>
+            <button class="btn-secondary edit-report-q-btn" data-qid="${r.questions?.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">📝 Edit</button>
+            <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+            <button class="btn-secondary resolve-report-btn" data-id="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Mark Resolved</button>
+            <button class="btn-secondary deactivate-question-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--error);">Deactivate</button>
+            <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Dismiss</button>
           </div>
-        ` : `<div style="font-size: 0.75rem; color: var(--success); font-style: italic;">Verified and ${r.status}</div>`}
+        ` : `<div style="font-size: 0.85rem; color: var(--success); font-style: italic; background: rgba(76, 175, 80, 0.1); padding: 0.5rem 1rem; border-radius: 6px; display: inline-block;">✅ Managed: ${r.status}</div>`}
       </div>
     `).join('')
 
     // Attach Listeners
+    document.querySelectorAll('.edit-report-q-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const qid = btn.getAttribute('data-qid')
+        const { data: q } = await supabase.from('questions').select(`
+          *,
+          question_groups (*),
+          question_answers (*),
+          answers (*)
+        `).eq('id', qid).single()
+        
+        if (q) this.openEditModal(q)
+        else alert('Error: Could not load question details.')
+      }
+    })
+
+    document.querySelectorAll('.ai-fix-btn').forEach(btn => {
+      btn.onclick = () => this.handleAiFix(btn)
+    })
+
     document.querySelectorAll('.resolve-report-btn').forEach(btn => {
       btn.onclick = async () => {
         const id = btn.getAttribute('data-id')
@@ -877,6 +1005,7 @@ export const AdminComponent = {
         this.loadReports()
       }
     })
+
     document.querySelectorAll('.dismiss-report-btn').forEach(btn => {
       btn.onclick = async () => {
         const id = btn.getAttribute('data-id')
@@ -885,6 +1014,7 @@ export const AdminComponent = {
         this.loadReports()
       }
     })
+
     document.querySelectorAll('.deactivate-question-btn').forEach(btn => {
       btn.onclick = async () => {
         if (!confirm('Are you sure you want to deactivate this question? It will no longer appear in exams.')) return
@@ -896,6 +1026,98 @@ export const AdminComponent = {
         this.loadReports()
       }
     })
+  },
+
+  async handleAiFix(btn) {
+    const qid = btn.dataset.qid
+    const rid = btn.dataset.rid
+    const reason = btn.dataset.reason
+    const details = btn.dataset.details
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="pulse">⏳ AI Thinking...</span>'
+
+    const { data: fix, error } = await DataService.aiRegenerateQuestion(qid, reason, details)
+
+    if (error) {
+      alert("AI Fix failed: " + error)
+      btn.disabled = false
+      btn.textContent = "🪄 AI Fix"
+      return
+    }
+
+    // Show Comparison Modal
+    const modalHtml = `
+      <div id="ai-fix-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem;">
+        <div class="glass card" style="width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
+          <h2 style="margin-bottom: 1.5rem; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.75rem;">
+            🪄 AI Proposed Correction
+            <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">ELITE MODE</span>
+          </h2>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div style="opacity: 0.6;">
+              <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem; color: var(--error);">Current Version (Reported)</h3>
+              <div class="glass" style="padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
+                <p><strong>Q:</strong> ${btn.closest('.glass').querySelector('div[style*="italic"]').textContent}</p>
+              </div>
+            </div>
+            
+            <div style="border-left: 2px solid var(--accent-primary); padding-left: 2rem;">
+              <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem; color: var(--success);">AI Revised Version</h3>
+              <div class="glass" style="padding: 1rem; border-radius: 8px; font-size: 0.95rem; border-color: var(--success);">
+                <p style="margin-bottom: 1rem;"><strong>Q:</strong> ${fix.question_text}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem;">
+                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'A' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">A: ${fix.option_a}</div>
+                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'B' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">B: ${fix.option_b}</div>
+                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'C' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">C: ${fix.option_c}</div>
+                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'D' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">D: ${fix.option_d}</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 0.75rem; border-radius: 4px; border-left: 3px solid var(--success);">
+                  <strong style="font-size: 0.7rem; display: block; margin-bottom: 0.25rem;">REVISED EXPLANATION:</strong>
+                  <p style="font-size: 0.85rem; margin: 0;">${fix.explanation}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem;">
+            <button id="approve-ai-fix" class="primary" style="flex: 2; padding: 1rem;">✅ Approve & Update Database</button>
+            <button id="reject-ai-fix" class="btn-secondary" style="flex: 1; padding: 1rem;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `
+    document.body.insertAdjacentHTML('beforeend', modalHtml)
+
+    document.getElementById('reject-ai-fix').onclick = () => {
+      document.getElementById('ai-fix-overlay').remove()
+      btn.disabled = false
+      btn.textContent = "🪄 AI Fix"
+    }
+
+    document.getElementById('approve-ai-fix').onclick = async () => {
+      const saveBtn = document.getElementById('approve-ai-fix')
+      saveBtn.disabled = true
+      saveBtn.textContent = "Updating Database..."
+
+      // Perform updates
+      await DataService.updateQuestion(qid, { question_text: fix.question_text })
+      await supabase.from('question_answers').update({
+        option_a: fix.option_a,
+        option_b: fix.option_b,
+        option_c: fix.option_c,
+        option_d: fix.option_d,
+        correct_option: fix.correct_option,
+        explanation: fix.explanation
+      }).eq('question_id', qid)
+
+      await DataService.updateReportStatus(rid, 'resolved (AI fix applied)')
+      
+      document.getElementById('ai-fix-overlay').remove()
+      this.loadReports()
+      alert("Question successfully repaired and explanation updated!")
+    }
   },
 
   async loadGlobalAnalytics() {

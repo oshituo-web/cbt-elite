@@ -123,41 +123,40 @@ export const DashboardComponent = {
     }
 
     container.innerHTML = `
-      <div id="dashboard-content" class="dashboard-scroll-area" style="padding-top: 0.5rem;">
+      <div id="dashboard-content" class="dashboard-scroll-area">
         
-        <!-- DASHBOARD WELCOME: Focused Title -->
-        <div style="margin-bottom: 1.5rem; padding-top: 0.25rem;">
-          <h1 style="font-family: 'Outfit'; font-size: 1.8rem; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">Welcome, ${this.profile.username || 'Student'} <i data-lucide="sun" style="width: 28px; height: 28px; color: var(--warning);"></i></h1>
-          <p style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.25rem;">Let's make today count. Continue your mastery journey.</p>
+        <!-- DASHBOARD WELCOME -->
+        <div class="mb-lg" style="padding-top: 1rem;">
+          <h1 style="font-family: 'Outfit'; font-size: 2rem; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">Welcome, ${this.profile.username || 'Student'} <i data-lucide="sun" style="width: 32px; height: 32px; color: var(--warning);"></i></h1>
+          <p style="font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">Let's make today count. Continue your mastery journey.</p>
         </div>
 
-        
-        <!-- FEATURED: High-Priority Resume Card -->
-        <div class="glass card scale-in" style="margin-bottom: 2rem; border-left: 5px solid var(--accent-primary);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <!-- FEATURED: AI Workout (Primary CTA) -->
+        <div class="glass card scale-in mb-lg" style="border-left: 6px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
             <div>
-                <h3 style="font-family: 'Outfit'; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="sparkles" style="color: var(--accent-primary);"></i> AI Custom Workout</h3>
-                <p id="ai-workout-hint" style="font-size: 0.8rem; color: var(--text-secondary);">Targeting your mastery gaps automatically...</p>
+                <h3 style="font-family: 'Outfit'; font-size: 1.35rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.6rem; color: var(--accent-primary); font-weight: 800;"><i data-lucide="sparkles"></i> AI Custom Workout</h3>
+                <p id="ai-workout-hint" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Targeting your mastery gaps automatically...</p>
             </div>
-            <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">RECOMMENDED</span>
+            <span class="badge" style="background: var(--accent-primary); font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 20px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">RECOMMENDED</span>
           </div>
-          <button id="start-ai-workout" class="primary" style="width: 100%; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #ffffff !important;">
-            <span style="color: #ffffff !important; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="rocket" style="width: 18px; height: 18px;"></i> Start Personalized Session</span>
+          <button id="start-ai-workout" class="btn-dominant" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+            <i data-lucide="rocket" style="width: 20px; height: 20px;"></i> Start Personalized Session
           </button>
         </div>
 
-        <div id="resume-container" style="display: none; margin-bottom: 2rem;">
-              <div class="glass card scale-in" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, var(--bg-secondary) 100%); display: flex; justify-content: space-between; align-items: center; padding: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
-                <div style="display: flex; align-items: center; gap: 1rem;">
+        <div id="resume-container" style="display: none;" class="mb-lg">
+              <div class="glass card scale-in card-medium" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px;">
                   <div style="color: var(--accent-secondary);"><i data-lucide="clock" style="width: 32px; height: 32px;"></i></div>
                   <div>
-                    <h3 style="margin-bottom: 0.25rem; font-family: 'Outfit'; color: var(--accent-secondary);">Continue Your Session</h3>
-                    <p id="resume-info" style="font-size: 0.85rem; color: var(--text-secondary);">Pick up exactly where you left off.</p>
+                    <h3 style="margin-bottom: 0.25rem; font-family: 'Outfit'; color: var(--accent-secondary); font-weight: 800;">Continue Your Session</h3>
+                    <p id="resume-info" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Pick up exactly where you left off.</p>
                   </div>
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
-                  <button id="discard-resume" class="btn-secondary" style="font-size: 0.8rem; border: none; background: transparent; opacity: 0.6;">Discard</button>
-                  <button id="confirm-resume" class="btn-primary" style="background: var(--accent-secondary); box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);">Resume Now</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                  <button id="discard-resume" class="btn-secondary" style="border: none; background: transparent; opacity: 0.7; font-weight: 600;">Discard</button>
+                  <button id="confirm-resume" class="btn-primary" style="background: var(--accent-secondary); box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);">Resume Now</button>
                 </div>
               </div>
         </div>
@@ -166,24 +165,24 @@ export const DashboardComponent = {
         ${(() => {
           const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
           const ActivationCard = () => `
-            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-primary); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-              <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="unlock" style="width: 20px; height: 20px;"></i> Activate Full Access</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
+            <div class="glass card card-freemium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+              <div style="flex: 1; min-width: 280px;">
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="unlock" style="color: var(--accent-primary);"></i> Activate Full Access</h4>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
               </div>
-              <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+              <button class="btn-primary" style="height: 48px; padding: 0 1.5rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                 Activate Lifetime Access – ₦1,500
               </button>
             </div>
           `;
 
           const RenewalCard = () => `
-            <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-              <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="rocket" style="width: 20px; height: 20px; color: var(--accent-secondary);"></i> Renew Premium Access</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
+            <div class="glass card card-medium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+              <div style="flex: 1; min-width: 280px;">
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="rocket" style="color: var(--accent-secondary);"></i> Renew Premium Access</h4>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
               </div>
-              <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background: var(--accent-secondary);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+              <button class="btn-primary" style="background: var(--accent-secondary); height: 48px; padding: 0 1.5rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                 Renew Premium – ₦1,000/month
               </button>
             </div>
@@ -192,23 +191,23 @@ export const DashboardComponent = {
           if (subState.tier === "premium") {
             if (subState.daysRemaining <= 5) {
               return `
-                <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--warning); background: rgba(255, 152, 0, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div class="glass card card-expiring scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
                   <div style="flex: 1;">
-                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.25rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i> Expiring Soon</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing premium access.</p>
+                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-triangle"></i> Expiring Soon</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing access.</p>
                   </div>
-                  <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--warning);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                    Renew Premium – ₦1,000/month
+                  <button class="btn-primary" style="background: var(--warning); padding: 0.5rem 1.25rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                    Renew Premium – ₦1,000
                   </button>
                 </div>
               `;
             } else {
               return `
-                <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--success); background: rgba(34, 197, 94, 0.05); border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
-                  <div style="color: var(--success);"><i data-lucide="crown" style="width: 24px; height: 24px;"></i></div>
+                <div class="glass card card-premium scale-in mb-lg" style="display: flex; align-items: center; gap: 1rem;">
+                  <div style="color: var(--success);"><i data-lucide="crown" style="width: 32px; height: 32px;"></i></div>
                   <div>
-                    <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1rem;">Premium Active</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days.</p>
+                    <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1.1rem; font-weight: 800;">Premium Access Active</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Expires in ${subState.daysRemaining} days. All pro features unlocked.</p>
                   </div>
                 </div>
               `;
@@ -217,13 +216,13 @@ export const DashboardComponent = {
 
           if (subState.isExpired) {
             return `
-              <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--error); background: rgba(239, 68, 68, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div class="glass card card-expired scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
                 <div style="flex: 1;">
-                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.25rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i> Premium Expired</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Premium expired – you are now on Medium plan.</p>
+                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-circle"></i> Premium Expired</h4>
+                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your access has expired – you are currently on the Medium plan.</p>
                 </div>
-                <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--error);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                  Renew Premium – ₦1,000/month
+                <button class="btn-primary" style="background: var(--error); padding: 0.5rem 1.25rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                  Renew Premium – ₦1,000
                 </button>
               </div>
             `;
@@ -237,90 +236,89 @@ export const DashboardComponent = {
 
         <header class="dashboard-header fade-in">
         
-        <!-- 🔥 1. Quick Action Section -->
-        <div class="glass card" style="text-align: center; padding: 3rem 1.5rem; border: 2px solid var(--accent-primary); background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 100%);">
-          <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Start Practicing Now</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select your preferred mode to continue training.</p>
-          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-             <button id="quick-practice-btn" class="primary" data-tooltip="Practice by topic to improve faster" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 1.25rem 2rem; font-size: 1.25rem; font-weight: 800; min-width: 200px;"><i data-lucide="target"></i> Practice Mode</button>
-             <button id="quick-exam-btn" class="secondary" data-tooltip="Simulate real exam conditions" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 1.25rem 2rem; border: 2px solid var(--accent-secondary); background: transparent; color: var(--text-primary); font-size: 1.25rem; font-weight: 800; min-width: 200px; border-radius: 8px;"><i data-lucide="trophy"></i> Mock Exam</button>
-             <button id="start-saved" class="glass" style="padding: 1.25rem 2rem; border: 2.5px solid var(--accent-primary); font-size: 1.1rem; display: none; align-items: center; gap: 0.5rem; justify-content: center; min-width: 200px; font-weight: 700;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
+        <!-- QUICK ACTION SECTION -->
+        <div class="glass card scale-in mb-xl" style="text-align: center; padding: 3rem 1.5rem; border: 2px solid var(--accent-primary); background: linear-gradient(180deg, rgba(37, 99, 235, 0.03) 0%, var(--surface-color) 100%);">
+          <h2 style="font-family: 'Outfit'; font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 800;">Ready to level up?</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2.5rem; font-size: 1.1rem; font-weight: 500;">Select your mode and start mastering your subjects.</p>
+          <div style="display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap;">
+             <button id="quick-practice-btn" class="btn-dominant" data-tooltip="Practice by topic to improve faster" style="padding: 0 2.5rem; min-width: 220px;"><i data-lucide="target"></i> Practice Mode</button>
+             <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 2.5rem; min-width: 220px; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
+             <button id="start-saved" class="glass-btn" style="padding: 0 2rem; border-color: var(--accent-primary); display: none; min-width: 200px;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
           </div>
         </div>
 
-
-
-         <!-- 3. Progress Summary & 4. Daily Goal Tracker -->
-         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
-            <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary); display: flex; flex-direction: column;">
-              <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
+         <!-- PROGRESS & GOALS -->
+         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;" class="mb-xl">
+            <div class="glass card" style="border-top: 4px solid var(--primary); padding-bottom: 1.5rem;">
+              <h3 style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Your Progress Overview</h3>
               
-              <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem;">
+              <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2rem;">
                  <!-- Readiness Gauge -->
-                 <div id="readiness-gauge-container" style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+                 <div id="readiness-gauge-container" style="position: relative; width: 85px; height: 85px; flex-shrink: 0;">
                     <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="3" />
                       <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" style="transition: stroke-dasharray 1s ease;" />
                     </svg>
-                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 0.9rem; color: var(--primary);">0%</div>
+                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1rem; color: var(--primary);">0%</div>
                  </div>
                  
                  <div style="flex: 1;">
-                    <div id="readiness-label" style="font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Exam Readiness</div>
-                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 700; color: var(--text-primary);">...</div>
-                    <div id="readiness-status" style="font-size: 0.65rem; font-weight: 600; color: var(--success); margin-top: 0.15rem;">Beginner</div>
+                    <div id="readiness-label" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">Exam Readiness</div>
+                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">...</div>
+                    <div id="readiness-status" style="font-size: 0.8rem; font-weight: 700; color: var(--success); margin-top: 0.2rem;">Beginner</div>
                  </div>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-md);">
                 <div>
-                  <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${totalQuestions}</div>
-                  <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Questions</div>
+                  <div style="font-size: 1.8rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary); line-height: 1;">${totalQuestions}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 600;">Questions Attempted</div>
                 </div>
                 <div style="text-align: right;">
-                   <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 800; color: #3B82F6; line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
-                   <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Overall Accuracy</div>
+                   <div style="font-size: 1.8rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary); line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
+                   <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 600;">Overall Accuracy</div>
                 </div>
               </div>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem;">
-                <button id="view-leaderboard" class="glass" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-primary); color: var(--accent-primary); border-radius: 6px;"><i data-lucide="trophy" style="width: 14px; height: 14px;"></i> GLOBAL RANKINGS</button>
-                <button id="performance-insights-btn" class="glass" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); border-radius: 6px;"><i data-lucide="bar-chart-2" style="width: 14px; height: 14px;"></i> INSIGHTS</button>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                <button id="view-leaderboard" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-primary);"><i data-lucide="trophy" style="width: 15px; height: 15px;"></i> GLOBAL RANK</button>
+                <button id="performance-insights-btn" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-secondary);"><i data-lucide="bar-chart-2" style="width: 15px; height: 15px;"></i> INSIGHTS</button>
               </div>
             </div>
 
-           <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--success);">
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h3 style="font-size: 0.9rem; color: var(--text-secondary);">Daily Practice Goal</h3>
-                <span style="font-size: 0.8rem; font-weight: 800; color: var(--success);">${todayQuestions} / ${dailyGoalLimit}</span>
+           <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--success);">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Daily Practice Goal</h3>
+                <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-size: 0.9rem; font-weight: 900; padding: 0.25rem 0.75rem;">${todayQuestions} / ${dailyGoalLimit}</span>
              </div>
              ${history.length === 0 ? `
-              <div class="empty-state-card" style="padding: 1rem;">
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">You haven’t started practicing yet.</p>
-                <button id="empty-start-btn" class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Start Practice</button>
+              <div style="padding: 2rem 1rem; text-align: center; background: rgba(0,0,0,0.1); border-radius: var(--radius-md); border: 1px dashed var(--glass-border);">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500;">You haven’t started practicing yet.</p>
+                <button id="empty-start-btn" class="btn-primary" style="padding: 0 1.5rem;">Start Practice Now</button>
               </div>
              ` : `
-              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1rem;">Complete ${dailyGoalLimit} questions every day to master the syllabus.</p>
-              <div style="width: 100%; height: 12px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden; border: 1px solid var(--glass-border);">
-                  <div style="height: 100%; width: ${dailyGoalPct}%; background: var(--success); border-radius: 6px; transition: width 0.5s ease;"></div>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500; line-height: 1.5;">Finish <strong>${dailyGoalLimit} questions</strong> today to stay on track for your exam.</p>
+              <div style="width: 100%; height: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border); padding: 2px;">
+                  <div style="height: 100%; width: ${dailyGoalPct}%; background: var(--success); border-radius: 6px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
               </div>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem; text-align: center; font-style: italic;">${dailyGoalPct >= 100 ? 'Goal reached! Outstanding work! 🔥' : 'Keep pushing, you\'re almost there!'}</p>
              `}
            </div>
-        </div>
+         </div>
 
-        <!-- 🤖 5. AI Performance Analysis -->
+        <!-- AI PERFORMANCE ANALYSIS -->
         ${history.length < 5 ? `
-          <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-             <div>
-               <h3 style="font-size: 1rem; margin-bottom: 0.25rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bot"></i> AI Analytics Calibration</h3>
-               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">Complete at least ${5 - history.length} more practice sessions or exams to unlock personalized AI performance insights.</p>
+          <div class="glass card mb-lg" style="padding: 1.5rem 2rem; border-left: 5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+             <div style="flex: 1; min-width: 250px;">
+               <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="bot"></i> AI Analytics Calibration</h3>
+               <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; margin-bottom: 0;">Complete <strong>${5 - history.length} more sessions</strong> to unlock personalized AI performance insights.</p>
              </div>
-             <div class="loader-spinner" style="width:24px; height:24px; border-width:3px; border-color: var(--accent-secondary) transparent transparent transparent;"></div>
+             <div class="loader-spinner" style="width:32px; height:32px; border-width:4px; border-color: var(--accent-secondary) transparent transparent transparent;"></div>
           </div>
         ` : `
-          <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.05); display: flex; flex-direction: column; gap: 0.75rem;">
-             <h3 style="font-size: 1rem; margin: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="brain"></i> AI Performance Analysis</h3>
-             <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+          <div class="glass card mb-lg" style="padding: 1.75rem 2rem; border-left: 5px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);">
+             <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="brain"></i> AI Performance Analysis</h3>
+             <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; font-weight: 500; margin-bottom: 1.25rem;">
                 ${(() => {
                     const sorted = [...(mastery || [])].sort((a,b) => b.average - a.average);
                     if (sorted.length === 0) return "You've completed sessions but haven't recorded topic mastery yet. Keep practicing!";
@@ -345,71 +343,71 @@ export const DashboardComponent = {
                 })()}
              </p>
              ${(weakSubject) ? `
-             <div style="margin-top: 0.5rem;">
-                <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="primary" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 800;"><i data-lucide="target" style="width: 16px; height: 16px; color: #ffffff;"></i> <span style="color: #ffffff !important;">Target ${weakSubject.subject}</span></button>
+             <div>
+                <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="btn-primary" style="padding: 0 1.5rem; height: 40px; font-size: 0.85rem;"><i data-lucide="target" style="width: 16px; height: 16px;"></i> Target ${weakSubject.subject}</button>
              </div>
              ` : ''}
           </div>
         `}
 
-        <!-- 🧭 7. Explore CBT Elite (Feature Map) -->
-        <div class="scale-in" style="margin-top: 1.5rem; width: 100%;">
-          <details style="width: 100%;">
-            <summary class="primary" style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff !important; background: var(--primary); padding: 1rem 1.5rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
-              <span style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff !important;"><i data-lucide="rocket"></i> Explore CBT Elite Features</span>
-              <span style="font-size: 0.85rem; opacity: 0.9; font-weight: normal; color: #ffffff !important;">Click to reveal \u25BC</span>
+        <!-- EXPLORE FEATURES -->
+        <div class="scale-in mb-xl" style="width: 100%;">
+          <details class="details-premium">
+            <summary class="summary-premium">
+              <span style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="rocket"></i> Explore CBT Elite Features</span>
+              <span style="font-size: 0.85rem; font-weight: 500;">Reveal Features \u25BC</span>
             </summary>
-            <div class="glass card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; padding: 1.5rem; margin-top: 0.5rem; border-left: 4px solid var(--primary);">
-              <div style="display: flex; gap: 1rem;">
-                <div style="color: var(--primary);"><i data-lucide="target" style="width: 24px; height: 24px;"></i></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; padding: 2rem; border-top: 1px solid var(--glass-border);">
+              <div class="feature-item">
+                <div style="color: var(--primary);"><i data-lucide="target" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Practice Mode</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Practice questions by topic and improve gradually</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">Practice Mode</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Practice questions by topic and improve your mastery level step-by-step.</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 1rem;">
-                <div style="color: var(--accent-secondary);"><i data-lucide="trophy" style="width: 24px; height: 24px;"></i></div>
+              <div class="feature-item">
+                <div style="color: var(--accent-secondary);"><i data-lucide="trophy" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Exam Mode</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Take full CBT exams with real timing</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">Full Mock Exams</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Simulate real exam conditions with timed standard assessments.</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 1rem;">
-                <div style="color: var(--success);"><i data-lucide="bar-chart-2" style="width: 24px; height: 24px;"></i></div>
+              <div class="feature-item">
+                <div style="color: var(--success);"><i data-lucide="bar-chart-2" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Performance Insights</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">See your progress and score trends</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">Performance Insights</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Detailed analytics helps you track progress and identify weak spots.</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 1rem;">
-                <div style="color: var(--accent-primary);"><i data-lucide="brain" style="width: 24px; height: 24px;"></i></div>
+              <div class="feature-item">
+                <div style="color: var(--accent-primary);"><i data-lucide="brain" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">AI Explanations</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Get detailed corrections after answering (Premium)</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">AI Correction & Theory</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Get human-like explanations and professional grading for theory work.</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 1rem;" id="feature-review-item">
-                <div style="color: var(--warning);"><i data-lucide="pin" style="width: 24px; height: 24px;"></i></div>
+              <div class="feature-item" id="feature-review-item">
+                <div style="color: var(--warning);"><i data-lucide="pin" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Review Questions</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">After finishing a test, tap 'Review Questions' to see corrections</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">Review Questions</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">After every test, go back and see precisely where you went wrong.</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 1rem;">
-                <div style="color: var(--text-secondary);"><i data-lucide="newspaper" style="width: 24px; height: 24px;"></i></div>
+              <div class="feature-item">
+                <div style="color: var(--text-secondary);"><i data-lucide="newspaper" style="width: 28px; height: 28px;"></i></div>
                 <div>
-                  <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">News & Updates</h4>
-                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Stay informed about JAMB, WAEC, and NECO</p>
+                  <h4 style="font-size: 1rem; margin-bottom: 0.4rem; font-weight: 800;">News & Updates</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Stay ahead with the latest news regarding JAMB, WAEC, and NECO.</p>
                 </div>
               </div>
             </div>
           </details>
         </div>
         
-        <div style="margin-top: 3rem; border-top: 1px dashed var(--glass-border); padding-top: 2rem;">
-            <div class="dashboard-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-              <button id="view-practice" class="nav-tab active" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="target" style="width: 18px; height: 18px;"></i> Practice Mode</button>
-              <button id="view-exam" class="nav-tab" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="trophy" style="width: 18px; height: 18px;"></i> Exam Mode</button>
+        <div style="margin-top: 2rem; border-top: 1px dashed var(--glass-border); padding-top: 2.5rem;">
+            <div class="dashboard-tabs" style="display: flex; gap: 1.25rem; margin-bottom: 2rem;">
+              <button id="view-practice" class="nav-tab active" style="flex: 1; height: 52px; font-weight: 800;"><i data-lucide="target" style="width: 20px; height: 20px;"></i> Practice</button>
+              <button id="view-exam" class="nav-tab" style="flex: 1; height: 52px; font-weight: 800;"><i data-lucide="trophy" style="width: 20px; height: 20px;"></i> Exams</button>
             </div>
             
             <!-- (Resume Container moved to top) -->
@@ -445,28 +443,28 @@ export const DashboardComponent = {
               </div>
 
               <!-- Practice Config -->
-              <div id="practice-config" class="glass card" style="display: none; margin-top: 2rem; padding: 2rem;">
-                <h3 id="practice-title" style="margin-bottom: 1.5rem;">Configure Practice</h3>
+              <div id="practice-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 2.5rem;">
+                <h3 id="practice-title" style="margin-bottom: 2rem; font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--primary);">Configure Session</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
                   <div>
-                    <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem;">Subject</label>
-                    <select id="p-subject" class="glass-select" style="width: 100%;"></select>
+                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Course / Subject</label>
+                    <select id="p-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);"></select>
                   </div>
                   <div id="p-topic-wrapper">
-                    <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem;">Topic</label>
-                    <select id="p-topic" class="glass-select" style="width: 100%;">
-                      <option value="">All Topics</option>
+                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Specific Topic</label>
+                    <select id="p-topic" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
+                      <option value="">All Topics (Recommended)</option>
                     </select>
                   </div>
                   <div id="p-type-wrapper" style="display: none;">
-                    <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem;">Question Type</label>
-                    <select id="p-type" class="glass-select" style="width: 100%;">
-                      <option value="objective">Objective</option>
-                      <option value="theory">Theory</option>
+                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Question Type</label>
+                    <select id="p-type" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
+                      <option value="objective">Objective (CBT)</option>
+                      <option value="theory">Theory (Standard)</option>
                     </select>
                   </div>
                 </div>
-                <button id="p-start-btn" class="primary" style="margin-top: 2rem; width: 100%;">Start Practice Session</button>
+                <button id="p-start-btn" class="btn-dominant" style="margin-top: 2.5rem; width: 100%;">Start Practice Session</button>
               </div>
             </div>
 
@@ -501,49 +499,49 @@ export const DashboardComponent = {
               </div>
 
               <!-- Exam Config -->
-              <div id="exam-config" class="glass card" style="display: none; margin-top: 2rem; padding: 2rem;">
-                <h3 id="exam-title" style="margin-bottom: 1.5rem;">Setup Mock Exam</h3>
+              <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 2.5rem;">
+                <h3 id="exam-title" style="margin-bottom: 2rem; font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
                 
                 <div id="jamb-exam-config" style="display: none;">
-                    <p style="margin-bottom: 1rem; color: var(--primary);">English is mandatory. Select 3 additional subjects.</p>
-                    <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; max-height: 200px; overflow-y: auto; padding: 1rem; background: var(--bg-color); border-radius: 8px;">
+                    <p style="margin-bottom: 1.25rem; color: var(--accent-secondary); font-weight: 600;">English is mandatory. Select 3 additional subjects to complete your set.</p>
+                    <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; max-height: 250px; overflow-y: auto; padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
                     </div>
                 </div>
 
                 <div id="waec-neco-exam-config" style="display: none;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div>
-                            <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-primary);">Subject</label>
-                            <select id="e-subject" class="glass-select" style="width: 100%;"></select>
+                            <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Subject</label>
+                            <select id="e-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);"></select>
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-primary);">Type</label>
-                            <select id="e-type" class="glass-select" style="width: 100%;">
-                                <option value="objective">Objective</option>
-                                <option value="theory">Theory</option>
+                            <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Assessment Format</label>
+                            <select id="e-type" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
+                                <option value="objective">Objective (Recommended)</option>
+                                <option value="theory">Theory (Graded by AI)</option>
                             </select>
                         </div>
                     </div>
                 </div>
-                <button id="e-start-btn" class="primary" style="margin-top: 2rem; width: 100%;">Begin Mock Exam</button>
+                <button id="e-start-btn" class="btn-dominant" style="margin-top: 2.5rem; width: 100%; background: var(--accent-gradient);">Begin Full Mock Exam</button>
               </div>
             </div>
         </div>
 
-        <!-- 📈 8. Performance Insights Section -->
-        <div id="analytics-section" style="margin-top: 3rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="bar-chart-2" style="color: var(--success); width: 24px; height: 24px;"></i> Performance Insights
+        <!-- PERFORMANCE INSIGHTS -->
+        <div id="analytics-section" style="margin-top: 4rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="bar-chart-2" style="color: var(--success); width: 28px; height: 28px;"></i> Personalized Analysis
           </h2>
-          <div class="analytics-grid">
-            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
-              <h4 style="margin-bottom: 1.25rem; color: var(--accent-primary); font-size: 0.9rem;">Score History (Past 50 Sessions)</h4>
+          <div class="analytics-grid" style="gap: 1.5rem;">
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+              <h4 style="margin-bottom: 1.5rem; color: var(--accent-primary); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Score History (Last 50 trials)</h4>
               <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="score-history-chart" style="width: 100% !important; height: auto !important;"></canvas>
               </div>
             </div>
-            <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
-              <h4 style="margin-bottom: 1.25rem; color: var(--success); font-size: 0.9rem;">Subject Mastery (%)</h4>
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+              <h4 style="margin-bottom: 1.5rem; color: var(--success); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Subject Mastery (%)</h4>
               <div style="flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 400px; margin: 0 auto;"></canvas>
               </div>
@@ -553,76 +551,80 @@ export const DashboardComponent = {
       </div>
 
       <!-- Leaderboard Modal -->
-      <div id="leaderboard-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
-        <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2rem;">
-          <button id="close-leaderboard" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 1.5rem; text-align: justify; display: flex; justify-content: center; align-items: center; gap: 0.5rem; color: var(--accent-primary);"><i data-lucide="trophy"></i> Global Rankings</h2>
-          <div id="leaderboard-list" style="margin-top: 1rem;">
-            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading rankings...</div>
+      <div id="leaderboard-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2.5rem; border-radius: var(--radius-lg);">
+          <button id="close-leaderboard" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 2.5rem; font-weight: 900; text-align: center; display: flex; justify-content: center; align-items: center; gap: 0.75rem; color: var(--accent-primary); font-size: 1.75rem;"><i data-lucide="trophy" style="width: 28px; height: 28px;"></i> Global Rankings</h2>
+          <div id="leaderboard-list">
+            <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div class="loader-spinner mb-md" style="margin: 0 auto; width: 32px; height: 32px;"></div>
+              <p style="font-weight: 500;">Retrieving elite data...</p>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Upgrade Modal -->
-      <div id="upgrade-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
-        <div class="modal-content glass" style="max-width: 450px; width: 100%; position: relative; padding: 2.5rem; text-align: center;">
-          <button id="close-upgrade" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <div style="margin-bottom: 1rem; display: flex; justify-content: center;">${profile.is_activated ? '<i data-lucide="rocket" style="width: 48px; height: 48px; color: var(--accent-primary);"></i>' : '<i data-lucide="sparkles" style="width: 48px; height: 48px; color: var(--accent-secondary);"></i>'}</div>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; color: var(--accent-secondary);">${profile.is_activated ? 'Renew Premium' : 'Activate Account'}</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+      <div id="upgrade-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 480px; width: 100%; position: relative; padding: 3rem; text-align: center; border-radius: var(--radius-lg);">
+          <button id="close-upgrade" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+          <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
             ${profile.is_activated 
-               ? 'Renew your monthly subscription to continue enjoying Unlimited AI and Mock Exams.' 
-               : 'Complete your one-time lifetime activation to unlock the full syllabus and 30 days of Premium access.'}
+              ? '<div style="background: rgba(37, 99, 235, 0.1); padding: 1.25rem; border-radius: 50%;"><i data-lucide="rocket" style="width: 56px; height: 56px; color: var(--accent-primary);"></i></div>' 
+              : '<div style="background: rgba(147, 51, 234, 0.1); padding: 1.25rem; border-radius: 50%;"><i data-lucide="sparkles" style="width: 56px; height: 56px; color: var(--accent-secondary);"></i></div>'}
+          </div>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 0.75rem; font-weight: 900; color: var(--text-primary); font-size: 1.75rem;">${profile.is_activated ? 'Renew Pro Access' : 'CBT Elite Pro'}</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2.5rem; font-size: 1rem; font-weight: 500; line-height: 1.6;">
+            ${profile.is_activated 
+               ? 'Your subscription keeps the AI explanations running. Renew to maintain your competitive edge.' 
+               : 'A one-time activation unlocks the full syllabus forever, plus 30 days of unlimited AI corrections.'}
           </p>
           
-          <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
             ${!profile.is_activated ? `
-              <div class="glass card" style="padding: 1rem; border: 2px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05);">
-                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Lifetime Activation</h4>
-                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.5rem;">₦1,500</div>
-                <ul style="text-align: left; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; list-style: none; padding: 0;">
-                  <li>✔ Includes 30 Days Premium</li>
-                  <li>✔ Lifetime Medium Access</li>
-                  <li>✔ 15 Monthly AI Credits</li>
+              <div class="glass card scale-in" style="padding: 1.75rem; border: 2px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%); width: 100%;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">LIFETIME ACTIVATION</h4>
+                <div style="font-size: 3rem; font-weight: 900; color: var(--accent-primary); margin-bottom: 0.75rem; font-family: 'Outfit';">₦1,500</div>
+                <ul style="text-align: left; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; font-weight: 500;">
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> 30 Days Pro Access</li>
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> Complete Syllabus Access</li>
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> Personal Performance AI</li>
                 </ul>
-                <button id="pay-lifetime-btn" class="primary" style="width: 100%; padding: 0.75rem;">Activate Now</button>
+                <button id="pay-lifetime-btn" class="btn-dominant" style="width: 100%; height: 56px;">ACTIVATE NOW</button>
               </div>
             ` : `
-              <div class="glass card" style="padding: 1rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
-                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Monthly Pro</h4>
-                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-secondary); margin-bottom: 0.5rem;">₦1,000</div>
-                <ul style="text-align: left; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; list-style: none; padding: 0;">
-                  <li>✔ Unlimited AI Explanations</li>
-                  <li>✔ Unlimited Mock Exams</li>
-                  <li>✔ AI Theory Grading</li>
+              <div class="glass card scale-in" style="padding: 1.75rem; border: 2px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, transparent 100%); width: 100%;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">RENEW PRO PLAN</h4>
+                <div style="font-size: 3rem; font-weight: 900; color: var(--accent-secondary); margin-bottom: 0.75rem; font-family: 'Outfit';">₦1,000</div>
+                <ul style="text-align: left; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; font-weight: 500;">
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> Unlimited AI Corrections</li>
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> Unlimited Full Mock Exams</li>
+                  <li style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="check-circle" style="width: 18px; color: var(--success);"></i> Expert Theory AI Grading</li>
                 </ul>
-                <button id="pay-monthly-btn" class="primary" style="width: 100%; padding: 0.75rem; background: var(--accent-secondary);">Renew Pro</button>
+                <button id="pay-monthly-btn" class="btn-dominant" style="width: 100%; height: 56px; background: var(--accent-secondary);">RENEW SUBSCRIPTION</button>
               </div>
             `}
           </div>
-          
-          <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 1rem;">Instant activation upon successful payment.</p>
         </div>
       </div>
 
       <!-- Help & Guide Modal -->
-      <div id="help-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
-        <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2.5rem; max-height: 85vh; overflow-y: auto;">
-          <button id="close-help" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; color: var(--accent-primary);"><i data-lucide="book-open"></i> How to Use CBT Elite</h2>
+      <div id="help-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 520px; width: 100%; position: relative; padding: 3rem; max-height: 85vh; overflow-y: auto; border-radius: var(--radius-lg);">
+          <button id="close-help" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 2.5rem; font-weight: 900; display: flex; justify-content: center; align-items: center; gap: 0.75rem; color: var(--accent-primary); font-size: 1.75rem;"><i data-lucide="book-open"></i> Mastery Guide</h2>
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-             <!-- Simplified Help Content -->
-             <div style="padding: 1rem; background: var(--bg-secondary)33; border-radius: 8px;">
-               <h4 style="color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="target" style="width: 18px; height: 18px;"></i> Start Practice</h4>
-               <p style="font-size: 0.85rem;">Select your exam type and pick specific topics to master your weak zones.</p>
+             <div style="padding: 1.25rem; background: rgba(37, 99, 235, 0.05); border-radius: var(--radius-md); border-left: 4px solid var(--primary);">
+               <h4 style="color: var(--primary); display: flex; align-items: center; gap: 0.6rem; font-weight: 800;"><i data-lucide="target" style="width: 20px; height: 20px;"></i> Targeted Practice</h4>
+               <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.5; font-weight: 500;">Select specific topics to isolate and fix your knowledge gaps. The AI monitors your progress here.</p>
              </div>
-             <div style="padding: 1rem; background: var(--bg-secondary)33; border-radius: 8px;">
-               <h4 style="color: var(--primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="trophy" style="width: 18px; height: 18px;"></i> Mock Exams</h4>
-               <p style="font-size: 0.85rem;">Simulate real exam formats. E.g. JAMB mimics the true 180 questioning format using rigorous timing.</p>
+             <div style="padding: 1.25rem; background: rgba(147, 51, 234, 0.05); border-radius: var(--radius-md); border-left: 4px solid var(--accent-secondary);">
+               <h4 style="color: var(--accent-secondary); display: flex; align-items: center; gap: 0.6rem; font-weight: 800;"><i data-lucide="trophy" style="width: 20px; height: 20px;"></i> Mock Examinations</h4>
+               <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.5; font-weight: 500;">Simulate actual JAMB/WAEC standard time and question counts to build exam endurance.</p>
              </div>
-             <div style="padding: 1rem; background: var(--warning)1A; border: 1px dashed var(--warning); border-radius: 8px;">
-               <h4 style="color: var(--warning); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i> AI Assistant</h4>
-               <p style="font-size: 0.85rem;">If you get a question wrong, click "View Explanation" to have AI step you through the formula.</p>
+             <div style="padding: 1.25rem; background: rgba(16, 185, 129, 0.05); border-radius: var(--radius-md); border-left: 4px solid var(--success);">
+               <h4 style="color: var(--success); display: flex; align-items: center; gap: 0.6rem; font-weight: 800;"><i data-lucide="sparkles" style="width: 20px; height: 20px;"></i> AI Tutor (Review)</h4>
+               <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.5; font-weight: 500;">After any session, click "Review Correction" to have the AI explain the "Why" behind the correct answer.</p>
              </div>
           </div>
         </div>
@@ -945,25 +947,27 @@ export const DashboardComponent = {
     
               if (leaderboardList) {
                   leaderboardList.innerHTML = `
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="premium-table">
                       <thead>
-                        <tr style="border-bottom: 2px solid var(--glass-border); text-align: left; color: var(--text-secondary); font-size: 0.8rem;">
-                          <th style="padding: 0.75rem;">RANK</th>
-                          <th style="padding: 0.75rem;">USER</th>
-                          <th style="padding: 0.75rem; text-align: right;">QUESTIONS</th>
+                        <tr>
+                          <th>RANK</th>
+                          <th>ELITE STUDENT</th>
+                          <th style="text-align: right;">QUESTIONS</th>
                         </tr>
                       </thead>
                       <tbody>
                         ${data.map((entry, i) => `
-                          <tr style="border-bottom: 1px solid var(--glass-border); ${entry.users?.username === profile.username ? 'background: var(--primary)1A;' : ''}">
-                            <td style="padding: 1rem; font-weight: 700;">#${i + 1}</td>
-                            <td style="padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
-                              <div class="glass" style="width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; background: var(--border-color);">
+                          <tr style="${entry.users?.username === profile.username ? 'background: var(--primary)1A; border-left: 3px solid var(--primary);' : ''}">
+                            <td>
+                              <div class="rank-badge ${i < 3 ? 'rank-' + (i + 1) : ''}">${i + 1}</div>
+                            </td>
+                            <td style="display: flex; align-items: center; gap: 1rem;">
+                              <div class="user-avatar">
                                 ${entry.users?.username?.charAt(0).toUpperCase() || '?'}
                               </div>
-                              <span style="font-weight: 600;">${entry.users?.username || 'Anonymous'}</span>
+                              <span style="font-weight: 800; font-family: 'Outfit'; color: var(--text-primary);">${entry.users?.username || 'Anonymous'}</span>
                             </td>
-                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: var(--primary);">${entry.total_questions_answered || 0}</td>
+                            <td style="text-align: right; font-weight: 900; color: var(--primary); font-family: 'Outfit'; font-size: 1.1rem;">${entry.total_questions_answered || 0}</td>
                           </tr>
                         `).join('')}
                       </tbody>

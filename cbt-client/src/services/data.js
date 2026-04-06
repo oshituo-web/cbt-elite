@@ -200,32 +200,25 @@ export const DataService = {
     let usingRandomOffset = false
 
     if (filters.randomize) {
-      const idQuery = supabase.from('questions').select('id').eq('is_active', true)
-      if (filters.subject_id) idQuery.eq('subject_id', filters.subject_id)
-      if (filters.exam_id) idQuery.eq('exam_id', filters.exam_id)
-      if (filters.exam_type) idQuery.eq('exam_type', filters.exam_type)
-      if (filters.topic) idQuery.eq('topic', filters.topic)
-
       try {
-        const { data: idPool, error: idError } = await idQuery
+        const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
+          p_subject_id: filters.subject_id || null,
+          p_exam_id: filters.exam_id || null,
+          p_exam_type: filters.exam_type || null,
+          p_topic: filters.topic || null,
+          p_question_type: filters.question_type || 'objective',
+          p_limit: filters.limit || 20
+        })
+
         if (idError) throw idError
 
-        if (idPool && idPool.length > 0) {
-          const sampledIds = idPool
-            .sort(() => Math.random() - 0.5)
-            .slice(0, filters.limit || 20)
-            .map(i => i.id)
-
-          if (sampledIds.length > 0) {
-            query = query.in('id', sampledIds)
-          } else {
-            query = query.limit(0)
-          }
+        if (randomIds && randomIds.length > 0) {
+          query = query.in('id', randomIds.map(r => r.id))
         } else {
           query = query.limit(0)
         }
       } catch (err) {
-        console.error("DataService.getQuestions Randomization Error:", err)
+        console.error("DataService.getQuestions Randomization RPC Error:", err)
         return { data: [], error: err, count: 0 }
       }
     } else if (isPaginated) {
@@ -348,6 +341,15 @@ export const DataService = {
     return { data, error }
   },
 
+  async updateQuestionAnswers(questionId, answersPayload) {
+    const { data, error } = await supabase
+      .from('question_answers')
+      .update(answersPayload)
+      .eq('question_id', questionId)
+      .select()
+    return { data, error }
+  },
+
   async toggleBookmark(userId, questionId) {
     const { data: existing } = await supabase
       .from('bookmarks')
@@ -389,44 +391,49 @@ export const DataService = {
   },
 
   async bulkAddQuestions(questions) {
-    let successCount = 0
-    let lastError = null
+    if (!questions || questions.length === 0) return { success: false, count: 0, error: 'Empty questions list' }
 
-    for (const q of questions) {
-      const { data: qData, error: qErr } = await supabase
+    // 1. Prepare Questions for Batch Insert
+    const qsToInsert = questions.map(q => ({
+        question_text: q.question_text,
+        exam_type: q.exam_type,
+        subject: q.subject,
+        topic: q.topic || '',
+        explanation: q.explanation || '',
+        diagram_url: q.diagram_url || null
+    }))
+
+    // 2. Perform Batch Question Insert
+    const { data: insertedQs, error: qErr } = await supabase
         .from('questions')
-        .insert({
-          question_text: q.question_text,
-          exam_type: q.exam_type,
-          subject: q.subject,
-          topic: q.topic,
-          explanation: q.explanation,
-          diagram_url: q.diagram_url
-        })
-        .select()
+        .insert(qsToInsert)
+        .select('id')
 
-      if (qErr) {
-        lastError = qErr.message
-        continue
-      }
+    if (qErr) return { success: false, count: 0, error: qErr.message }
+    if (!insertedQs) return { success: true, count: 0 }
 
-      if (qData && qData[0] && q.answers && q.answers.length > 0) {
-        const questionId = qData[0].id
-        const answersToInsert = q.answers.map(a => ({
-          question_id: questionId,
-          option_text: a.text,
-          is_correct: !!a.is_correct
-        }))
+    // 3. Prepare Batch Answers (Mapped to new Question IDs)
+    const ansToInsert = []
+    insertedQs.forEach((insQ, idx) => {
+        const origQ = questions[idx]
+        if (origQ.answers && Array.isArray(origQ.answers)) {
+            origQ.answers.forEach(ans => {
+                ansToInsert.push({
+                    question_id: insQ.id,
+                    option_text: ans.text,
+                    is_correct: !!ans.is_correct
+                })
+            })
+        }
+    })
 
-        const { error: aErr } = await supabase.from('answers').insert(answersToInsert)
-        if (aErr) lastError = aErr.message
-        else successCount++
-      } else if (qData && qData[0]) {
-        successCount++
-      }
+    // 4. Perform Batch Answer Insert
+    if (ansToInsert.length > 0) {
+        const { error: aErr } = await supabase.from('answers').insert(ansToInsert)
+        if (aErr) console.warn("Partial Success: Questions inserted, but answers failed:", aErr.message)
     }
 
-    return { success: successCount > 0, count: successCount, error: lastError }
+    return { success: true, count: insertedQs.length, error: null }
   },
 
   async getBookmarks(userId) {
@@ -874,6 +881,11 @@ export const DataService = {
       .limit(limit)
     return { data, error }
   },
+  
+  // Alias for backward compatibility
+  async getNews(limit = 10) {
+    return this.getNewsUpdates(limit)
+  },
 
   async getNewsArticle(id) {
     const { data, error } = await supabase
@@ -1154,6 +1166,75 @@ export const DataService = {
       }
     } catch (err) {
       console.error("Offline Sync Error:", err)
+    }
+  },
+  
+  async aiRegenerateQuestion(questionId, reportReason, reportDetails) {
+    try {
+      // 1. Get current question state
+      const { data: q } = await supabase.from('questions').select(`
+        *,
+        question_answers (*)
+      `).eq('id', questionId).single()
+      
+      if (!q) throw new Error("Question not found")
+      
+      const qa = q.question_answers?.[0] || {}
+      
+      // 2. Formulate Prompt for Gemini
+      const prompt = `
+        You are a CBT Exam Content Expert. A student reported an issue with the following question.
+        
+        ISSUE REPORTED:
+        Reason: ${reportReason}
+        Details: ${reportDetails}
+        
+        CURRENT QUESTION:
+        Text: ${q.question_text}
+        Options:
+        A: ${qa.option_a || qa.option_A}
+        B: ${qa.option_b || qa.option_B}
+        C: ${qa.option_c || qa.option_C}
+        D: ${qa.option_d || qa.option_D}
+        Correct Option: ${qa.correct_option}
+        Explanation: ${qa.explanation || q.explanation}
+        
+        TASK:
+        1. Fix the question based on the report. 
+        2. If the answer was wrong, change the correct option.
+        3. If you change the answer or the question significantly, REWRITE the explanation to match.
+        4. Return ONLY a valid JSON object in this format:
+        {
+          "question_text": "...",
+          "option_a": "...",
+          "option_b": "...",
+          "option_c": "...",
+          "option_d": "...",
+          "correct_option": "A" | "B" | "C" | "D",
+          "explanation": "..."
+        }
+      `
+      
+      // 3. Call Gemini via Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('gemini-api', {
+        body: { 
+          action: 'fix-question', 
+          payload: { prompt } 
+        }
+      })
+      
+      if (error) throw error
+      
+      const text = data.candidates[0].content.parts[0].text
+      const jsonMatch = text.match(/\{.*\}/s)
+      return { 
+        data: JSON.parse(jsonMatch ? jsonMatch[0] : text), 
+        error: null 
+      }
+      
+    } catch (err) {
+      console.error("AI Regeneration Error:", err)
+      return { data: null, error: err.message }
     }
   }
 }

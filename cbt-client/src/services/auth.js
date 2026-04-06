@@ -62,20 +62,29 @@ export const AuthService = {
   },
 
   async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error) throw error
+      return user
+    } catch (e) {
+      console.error("AuthService.getCurrentUser failure:", e)
+      return null
+    }
   },
 
   async getProfile(userId) {
-    if (!userId || typeof userId !== 'string' || userId.length < 30) {
-      console.warn("AuthService.getProfile: Invalid or missing userId", userId)
-      return { data: null, error: { message: "Invalid UUID format" } }
+    // 💡 Robust UUID Validation to prevent 400 Bad Request
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!userId || typeof userId !== 'string' || !uuidRegex.test(userId)) {
+      console.warn("AuthService.getProfile: Invalid UUID format", userId)
+      return { data: null, error: { message: "Invalid UUID format", status: 400 } }
     }
     
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
+      .limit(1)
       .maybeSingle()
     return { data, error }
   },
@@ -93,10 +102,8 @@ export const AuthService = {
       .from('users')
       .select('username')
       .eq('username', username)
-      .single()
+      .maybeSingle()
     
-    // If error is PGRST116 (no rows found), the username is available
-    if (error && error.code === 'PGRST116') return true
-    return false
+    return !data && !error
   }
 }
