@@ -22,6 +22,9 @@
     <!-- Phase 3: PapaParse for CSV Import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
+    <!-- Phase 13: Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -31,12 +34,117 @@
     </script>
   </head>
   <body>
-    <div id="app">
-      <!-- App content will be injected here -->
-      <div id="auth-container" class="container" style="display: none;"></div>
-      <div id="dashboard-container" class="container" style="display: none;"></div>
-      <div id="exam-container" style="display: none;"></div>
-      <div id="admin-container" class="container" style="display: none;"></div>
+    <div id="app" class="elite-layout">
+      <!-- \uD83D\uDED2 Phase 12: Consolidated Branding & System Top Bar -->
+      <header id="app-header" class="glass branding-header">
+        <div class="header-content container-fluid" style="padding: 0 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="sidebar-toggle" class="header-icon-btn" title="Toggle Sidebar">
+              <i data-lucide="menu"></i>
+            </button>
+            <div class="branding-logo" style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="logo-icon" style="display: flex; color: var(--accent-primary);"><i data-lucide="graduation-cap"></i></span> 
+              <span class="logo-text" style="font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em;">CBT<span class="accent">Elite</span></span>
+            </div>
+          </div>
+
+          <div class="header-center">
+            <!-- Global Stats Integrated into Top Bar -->
+            <div id="global-stats-bar" style="display: flex; align-items: center; gap: 1rem;">
+              <div id="header-streak" class="streak-mini" title="Your Streak" style="display: flex; align-items: center; gap: 0.35rem;">
+                <i data-lucide="flame" style="width: 16px; height: 16px;"></i> <span id="streak-text">0</span>
+              </div>
+              <div id="header-tier" class="tier-mini" title="Your Account Tier" style="display: flex; align-items: center; gap: 0.35rem;">
+                <i data-lucide="award" style="width: 16px; height: 16px;"></i> <span id="tier-text">FREE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="header-actions">
+            <button id="global-news-btn" class="header-icon-btn" title="Exam News & Updates" style="position: relative;">
+               <i data-lucide="bell"></i>
+               <span id="notification-badge" class="notification-count">0</span>
+            </button>
+            <button id="global-help-btn" class="header-icon-btn" title="Help Guide"><i data-lucide="help-circle"></i></button>
+            <button id="global-theme-toggle" class="header-icon-btn" title="Toggle Theme"><i data-lucide="sun"></i></button>
+            <div style="width: 1px; height: 24px; background: var(--glass-border); margin: 0 0.5rem;"></div>
+            <div id="profile-trigger" class="user-profile-badge" title="Your Profile">
+              <div class="profile-avatar" id="header-avatar" style="display: none;"></div>
+              <i data-lucide="user-circle" style="color: var(--accent-primary); width: 32px; height: 32px;"></i>
+              <span class="profile-name mobile-hide" id="header-username">Student</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- \uD83D\uDDFD Phase 12: Collapsible Side Navigation (Default: Collapsed) -->
+      <aside id="app-sidebar" class="app-sidebar glass collapsed">
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-view="dashboard" title="Dashboard">
+            <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+          </button>
+          <button class="nav-item" data-view="exams" title="Practice & Exams">
+            <i data-lucide="book-open-check"></i> <span>Practice & Exams</span>
+          </button>
+          <button class="nav-item" data-view="rankings" title="Rankings">
+            <i data-lucide="trophy"></i> <span>Rankings</span>
+          </button>
+          <button class="nav-item" data-view="profile" title="My Profile">
+            <i data-lucide="user-round"></i> <span>My Profile</span>
+          </button>
+          <div class="nav-divider"></div>
+          <button id="sidebar-admin-btn" class="nav-item" data-view="admin" style="display: none; color: var(--accent-primary);" title="Admin Panel">
+            <i data-lucide="shield-alert"></i> <span>Admin Panel</span>
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="logout-btn" class="nav-item logout" title="Sign Out">
+            <i data-lucide="log-out"></i> <span>Sign Out</span>
+          </button>
+          
+          <!-- Legal Disclaimer -->
+          <div class="sidebar-legal mobile-hide" style="font-size: 0.6rem; color: var(--text-secondary); margin-top: auto; padding: 1.5rem 0.5rem 0.5rem; text-align: center; opacity: 0.8; line-height: 1.4;">
+            CBT Elite is an independent educational platform and is not affiliated with JAMB, WAEC, or NECO.
+          </div>
+        </div>
+      </aside>
+
+      <!-- \uD83D\uDCE2 Phase 12: Global News Drawer Container -->
+      <div id="news-drawer" class="news-drawer glass" style="display: none;">
+        <div class="drawer-header">
+           <h3>\uD83D\uDCE2 Exam News & Updates</h3>
+           <button id="close-news-drawer" class="close-btn">&times;</button>
+        </div>
+        <div id="news-drawer-content" class="drawer-body">
+           <div class="loader-spinner"></div>
+        </div>
+      </div>
+
+      <!-- 📱 Phase 10: Bottom Navigation (Mobile) -->
+      <nav id="bottom-nav" class="bottom-nav glass">
+        <button class="bottom-nav-item active" data-view="dashboard" title="Home">
+          <i data-lucide="layout-dashboard"></i> <span>Home</span>
+        </button>
+        <button class="bottom-nav-item" data-view="exams" title="Exams">
+          <i data-lucide="book-open-check"></i> <span>Exams</span>
+        </button>
+        <button class="bottom-nav-item" data-view="rankings" title="Rankings">
+          <i data-lucide="trophy"></i> <span>Rank</span>
+        </button>
+        <button class="bottom-nav-item" data-view="profile" title="Profile">
+          <i data-lucide="user-round"></i> <span>Profile</span>
+        </button>
+      </nav>
+
+      <!-- 🖼️ Phase 10: Main Content Container -->
+      <main id="main-view" class="main-content-area container">
+        <div id="auth-container" style="display: none;"></div>
+        <div id="dashboard-container" style="display: none;"></div>
+        <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>
+        <div id="admin-container" style="display: none;"></div>
+      </main>
+      
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
     </div>
     <script type="module" src="/main.js"></script>
   </body>

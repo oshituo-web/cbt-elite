@@ -4,6 +4,7 @@ import { WeeklyRecapComponent } from './WeeklyRecap'
 import { TourGuide } from '../utils/TourGuide'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
+import { ExamCard } from './ExamCard'
 
 export const DashboardComponent = {
   profile: null,
@@ -11,8 +12,8 @@ export const DashboardComponent = {
 
   async render(profile, onStartExam, onOpenAdmin, onReadNews) {
     // Handle Tier Transitions & Daily Resets
-    const updatedUser = await SubscriptionService.handleTierTransition(profile)
-    this.profile = updatedUser || profile
+    const updatedUser = profile ? await SubscriptionService.handleTierTransition(profile) : null
+    this.profile = updatedUser || profile || { username: 'Student', id: 'anon' }
     this.onStartExam = onStartExam
     this.onOpenAdmin = onOpenAdmin
     this.onReadNews = onReadNews
@@ -21,7 +22,6 @@ export const DashboardComponent = {
     
     let history = []
     let mastery = []
-    let newsItems = []
     let isSystemFree = false
 
     try {
@@ -30,8 +30,6 @@ export const DashboardComponent = {
         history = analytics.history || []
         mastery = analytics.mastery || []
         
-        const news = await DataService.getNewsUpdates(5)
-        newsItems = news.data || []
 
         const configResp = await DataService.getSystemConfig('explanations_free_access')
         isSystemFree = configResp.data?.value === true || configResp.data?.value === 'true'
@@ -61,7 +59,7 @@ export const DashboardComponent = {
     let totalQuestions = 0
     let totalCorrect = 0
     let accuracy = 0
-    let trendStr = "🎯 Target: 80%"
+    let trendStr = "<i data-lucide='target' style='width: 14px; height: 14px; vertical-align: middle;'></i> Target: 80%"
     
     if (history && history.length > 0) {
         let recentQuestions = 0
@@ -106,10 +104,10 @@ export const DashboardComponent = {
     
     // Determine Achievements
     const badges = [];
-    if (profile.streak_count >= 7) badges.push({ emoji: '🔥', title: '7-Day Streak' });
-    if (totalQuestions >= 500) badges.push({ emoji: '🛡️', title: 'Veteran' });
-    if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '🎯', title: 'Sharpshooter' });
-    if (profile.is_activated) badges.push({ emoji: '💎', title: 'Activated' });
+    if (profile.streak_count >= 7) badges.push({ emoji: '<i data-lucide="flame" style="width: 16px; height: 16px; color: var(--warning);"></i>', title: '7-Day Streak' });
+    if (totalQuestions >= 500) badges.push({ emoji: '<i data-lucide="shield" style="width: 16px; height: 16px; color: var(--accent-secondary);"></i>', title: 'Veteran' });
+    if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '<i data-lucide="target" style="width: 16px; height: 16px; color: var(--primary);"></i>', title: 'Sharpshooter' });
+    if (profile.is_activated) badges.push({ emoji: '<i data-lucide="gem" style="width: 16px; height: 16px; color: var(--accent-primary);"></i>', title: 'Activated' });
 
     // Determine Weak Subject (Threshold: min 5 attempts, < 50% average)
     let weakSubject = null
@@ -125,52 +123,33 @@ export const DashboardComponent = {
     }
 
     container.innerHTML = `
-      <header class="flex-between" style="padding: 1.5rem 0; border-bottom: 1px solid var(--glass-border);">
-        <h1 style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--accent-primary);">CBT Elite</h1>
-
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem;">
-          <button id="help-guide-btn" class="glass" style="padding: 0; font-size: 1.25rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-secondary); color: var(--accent-secondary);">❔</button>
-          <button id="theme-toggle" class="glass" style="padding: 0; font-size: 1.25rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">🌓</button>
-          ${(profile.role !== 'student' || profile.username === 'tester') ? '<button id="admin-panel-btn" class="btn-admin">Admin Control</button>' : ''}
-          <div style="display: flex; gap: 1rem; align-items: center;">
-            <div id="streak-badge" style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255, 107, 0, 0.15); color: #FF6B00; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255, 107, 0, 0.3);">
-               🔥 ${profile.streak_count || 0} DAY STREAK
-            </div>
-            <div id="user-tier-badge" style="padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; background: ${SubscriptionService.resolveUserTier(profile, isSystemFree) === 'premium' ? 'var(--accent-secondary)' : '#475569'}; color: var(--text-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
-              ${SubscriptionService.resolveUserTier(profile, isSystemFree).toUpperCase()}
-            </div>
-            
-            <!-- 🏆 New Achievement Badges -->
-            <div id="achievement-badges" style="display: flex; gap: 0.5rem; margin-right: 0.5rem;">
-              ${badges.map(b => `<span title="${b.title}" style="cursor: help; opacity: 0.9; font-size: 1.1rem;">${b.emoji}</span>`).join('')}
-            </div>
-
-            <span style="font-size: 0.875rem;">Welcome, <strong>${profile.username}</strong></span>
-            <button id="logout-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</button>
-          </div>
-        </div>
-      </header>
-
-      <div id="dashboard-content" class="dashboard-scroll-area">
+      <div id="dashboard-content" class="dashboard-scroll-area" style="padding-top: 0.5rem;">
         
-        <!-- 🔖 0. FEATURED: High-Priority Resume Card -->
+        <!-- DASHBOARD WELCOME: Focused Title -->
+        <div style="margin-bottom: 1.5rem; padding-top: 0.25rem;">
+          <h1 style="font-family: 'Outfit'; font-size: 1.8rem; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">Welcome, ${this.profile.username || 'Student'} <i data-lucide="sun" style="width: 28px; height: 28px; color: var(--warning);"></i></h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.25rem;">Let's make today count. Continue your mastery journey.</p>
+        </div>
+
+        
+        <!-- FEATURED: High-Priority Resume Card -->
         <div class="glass card scale-in" style="margin-bottom: 2rem; border-left: 5px solid var(--accent-primary);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
             <div>
-                <h3 style="font-family: 'Outfit'; margin-bottom: 0.25rem;">\u2728 AI Custom Workout</h3>
+                <h3 style="font-family: 'Outfit'; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="sparkles" style="color: var(--accent-primary);"></i> AI Custom Workout</h3>
                 <p id="ai-workout-hint" style="font-size: 0.8rem; color: var(--text-secondary);">Targeting your mastery gaps automatically...</p>
             </div>
             <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">RECOMMENDED</span>
           </div>
           <button id="start-ai-workout" class="primary" style="width: 100%; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #ffffff !important;">
-            <span style="color: #ffffff !important;">\uD83D\uDE80 Start Personalized Session</span>
+            <span style="color: #ffffff !important; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="rocket" style="width: 18px; height: 18px;"></i> Start Personalized Session</span>
           </button>
         </div>
 
         <div id="resume-container" style="display: none; margin-bottom: 2rem;">
               <div class="glass card scale-in" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, var(--bg-secondary) 100%); display: flex; justify-content: space-between; align-items: center; padding: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                  <div style="font-size: 2rem;">⏳</div>
+                  <div style="color: var(--accent-secondary);"><i data-lucide="clock" style="width: 32px; height: 32px;"></i></div>
                   <div>
                     <h3 style="margin-bottom: 0.25rem; font-family: 'Outfit'; color: var(--accent-secondary);">Continue Your Session</h3>
                     <p id="resume-info" style="font-size: 0.85rem; color: var(--text-secondary);">Pick up exactly where you left off.</p>
@@ -189,7 +168,7 @@ export const DashboardComponent = {
           const ActivationCard = () => `
             <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-primary); background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">🔓 Activate Full Access</h4>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="unlock" style="width: 20px; height: 20px;"></i> Activate Full Access</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary);">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
               </div>
               <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
@@ -201,7 +180,7 @@ export const DashboardComponent = {
           const RenewalCard = () => `
             <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.25rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div style="flex: 1; min-width: 250px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">🚀 Renew Premium Access</h4>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="rocket" style="width: 20px; height: 20px; color: var(--accent-secondary);"></i> Renew Premium Access</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary);">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
               </div>
               <button class="primary" style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background: var(--accent-secondary);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
@@ -215,7 +194,7 @@ export const DashboardComponent = {
               return `
                 <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--warning); background: rgba(255, 152, 0, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                   <div style="flex: 1;">
-                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.25rem 0; font-size: 1rem;">⚠️ Expiring Soon</h4>
+                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.25rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i> Expiring Soon</h4>
                     <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing premium access.</p>
                   </div>
                   <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--warning);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
@@ -226,7 +205,7 @@ export const DashboardComponent = {
             } else {
               return `
                 <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--success); background: rgba(34, 197, 94, 0.05); border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
-                  <div style="font-size: 1.5rem;">👑</div>
+                  <div style="color: var(--success);"><i data-lucide="crown" style="width: 24px; height: 24px;"></i></div>
                   <div>
                     <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1rem;">Premium Active</h4>
                     <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Your Premium expires in ${subState.daysRemaining} days.</p>
@@ -240,7 +219,7 @@ export const DashboardComponent = {
             return `
               <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border: 1px solid var(--error); background: rgba(239, 68, 68, 0.05); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div style="flex: 1;">
-                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.25rem 0; font-size: 1rem;">⚠️ Premium Expired</h4>
+                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.25rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i> Premium Expired</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Premium expired – you are now on Medium plan.</p>
                 </div>
                 <button class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; background: var(--error);" onclick="document.getElementById('upgrade-modal').style.display='flex'">
@@ -263,26 +242,15 @@ export const DashboardComponent = {
           <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Start Practicing Now</h2>
           <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select your preferred mode to continue training.</p>
           <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-             <button id="quick-practice-btn" class="primary" data-tooltip="Practice by topic to improve faster" style="padding: 1.25rem 2rem; font-size: 1.25rem; font-weight: 800; min-width: 200px;">🎯 Practice Mode</button>
-             <button id="quick-exam-btn" class="secondary" data-tooltip="Simulate real exam conditions" style="padding: 1.25rem 2rem; border: 2px solid var(--accent-secondary); background: transparent; color: var(--text-primary); font-size: 1.25rem; font-weight: 800; min-width: 200px; border-radius: 8px;">🏆 Mock Exam</button>
-             <button id="start-saved" class="glass" style="padding: 1.25rem 2rem; border: 2.5px solid var(--accent-primary); font-size: 1.1rem; display: none; align-items: center; gap: 0.5rem; justify-content: center; min-width: 200px; font-weight: 700;">🔖 Saved (<span id="bookmark-count">0</span>)</button>
+             <button id="quick-practice-btn" class="primary" data-tooltip="Practice by topic to improve faster" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 1.25rem 2rem; font-size: 1.25rem; font-weight: 800; min-width: 200px;"><i data-lucide="target"></i> Practice Mode</button>
+             <button id="quick-exam-btn" class="secondary" data-tooltip="Simulate real exam conditions" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 1.25rem 2rem; border: 2px solid var(--accent-secondary); background: transparent; color: var(--text-primary); font-size: 1.25rem; font-weight: 800; min-width: 200px; border-radius: 8px;"><i data-lucide="trophy"></i> Mock Exam</button>
+             <button id="start-saved" class="glass" style="padding: 1.25rem 2rem; border: 2.5px solid var(--accent-primary); font-size: 1.1rem; display: none; align-items: center; gap: 0.5rem; justify-content: center; min-width: 200px; font-weight: 700;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
           </div>
         </div>
 
-        <!-- 🧭 2. Dashboard Guide Entry (Replayable) -->
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary);">
-           <div style="display: flex; align-items: center; gap: 1rem;">
-             <div style="font-size: 1.5rem;">📖</div>
-             <div>
-               <h3 style="font-size: 1rem; margin: 0;">New to CBT Elite?</h3>
-               <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Learn how to use the platform effectively.</p>
-             </div>
-           </div>
-           <button id="start-guide-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-color: var(--primary); color: var(--primary);">Start Guide</button>
-        </div>
 
 
-         <!-- 📊 3. Progress Summary & 🎯 4. Daily Goal Tracker -->
+         <!-- 3. Progress Summary & 4. Daily Goal Tracker -->
          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem;">
             <div class="glass card" style="padding: 1rem; border-top: 4px solid var(--primary); display: flex; flex-direction: column;">
               <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Your Progress Overview</h3>
@@ -316,8 +284,8 @@ export const DashboardComponent = {
               </div>
               
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem;">
-                <button id="view-leaderboard" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-primary); color: var(--accent-primary); border-radius: 6px;">🏆 GLOBAL RANKINGS</button>
-                <button id="performance-insights-btn" class="glass" style="padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); border-radius: 6px;">📊 INSIGHTS</button>
+                <button id="view-leaderboard" class="glass" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-primary); color: var(--accent-primary); border-radius: 6px;"><i data-lucide="trophy" style="width: 14px; height: 14px;"></i> GLOBAL RANKINGS</button>
+                <button id="performance-insights-btn" class="glass" style="display: flex; align-items: center; justify-content: center; gap: 0.3rem; padding: 0.5rem; font-size: 0.75rem; font-weight: 800; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); border-radius: 6px;"><i data-lucide="bar-chart-2" style="width: 14px; height: 14px;"></i> INSIGHTS</button>
               </div>
             </div>
 
@@ -344,14 +312,14 @@ export const DashboardComponent = {
         ${history.length < 5 ? `
           <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
              <div>
-               <h3 style="font-size: 1rem; margin-bottom: 0.25rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.5rem;">🤖 AI Analytics Calibration</h3>
+               <h3 style="font-size: 1rem; margin-bottom: 0.25rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bot"></i> AI Analytics Calibration</h3>
                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">Complete at least ${5 - history.length} more practice sessions or exams to unlock personalized AI performance insights.</p>
              </div>
              <div class="loader-spinner" style="width:24px; height:24px; border-width:3px; border-color: var(--accent-secondary) transparent transparent transparent;"></div>
           </div>
         ` : `
           <div class="glass card" style="margin-top: 1.5rem; padding: 1.25rem 1.5rem; border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.05); display: flex; flex-direction: column; gap: 0.75rem;">
-             <h3 style="font-size: 1rem; margin: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">🧠 AI Performance Analysis</h3>
+             <h3 style="font-size: 1rem; margin: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="brain"></i> AI Performance Analysis</h3>
              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
                 ${(() => {
                     const sorted = [...(mastery || [])].sort((a,b) => b.average - a.average);
@@ -378,77 +346,57 @@ export const DashboardComponent = {
              </p>
              ${(weakSubject) ? `
              <div style="margin-top: 0.5rem;">
-                <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 800;"><span style="color: #ffffff !important;">🎯 Target ${weakSubject.subject}</span></button>
+                <button id="practice-weak-btn" data-subject="${weakSubject.subject}" class="primary" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 800;"><i data-lucide="target" style="width: 16px; height: 16px; color: #ffffff;"></i> <span style="color: #ffffff !important;">Target ${weakSubject.subject}</span></button>
              </div>
              ` : ''}
           </div>
         `}
 
-        <!-- 📰 6. News & Updates System -->
-        <div class="glass card" style="margin-top: 1.5rem; padding: 1rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-            <span>📢 Exam Updates & News</span>
-          </h2>
-          <div id="news-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-             ${(!newsItems || newsItems.length === 0) ? '<p style="font-size: 0.85rem; color: var(--text-secondary);">No updates available at this time.</p>' : 
-                 newsItems.map(news => `
-                    <div class="news-ui-card" data-news='${JSON.stringify({ ...news, content: (news.content || "").replace(/'/g, "&#39;") })}' style="padding: 1rem; background: var(--bg-secondary)4D; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: transform 0.2s; border-left: 3px solid var(--primary);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <div style="font-size: 0.65rem; padding: 0.2rem 0.5rem; background: var(--primary)33; color: var(--primary); display: inline-block; border-radius: 4px; font-weight: 800;">${news.category || 'NEWS'}</div>
-                            ${news.attachment_url ? `<span style="font-size: 0.8rem; color: #60a5fa;" title="Contains PDF Attachment">📎</span>` : ''}
-                        </div>
-                        <h4 style="font-family: 'Outfit'; margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.3;">${news.title}</h4>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${news.summary || news.content}</p>
-                    </div>
-                 `).join('')}
-          </div>
-        </div>
-
         <!-- 🧭 7. Explore CBT Elite (Feature Map) -->
         <div class="scale-in" style="margin-top: 1.5rem; width: 100%;">
           <details style="width: 100%;">
             <summary class="primary" style="font-family: 'Outfit'; font-size: 1.1rem; color: #ffffff !important; background: var(--primary); padding: 1rem 1.5rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
-              <span style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff !important;"><span>🚀</span> Explore CBT Elite Features</span>
-              <span style="font-size: 0.85rem; opacity: 0.9; font-weight: normal; color: #ffffff !important;">Click to reveal ▼</span>
+              <span style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff !important;"><i data-lucide="rocket"></i> Explore CBT Elite Features</span>
+              <span style="font-size: 0.85rem; opacity: 0.9; font-weight: normal; color: #ffffff !important;">Click to reveal \u25BC</span>
             </summary>
             <div class="glass card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; padding: 1.5rem; margin-top: 0.5rem; border-left: 4px solid var(--primary);">
               <div style="display: flex; gap: 1rem;">
-                <div style="font-size: 1.25rem;">🎯</div>
+                <div style="color: var(--primary);"><i data-lucide="target" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Practice Mode</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">Practice questions by topic and improve gradually</p>
                 </div>
               </div>
               <div style="display: flex; gap: 1rem;">
-                <div style="font-size: 1.25rem;">🏆</div>
+                <div style="color: var(--accent-secondary);"><i data-lucide="trophy" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Exam Mode</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">Take full CBT exams with real timing</p>
                 </div>
               </div>
               <div style="display: flex; gap: 1rem;">
-                <div style="font-size: 1.25rem;">📊</div>
+                <div style="color: var(--success);"><i data-lucide="bar-chart-2" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Performance Insights</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">See your progress and score trends</p>
                 </div>
               </div>
               <div style="display: flex; gap: 1rem;">
-                <div style="font-size: 1.25rem;">🧠</div>
+                <div style="color: var(--accent-primary);"><i data-lucide="brain" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">AI Explanations</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">Get detailed corrections after answering (Premium)</p>
                 </div>
               </div>
               <div style="display: flex; gap: 1rem;" id="feature-review-item">
-                <div style="font-size: 1.25rem;">📌</div>
+                <div style="color: var(--warning);"><i data-lucide="pin" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">Review Questions</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">After finishing a test, tap 'Review Questions' to see corrections</p>
                 </div>
               </div>
               <div style="display: flex; gap: 1rem;">
-                <div style="font-size: 1.25rem;">📰</div>
+                <div style="color: var(--text-secondary);"><i data-lucide="newspaper" style="width: 24px; height: 24px;"></i></div>
                 <div>
                   <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem;">News & Updates</h4>
                   <p style="font-size: 0.75rem; color: var(--text-secondary);">Stay informed about JAMB, WAEC, and NECO</p>
@@ -457,12 +405,11 @@ export const DashboardComponent = {
             </div>
           </details>
         </div>
-
-        <!-- 📚 8. Exam Selection (Existing) -->
+        
         <div style="margin-top: 3rem; border-top: 1px dashed var(--glass-border); padding-top: 2rem;">
             <div class="dashboard-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-              <button id="view-practice" class="nav-tab active" style="flex: 1;">🎯 Practice Mode</button>
-              <button id="view-exam" class="nav-tab" style="flex: 1;">🏆 Exam Mode</button>
+              <button id="view-practice" class="nav-tab active" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="target" style="width: 18px; height: 18px;"></i> Practice Mode</button>
+              <button id="view-exam" class="nav-tab" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="trophy" style="width: 18px; height: 18px;"></i> Exam Mode</button>
             </div>
             
             <!-- (Resume Container moved to top) -->
@@ -471,18 +418,30 @@ export const DashboardComponent = {
             <div id="practice-section">
               <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Choose Your Exam Type</h2>
               <div class="dashboard-grid">
-                <div class="glass card practice-tier" data-exam="JAMB" style="border-top: 4px solid var(--accent-primary); cursor: pointer;">
-                  <h3>JAMB Practice</h3>
-                  <p style="font-size: 0.875rem;">Topic-based objective practice</p>
-                </div>
-                <div class="glass card practice-tier" data-exam="WAEC" style="border-top: 4px solid var(--accent-secondary); cursor: pointer;">
-                  <h3>WAEC Practice</h3>
-                  <p style="font-size: 0.875rem;">Objective & Theory support</p>
-                </div>
-                <div class="glass card practice-tier" data-exam="NECO" style="border-top: 4px solid var(--success); cursor: pointer;">
-                  <h3>NECO Practice</h3>
-                  <p style="font-size: 0.875rem;">Objective & Theory support</p>
-                </div>
+                ${ExamCard({
+                  title: 'JAMB Practice',
+                  description: 'Topic-based objective practice',
+                  colorClass: 'jamb',
+                  icon: '<i data-lucide="target" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'JAMB',
+                  extraClass: 'practice-tier'
+                })}
+                ${ExamCard({
+                  title: 'WAEC Practice',
+                  description: 'Objective & Theory support',
+                  colorClass: 'waec',
+                  icon: '<i data-lucide="book" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'WAEC',
+                  extraClass: 'practice-tier'
+                })}
+                ${ExamCard({
+                  title: 'NECO Practice',
+                  description: 'Objective & Theory support',
+                  colorClass: 'neco',
+                  icon: '<i data-lucide="pen-tool" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'NECO',
+                  extraClass: 'practice-tier'
+                })}
               </div>
 
               <!-- Practice Config -->
@@ -515,18 +474,30 @@ export const DashboardComponent = {
             <div id="exam-section" style="display: none;">
               <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Structured Mock Exams</h2>
               <div class="dashboard-grid">
-                <div class="glass card exam-tier" data-exam="JAMB" style="border-top: 4px solid var(--primary); cursor: pointer;">
-                  <h3>JAMB Mock</h3>
-                  <p style="font-size: 0.875rem; color: var(--text-primary);">180 Questions | 120 Mins</p>
-                </div>
-                <div class="glass card exam-tier" data-exam="WAEC" style="border-top: 4px solid var(--accent-secondary); cursor: pointer;">
-                  <h3>WAEC Mock</h3>
-                  <p style="font-size: 0.875rem; color: var(--text-primary);">Standard Full Exam</p>
-                </div>
-                <div class="glass card exam-tier" data-exam="NECO" style="border-top: 4px solid var(--success); cursor: pointer;">
-                  <h3>NECO Mock</h3>
-                  <p style="font-size: 0.875rem; color: var(--text-primary);">Standard Full Exam</p>
-                </div>
+                ${ExamCard({
+                  title: 'JAMB Mock',
+                  description: '180 Questions | 120 Mins',
+                  colorClass: 'jamb',
+                  icon: '<i data-lucide="target" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'JAMB',
+                  extraClass: 'exam-tier'
+                })}
+                ${ExamCard({
+                  title: 'WAEC Mock',
+                  description: 'Standard Full Exam',
+                  colorClass: 'waec',
+                  icon: '<i data-lucide="book" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'WAEC',
+                  extraClass: 'exam-tier'
+                })}
+                ${ExamCard({
+                  title: 'NECO Mock',
+                  description: 'Standard Full Exam',
+                  colorClass: 'neco',
+                  icon: '<i data-lucide="pen-tool" style="width: 24px; height: 24px;"></i>',
+                  dataExamTarget: 'NECO',
+                  extraClass: 'exam-tier'
+                })}
               </div>
 
               <!-- Exam Config -->
@@ -562,7 +533,7 @@ export const DashboardComponent = {
         <!-- 📈 8. Performance Insights Section -->
         <div id="analytics-section" style="margin-top: 3rem;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            📊 Performance Insights
+            <i data-lucide="bar-chart-2" style="color: var(--success); width: 24px; height: 24px;"></i> Performance Insights
           </h2>
           <div class="analytics-grid">
             <div class="glass card" style="padding: 1rem; display: flex; flex-direction: column;">
@@ -585,7 +556,7 @@ export const DashboardComponent = {
       <div id="leaderboard-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
         <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2rem;">
           <button id="close-leaderboard" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 1.5rem; text-align: center; color: var(--accent-primary);">🏆 Global Rankings</h2>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 1.5rem; text-align: justify; display: flex; justify-content: center; align-items: center; gap: 0.5rem; color: var(--accent-primary);"><i data-lucide="trophy"></i> Global Rankings</h2>
           <div id="leaderboard-list" style="margin-top: 1rem;">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading rankings...</div>
           </div>
@@ -596,7 +567,7 @@ export const DashboardComponent = {
       <div id="upgrade-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
         <div class="modal-content glass" style="max-width: 450px; width: 100%; position: relative; padding: 2.5rem; text-align: center;">
           <button id="close-upgrade" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <div style="font-size: 3rem; margin-bottom: 1rem;">${profile.is_activated ? '🚀' : '✨'}</div>
+          <div style="margin-bottom: 1rem; display: flex; justify-content: center;">${profile.is_activated ? '<i data-lucide="rocket" style="width: 48px; height: 48px; color: var(--accent-primary);"></i>' : '<i data-lucide="sparkles" style="width: 48px; height: 48px; color: var(--accent-secondary);"></i>'}</div>
           <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; color: var(--accent-secondary);">${profile.is_activated ? 'Renew Premium' : 'Activate Account'}</h2>
           <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
             ${profile.is_activated 
@@ -638,19 +609,19 @@ export const DashboardComponent = {
       <div id="help-modal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
         <div class="modal-content glass" style="max-width: 500px; width: 100%; position: relative; padding: 2.5rem; max-height: 85vh; overflow-y: auto;">
           <button id="close-help" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary);">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 2rem; text-align: center; color: var(--accent-primary);">📖 How to Use CBT Elite</h2>
+          <h2 style="font-family: 'Outfit'; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; color: var(--accent-primary);"><i data-lucide="book-open"></i> How to Use CBT Elite</h2>
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
              <!-- Simplified Help Content -->
              <div style="padding: 1rem; background: var(--bg-secondary)33; border-radius: 8px;">
-               <h4 style="color: var(--accent-primary);">🎯 Start Practice</h4>
+               <h4 style="color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="target" style="width: 18px; height: 18px;"></i> Start Practice</h4>
                <p style="font-size: 0.85rem;">Select your exam type and pick specific topics to master your weak zones.</p>
              </div>
              <div style="padding: 1rem; background: var(--bg-secondary)33; border-radius: 8px;">
-               <h4 style="color: var(--primary);">🏆 Mock Exams</h4>
+               <h4 style="color: var(--primary); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="trophy" style="width: 18px; height: 18px;"></i> Mock Exams</h4>
                <p style="font-size: 0.85rem;">Simulate real exam formats. E.g. JAMB mimics the true 180 questioning format using rigorous timing.</p>
              </div>
              <div style="padding: 1rem; background: var(--warning)1A; border: 1px dashed var(--warning); border-radius: 8px;">
-               <h4 style="color: var(--warning);">💡 AI Assistant</h4>
+               <h4 style="color: var(--warning); display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i> AI Assistant</h4>
                <p style="font-size: 0.85rem;">If you get a question wrong, click "View Explanation" to have AI step you through the formula.</p>
              </div>
           </div>
@@ -658,6 +629,15 @@ export const DashboardComponent = {
       </div>
     `
 
+    // Dynamically render the newly injected string icons into robust SVGs across the container DOM
+    const renderLucide = () => {
+      if (window.lucide) {
+        window.lucide.createIcons({ root: container });
+      } else {
+        setTimeout(renderLucide, 100);
+      }
+    };
+    renderLucide();
 
     // Siding Tabs Setup
     const pSec = document.getElementById('practice-section')
@@ -1096,14 +1076,6 @@ export const DashboardComponent = {
         }
     }
 
-    // 📰 News Reader Logic
-    const newsCards = document.querySelectorAll('.news-ui-card')
-    newsCards.forEach(card => {
-        card.onclick = () => {
-            const articleData = JSON.parse(card.dataset.news)
-            if (this.onReadNews) this.onReadNews(articleData)
-        }
-    })
 
     // Store intervals for cleanup if necessary
     this.activeIntervals = []
@@ -1127,7 +1099,7 @@ export const DashboardComponent = {
             } else {
                 alert("AI needs more of your performance data to build a workout. Try a few regular practices first!")
                 aiWorkoutBtn.disabled = false
-                aiWorkoutBtn.innerHTML = '<span>\uD83D\uDE80 Start Personalized Session</span>'
+                aiWorkoutBtn.innerHTML = '<span style="display:flex; align-items:center; gap:0.5rem;"><i data-lucide="rocket" style="width: 18px; height: 18px;"></i> Start Personalized Session</span>'
             }
         }
     }
@@ -1138,11 +1110,12 @@ export const DashboardComponent = {
     const analyticsSection = document.getElementById('analytics-section')
     if (error || (!history.length && !mastery.length)) {
       analyticsSection.innerHTML = `
-        <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">📊 Performance Insights</h2>
-        <div class="glass card" style="padding: 3rem 1rem; text-align: center; border: 1px dashed var(--glass-border);">
-           <div style="font-size: 2.5rem; margin-bottom: 1rem;">📈</div>
-           <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">No Analytics Data Yet</h3>
-           <p style="font-size: 0.85rem; color: var(--text-secondary);">Start taking practice sessions or mock exams. Your performance charts and subject mastery will appear here automatically.</p>
+        <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bar-chart-2" style="color: var(--success); width: 24px; height: 24px;"></i> Performance Insights</h2>
+        <div class="empty-state-card glass cta-pulse" style="display: flex; flex-direction: column; align-items: center;">
+           <div style="margin-bottom: 1.5rem; color: var(--accent-primary);"><i data-lucide="rocket" style="width: 48px; height: 48px;"></i></div>
+           <h3 style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.75rem;">Ready for your first session?</h3>
+           <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 400px; margin-bottom: 2rem;">Take your first practice test or mock exam to unlock personalized performance charts, subject mastery scores, and your readiness evaluation.</p>
+           <button class="primary" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Start Practicing Now</button>
         </div>
       `
       return
