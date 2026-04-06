@@ -5,20 +5,30 @@ export const ProfileSetupComponent = {
     const container = document.getElementById('auth-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="auth-card glass card" style="max-width: 400px; margin: 100px auto;">
-        <h2 style="text-align: center; font-family: 'Outfit';">Set Your Username</h2>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">Choose a unique handle for the leaderboard</p>
+      <div class="auth-card glass card scale-in" style="max-width: 440px; margin: 6rem auto; padding: 4rem 3rem;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+          <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 2rem; color: var(--text-primary); margin-bottom: 0.5rem;">Secure Your Handle</h2>
+          <p style="color: var(--text-secondary); font-weight: 600; font-size: 1rem; line-height: 1.4;">Choose a unique identity for the elite leaderboard</p>
+        </div>
         
-        <div id="setup-error" style="color: var(--error); font-size: 0.875rem; text-align: center; margin-bottom: 1rem; display: none;"></div>
+        <div id="setup-error" class="glass" style="color: var(--error); font-size: 0.9rem; font-weight: 700; text-align: center; margin-bottom: 1.5rem; padding: 1rem; background: rgba(239, 68, 68, 0.08); border-radius: 12px; display: none; border: 1px solid rgba(239, 68, 68, 0.2); font-family: 'Outfit';"></div>
 
-        <form id="setup-form" style="display: flex; flex-direction: column; gap: 1rem;">
+        <form id="setup-form" style="display: flex; flex-direction: column; gap: 1.75rem;">
           <div style="position: relative;">
-            <input type="text" id="username" placeholder="Username" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary);">
-            <div id="availability-check" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.75rem;"></div>
+            <label for="username" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit'; display: block; margin-bottom: 0.75rem;">Global Username</label>
+            <input type="text" id="username" placeholder="Elite Explorer" required class="glass-input" style="height: 56px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%; padding-right: 6rem;">
+            <div id="availability-check" style="position: absolute; right: 16px; bottom: 18px; font-size: 0.75rem; font-weight: 900; font-family: 'Outfit'; text-transform: uppercase; letter-spacing: 0.05em;"></div>
           </div>
-          <input type="text" id="full_name" placeholder="Full Name" value="${user.user_metadata?.full_name || ''}" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary);">
-          <button type="submit" class="primary" id="save-profile" disabled>Save Profile</button>
-          <button type="button" class="glass" id="back-to-login" style="margin-top: 0.5rem;">← Back to Login</button>
+          
+          <div>
+            <label for="full_name" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit'; display: block; margin-bottom: 0.75rem;">Full Name</label>
+            <input type="text" id="full_name" placeholder="John Doe" value="${user.user_metadata?.full_name || ''}" class="glass-input" style="height: 56px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%;">
+          </div>
+
+          <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <button type="submit" class="btn-primary" id="save-profile" disabled style="height: 60px; font-size: 1.1rem; font-weight: 900; font-family: 'Outfit';">Complete Setup</button>
+            <button type="button" class="btn-secondary" id="back-to-login" style="height: 52px; font-size: 0.95rem; font-weight: 800; font-family: 'Outfit'; border-style: dashed; border-width: 2px;">Back to Login</button>
+          </div>
         </form>
       </div>
     `

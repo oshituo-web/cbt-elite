@@ -2092,3 +2092,34 @@ body.light-mode .option-btn .option-holder {
 .progress-v2-fill.success { background: var(--success); box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
 .progress-v2-fill.error { background: var(--error); box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
 .progress-v2-fill.primary { background: var(--primary); }
+
+/* =========================================
+   AUTH & ONBOARDING PREMIUM
+   ========================================= */
+.auth-card {
+  z-index: 10;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.15), inset 0 0 5px rgba(37, 99, 235, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    margin: 2rem 1rem !important;
+    padding: 2.5rem 1.5rem !important;
+  }
+}

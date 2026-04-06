@@ -5,46 +5,48 @@ export const AuthComponent = {
     const container = document.getElementById('auth-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="auth-card glass card" style="max-width: 400px; margin: 80px auto; padding: 2.5rem;">
-        <h2 id="auth-title" style="text-align: center; font-family: 'Outfit'; margin-top: 0; font-weight: 800; font-size: 1.75rem;">Welcome Back</h2>
-        <p id="auth-subtitle" style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-weight: 500;">Log in to your CBT practice account</p>
+      <div class="auth-card glass card scale-in" style="max-width: 440px; margin: 6rem auto; padding: 4rem 3rem; position: relative;">
+        <div style="text-align: center; margin-bottom: 3.5rem;">
+          <h2 id="auth-title" style="font-family: 'Outfit'; font-weight: 900; font-size: 2.4rem; color: var(--text-primary); margin-bottom: 0.5rem; letter-spacing: -0.02em;">Welcome Back</h2>
+          <p id="auth-subtitle" style="color: var(--text-secondary); font-weight: 600; font-size: 1.1rem; line-height: 1.4;">Access your elite study dashboard</p>
+        </div>
         
-        <div id="auth-error" style="color: var(--error); font-size: 0.875rem; text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; display: none; line-height: 1.4; border: 1px solid rgba(239, 68, 68, 0.2);"></div>
-        <div id="auth-success" style="color: var(--success); font-size: 0.875rem; text-align: center; margin-bottom: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; display: none; line-height: 1.4; border: 1px solid rgba(16, 185, 129, 0.2);"></div>
+        <div id="auth-error" class="glass" style="color: var(--error); font-size: 0.95rem; font-weight: 700; text-align: center; margin-bottom: 2rem; padding: 1.25rem; background: rgba(239, 68, 68, 0.08); border-radius: 12px; display: none; line-height: 1.5; border: 1px solid rgba(239, 68, 68, 0.2); font-family: 'Outfit';"></div>
+        <div id="auth-success" class="glass" style="color: var(--success); font-size: 0.95rem; font-weight: 700; text-align: center; margin-bottom: 2rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.08); border-radius: 12px; display: none; line-height: 1.5; border: 1px solid rgba(16, 185, 129, 0.2); font-family: 'Outfit';"></div>
 
-        <form id="auth-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label for="email" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Email Address</label>
-            <input type="email" id="email" placeholder="name@example.com" required class="glass-input" style="width: 100%; border-width: 2px;">
+        <form id="auth-form" style="display: flex; flex-direction: column; gap: 1.75rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label for="email" style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit';">Email Address</label>
+            <input type="email" id="email" placeholder="name@example.com" required class="glass-input" style="height: 56px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px;">
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label for="password" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Password</label>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label for="password" style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit';">Password</label>
             <div style="position: relative;">
-              <input type="password" id="password" placeholder="••••••••" required class="glass-input" style="padding-right: 3.5rem; width: 100%; border-width: 2px;">
-              <button type="button" id="toggle-password" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: 800;">SHOW</button>
+              <input type="password" id="password" placeholder="••••••••" required class="glass-input" style="height: 56px; border-radius: 12px; padding-right: 4rem; font-weight: 700; font-family: 'Outfit'; border-width: 2px;">
+              <button type="button" id="toggle-password" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.75rem; font-weight: 900; font-family: 'Outfit';">SHOW</button>
             </div>
           </div>
 
 
-          <div id="forgot-password-link" style="text-align: right; margin-top: -0.5rem;">
-            <button type="button" id="btn-forgot-password" style="background: none; border: none; color: var(--primary); font-size: 0.85rem; cursor: pointer; font-weight: 700; padding: 0;">Forgot Password?</button>
+          <div id="forgot-password-link" style="text-align: right; margin-top: -0.75rem;">
+            <button type="button" id="btn-forgot-password" style="background: none; border: none; color: var(--primary); font-size: 0.9rem; cursor: pointer; font-weight: 800; padding: 0.5rem; font-family: 'Outfit';">Forgot Password?</button>
           </div>
 
-          <button type="submit" class="primary" style="width: 100%; margin-top: 0.5rem;">Login</button>
+          <button type="submit" class="btn-primary" style="height: 60px; font-size: 1.1rem; font-weight: 900; font-family: 'Outfit'; box-shadow: var(--shadow-lg);">Login to Elite</button>
           
-          <button type="button" id="toggle-auth" style="background: none; color: var(--primary); font-size: 0.9rem; font-weight: 700; margin-top: 0.5rem; border: none; cursor: pointer;">Need an account? Sign Up</button>
+          <button type="button" id="toggle-auth" style="background: none; color: var(--text-primary); font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; border: none; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; font-family: 'Outfit';">Don't have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span></button>
         </form>
 
-        <div style="margin: 2rem 0 1.5rem 0; display: flex; align-items: center; gap: 12px;">
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
-          <span style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 800;">OR CONTINUE WITH</span>
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+        <div style="margin: 3.5rem 0 2.5rem 0; display: flex; align-items: center; gap: 16px;">
+          <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+          <span style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.2em; font-family: 'Outfit';">OR LOGIN WITH</span>
+          <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
         </div>
 
-        <button id="google-signin" class="btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; background: #FFFFFF; color: #111827; border: 2px solid #E5E7EB;">
-          <img src="https://www.google.com/favicon.ico" style="width: 18px;">
-          <span style="font-weight: 700;">Google</span>
+        <button id="google-signin" class="glass card" style="width: 100%; height: 56px; display: flex; align-items: center; justify-content: center; gap: 1rem; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 2px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px;">
+          <span style="font-weight: 800; font-family: 'Outfit'; font-size: 1rem;">Google Account</span>
         </button>
       </div>
     `
@@ -59,10 +61,10 @@ export const AuthComponent = {
 
     toggleBtn.onclick = () => {
       isSignUp = !isSignUp
-      document.getElementById('auth-title').textContent = isSignUp ? 'Create CBT Elite Account' : 'Welcome Back'
-      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Join thousands of students practicing for success in JAMB, WAEC & NECO.' : 'Log in to your CBT practice account'
-      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Start My Success Journey' : 'Login'
-      toggleBtn.textContent = isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'
+      document.getElementById('auth-title').textContent = isSignUp ? 'Join CBT Elite' : 'Welcome Back'
+      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Master JAMB, WAEC & NECO with premium practice tools.' : 'Access your elite study dashboard'
+      form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Start My Success Journey' : 'Login to Elite'
+      toggleBtn.innerHTML = isSignUp ? 'Already have an account? <span style="color: var(--primary); font-weight: 900;">Login</span>' : 'Don\'t have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span>'
       
       forgotLink.style.display = isSignUp ? 'none' : 'block'
       
@@ -83,7 +85,7 @@ export const AuthComponent = {
     document.getElementById('btn-forgot-password').onclick = async () => {
       const email = document.getElementById('email').value
       if (!email) {
-        errorDiv.textContent = 'Please enter your email address first.'
+        errorDiv.textContent = 'Enter your email above first.'
         errorDiv.style.display = 'block'
         return
       }
@@ -93,7 +95,7 @@ export const AuthComponent = {
         errorDiv.textContent = error.message
         errorDiv.style.display = 'block'
       } else {
-        successDiv.textContent = 'Password reset link sent! Check your inbox.'
+        successDiv.textContent = 'Success! Check your inbox for a reset link.'
         successDiv.style.display = 'block'
         errorDiv.style.display = 'none'
       }
@@ -115,9 +117,11 @@ export const AuthComponent = {
       } else if (isSignUp && !data.session) {
         // Registration successful but email confirmation required
         successDiv.innerHTML = `
-          <div style="text-align: center; padding: 0.5rem;">
-            <p style="margin-bottom: 1rem; font-weight: 600;">We’ve sent a confirmation email.<br>Please check your inbox (and spam folder).</p>
-            <button id="resend-email" class="btn-secondary" style="width: 100%; border-style: dashed; font-weight: 800;">👉 Resend Email</button>
+          <div style="text-align: center; padding: 1rem;">
+             <div style="font-size: 3rem; margin-bottom: 1.5rem;">📬</div>
+            <h4 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 0.5rem; font-size: 1.25rem;">Verify Your Account</h4>
+            <p style="margin-bottom: 2rem; font-weight: 600; font-size: 1rem; color: var(--text-secondary); line-height: 1.5;">We’ve sent a premium activation link to your email. Please check your inbox.</p>
+            <button id="resend-email" class="btn-secondary" style="width: 100%; border-radius: 12px; font-weight: 900; font-family: 'Outfit'; height: 52px; border-width: 2px;">Resend Email</button>
           </div>
         `
         successDiv.style.display = 'block'
