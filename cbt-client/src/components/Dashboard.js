@@ -243,9 +243,9 @@ export const DashboardComponent = {
           <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.4rem; color: var(--text-primary); font-weight: 800;">Ready to level up?</h2>
           <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.05rem; font-weight: 500;">Select your mode and start mastering your subjects.</p>
           <div class="mobile-stack" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-             <button id="quick-practice-btn" class="btn-primary" data-tooltip="Practice by topic to improve faster" style="padding: 0 2rem; min-width: 200px; font-size: 1.05rem;"><i data-lucide="target"></i> Practice Mode</button>
-             <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 2rem; min-width: 200px; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
-             <button id="start-saved" class="glass-btn" style="padding: 0 1.5rem; border-color: var(--accent-primary); display: none; min-width: 160px;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
+             <button id="quick-practice-btn" class="btn-primary" data-tooltip="Practice by topic to improve faster" style="padding: 0 1.5rem; width: 100%; min-width: 0 !important; font-size: 1.05rem;"><i data-lucide="target"></i> Practice Mode</button>
+             <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 1.5rem; width: 100%; min-width: 0 !important; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
+             <button id="start-saved" class="glass-btn" style="padding: 0 1.5rem; border-color: var(--accent-primary); display: none; width: 100%; min-width: 0 !important;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
           </div>
         </div>
 

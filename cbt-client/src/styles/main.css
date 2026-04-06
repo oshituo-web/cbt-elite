@@ -209,6 +209,19 @@ body {
       gap: 0.15rem;
   }
   
+  /* Logo & Nav Sizing Overrides */
+  .logo-text {
+      font-size: 1.45rem !important;
+  }
+  .logo-icon {
+      width: 24px !important;
+      height: 24px !important;
+  }
+  .branding-header .lucide {
+      width: 1.6rem !important;
+      height: 1.6rem !important;
+  }
+  
   /* Hide text labels on small screens to save space */
   .header-actions a span, 
   .header-actions div span,
@@ -259,6 +272,8 @@ body {
   background-clip: text;
   color: transparent;
   display: inline-block;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .lucide {
