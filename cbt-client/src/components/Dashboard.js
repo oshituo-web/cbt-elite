@@ -126,22 +126,22 @@ export const DashboardComponent = {
       <div id="dashboard-content" class="dashboard-scroll-area">
         
         <!-- DASHBOARD WELCOME -->
-        <div class="mb-lg" style="padding-top: 1rem;">
-          <h1 style="font-family: 'Outfit'; font-size: 2rem; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">Welcome, ${this.profile.username || 'Student'} <i data-lucide="sun" style="width: 32px; height: 32px; color: var(--warning);"></i></h1>
-          <p style="font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">Let's make today count. Continue your mastery journey.</p>
+        <div class="mb-md" style="padding-top: 0.5rem;">
+          <h1 style="font-family: 'Outfit'; font-size: 2.2rem; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">Welcome, ${this.profile.username || 'Student'} <i data-lucide="sun" style="width: 32px; height: 32px; color: var(--warning);"></i></h1>
+          <p style="font-size: 1.05rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 500;">Let's make today count. Continue your mastery journey.</p>
         </div>
 
         <!-- FEATURED: AI Workout (Primary CTA) -->
         <div class="glass card scale-in mb-lg" style="border-left: 6px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
             <div>
-                <h3 style="font-family: 'Outfit'; font-size: 1.35rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.6rem; color: var(--accent-primary); font-weight: 800;"><i data-lucide="sparkles"></i> AI Custom Workout</h3>
-                <p id="ai-workout-hint" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Targeting your mastery gaps automatically...</p>
+                <h3 style="font-family: 'Outfit'; font-size: 1.45rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.6rem; color: var(--accent-primary); font-weight: 800;"><i data-lucide="sparkles"></i> AI Custom Workout</h3>
+                <p id="ai-workout-hint" style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Targeting your mastery gaps automatically...</p>
             </div>
-            <span class="badge" style="background: var(--accent-primary); font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 20px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">RECOMMENDED</span>
+            <span class="badge" style="background: var(--accent-primary); font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 20px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); text-transform: uppercase;">Recommended</span>
           </div>
-          <button id="start-ai-workout" class="btn-dominant" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
-            <i data-lucide="rocket" style="width: 20px; height: 20px;"></i> Start Personalized Session
+          <button id="start-ai-workout" class="btn-dominant" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; min-height: 56px; font-size: 1.15rem; margin-top: 0.5rem;">
+            <i data-lucide="rocket" style="width: 22px; height: 22px;"></i> Start Personalized Session
           </button>
         </div>
 
@@ -165,25 +165,25 @@ export const DashboardComponent = {
         ${(() => {
           const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
           const ActivationCard = () => `
-            <div class="glass card card-freemium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div class="glass card card-freemium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(37, 99, 235, 0.3);">
               <div style="flex: 1; min-width: 280px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="unlock" style="color: var(--accent-primary);"></i> Activate Full Access</h4>
-                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="unlock" style="color: var(--accent-primary);"></i> Activate Full Access <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--accent-primary); font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: 900; letter-spacing: 0.05em;">LIFETIME</span></h4>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
               </div>
-              <button class="btn-primary" style="height: 48px; padding: 0 1.5rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                Activate Lifetime Access – ₦1,500
+              <button class="btn-dominant" style="height: 48px; padding: 0 1.5rem; font-size: 1rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                Activate Lifetime – ₦1,500
               </button>
             </div>
           `;
 
           const RenewalCard = () => `
-            <div class="glass card card-medium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div class="glass card card-medium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(139, 92, 246, 0.3);">
               <div style="flex: 1; min-width: 280px;">
-                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="rocket" style="color: var(--accent-secondary);"></i> Renew Premium Access</h4>
-                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
+                <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="rocket" style="color: var(--accent-secondary);"></i> Renew Premium Access <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-secondary); font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: 900; letter-spacing: 0.05em;">RECOMMENDED</span></h4>
+                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
               </div>
-              <button class="btn-primary" style="background: var(--accent-secondary); height: 48px; padding: 0 1.5rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                Renew Premium – ₦1,000/month
+              <button class="btn-dominant" style="background: var(--accent-secondary); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3); height: 48px; padding: 0 1.5rem; font-size: 1rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                Renew Premium – ₦1,000/mo
               </button>
             </div>
           `;
@@ -191,23 +191,25 @@ export const DashboardComponent = {
           if (subState.tier === "premium") {
             if (subState.daysRemaining <= 5) {
               return `
-                <div class="glass card card-expiring scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+                <div class="glass card card-expiring scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(245, 158, 11, 0.4);">
                   <div style="flex: 1;">
-                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-triangle"></i> Expiring Soon</h4>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing access.</p>
+                    <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-triangle"></i> Expiring Soon</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing access.</p>
                   </div>
-                  <button class="btn-primary" style="background: var(--warning); padding: 0.5rem 1.25rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                  <button class="btn-primary" style="background: var(--warning); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); padding: 0.5rem 1.25rem; font-size: 1rem; color: #111 !important;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                     Renew Premium – ₦1,000
                   </button>
                 </div>
               `;
             } else {
               return `
-                <div class="glass card card-premium scale-in mb-lg" style="display: flex; align-items: center; gap: 1rem;">
-                  <div style="color: var(--success);"><i data-lucide="crown" style="width: 32px; height: 32px;"></i></div>
-                  <div>
-                    <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1.1rem; font-weight: 800;">Premium Access Active</h4>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Expires in ${subState.daysRemaining} days. All pro features unlocked.</p>
+                <div class="glass card card-premium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(16, 185, 129, 0.3);">
+                  <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="color: var(--success);"><i data-lucide="crown" style="width: 32px; height: 32px;"></i></div>
+                    <div>
+                      <h4 style="font-family: 'Outfit'; color: var(--success); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">Premium Access Active <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: 900; letter-spacing: 0.05em;">PRO</span></h4>
+                      <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Expires in ${subState.daysRemaining} days. All pro features unlocked.</p>
+                    </div>
                   </div>
                 </div>
               `;
@@ -216,12 +218,12 @@ export const DashboardComponent = {
 
           if (subState.isExpired) {
             return `
-              <div class="glass card card-expired scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+              <div class="glass card card-expired scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(239, 68, 68, 0.4);">
                 <div style="flex: 1;">
-                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-circle"></i> Premium Expired</h4>
-                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your access has expired – you are currently on the Medium plan.</p>
+                  <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-circle"></i> Premium Expired</h4>
+                  <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your access has expired – you are currently on the Medium plan.</p>
                 </div>
-                <button class="btn-primary" style="background: var(--error); padding: 0.5rem 1.25rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                <button class="btn-primary" style="background: var(--error); padding: 0.5rem 1.25rem; font-size: 1rem;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                   Renew Premium – ₦1,000
                 </button>
               </div>
@@ -237,13 +239,13 @@ export const DashboardComponent = {
         <header class="dashboard-header fade-in">
         
         <!-- QUICK ACTION SECTION -->
-        <div class="glass card scale-in mb-xl" style="text-align: center; padding: 3rem 1.5rem; border: 2px solid var(--accent-primary); background: linear-gradient(180deg, rgba(37, 99, 235, 0.03) 0%, var(--surface-color) 100%);">
-          <h2 style="font-family: 'Outfit'; font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 800;">Ready to level up?</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 2.5rem; font-size: 1.1rem; font-weight: 500;">Select your mode and start mastering your subjects.</p>
-          <div style="display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap;">
-             <button id="quick-practice-btn" class="btn-dominant" data-tooltip="Practice by topic to improve faster" style="padding: 0 2.5rem; min-width: 220px;"><i data-lucide="target"></i> Practice Mode</button>
-             <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 2.5rem; min-width: 220px; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
-             <button id="start-saved" class="glass-btn" style="padding: 0 2rem; border-color: var(--accent-primary); display: none; min-width: 200px;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
+        <div class="glass card scale-in mb-lg" style="text-align: center; padding: 2.5rem 1.5rem; border: 2px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface-color) 100%);">
+          <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.4rem; color: var(--text-primary); font-weight: 800;">Ready to level up?</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.05rem; font-weight: 500;">Select your mode and start mastering your subjects.</p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+             <button id="quick-practice-btn" class="btn-primary" data-tooltip="Practice by topic to improve faster" style="padding: 0 2rem; min-width: 200px; font-size: 1.05rem;"><i data-lucide="target"></i> Practice Mode</button>
+             <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 2rem; min-width: 200px; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
+             <button id="start-saved" class="glass-btn" style="padding: 0 1.5rem; border-color: var(--accent-primary); display: none; min-width: 160px;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>
           </div>
         </div>
 

@@ -23,8 +23,8 @@
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
+  --space-lg: 20px;
+  --space-xl: 28px;
   
   --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
@@ -484,7 +484,8 @@ body {
 
 .glass.card {
   padding: 1.25rem 1.5rem;
-  box-shadow: var(--shadow-md);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Smoother, lighter shadow */
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -493,9 +494,9 @@ body {
 }
 
 .glass.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(124, 58, 237, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12); /* Pronounced glowing shadow */
+  border-color: rgba(124, 58, 237, 0.3);
 }
 
 /* Status Indicator Cards */
@@ -603,17 +604,24 @@ button:active, .btn:active {
 
 /* Dominant Primary Button (High contrast) */
 .btn-dominant {
-  height: 48px;
-  font-size: 15px;
+  height: 52px; /* Taller height for primary CTA dominance */
+  font-size: 16px; /* Slightly larger text */
+  font-weight: 800; /* Bolder text */
   letter-spacing: -0.01em;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35); /* Stronger intentional shadow */
   background: #2563EB; /* Solid primary for maximum stability/contrast */
   color: #FFFFFF !important;
+  border-radius: 14px;
 }
 
 .btn-dominant:hover {
   background: #1D4ED8;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.5);
+}
+
+.btn-dominant:active {
+  transform: scale(0.97);
 }
 
 .btn-secondary, .glass-btn {
