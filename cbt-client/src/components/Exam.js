@@ -128,141 +128,152 @@ export class Exam {
     }
     
     container.innerHTML = `
-      <div class="exam-layout">
-        <!-- Phase 5: Persistent Top Bar -->
-        <div class="exam-top-bar glass">
+      <div class="exam-layout fade-in">
+        <!-- Persistent Top Bar -->
+        <div class="exam-top-bar glass" style="border-bottom: 2px solid var(--accent-primary);">
           <div class="top-bar-left">
-            <button id="exam-back-btn" class="btn-secondary" style="padding: 0.4rem 0.6rem; border-radius: 8px; margin-right: 0.5rem;" title="Go Back">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <button id="exam-back-btn" class="btn-secondary" style="width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;" title="Go Back">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <button id="mobile-map-toggle" class="btn-secondary mobile-only" style="padding: 0.4rem 0.6rem; border-radius: 8px; margin-right: 0.5rem; font-size: 0.8rem;" title="Question Map">🗺️ Map</button>
-            <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">...</span>
-            <span id="display-subject" class="subject-title">...</span>
+            <button id="mobile-map-toggle" class="btn-secondary mobile-only" style="padding: 0.5rem 1rem; border-radius: var(--radius-md); margin-right: 1rem; font-weight: 800; font-size: 0.8rem;">🗺️ VIEW MAP</button>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 900; font-size: 0.75rem; font-family: 'Outfit';">...</span>
+               <span id="display-subject" class="subject-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">...</span>
+            </div>
           </div>
           
           <div class="top-bar-center">
-            <div id="q-meta" class="q-counter">1 of 0</div>
-            <span id="display-topic" class="badge" style="background: var(--accent-secondary); color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.7rem; margin-left: 0.5rem; display: none;">...</span>
+            <div id="q-meta" class="q-counter" style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; color: var(--primary);">1 of 0</div>
+            <span id="display-topic" class="badge" style="background: var(--accent-secondary); color: #ffffff; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.7rem; margin-left: 1rem; display: none; font-family: 'Outfit';">...</span>
           </div>
 
           <div class="top-bar-right">
-            <button id="toggle-calc" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 8px;">
-              🧮 Calc
+            <button id="toggle-calc" class="btn-secondary" style="padding: 0 1.25rem; height: 40px; font-weight: 800; font-size: 0.75rem; border-color: var(--accent-primary); border-radius: var(--radius-md);">
+              <i data-lucide="calculator" style="width: 16px; height: 16px; margin-right: 0.4rem;"></i> CALC
             </button>
-            <div id="timer" class="timer-display">00:00</div>
+            <div id="timer" class="timer-display" style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; color: var(--text-primary); margin-left: 1.5rem; letter-spacing: 0.05em;">00:00</div>
           </div>
         </div>
 
         <div class="exam-content-wrapper" id="exam-wrapper" style="display: flex; gap: 1rem; flex: 1; overflow: hidden; height: calc(100vh - 80px);">
           <!-- Left side: Pinned Content (Passage) -->
-          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 1.5rem; border-right: 1px solid var(--glass-border); min-width: 300px; scrollbar-width: thin;">
-             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.1rem; line-height: 1.8; color: var(--text-primary);"></div>
+          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 2rem; border-right: 3px solid var(--accent-primary); min-width: 350px;">
+             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.15rem; line-height: 1.8; color: var(--text-primary); font-family: serif;"></div>
           </div>
 
           <!-- Main Content -->
-          <div class="exam-main glass" style="flex: 1.2; overflow-y: auto; padding: 1.5rem 2rem; scrollbar-width: thin; display: flex; flex-direction: column;">
+          <div class="exam-main glass" style="flex: 1.5; overflow-y: auto; padding: 2.5rem 3rem; display: flex; flex-direction: column; position: relative;">
             <!-- Subject Tabs placed at the top of content area -->
-            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin; -webkit-overflow-scrolling: touch;"></div>
+            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
 
             <div id="question-area" style="flex: 1;">
               <!-- Inline passage for mobile or fallback -->
-              <div id="q-group-content-inline" class="passage-container glass" style="display: none; margin-bottom: 2rem; padding: 1.5rem; font-size: 1.05rem; line-height: 1.8; border-left: 4px solid var(--accent-primary); background: var(--bg-secondary);"></div>
-              <div id="q-diagram" style="display: none;"></div>
-              <div id="q-text" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 500;">...</div>
+              <div id="q-group-content-inline" class="passage-container glass card" style="display: none; margin-bottom: 2.5rem; padding: 2rem; font-size: 1.1rem; line-height: 1.8; border-left: 6px solid var(--accent-primary); background: var(--bg-secondary); font-family: serif;"></div>
+              
+              <div id="q-diagram" style="display: none; margin-bottom: 2.5rem;"></div>
+              
+              <div id="q-text" style="font-size: 1.35rem; line-height: 1.6; margin-bottom: 3rem; font-weight: 600; color: var(--text-primary); font-family: 'Outfit';">...</div>
 
-              <div id="options-container" style="display: flex; flex-direction: column; gap: 1rem;"></div>
-              <div id="explanation-container" class="glass" style="margin-top: 2rem; padding: 1.5rem; display: none; border-left: 4px solid var(--primary);"></div>
+              <div id="options-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
+              
+              <div id="explanation-container" class="glass card scale-in" style="margin-top: 3.5rem; padding: 2.5rem; display: none; border-left: 6px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);"></div>
             </div>
 
-            <div class="exam-footer" style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; gap: 0.75rem;">
-                <button id="prev-btn" class="btn-secondary">Previous</button>
-                <button id="next-btn" class="btn-primary">Next Question</button>
+            <div class="exam-footer" style="margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+              <div style="display: flex; gap: 1rem;">
+                <button id="prev-btn" class="btn-secondary" style="height: 52px; padding: 0 1.5rem; font-weight: 800;">PREVIOUS</button>
+                <button id="next-btn" class="btn-primary" style="height: 52px; padding: 0 2rem; font-weight: 900;">NEXT QUESTION</button>
               </div>
               
-              <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <button id="report-btn" class="btn-secondary" style="padding: 0.5rem; color: var(--error); font-size: 0.8rem; background: transparent; border: none;">Report Issue</button>
-                <button id="toggle-bookmark" class="btn-secondary" style="padding: 0.5rem 1rem;">💾 Save Question</button>
-                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary">Exit Review</button>' : '<button id="finish-btn" class="finish-btn">Finish Exam</button>'}
+              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.8rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT ISSUE</button>
+                <button id="toggle-bookmark" class="btn-secondary" style="height: 48px; border-radius: var(--radius-md); font-weight: 800; padding: 0 1.25rem;">💾 SAVE</button>
+                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 48px; padding: 0 1.5rem;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 52px; padding: 0 2.5rem; background: var(--accent-secondary); font-weight: 900;">FINISH EXAM</button>'}
               </div>
             </div>
           </div>
 
-          <!-- Sidebar Navigation for Desktop and Drawer for Mobile -->
+          <!-- Sidebar Navigation -->
           <div class="drawer-overlay" id="exam-drawer-overlay"></div>
-          <div class="exam-sidebar glass" id="exam-sidebar">
-            <div style="font-weight: 700; margin-bottom: 1rem; font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;">Question Map</div>
-            <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;"></div>
+          <div class="exam-sidebar glass" id="exam-sidebar" style="padding: 2rem; border-left: 1px solid var(--glass-border);">
+            <div style="font-weight: 900; margin-bottom: 1.5rem; font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary); font-family: 'Outfit';">Question Map</div>
+            <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem;"></div>
             
-            <div style="margin-top: auto; padding-top: 1.5rem;">
-              <div class="progress-container" style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
-                 <div id="progress-bar" style="height: 100%; background: var(--accent-primary); width: 0%; transition: width 0.3s;"></div>
+            <div style="margin-top: auto; padding-top: 2rem;">
+              <div class="progress-v2-container" style="margin-bottom: 0.75rem;">
+                 <div id="progress-bar" class="progress-v2-fill primary" style="width: 0%;"></div>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.7rem;">
-                 <span>PROGRESS</span>
-                 <span id="progress-text">0%</span>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; font-family: 'Outfit';">
+                 <span style="color: var(--text-secondary);">SESSION PROGRESS</span>
+                 <span id="progress-text" style="color: var(--primary);">0%</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div id="report-modal" class="modal-overlay" style="display: none; align-items: flex-start; padding-top: 3rem;">
-        <div class="modal-content glass" style="max-width: 450px;">
-          <h3 style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-            Report Question <span id="close-report-x" style="cursor: pointer; color: var(--error);">✖</span>
+
+      <!-- Report Modal -->
+      <div id="report-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 480px; padding: 3rem;">
+          <h3 style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            Report Issue <i data-lucide="x" id="close-report-x" style="cursor: pointer; color: var(--error); width: 28px; height: 28px;"></i>
           </h3>
-          <p style="font-size: 0.9rem; color: var(--text-primary); opacity: 0.9; margin-bottom: 1.5rem;">What's wrong with this question?</p>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Typo / Grammar error</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Incorrect Answer / Missing Option</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Image missing / broken</button>
-            <button class="reason-btn glass" style="text-align: left; padding: 1rem; border-radius: 8px; color: var(--text-primary);">Other</button>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 500; margin-bottom: 2rem;">What's wrong with this question?</p>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Typo / Grammar error</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Incorrect Answer / Missing Option</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Image missing / broken</button>
+            <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Other</button>
           </div>
-          <button id="close-report" class="btn-secondary" style="margin-top: 1.5rem; width: 100%; border-radius: 8px;">Cancel</button>
+          <button id="close-report" class="btn-secondary" style="margin-top: 2rem; width: 100%; height: 52px; font-weight: 800;">CLOSE</button>
         </div>
       </div>
       
-      <div id="finish-modal" class="modal-overlay" style="display: none; align-items: flex-start; padding-top: 3rem;">
-        <div class="modal-content glass" style="max-width: 450px; text-align: center;">
-          <h2 style="margin-bottom: 1rem; color: var(--text-primary);">End Session?</h2>
-          <p style="font-size: 1rem; color: var(--text-primary); opacity: 0.9; margin-bottom: 2.5rem;">Are you sure you want to finish and submit your answers? You cannot undo this action.</p>
-          <div style="display: flex; gap: 1rem;">
-            <button id="cancel-finish" class="btn-secondary" style="flex: 1; border-radius: 8px; font-weight: bold;">Keep Working</button>
-            <button id="confirm-finish" class="finish-btn" style="flex: 1; border-radius: 8px; font-weight: bold; font-size: 1.1rem;">Submit Now</button>
+      <!-- Finish Modal -->
+      <div id="finish-modal" class="modal-overlay">
+        <div class="modal-content glass" style="max-width: 480px; text-align: center; padding: 3.5rem 3rem;">
+          <div style="background: rgba(147, 51, 234, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+             <i data-lucide="flag" style="width: 40px; height: 40px; color: var(--accent-secondary);"></i>
+          </div>
+          <h2 style="margin-bottom: 1rem; font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); font-size: 1.75rem;">End Session?</h2>
+          <p style="font-size: 1.1rem; color: var(--text-secondary); font-weight: 500; margin-bottom: 3rem;">Are you sure you want to finalize and submit? You cannot undo this action.</p>
+          <div style="display: flex; gap: 1.25rem;">
+            <button id="cancel-finish" class="btn-secondary" style="flex: 1; height: 56px; font-weight: 800;">KEEP WORKING</button>
+            <button id="confirm-finish" class="btn-primary" style="flex: 1; height: 56px; font-weight: 900; background: var(--accent-secondary);">SUBMIT NOW</button>
           </div>
         </div>
       </div>
 
       <!-- Floating Calculator -->
-      <div id="exam-calculator" class="calculator-modal" style="display: none;">
-        <div class="calc-header">
-          <span>Calculator</span>
-          <button id="close-calc">×</button>
+      <div id="exam-calculator" class="calculator-modal glass scale-in" style="display: none; border: 2px solid var(--accent-primary); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-xl);">
+        <div class="calc-header" style="background: var(--accent-primary); padding: 1rem 1.5rem; color: white; font-weight: 900; font-family: 'Outfit'; font-size: 0.9rem; letter-spacing: 0.1em; display: flex; justify-content: space-between; align-items: center;">
+          <span>ELITE CALCULATOR</span>
+          <button id="close-calc" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">×</button>
         </div>
-        <div class="calc-display" id="calc-display">0</div>
-        <div class="calc-buttons">
-          <button class="calc-btn clear" data-val="C">C</button>
-          <button class="calc-btn op" data-val="/">/</button>
-          <button class="calc-btn op" data-val="*">×</button>
-          <button class="calc-btn clear" data-val="DEL">⌫</button>
+        <div class="calc-display" id="calc-display" style="padding: 1.5rem; background: rgba(0,0,0,0.2); font-family: 'Outfit'; font-weight: 900; font-size: 2.5rem; text-align: right; color: var(--text-primary);">0</div>
+        <div class="calc-buttons" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--glass-border); padding: 1px;">
+          <button class="calc-btn clear" data-val="C" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--error);">C</button>
+          <button class="calc-btn op" data-val="/" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">÷</button>
+          <button class="calc-btn op" data-val="*" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">×</button>
+          <button class="calc-btn clear" data-val="DEL" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--error);">⌫</button>
           
-          <button class="calc-btn" data-val="7">7</button>
-          <button class="calc-btn" data-val="8">8</button>
-          <button class="calc-btn" data-val="9">9</button>
-          <button class="calc-btn op" data-val="-">-</button>
+          <button class="calc-btn" data-val="7" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">7</button>
+          <button class="calc-btn" data-val="8" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">8</button>
+          <button class="calc-btn" data-val="9" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">9</button>
+          <button class="calc-btn op" data-val="-" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">-</button>
           
-          <button class="calc-btn" data-val="4">4</button>
-          <button class="calc-btn" data-val="5">5</button>
-          <button class="calc-btn" data-val="6">6</button>
-          <button class="calc-btn op" data-val="+">+</button>
+          <button class="calc-btn" data-val="4" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">4</button>
+          <button class="calc-btn" data-val="5" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">5</button>
+          <button class="calc-btn" data-val="6" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">6</button>
+          <button class="calc-btn op" data-val="+" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">+</button>
           
-          <button class="calc-btn" data-val="1">1</button>
-          <button class="calc-btn" data-val="2">2</button>
-          <button class="calc-btn" data-val="3">3</button>
-          <button class="calc-btn eq" data-val="=">=</button>
+          <button class="calc-btn" data-val="1" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">1</button>
+          <button class="calc-btn" data-val="2" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">2</button>
+          <button class="calc-btn" data-val="3" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">3</button>
+          <button class="calc-btn eq" data-val="=" style="grid-row: span 2; background: var(--accent-primary); color: white; border: none; font-weight: 900; font-size: 1.5rem;">=</button>
           
-          <button class="calc-btn" style="grid-column: span 2;" data-val="0">0</button>
-          <button class="calc-btn" data-val=".">.</button>
+          <button class="calc-btn" style="grid-column: span 2; padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;" data-val="0">0</button>
+          <button class="calc-btn" data-val="." style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">.</button>
         </div>
       </div>
     `
@@ -290,6 +301,7 @@ export class Exam {
 
     this.updateUI()
     this.attachListeners(onFinish, onBack)
+    if (window.lucide) window.lucide.createIcons();
   }
 
   attachListeners(onFinish, onBack) {
@@ -496,15 +508,20 @@ export class Exam {
         if (q.question_groups.type === 'map' || q.question_groups.type === 'graph') headerText = 'Reference Materials'
         
         const formattedContent = q.question_groups.content.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
-        const fullHTML = `<div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;">${headerText}</div><div>${sanitizeContent(formattedContent)}</div>`
+        const fullHTML = `
+          <div style="font-weight: 900; margin-bottom: 1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem; font-family: 'Outfit';">
+            <i data-lucide="book-open" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 0.4rem;"></i> ${headerText}
+          </div>
+          <div style="font-family: 'Outfit', sans-serif; font-size: 1.05rem; line-height: 1.7; color: var(--text-primary);">
+            ${sanitizeContent(formattedContent)}
+          </div>`
         
         if (pinnedContent) pinnedContent.innerHTML = fullHTML
         if (inlineArea) inlineArea.innerHTML = fullHTML
+        if (window.lucide) window.lucide.createIcons();
     } else {
         pinnedArea.style.display = 'none'
         inlineArea.style.display = 'none'
-        if (pinnedContent) pinnedContent.innerHTML = ''
-        if (inlineArea) inlineArea.innerHTML = ''
     }
 
     // Diagram Handling
@@ -513,24 +530,26 @@ export class Exam {
         diagramDiv.style.display = 'block'
         const cleanSvg = q.diagram_svg.includes('<svg') ? q.diagram_svg : `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">${q.diagram_svg}</svg>`
         diagramDiv.innerHTML = `
-          <div class="diagram-container svg-diagram" style="background: #fff; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); border: 1px solid var(--border-color);">
+          <div class="glass card" style="padding: 2.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; display: flex; justify-content: center;">
             ${cleanSvg}
           </div>`
     } else if (q.diagram_url && q.diagram_url.length > 5) {
         diagramDiv.style.display = 'block'
-        const isGraph = q.diagram_type === 'graph'
         diagramDiv.innerHTML = `
-          <div class="diagram-container ${isGraph ? 'graph-diagram' : ''}" style="margin-bottom: 2rem; text-align: center;">
+          <div class="diagram-container" style="text-align: center; position: relative;">
             <img src="${q.diagram_url}" 
-                 alt="Question Diagram" 
-                 class="blur-up" 
-                 style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 2px solid #fff;" 
+                 alt="Visual Aid" 
+                 class="blur-up glass" 
+                 style="max-width: 100%; border-radius: 16px; border: 4px solid var(--glass-border); box-shadow: var(--shadow-lg);" 
                  onload="this.classList.add('loaded')"
-                 onerror="this.parentElement.innerHTML = '<div class=\\'glass\\' style=\\'padding: 2rem; color: var(--error);\\'>⚠️ Visual aid could not be loaded. Please check your connection or report this question.</div>'">
-            <div style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.7;">
-                <a href="${q.diagram_url}" target="_blank" style="color: var(--primary); text-decoration: none;">🔍 View Full Diagram</a>
+                 onerror="this.parentElement.innerHTML = '<div class=\\'glass\\' style=\\'padding: 2rem; color: var(--error);\\'>⚠️ Visual aid could not be loaded.</div>'">
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; opacity: 0.8; font-family: 'Outfit';">
+                <a href="${q.diagram_url}" target="_blank" style="color: var(--primary); text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                  <i data-lucide="maximize" style="width: 14px; height: 14px;"></i> VIEW FULL SCALE
+                </a>
             </div>
           </div>`
+        if (window.lucide) window.lucide.createIcons();
     } else {
         diagramDiv.style.display = 'none'
     }
@@ -540,8 +559,9 @@ export class Exam {
     // Create styled number
     const numberSpan = document.createElement('span')
     numberSpan.style.color = 'var(--accent-primary)'
-    numberSpan.style.fontWeight = '800'
-    numberSpan.style.marginRight = '0.5rem'
+    numberSpan.style.fontWeight = '900'
+    numberSpan.style.marginRight = '0.75rem'
+    numberSpan.style.fontFamily = 'Outfit'
     
     let displayNumText = this.session.currentIndex + 1;
     if (this.examType === 'JAMB') {
@@ -552,6 +572,8 @@ export class Exam {
     
     // Create text node for question
     const textSpan = document.createElement('span')
+    textSpan.style.color = 'var(--text-primary)'
+    textSpan.style.fontFamily = 'Outfit'
     textSpan.innerHTML = sanitizeContent(q.question_text || q.question)
     
     qTextDiv.appendChild(numberSpan)
@@ -602,23 +624,23 @@ export class Exam {
 
       if (subState.shouldShowActivateCTA && !isFreeAccess) {
         expDiv.innerHTML = `
-          <div class="premium-lock-container">
-            <div class="lock-icon">🔒</div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Activate Full Access</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Activate for ₦1,500 to unlock explanations</p>
-            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
-              Activate Lifetime Access – ₦1,500
+          <div style="text-align: center; padding: 1rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
+            <h4 style="margin-bottom: 0.75rem; color: var(--accent-secondary); font-family: 'Outfit'; font-weight: 800;">Activate Full Access</h4>
+            <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 2rem; font-weight: 500;">Activate for ₦1,500 to unlock elite explanations</p>
+            <button class="btn-primary" style="padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+              Activate – ₦1,500
             </button>
           </div>
         `
       } else if (subState.shouldShowRenewCTA && !isFreeAccess && !aiStatus.canUse) {
         expDiv.innerHTML = `
-          <div class="premium-lock-container">
-            <div class="lock-icon">🚀</div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--accent-secondary);">Renew Premium Access</h4>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Renew Premium (₦1,000) to unlock AI explanations</p>
-            <button class="primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="location.reload()">
-              Renew Premium – ₦1,000/month
+          <div style="text-align: center; padding: 1rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🚀</div>
+            <h4 style="margin-bottom: 0.75rem; color: var(--accent-secondary); font-family: 'Outfit'; font-weight: 800;">Renew Premium Access</h4>
+            <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 2rem; font-weight: 500;">Renew Premium to continue enjoying AI corrections</p>
+            <button class="btn-primary" style="background: var(--accent-secondary); padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+              Renew – ₦1,000/month
             </button>
           </div>
         `
@@ -630,9 +652,7 @@ export class Exam {
         const isPremium = subState.tier === 'premium'
         if (!isPremium && !isFreeAccess && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
           SubscriptionService.useAICredit(this.profile).then(success => {
-            if (success) {
-               this._deductedQuestions.add(qId)
-            }
+            if (success) this._deductedQuestions.add(qId)
           })
         } else if (isPremium && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
           SubscriptionService.useAICredit(this.profile).then(() => this._deductedQuestions.add(qId))
@@ -641,17 +661,17 @@ export class Exam {
         if (q.question_type === 'theory') {
           const graded = q.graded || {}
           expDiv.innerHTML = `
-            <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
-              <span>Grading Details:</span>
-              ${isPremium ? '<span style="font-size: 0.75rem; color: var(--success); opacity: 0.8;">\u2728 AI THEORY ENABLED</span>' : ''}
+            <div style="font-weight: 900; color: var(--accent-primary); margin-bottom: 1.5rem; display: flex; justify-content: space-between; font-family: 'Outfit'; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">
+              <span>Grading Details</span>
+              ${isPremium ? '<span style="color: var(--success); opacity: 0.8;">✨ AI GRADED</span>' : ''}
             </div>
-            <div style="margin-bottom: 1rem;">
-                <strong style="color: var(--success);">Model Answer:</strong>
-                <p style="margin-top: 0.25rem;">${sanitizeContent(q.model_answer || '')}</p>
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.1); border-radius: 12px;">
+                <strong style="color: var(--success); display: block; margin-bottom: 0.5rem; font-family: 'Outfit';">MODEL ANSWER</strong>
+                <p style="font-size: 1.05rem; line-height: 1.6;">${sanitizeContent(q.model_answer || 'No model answer provided.')}</p>
             </div>
-            <div>
-                <strong style="color: var(--accent-secondary);">AI Feedback (Score: ${graded.score || 0}/5):</strong>
-                <p style="margin-top: 0.25rem;">${sanitizeContent(graded.feedback || 'Wait for grading...')}</p>
+            <div style="padding: 1.5rem; border: 1px solid var(--accent-secondary); border-radius: 12px;">
+                <strong style="color: var(--accent-secondary); display: block; margin-bottom: 0.5rem; font-family: 'Outfit';">AI FEEDBACK (Score: ${graded.score || 0}/5)</strong>
+                <p style="font-size: 1.05rem; line-height: 1.6;">${sanitizeContent(graded.feedback || 'Wait for grading...')}</p>
             </div>
           `
         } else {
@@ -659,34 +679,34 @@ export class Exam {
           if (!isPremium && (isFreeAccess || aiStatus.canUse)) {
              if (subState.shouldShowActivateCTA) {
                 ctaHtml = `
-                  <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border: 1px dashed var(--accent-primary); text-align: center;">
-                    <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Activate for ₦1,500 to unlock unlimited explanations.</p>
-                    <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-primary); color: var(--accent-primary);" onclick="location.reload()">Activate Lifetime Access – ₦1,500</button>
+                  <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border-radius: 12px; border: 1px dashed var(--accent-primary); text-align: left;">
+                    <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">🚀 GO PREMIUM FOR UNLIMITED</h5>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Activate for ₦1,500 to unlock unlimited explanations and AI insights.</p>
+                    <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-primary); color: var(--accent-primary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">ACTIVATE NOW</button>
                   </div>
                 `;
              } else if (subState.shouldShowRenewCTA) {
                 ctaHtml = `
-                  <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-secondary-rgb, 255, 152, 0), 0.1); border-radius: 8px; border: 1px dashed var(--accent-secondary); text-align: center;">
-                    <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 600;">\uD83D\uDE80 Go Premium for Unlimited Access</p>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Renew Premium (₦1,000) to unlock AI explanations.</p>
-                    <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 1rem; border-color: var(--accent-secondary); color: var(--accent-secondary);" onclick="location.reload()">Renew Premium – ₦1,000/month</button>
+                  <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(147, 51, 234, 0.05); border-radius: 12px; border: 1px dashed var(--accent-secondary); text-align: left;">
+                    <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">⚡ RENEW ELITE ACCESS</h5>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Renew Premium to maintain your unlimited AI study track.</p>
+                    <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-secondary); color: var(--accent-secondary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">RENEW PREMIUM</button>
                   </div>
                 `;
              }
           }
 
           expDiv.innerHTML = `
-            <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
-              <span>Explanation:</span>
-              ${aiStatus.credits ? `<span style="font-size: 0.75rem; color: var(--accent-secondary); opacity: 0.8;">${aiStatus.credits} Credits Left</span>` : ''}
-              ${aiStatus.usage ? `<span style="font-size: 0.75rem; color: var(--accent-secondary); opacity: 0.8;">${aiStatus.usage}/30 Daily AI Used</span>` : ''}
+            <div style="font-weight: 900; color: var(--accent-primary); margin-bottom: 1rem; display: flex; justify-content: space-between; font-family: 'Outfit'; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;">
+              <span>EXPLANATION</span>
+              ${aiStatus.usage ? `<span style="color: var(--accent-secondary); opacity: 0.8;">${aiStatus.usage}/30 DAILY AI USED</span>` : ''}
             </div>
-            <div style="color: var(--text-secondary);">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
+            <div style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; font-family: 'Outfit'; font-weight: 500;">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
             ${ctaHtml}
           `
         }
       }
+      if (window.lucide) window.lucide.createIcons();
     } else {
       expDiv.style.display = 'none'
     }
@@ -712,7 +732,7 @@ export class Exam {
             }
         }
     } catch (e) {
-        console.warn("KaTeX rendering failed but skipping to enable navigation:", e);
+        console.warn("KaTeX rendering failed:", e);
     }
   }
 
@@ -721,7 +741,7 @@ export class Exam {
     if (!container || this.examType !== 'JAMB') return
     container.style.display = 'flex'
     container.innerHTML = this.jambSubjects.map(sub => `
-      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.6rem 1.25rem; border-radius: 20px; font-size: 0.9rem; font-weight: 700; border: 1px solid var(--accent-primary); background: ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'transparent'}; color: ${sub === this.activeJambSubject ? 'white' : 'var(--accent-primary)'}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.75rem 1.75rem; border-radius: 30px; font-size: 0.9rem; font-weight: 800; border: 2px solid ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'rgba(255,255,255,0.03)'}; color: ${sub === this.activeJambSubject ? 'white' : 'var(--text-secondary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Outfit';">
         ${sub}
       </button>
     `).join('')
@@ -754,22 +774,40 @@ export class Exam {
       const isAnswered = this.session.userAnswers[i] && this.session.userAnswers[i] !== ""
       const isBookmarked = this.bookmarks.includes(question.id)
       
-      const statusClasses = []
-      if (isCurrent) statusClasses.push('current')
+      const style = {
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid var(--glass-border)',
+        color: 'var(--text-secondary)',
+        transform: 'none'
+      }
+
+      if (isAnswered) {
+        style.background = 'var(--primary)';
+        style.color = 'white';
+        style.border = 'none';
+      }
+
+      if (isCurrent) {
+        style.border = '2px solid var(--accent-primary)';
+        style.transform = 'scale(1.1)';
+        style.zIndex = '2';
+        if (!isAnswered) style.color = 'var(--accent-primary)';
+      }
       
       if (this.isReviewMode) {
         if (isAnswered) {
           const selectedId = this.session.userAnswers[i]
           const isCorrect = question.answers?.find(a => a.is_correct)?.id === selectedId
-          statusClasses.push(isCorrect ? 'correct' : 'incorrect')
+          style.background = isCorrect ? 'var(--success)' : 'var(--error)';
+          style.color = 'white';
         } else {
-          statusClasses.push('unattempted')
+          style.background = 'rgba(239, 68, 68, 0.1)';
+          style.color = 'var(--error)';
+          style.border = '1px dashed var(--error)';
         }
-      } else {
-        if (isAnswered) statusClasses.push('answered')
       }
       
-      const statusClass = statusClasses.join(' ')
+      const inlineStyle = `background: ${style.background}; color: ${style.color}; border: ${style.border}; transform: ${style.transform}; position: relative; font-family: 'Outfit'; font-weight: 800; width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; transition: all 0.2s;`
       
       let displayNum = i + 1;
       if (this.examType === 'JAMB') {
@@ -777,14 +815,15 @@ export class Exam {
          displayNum = localQs.findIndex(q => q.id === question.id) + 1;
       }
 
-      html += `<button class="q-grid-item ${statusClass}" data-index="${i}">${displayNum}${isBookmarked ? '⭐' : ''}</button>`
+      html += `<button class="q-grid-item" data-index="${i}" style="${inlineStyle}">${displayNum}${isBookmarked ? '<span style="position: absolute; top: -4px; right: -4px; font-size: 10px;">⭐</span>' : ''}</button>`
     })
     
     grid.innerHTML = html
 
     grid.onclick = (e) => {
-      const idx = e.target.dataset.index
-      if (idx !== undefined) {
+      const btn = e.target.closest('.q-grid-item')
+      if (btn) {
+        const idx = btn.dataset.index
         this.session.currentIndex = parseInt(idx)
         this.saveState()
         this.updateUI()
@@ -797,7 +836,8 @@ export class Exam {
     }
 
     const progress = this.session.getProgress()
-    document.getElementById('progress-bar').style.width = `${progress.percentage}%`
+    const bar = document.getElementById('progress-bar')
+    if (bar) bar.style.width = `${progress.percentage}%`
     document.getElementById('progress-text').textContent = `${progress.percentage}%`
   }
 

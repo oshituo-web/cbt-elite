@@ -14,10 +14,10 @@ export const ResultsComponent = {
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="glass card" style="max-width: 800px; margin: 50px auto; padding: 3rem; text-align: center;">
-        <div class="loader-spinner" style="margin: 2rem auto;"></div>
-        <h2 style="font-family: 'Outfit';">Finalizing Results...</h2>
-        <p style="color: var(--text-primary);">Saving your progress and generating your performance report.</p>
+      <div class="glass card scale-in" style="max-width: 800px; margin: 4rem auto; padding: 4rem 2rem; text-align: center;">
+        <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
+        <h2 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Finalizing Your Story</h2>
+        <p style="color: var(--text-secondary); font-weight: 500; font-size: 1.1rem;">Saving your progress to the Elite database...</p>
       </div>
     `
 
@@ -58,17 +58,21 @@ export const ResultsComponent = {
     })
 
     container.innerHTML = `
-      <div class="glass card results-container" style="max-width: 900px; width: 95%; margin: 2rem auto; padding: 2rem; position: relative; text-align: center;">
-        <button id="results-back-btn" class="btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; padding: 0.4rem 0.6rem; border-radius: 8px;" title="Go Back">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      <div class="glass card scale-in" style="max-width: 900px; width: 95%; margin: 3rem auto; padding: 3rem 2rem; position: relative; text-align: center;">
+        <button id="results-back-btn" class="btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;" title="Go Back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
-        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; margin-bottom: 2rem;">Exam Results</h2>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-          <div class="result-card" style="text-align: center; padding: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-primary); margin-bottom: 0.5rem; letter-spacing: 0.1em;">OBJECTIVE SCORE</div>
-            <div style="font-size: 3.5rem; font-weight: 800; color: var(--accent-primary); line-height: 1;">${correct} / ${objQuestions.length}</div>
-            <div style="font-size: 1.15rem; color: var(--text-primary); margin-top: 0.75rem; font-weight: 700;">${scorePercent}% Correct</div>
+        <div style="margin-bottom: 3.5rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.5rem;">Session Complete</h2>
+          <p style="color: var(--text-secondary); font-weight: 500; font-size: 1.1rem;">Here is a breakdown of your elite performance.</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 3.5rem;">
+          <div class="glass card" style="text-align: center; padding: 2.5rem; border: 2px solid var(--primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;">Objective Score</div>
+            <div style="font-size: 4.5rem; font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
+            <div style="font-size: 1.4rem; color: var(--text-primary); margin-top: 1rem; font-weight: 800;">${scorePercent}% Accurate</div>
           </div>
         </div>
 
@@ -79,20 +83,20 @@ export const ResultsComponent = {
 
           if (subState.shouldShowActivateCTA) {
             return `
-              <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05); border-radius: 12px;">
-                <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem; font-family: 'Outfit';">Boost your score by 40%! \uD83D\uDE80</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.</p>
-                <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
+              <div class="glass card scale-in mb-xl" style="padding: 2.5rem; border-left: 6px solid var(--accent-primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%); text-align: left;">
+                <h4 style="color: var(--accent-primary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="sparkles"></i> Boost your score by 40%!</h4>
+                <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500;">Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.</p>
+                <button class="btn-primary" style="padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                    Activate Lifetime Access – ₦1,500
                 </button>
               </div>
             `;
           } else if (subState.shouldShowRenewCTA) {
             return `
-              <div class="glass card scale-in" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--accent-secondary); background: rgba(255, 152, 0, 0.05); border-radius: 12px;">
-                <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-family: 'Outfit';">Keep the Momentum! \u26A1</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Renew Premium to continue enjoying AI explanations and unlimited mock exams.</p>
-                <button class="primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;" onclick="location.reload()">
+              <div class="glass card scale-in mb-xl" style="padding: 2.5rem; border-left: 6px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, transparent 100%); text-align: left;">
+                <h4 style="color: var(--accent-secondary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="rocket"></i> Keep the Momentum!</h4>
+                <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500;">Renew Premium to continue enjoying AI explanations and unlimited mock exams.</p>
+                <button class="btn-primary" style="background: var(--accent-secondary); padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
                    Renew Premium – ₦1,000/month
                 </button>
               </div>
@@ -101,32 +105,35 @@ export const ResultsComponent = {
           return '';
         })()}
 
-        <h3 style="text-align: left; font-family: 'Outfit'; margin-bottom: 1rem; font-size: 1.25rem;">
-            ${isJambMock ? 'Performance by Subject' : 'Performance by Topic'}
-        </h3>
-        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 3rem;">
-          ${Object.entries(statsGroup).map(([label, stats]) => {
-            const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
-            return `
-              <div style="text-align: left;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-                  <span style="font-weight: 600;">${label}</span>
-                  <span style="color: ${percent >= 50 ? 'var(--success)' : 'var(--error)'}; font-weight: 800;">${stats.correct} / ${stats.total} (${percent}%)</span>
+        <div style="text-align: left;">
+          <h3 style="font-family: 'Outfit'; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">
+              ${isJambMock ? 'Performance by Subject' : 'Performance by Topic'}
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 4rem;">
+            ${Object.entries(statsGroup).map(([label, stats]) => {
+              const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
+              const isSuccess = percent >= 50
+              return `
+                <div class="glass" style="padding: 1.25rem; border-radius: 12px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                    <span style="font-weight: 800; color: var(--text-primary);">${label}</span>
+                    <span style="color: ${isSuccess ? 'var(--success)' : 'var(--error)'}; font-weight: 900; font-family: 'Outfit';">${stats.correct} / ${stats.total} (${percent}%)</span>
+                  </div>
+                  <div class="progress-v2-container">
+                    <div class="progress-v2-fill ${isSuccess ? 'success' : 'error'}" style="width: ${percent}%;"></div>
+                  </div>
                 </div>
-                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
-                  <div style="width: ${percent}%; height: 100%; background: ${percent >= 50 ? 'var(--success)' : 'var(--error)'}; transition: width 0.5s ease;"></div>
-                </div>
-              </div>
-            `
-          }).join('')}
+              `
+            }).join('')}
+          </div>
         </div>
 
-        <div style="margin-bottom: 2rem;">
-          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600;">View your performance and explanations</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
-            <button class="primary" id="restart-exam" style="flex: 1; min-width: 200px; padding: 1rem;">Retake Practice</button>
-            <button class="btn-secondary" id="review-exam" data-tooltip="Tap here after a test to see explanations and corrections" style="flex: 1; min-width: 200px; padding: 1rem; border-color: var(--accent-primary);">Review Questions</button>
-            <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; padding: 1rem;">← Back to Dashboard</button>
+        <div class="glass card" style="padding: 2.5rem; background: rgba(0,0,0,0.1); border-radius: 20px;">
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem;">What's your next move?</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center;">
+            <button class="btn-primary" id="restart-exam" style="flex: 1; min-width: 200px; height: 56px;">Retake Session</button>
+            <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 200px; height: 56px; border-color: var(--accent-primary); border-width: 2px;">Review Correction</button>
+            <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; height: 56px;">← Back to Dashboard</button>
           </div>
         </div>
 
@@ -143,7 +150,6 @@ export const ResultsComponent = {
         if (onBack) onBack(); else location.reload();
     }
 
-
-
+    if (window.lucide) window.lucide.createIcons();
   }
 }

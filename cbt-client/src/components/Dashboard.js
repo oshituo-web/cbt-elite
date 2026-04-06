@@ -1084,7 +1084,9 @@ export const DashboardComponent = {
     // Store intervals for cleanup if necessary
     this.activeIntervals = []
 
-    initData()
+    // Await core data initialization and refresh icons for dynamic content
+    await initData()
+    renderLucide()
     
     // Phase 3: Sync Offline Pool in background
     DataService.syncOfflinePool().catch(e => console.warn("Offline pool sync not possible:", e))
