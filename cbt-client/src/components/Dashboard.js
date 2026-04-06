@@ -146,7 +146,7 @@ export const DashboardComponent = {
         </div>
 
         <div id="resume-container" style="display: none;" class="mb-lg">
-              <div class="glass card scale-in card-medium" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+              <div class="glass card scale-in card-medium mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px;">
                   <div style="color: var(--accent-secondary);"><i data-lucide="clock" style="width: 32px; height: 32px;"></i></div>
                   <div>
@@ -165,7 +165,7 @@ export const DashboardComponent = {
         ${(() => {
           const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
           const ActivationCard = () => `
-            <div class="glass card card-freemium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(37, 99, 235, 0.3);">
+            <div class="glass card card-freemium scale-in mb-lg mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(37, 99, 235, 0.3);">
               <div style="flex: 1; min-width: 280px;">
                 <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="unlock" style="color: var(--accent-primary);"></i> Activate Full Access <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--accent-primary); font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: 900; letter-spacing: 0.05em;">LIFETIME</span></h4>
                 <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5;">Pay ₦1,500 once to unlock more features + 30 days Premium access.</p>
@@ -177,7 +177,7 @@ export const DashboardComponent = {
           `;
 
           const RenewalCard = () => `
-            <div class="glass card card-medium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(139, 92, 246, 0.3);">
+            <div class="glass card card-medium scale-in mb-lg mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(139, 92, 246, 0.3);">
               <div style="flex: 1; min-width: 280px;">
                 <h4 style="font-family: 'Outfit'; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="rocket" style="color: var(--accent-secondary);"></i> Renew Premium Access <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-secondary); font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: 900; letter-spacing: 0.05em;">RECOMMENDED</span></h4>
                 <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5;">Get AI explanations, unlimited exams and full access for ₦1,000/month.</p>
@@ -191,7 +191,7 @@ export const DashboardComponent = {
           if (subState.tier === "premium") {
             if (subState.daysRemaining <= 5) {
               return `
-                <div class="glass card card-expiring scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(245, 158, 11, 0.4);">
+                <div class="glass card card-expiring scale-in mb-lg mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(245, 158, 11, 0.4);">
                   <div style="flex: 1;">
                     <h4 style="font-family: 'Outfit'; color: var(--warning); margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-triangle"></i> Expiring Soon</h4>
                     <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your Premium expires in ${subState.daysRemaining} days. Renew to avoid losing access.</p>
@@ -203,7 +203,7 @@ export const DashboardComponent = {
               `;
             } else {
               return `
-                <div class="glass card card-premium scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(16, 185, 129, 0.3);">
+                <div class="glass card card-premium scale-in mb-lg mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(16, 185, 129, 0.3);">
                   <div style="display: flex; align-items: center; gap: 1rem;">
                     <div style="color: var(--success);"><i data-lucide="crown" style="width: 32px; height: 32px;"></i></div>
                     <div>
@@ -218,7 +218,7 @@ export const DashboardComponent = {
 
           if (subState.isExpired) {
             return `
-              <div class="glass card card-expired scale-in mb-lg" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(239, 68, 68, 0.4);">
+              <div class="glass card card-expired scale-in mb-lg mobile-stack" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border: 2px solid rgba(239, 68, 68, 0.4);">
                 <div style="flex: 1;">
                   <h4 style="font-family: 'Outfit'; color: var(--error); margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="alert-circle"></i> Premium Expired</h4>
                   <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0; font-weight: 500;">Your access has expired – you are currently on the Medium plan.</p>
@@ -242,7 +242,7 @@ export const DashboardComponent = {
         <div class="glass card scale-in mb-lg" style="text-align: center; padding: 2.5rem 1.5rem; border: 2px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface-color) 100%);">
           <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 0.4rem; color: var(--text-primary); font-weight: 800;">Ready to level up?</h2>
           <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.05rem; font-weight: 500;">Select your mode and start mastering your subjects.</p>
-          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+          <div class="mobile-stack" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
              <button id="quick-practice-btn" class="btn-primary" data-tooltip="Practice by topic to improve faster" style="padding: 0 2rem; min-width: 200px; font-size: 1.05rem;"><i data-lucide="target"></i> Practice Mode</button>
              <button id="quick-exam-btn" class="btn-secondary" data-tooltip="Simulate real exam conditions" style="padding: 0 2rem; min-width: 200px; font-weight: 800; border-radius: var(--radius-md);"><i data-lucide="trophy"></i> Full Mock Exam</button>
              <button id="start-saved" class="glass-btn" style="padding: 0 1.5rem; border-color: var(--accent-primary); display: none; min-width: 160px;"><i data-lucide="bookmark"></i> Saved (<span id="bookmark-count">0</span>)</button>

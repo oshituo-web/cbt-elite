@@ -120,14 +120,20 @@ body.light-mode {
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-color);
   color: var(--text-primary);
   line-height: 1.6;
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
-  overflow: hidden; /* Prevent body scrolling; allow internal layout scrolling */
+  overflow: hidden; /* Prevent vertical body scrolling; rely on internal elements for scrolling */
 }
 
 /* =========================================
@@ -135,9 +141,9 @@ body {
    ========================================= */
 .elite-layout {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 250px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   transition: grid-template-columns 0.3s ease;
@@ -145,7 +151,7 @@ body {
 
 @media (max-width: 768px) {
   .elite-layout {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     grid-template-rows: auto auto 1fr; /* [1] Banner, [2] Header, [3] Content */
   }
   .broadcast-banner {
@@ -162,7 +168,7 @@ body {
 }
 
 .elite-layout:has(.app-sidebar.collapsed) {
-  grid-template-columns: 75px 1fr;
+  grid-template-columns: 75px minmax(0, 1fr);
 }
 
 /* --- Topbar Header --- */
@@ -413,8 +419,12 @@ body {
   grid-column: 2 / 3;
   grid-row: 2 / 3;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 2rem;
   position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* --- Mobile Nav --- */
@@ -427,7 +437,7 @@ body {
    ========================================= */
 @media (max-width: 768px) {
   .elite-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) !important;
     grid-template-rows: 64px 1fr 60px; /* Header, Body, BottomNav */
   }
   .branding-header {
@@ -439,10 +449,37 @@ body {
   .main-content-area {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
-    padding: 1rem;
+    padding: 1.25rem 1rem !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    box-sizing: border-box;
   }
   .mobile-hide {
     display: none !important;
+  }
+  
+  /* Global Width & Text Corrections */
+  .glass.card {
+     width: 100% !important;
+     max-width: 100% !important;
+     padding: 1.25rem 1rem !important;
+     box-sizing: border-box !important;
+  }
+
+  .mobile-stack {
+     flex-direction: column !important;
+     align-items: stretch !important;
+     gap: 1rem !important;
+  }
+  
+  .mobile-stack > div, .mobile-stack > button {
+     width: 100% !important;
+     min-width: 0 !important;
+  }
+
+  * {
+     word-wrap: break-word;
+     white-space: normal;
   }
   .bottom-nav {
     display: flex;
