@@ -250,7 +250,7 @@ export const DashboardComponent = {
         </div>
 
          <!-- PROGRESS & GOALS -->
-         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;" class="mb-xl">
+         <div class="dashboard-responsive-grid mb-xl" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
             <div class="glass card" style="border-top: 4px solid var(--primary); padding-bottom: 1.5rem;">
               <h3 style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Your Progress Overview</h3>
               
@@ -271,12 +271,12 @@ export const DashboardComponent = {
                  </div>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-md);">
+              <div class="mobile-stack" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-md);">
                 <div>
                   <div style="font-size: 1.8rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary); line-height: 1;">${totalQuestions}</div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 600;">Questions Attempted</div>
                 </div>
-                <div style="text-align: right;">
+                <div>
                    <div style="font-size: 1.8rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary); line-height: 1;">${history.length > 0 ? accuracy + '%' : '--'}</div>
                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 600;">Overall Accuracy</div>
                 </div>
@@ -1049,14 +1049,30 @@ export const DashboardComponent = {
 
     if (quickPracticeBtn) {
         quickPracticeBtn.onclick = () => {
-            document.getElementById('view-practice')?.click()
-            document.getElementById('practice-section')?.scrollIntoView({ behavior: 'smooth' })
+            const pSec = document.getElementById('practice-section')
+            const eSec = document.getElementById('exam-section')
+            const pTab = document.getElementById('view-practice')
+            const eTab = document.getElementById('view-exam')
+            
+            if (pTab && eTab && pSec && eSec) {
+                pTab.classList.add('active'); eTab.classList.remove('active')
+                pSec.style.display = 'block'; eSec.style.display = 'none'
+                pSec.scrollIntoView({ behavior: 'smooth' })
+            }
         }
     }
     if (quickExamBtn) {
         quickExamBtn.onclick = () => {
-            document.getElementById('view-exam')?.click()
-            document.getElementById('exam-section')?.scrollIntoView({ behavior: 'smooth' })
+            const pSec = document.getElementById('practice-section')
+            const eSec = document.getElementById('exam-section')
+            const pTab = document.getElementById('view-practice')
+            const eTab = document.getElementById('view-exam')
+            
+            if (pTab && eTab && pSec && eSec) {
+                eTab.classList.add('active'); pTab.classList.remove('active')
+                eSec.style.display = 'block'; pSec.style.display = 'none'
+                eSec.scrollIntoView({ behavior: 'smooth' })
+            }
         }
     }
     if (weakPracticeBtn) {

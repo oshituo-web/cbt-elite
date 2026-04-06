@@ -481,10 +481,12 @@ body {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     /* Add extra padding at bottom dynamically equal to the nav height + iOS/Android safe area */
-    padding: 1.25rem 1rem calc(90px + env(safe-area-inset-bottom)) !important;
+    padding: 1.25rem 0.75rem calc(90px + env(safe-area-inset-bottom)) !important;
     width: 100% !important;
+    max-width: 100%;
     margin-left: 0 !important;
     box-sizing: border-box;
+    overflow-x: hidden;
   }
   .mobile-hide {
     display: none !important;
@@ -510,14 +512,23 @@ body {
   }
 
   .mobile-stack {
+     display: flex !important;
      flex-direction: column !important;
      align-items: stretch !important;
      gap: 1rem !important;
+     width: 100% !important;
   }
   
   .mobile-stack > div, .mobile-stack > button {
      width: 100% !important;
      min-width: 0 !important;
+  }
+
+  .dashboard-responsive-grid {
+     display: grid !important;
+     grid-template-columns: 1fr !important;
+     gap: 1rem !important;
+     width: 100% !important;
   }
 
   * {
