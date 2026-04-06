@@ -133,12 +133,12 @@ export const DashboardComponent = {
 
         <!-- FEATURED: AI Workout (Primary CTA) -->
         <div class="glass card scale-in mb-lg" style="border-left: 6px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+          <div class="mobile-stack" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
             <div>
                 <h3 style="font-family: 'Outfit'; font-size: 1.45rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.6rem; color: var(--accent-primary); font-weight: 800;"><i data-lucide="sparkles"></i> AI Custom Workout</h3>
                 <p id="ai-workout-hint" style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">Targeting your mastery gaps automatically...</p>
             </div>
-            <span class="badge" style="background: var(--accent-primary); font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 20px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); text-transform: uppercase;">Recommended</span>
+            <span class="badge" style="background: var(--accent-primary); font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 20px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); text-transform: uppercase; width: fit-content;">Recommended</span>
           </div>
           <button id="start-ai-workout" class="btn-dominant" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; min-height: 56px; font-size: 1.15rem; margin-top: 0.5rem;">
             <i data-lucide="rocket" style="width: 22px; height: 22px;"></i> Start Personalized Session
@@ -282,9 +282,9 @@ export const DashboardComponent = {
                 </div>
               </div>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
-                <button id="view-leaderboard" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-primary);"><i data-lucide="trophy" style="width: 15px; height: 15px;"></i> GLOBAL RANK</button>
-                <button id="performance-insights-btn" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-secondary);"><i data-lucide="bar-chart-2" style="width: 15px; height: 15px;"></i> INSIGHTS</button>
+              <div class="mobile-stack" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                <button id="view-leaderboard" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-primary); min-height: 40px;"><i data-lucide="trophy" style="width: 15px; height: 15px;"></i> GLOBAL RANK</button>
+                <button id="performance-insights-btn" class="btn-secondary" style="border-radius: var(--radius-md); font-size: 0.75rem; border-color: var(--accent-secondary); min-height: 40px;"><i data-lucide="bar-chart-2" style="width: 15px; height: 15px;"></i> INSIGHTS</button>
               </div>
             </div>
 

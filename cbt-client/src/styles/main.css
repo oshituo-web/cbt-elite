@@ -181,6 +181,9 @@ body {
   background: var(--surface-color);
   z-index: 100;
   border-radius: 0;
+  min-height: 64px;
+  height: auto;
+  padding: 0.5rem 0;
 }
 
 .branding-header .header-content {
@@ -188,6 +191,7 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  flex-wrap: nowrap !important; /* Force single row */
 }
 
 .header-actions {
@@ -199,17 +203,29 @@ body {
 @media (max-width: 480px) {
   .branding-header .header-content {
       padding: 0 0.5rem;
-  }
-  .header-actions {
       gap: 0.25rem;
   }
+  .header-actions {
+      gap: 0.15rem;
+  }
+  
   /* Hide text labels on small screens to save space */
   .header-actions a span, 
-  .header-actions div span {
+  .header-actions div span,
+  .logo-area span span {
       display: none !important;
   }
-  .branding-header h1 span {
-      display: none !important; /* Hide "Elite" in CBT Elite if needed */
+  
+  /* Strongly downscale stats to fit row or hide if extreme narrow */
+  .header-center {
+      transform: scale(0.85);
+      transform-origin: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-center {
+      display: none !important; /* Hide stats bar on narrow Android to keep logo/actions on one line */
   }
 }
 
@@ -438,7 +454,7 @@ body {
 @media (max-width: 768px) {
   .elite-layout {
     grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: 64px 1fr; /* Header, Content. BottomNav is strictly position:fixed */
+    grid-template-rows: auto 1fr; /* Let the header height be dynamic to prevent overlap if icons wrap */
   }
   .branding-header {
     grid-column: 1 / 2;
@@ -463,8 +479,19 @@ body {
   .glass.card {
      width: 100% !important;
      max-width: 100% !important;
-     padding: 1.25rem 1rem !important;
+     padding: 1rem 0.75rem !important; /* Tighter padding for mobile */
      box-sizing: border-box !important;
+     margin-bottom: 1rem !important;
+  }
+  
+  .glass.card h1, .glass.card h2, .glass.card h3 {
+     font-size: 1.25rem !important; /* Scale down titles inside cards */
+  }
+  
+  .btn-dominant, .btn-primary {
+     min-height: 48px !important;
+     padding: 0 1rem !important;
+     font-size: 0.95rem !important;
   }
 
   .mobile-stack {
@@ -483,19 +510,26 @@ body {
      white-space: normal;
   }
   
-  /* Defeat inline rigid flex headers and massive typography causing horizontal clip */
-  h1, h2, h3, h4, h5, [style*="display: flex"] {
-     flex-wrap: wrap !important;
-  }
-  h1 { font-size: 1.5rem !important; }
-  h2 { font-size: 1.35rem !important; }
-  h3 { font-size: 1.15rem !important; }
-  h4 { font-size: 1.05rem !important; }
-  
   /* Ensure flex items can physically shrink below their text intrinsic widths */
   * {
      min-width: 0;
   }
+  
+  /* Selectively target cards instead of global headings to prevent header shatter */
+  .glass.card [style*="display: flex"] {
+     flex-wrap: wrap !important;
+  }
+  
+  .header-actions {
+     flex-wrap: nowrap !important;
+     white-space: nowrap;
+     gap: 0.25rem !important;
+  }
+  
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.35rem !important; }
+  h3 { font-size: 1.15rem !important; }
+  h4 { font-size: 1.05rem !important; }
   .bottom-nav {
     display: flex;
     justify-content: space-around;
