@@ -157,18 +157,18 @@ export class Exam {
 
         <div class="exam-content-wrapper" id="exam-wrapper" style="display: flex; gap: 1rem; flex: 1; overflow: hidden; height: calc(100vh - 80px);">
           <!-- Left side: Pinned Content (Passage) -->
-          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 2rem; border-right: 3px solid var(--accent-primary); min-width: 350px;">
-             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.15rem; line-height: 1.8; color: var(--text-primary); font-family: serif;"></div>
+          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 1.25rem; border-right: 3px solid var(--accent-primary); width: 350px; max-width: 40vw;">
+             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.1rem; line-height: 1.7; color: var(--text-primary); font-family: serif;"></div>
           </div>
 
           <!-- Main Content -->
-          <div class="exam-main glass" style="flex: 1.5; overflow-y: auto; padding: 2.5rem 3rem; display: flex; flex-direction: column; position: relative;">
+          <div class="exam-main glass" style="flex: 1.5; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; position: relative;">
             <!-- Subject Tabs placed at the top of content area -->
             <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
 
             <div id="question-area" style="flex: 1;">
               <!-- Inline passage for mobile or fallback -->
-              <div id="q-group-content-inline" class="passage-container glass card" style="display: none; margin-bottom: 2.5rem; padding: 2rem; font-size: 1.1rem; line-height: 1.8; border-left: 6px solid var(--accent-primary); background: var(--bg-secondary); font-family: serif;"></div>
+              <div id="q-group-content-inline" class="passage-container glass card" style="display: none; margin-bottom: 2rem; padding: 1.25rem; font-size: 1.1rem; line-height: 1.7; border-left: 6px solid var(--accent-primary); background: var(--bg-secondary); font-family: serif;"></div>
               
               <div id="q-diagram" style="display: none; margin-bottom: 2.5rem;"></div>
               
@@ -214,7 +214,7 @@ export class Exam {
 
       <!-- Report Modal -->
       <div id="report-modal" class="modal-overlay">
-        <div class="modal-content glass" style="max-width: 480px; padding: 3rem;">
+        <div class="modal-content glass" style="width: min(480px, 92vw); padding: 2rem;">
           <h3 style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
             Report Issue <i data-lucide="x" id="close-report-x" style="cursor: pointer; color: var(--error); width: 28px; height: 28px;"></i>
           </h3>
@@ -231,7 +231,7 @@ export class Exam {
       
       <!-- Finish Modal -->
       <div id="finish-modal" class="modal-overlay">
-        <div class="modal-content glass" style="max-width: 480px; text-align: center; padding: 3.5rem 3rem;">
+        <div class="modal-content glass" style="width: min(480px, 92vw); text-align: center; padding: 2.5rem 1.5rem;">
           <div style="background: rgba(147, 51, 234, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
              <i data-lucide="flag" style="width: 40px; height: 40px; color: var(--accent-secondary);"></i>
           </div>

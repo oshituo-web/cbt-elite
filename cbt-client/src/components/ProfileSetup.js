@@ -5,7 +5,7 @@ export const ProfileSetupComponent = {
     const container = document.getElementById('auth-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="auth-card glass card scale-in" style="max-width: 440px; margin: 6rem auto; padding: 4rem 3rem;">
+      <div class="auth-card glass card scale-in" style="width: min(440px, 92vw); margin: 3rem auto; padding: 2.5rem 1.5rem;">
         <div style="text-align: center; margin-bottom: 3rem;">
           <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 2rem; color: var(--text-primary); margin-bottom: 0.5rem;">Secure Your Handle</h2>
           <p style="color: var(--text-secondary); font-weight: 600; font-size: 1rem; line-height: 1.4;">Choose a unique identity for the elite leaderboard</p>

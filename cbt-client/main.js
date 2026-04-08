@@ -250,6 +250,17 @@ function setupNavigation(profile) {
       navItems.forEach(nav => nav.classList.remove('active'))
       document.querySelectorAll(`[data-view="${view}"]`).forEach(v => v.classList.add('active'))
       
+      if (view === 'logout') {
+          navItems.forEach(nav => nav.classList.remove('active'))
+          const prevView = document.querySelector('.main-content-area > div:not([style*="display: none"])')?.id?.replace('-container', '') || 'dashboard'
+          document.querySelectorAll(`[data-view="${prevView}"]`).forEach(v => v.classList.add('active'))
+          
+          if (confirm('Are you sure you want to sign out?')) {
+            AuthService.signOut().then(() => location.reload())
+          }
+          return
+      }
+
       if (view === 'dashboard') showDashboard(profile)
       else if (view === 'admin') showAdmin(profile)
       else if (view === 'exams') {

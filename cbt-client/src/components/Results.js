@@ -14,7 +14,7 @@ export const ResultsComponent = {
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="glass card scale-in" style="max-width: 800px; margin: 4rem auto; padding: 4rem 2rem; text-align: center;">
+      <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1.25rem; text-align: center;">
         <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
         <h2 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Finalizing Your Story</h2>
         <p style="color: var(--text-secondary); font-weight: 500; font-size: 1.1rem;">Saving your progress to the Elite database...</p>
@@ -58,7 +58,7 @@ export const ResultsComponent = {
     })
 
     container.innerHTML = `
-      <div class="glass card scale-in" style="max-width: 900px; width: 95%; margin: 3rem auto; padding: 3rem 2rem; position: relative; text-align: center;">
+      <div class="glass card scale-in" style="width: min(900px, 92vw); margin: 2rem auto; padding: 2.5rem 1.25rem; position: relative; text-align: center;">
         <button id="results-back-btn" class="btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;" title="Go Back">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
@@ -71,7 +71,7 @@ export const ResultsComponent = {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 3.5rem;">
           <div class="glass card" style="text-align: center; padding: 2.5rem; border: 2px solid var(--primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);">
             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;">Objective Score</div>
-            <div style="font-size: 4.5rem; font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
+            <div style="font-size: clamp(3rem, 15vw, 4.5rem); font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
             <div style="font-size: 1.4rem; color: var(--text-primary); margin-top: 1rem; font-weight: 800;">${scorePercent}% Accurate</div>
           </div>
         </div>
@@ -83,7 +83,7 @@ export const ResultsComponent = {
 
           if (subState.shouldShowActivateCTA) {
             return `
-              <div class="glass card scale-in mb-xl" style="padding: 2.5rem; border-left: 6px solid var(--accent-primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%); text-align: left;">
+              <div class="glass card scale-in mb-xl" style="padding: 1.5rem; border-left: 6px solid var(--accent-primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%); text-align: left;">
                 <h4 style="color: var(--accent-primary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="sparkles"></i> Boost your score by 40%!</h4>
                 <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500;">Premium users get detailed AI-powered corrections and personalized study paths that double performance speed.</p>
                 <button class="btn-primary" style="padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
@@ -93,7 +93,7 @@ export const ResultsComponent = {
             `;
           } else if (subState.shouldShowRenewCTA) {
             return `
-              <div class="glass card scale-in mb-xl" style="padding: 2.5rem; border-left: 6px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, transparent 100%); text-align: left;">
+              <div class="glass card scale-in mb-xl" style="padding: 1.5rem; border-left: 6px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(147, 51, 234, 0.05) 0%, transparent 100%); text-align: left;">
                 <h4 style="color: var(--accent-secondary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="rocket"></i> Keep the Momentum!</h4>
                 <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500;">Renew Premium to continue enjoying AI explanations and unlimited mock exams.</p>
                 <button class="btn-primary" style="background: var(--accent-secondary); padding: 0 2rem; height: 48px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">

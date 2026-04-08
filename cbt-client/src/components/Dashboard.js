@@ -250,7 +250,7 @@ export const DashboardComponent = {
         </div>
 
          <!-- PROGRESS & GOALS -->
-         <div class="dashboard-responsive-grid mb-xl" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+         <div class="dashboard-responsive-grid mb-xl">
             <div class="glass card" style="border-top: 4px solid var(--primary); padding-bottom: 1.5rem;">
               <h3 style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Your Progress Overview</h3>
               
@@ -310,7 +310,7 @@ export const DashboardComponent = {
 
         <!-- AI PERFORMANCE ANALYSIS -->
         ${history.length < 5 ? `
-          <div class="glass card mb-lg" style="padding: 1.5rem 2rem; border-left: 5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <div class="glass card mb-lg mobile-stack" style="border-left: 5px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
              <div style="flex: 1; min-width: 250px;">
                <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="bot"></i> AI Analytics Calibration</h3>
                <p style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 500; margin-bottom: 0;">Complete <strong>${5 - history.length} more sessions</strong> to unlock personalized AI performance insights.</p>
@@ -318,7 +318,7 @@ export const DashboardComponent = {
              <div class="loader-spinner" style="width:32px; height:32px; border-width:4px; border-color: var(--accent-secondary) transparent transparent transparent;"></div>
           </div>
         ` : `
-          <div class="glass card mb-lg" style="padding: 1.75rem 2rem; border-left: 5px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);">
+          <div class="glass card mb-lg mobile-stack" style="border-left: 5px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);">
              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="brain"></i> AI Performance Analysis</h3>
              <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; font-weight: 500; margin-bottom: 1.25rem;">
                 ${(() => {
@@ -359,7 +359,7 @@ export const DashboardComponent = {
               <span style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="rocket"></i> Explore CBT Elite Features</span>
               <span style="font-size: 0.85rem; font-weight: 500;">Reveal Features \u25BC</span>
             </summary>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; padding: 2rem; border-top: 1px solid var(--glass-border);">
+            <div class="dashboard-responsive-grid" style="padding: 2rem; border-top: 1px solid var(--glass-border);">
               <div class="feature-item">
                 <div style="color: var(--primary);"><i data-lucide="target" style="width: 28px; height: 28px;"></i></div>
                 <div>
