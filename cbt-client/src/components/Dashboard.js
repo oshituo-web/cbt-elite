@@ -1058,6 +1058,11 @@ export const DashboardComponent = {
                 pTab.classList.add('active'); eTab.classList.remove('active')
                 pSec.style.display = 'block'; eSec.style.display = 'none'
                 pSec.scrollIntoView({ behavior: 'smooth' })
+                
+                // Sync Bottom Nav Highlight
+                const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
+                navItems.forEach(nav => nav.classList.remove('active'))
+                document.querySelectorAll('[data-view="exams"]').forEach(v => v.classList.add('active'))
             }
         }
     }
@@ -1072,6 +1077,11 @@ export const DashboardComponent = {
                 eTab.classList.add('active'); pTab.classList.remove('active')
                 eSec.style.display = 'block'; pSec.style.display = 'none'
                 eSec.scrollIntoView({ behavior: 'smooth' })
+                
+                // Sync Bottom Nav Highlight
+                const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
+                navItems.forEach(nav => nav.classList.remove('active'))
+                document.querySelectorAll('[data-view="exams"]').forEach(v => v.classList.add('active'))
             }
         }
     }
