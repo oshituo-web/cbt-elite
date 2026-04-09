@@ -213,7 +213,7 @@ export class Exam {
       </div>
 
       <!-- Report Modal -->
-      <div id="report-modal" class="modal-overlay">
+      <div id="report-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass" style="width: min(480px, 92vw); padding: 2rem;">
           <h3 style="margin-bottom: 0.5rem; font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
             Report Issue <i data-lucide="x" id="close-report-x" style="cursor: pointer; color: var(--error); width: 28px; height: 28px;"></i>
@@ -230,7 +230,7 @@ export class Exam {
       </div>
       
       <!-- Finish Modal -->
-      <div id="finish-modal" class="modal-overlay">
+      <div id="finish-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass" style="width: min(480px, 92vw); text-align: center; padding: 2.5rem 1.5rem;">
           <div style="background: rgba(147, 51, 234, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
              <i data-lucide="flag" style="width: 40px; height: 40px; color: var(--accent-secondary);"></i>

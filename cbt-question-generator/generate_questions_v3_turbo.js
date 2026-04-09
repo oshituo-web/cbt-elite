@@ -144,6 +144,22 @@ async function saveToDatabase(items) {
             const cleanText = q.question.toLowerCase().trim();
             if (knowledgeBase.has(cleanText)) continue;
             
+            // SELF-CORRECTION: Validate Visual Aids
+            if (q.diagram_type === 'graph' && q.diagram_url) {
+                if (!q.diagram_url.includes('quickchart.io/chart')) {
+                    console.warn(`[Self-Correction] Dropping invalid graph URL: ${q.diagram_url.slice(0, 30)}...`);
+                    q.diagram_url = null;
+                    q.diagram_type = 'none';
+                }
+            }
+            if (q.diagram_type === 'svg' && q.diagram_svg) {
+                if (!q.diagram_svg.includes('<svg') || !q.diagram_svg.includes('</svg>')) {
+                    console.warn(`[Self-Correction] Dropping invalid SVG payload.`);
+                    q.diagram_svg = null;
+                    q.diagram_type = 'none';
+                }
+            }
+            
             qsToInsert.push({
                 exam_id: examId,
                 subject_id: subjectId,

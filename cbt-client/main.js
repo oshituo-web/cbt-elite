@@ -11,6 +11,9 @@ import { DataService } from './src/services/data'
 import { TourGuide } from './src/utils/TourGuide'
 import './src/styles/main.css'
 
+let dashboardLoaded = false;
+let currentProfile = null;
+
 async function initApp() {
   // 🧭 0. GLOBAL ERROR LOGGING
   window.onerror = (msg, url, lineNo, columnNo, error) => {
@@ -265,20 +268,32 @@ function setupNavigation(profile) {
       else if (view === 'admin') showAdmin(profile)
       else if (view === 'exams') {
         const dashboardBtn = document.getElementById('e-start-btn')
-        if (dashboardBtn) {
-           showDashboard(profile)
-           setTimeout(() => window.scrollTo({ top: dashboardBtn.offsetTop - 100, behavior: 'smooth' }), 100)
-        } else {
-          showDashboard(profile)
+        const mainView = document.getElementById('main-view')
+        
+        // Use persistence to ensure btn exists
+        showDashboard(profile)
+        
+        // Wait for potential render or just scroll if persistent
+        const scrollTarget = () => {
+             const btn = document.getElementById('e-start-btn')
+             if (btn && mainView) {
+                mainView.scrollTo({ top: btn.offsetTop - 100, behavior: 'smooth' })
+             }
         }
+        
+        if (dashboardLoaded) scrollTarget()
+        else setTimeout(scrollTarget, 300)
       }
       else if (view === 'rankings') {
           showDashboard(profile)
           setTimeout(() => document.getElementById('show-leaderboard')?.click(), 100)
       }
       else if (view === 'profile') {
+          const mainView = document.getElementById('main-view')
           showDashboard(profile)
-          setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100)
+          if (mainView) {
+              setTimeout(() => mainView.scrollTo({ top: mainView.scrollHeight, behavior: 'smooth' }), 300)
+          }
       }
     }
   })
@@ -311,6 +326,12 @@ function showProfileSetup(user) {
 }
 
 function showDashboard(profile) {
+  currentProfile = profile
+  const dashContainer = document.getElementById('dashboard-container')
+  
+  hideAll()
+  dashContainer.style.display = 'block'
+  
   // Initialize Notifications
   initNotifications(profile)
   
@@ -324,6 +345,8 @@ function showDashboard(profile) {
   }, (article) => {
     showNewsArticle(article, profile)
   })
+  
+  dashboardLoaded = true
 }
 
 function showNewsArticle(article, profile) {

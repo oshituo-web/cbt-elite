@@ -11,14 +11,18 @@ export const DashboardComponent = {
   onStartExam: null,
 
   async render(profile, onStartExam, onOpenAdmin, onReadNews) {
-    // Handle Tier Transitions & Daily Resets
-    const updatedUser = profile ? await SubscriptionService.handleTierTransition(profile) : null
-    this.profile = updatedUser || profile || { username: 'Student', id: 'anon' }
     this.onStartExam = onStartExam
     this.onOpenAdmin = onOpenAdmin
     this.onReadNews = onReadNews
+    
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
+    
+    // 🧱 1. Removed Idempotency Check to ensure dashboard data syncs every visit
+
+    // Handle Tier Transitions & Daily Resets
+    const updatedUser = profile ? await SubscriptionService.handleTierTransition(profile) : null
+    this.profile = updatedUser || profile || { username: 'Student', id: 'anon' }
     
     let history = []
     let mastery = []
@@ -109,11 +113,11 @@ export const DashboardComponent = {
     if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '<i data-lucide="target" style="width: 16px; height: 16px; color: var(--primary);"></i>', title: 'Sharpshooter' });
     if (profile.is_activated) badges.push({ emoji: '<i data-lucide="gem" style="width: 16px; height: 16px; color: var(--accent-primary);"></i>', title: 'Activated' });
 
-    // Determine Weak Subject (Threshold: min 5 attempts, < 50% average)
+    // Determine Weak Subject (Threshold: min 2 attempts, < 50% average)
     let weakSubject = null
     if (mastery && mastery.length > 0) {
         try {
-            const potentialWeakSubjects = mastery.filter(m => m.total_attempted >= 5 && m.average < 50)
+            const potentialWeakSubjects = mastery.filter(m => m.total_attempted >= 2 && m.average < 50)
             if (potentialWeakSubjects.length > 0) {
                 weakSubject = potentialWeakSubjects.reduce((prev, curr) => (prev.average < curr.average) ? prev : curr)
             }
@@ -471,7 +475,7 @@ export const DashboardComponent = {
             </div>
 
             <!-- Exam Mode Section -->
-            <div id="exam-section" style="display: none;">
+            <div id="exam-section">
               <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Structured Mock Exams</h2>
               <div class="dashboard-grid">
                 ${ExamCard({
@@ -649,26 +653,19 @@ export const DashboardComponent = {
     const pTab = document.getElementById('view-practice')
     const eTab = document.getElementById('view-exam')
 
-    pTab.onclick = () => {
-        pTab.classList.add('active'); eTab.classList.remove('active')
-        pSec.style.display = 'block'; eSec.style.display = 'none'
+    if (pTab && eTab) {
+        pTab.onclick = () => {
+            pTab.classList.add('active'); eTab.classList.remove('active')
+            pSec.style.display = 'block'; eSec.style.display = 'none'
+        }
+
+        eTab.onclick = () => {
+            eTab.classList.add('active'); pTab.classList.remove('active')
+            eSec.style.display = 'block'; pSec.style.display = 'none'
+        }
     }
 
-    eTab.onclick = () => {
-        eTab.classList.add('active'); pTab.classList.remove('active')
-        eSec.style.display = 'block'; pSec.style.display = 'none'
-    }
-
-    // Generic UI listeners
-    document.getElementById('theme-toggle').onclick = () => {
-      document.body.classList.toggle('light-mode')
-      localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark')
-    }
-
-    document.getElementById('logout-btn').onclick = async () => {
-      await AuthService.signOut()
-      location.reload()
-    }
+    // Generic UI listeners (Handled globally by main.js)
 
     if (document.getElementById('admin-panel-btn')) {
       document.getElementById('admin-panel-btn').onclick = () => this.onOpenAdmin()
@@ -680,8 +677,11 @@ export const DashboardComponent = {
 
     if (document.getElementById('empty-start-btn')) {
       document.getElementById('empty-start-btn').onclick = () => {
-        document.getElementById('view-practice').click();
-        document.getElementById('dashboard-content').scrollIntoView({ behavior: 'smooth' });
+        const pSec = document.getElementById('practice-section')
+        const mainView = document.getElementById('main-view')
+        if (mainView && pSec) {
+            mainView.scrollTo({ top: pSec.offsetTop - 20, behavior: 'smooth' });
+        }
       }
     }
 
@@ -784,11 +784,13 @@ export const DashboardComponent = {
         const jambList = document.getElementById('jamb-sub-list')
 
         allSubjects.forEach(s => {
+            if ([...pSub?.options || []].some(o => o.value === s.id)) return // Skip if already added
             const opt = new Option(s.subject_name, s.id)
             pSub?.appendChild(opt.cloneNode(true))
             eSub?.appendChild(opt)
 
             if (s.subject_name.toLowerCase() !== 'english') {
+                if (jambList?.querySelector(`input[value="${s.id}"]`)) return // Skip
                 const label = document.createElement('label')
                 label.style.display = 'flex'; label.style.alignItems = 'center'; label.style.gap = '0.5rem'; label.style.fontSize = '0.8rem';
                 label.innerHTML = `<input type="checkbox" class="jamb-sub-check" value="${s.id}" data-name="${s.subject_name}"> ${s.subject_name}`
@@ -1035,6 +1037,9 @@ export const DashboardComponent = {
       }
     }
 
+    // Initialize all dynamic data and attach session listeners
+    // Skip immediate initData() here to avoid duplicate execution; will be awaited at the bottom of render lifecycle
+
     // Help Modal Logic
     const helpBtn = document.getElementById('help-guide-btn')
     const helpModal = document.getElementById('help-modal')
@@ -1050,14 +1055,16 @@ export const DashboardComponent = {
     if (quickPracticeBtn) {
         quickPracticeBtn.onclick = () => {
             const pSec = document.getElementById('practice-section')
-            const eSec = document.getElementById('exam-section')
-            const pTab = document.getElementById('view-practice')
-            const eTab = document.getElementById('view-exam')
+            const jambPractice = document.querySelector('.practice-tier[data-exam="JAMB"]')
             
-            if (pTab && eTab && pSec && eSec) {
-                pTab.classList.add('active'); eTab.classList.remove('active')
-                pSec.style.display = 'block'; eSec.style.display = 'none'
-                pSec.scrollIntoView({ behavior: 'smooth' })
+            if (pSec) {
+                if (jambPractice) jambPractice.click() // Auto-trigger the first category
+                const scrollTarget = document.getElementById('dashboard-content') || document.querySelector('.dashboard-scroll-area')
+                if (scrollTarget) {
+                    scrollTarget.scrollTo({ top: pSec.offsetTop - 20, behavior: 'smooth' })
+                } else {
+                    window.scrollTo({ top: pSec.offsetTop - 20, behavior: 'smooth' })
+                }
                 
                 // Sync Bottom Nav Highlight
                 const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
@@ -1068,15 +1075,17 @@ export const DashboardComponent = {
     }
     if (quickExamBtn) {
         quickExamBtn.onclick = () => {
-            const pSec = document.getElementById('practice-section')
             const eSec = document.getElementById('exam-section')
-            const pTab = document.getElementById('view-practice')
-            const eTab = document.getElementById('view-exam')
+            const jambExam = document.querySelector('.exam-tier[data-exam="JAMB"]')
             
-            if (pTab && eTab && pSec && eSec) {
-                eTab.classList.add('active'); pTab.classList.remove('active')
-                eSec.style.display = 'block'; pSec.style.display = 'none'
-                eSec.scrollIntoView({ behavior: 'smooth' })
+            if (eSec) {
+                if (jambExam) jambExam.click() // Auto-trigger the first category
+                const scrollTarget = document.getElementById('dashboard-content') || document.querySelector('.dashboard-scroll-area')
+                if (scrollTarget) {
+                    scrollTarget.scrollTo({ top: eSec.offsetTop - 20, behavior: 'smooth' })
+                } else {
+                    window.scrollTo({ top: eSec.offsetTop - 20, behavior: 'smooth' })
+                }
                 
                 // Sync Bottom Nav Highlight
                 const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
@@ -1116,6 +1125,17 @@ export const DashboardComponent = {
     await initData()
     renderLucide()
     
+    container.dataset.rendered = 'true'
+
+    // 📱 Haptic Feedback & Global Touch Improvements
+    const playHaptic = () => { if (typeof navigator.vibrate === 'function') navigator.vibrate(10) }
+    document.querySelectorAll('button').forEach(btn => {
+        if (!btn.dataset.haptic) {
+            btn.dataset.haptic = "true"
+            btn.addEventListener('click', playHaptic)
+        }
+    })
+
     // Phase 3: Sync Offline Pool in background
     DataService.syncOfflinePool().catch(e => console.warn("Offline pool sync not possible:", e))
 
@@ -1169,9 +1189,13 @@ export const DashboardComponent = {
     // Grid color logic for better contrast in light mode and dark mode
     const chartGridColor = isLightMode ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.25)'
 
+    // Destroy existing charts to prevent Canvas duplication errors
+    if (DashboardComponent._historyChart) DashboardComponent._historyChart.destroy()
+    if (DashboardComponent._masteryChart) DashboardComponent._masteryChart.destroy()
+
     // 1. Score History Chart
     const historyCtx = document.getElementById('score-history-chart').getContext('2d')
-    new Chart(historyCtx, {
+    DashboardComponent._historyChart = new Chart(historyCtx, {
       type: 'line',
       data: {
         labels: history.map((_, i) => i + 1),
@@ -1214,6 +1238,55 @@ export const DashboardComponent = {
       }
     })
 
+    // 2. Subject Mastery Chart (Radar)
+    const masteryCanvas = document.getElementById('subject-mastery-chart')
+    if (masteryCanvas) {
+      const masteryCtx = masteryCanvas.getContext('2d')
+      const labels = mastery.map(m => m.subject)
+      const data = mastery.map(m => m.average)
+
+      DashboardComponent._masteryChart = new Chart(masteryCtx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Mastery Level (%)',
+            data: data,
+            backgroundColor: primaryColor + '33',
+            borderColor: primaryColor,
+            pointBackgroundColor: primaryColor,
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: primaryColor,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          elements: { line: { tension: 0.3 } },
+          scales: {
+            r: {
+              angleLines: { color: chartGridColor },
+              grid: { color: chartGridColor },
+              pointLabels: { color: textPrimary, font: { size: 11, family: 'Outfit', weight: '800' } },
+              ticks: { display: false, min: 0, max: 100 }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: isLightMode ? '#fff' : '#1E293B',
+                titleColor: isLightMode ? '#111827' : '#F9FAFB',
+                bodyColor: isLightMode ? '#4B5563' : '#CBD5F5',
+                borderColor: isLightMode ? '#E5E7EB' : 'transparent',
+                borderWidth: 1
+            }
+          }
+        }
+      })
+    }
+
     // 3. Exam Readiness Gauge Initialization
     const initReadinessGauge = async () => {
       const gaugePath = document.getElementById('readiness-progress-path')
@@ -1230,7 +1303,7 @@ export const DashboardComponent = {
       const topSub = mastery.reduce((prev, curr) => (prev.total_attempted > curr.total_attempted) ? prev : curr)
       gaugeSub.textContent = topSub.subject
       
-      const { data: score, error } = await DataService.getReadinessScore(profile.id, topSub.subject)
+      const { data: score, error } = await DataService.getReadinessScore(userId, topSub.subject)
       
       if (!error) {
         gaugePath.style.strokeDasharray = `${score}, 100`

@@ -1,3 +1,17 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+}
+
 :root {
   /* DARK THEME (Default) */
   --bg-color: #0F172A;
@@ -151,8 +165,9 @@ body {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
-  height: 100dvh;
+  min-height: 100vh;
   width: 100%;
+  position: relative; /* Base for stacking */
   overflow: hidden;
   transition: grid-template-columns 0.3s ease;
 }
@@ -183,15 +198,16 @@ body {
 .branding-header {
   grid-column: 1 / 3;
   grid-row: 1 / 2;
+  position: sticky;
+  top: 0;
+  height: 72px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--glass-border);
   background: var(--surface-color);
-  z-index: 100;
-  border-radius: 0;
-  min-height: 64px;
-  height: auto;
-  padding: 0.5rem 0;
+  z-index: 1000; /* Targeted Stacking */
+  padding: 0 1.5rem;
+  box-sizing: border-box;
 }
 
 .branding-header .header-content {
@@ -392,7 +408,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   transition: all 0.3s ease;
-  z-index: 90;
+  z-index: 900;
   border-radius: 0;
 }
 
@@ -464,11 +480,15 @@ body {
   grid-row: 2 / 3;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 2rem;
+  padding: 2.5rem 2rem 5rem 2rem; /* Added extra bottom padding */
   position: relative;
+  z-index: 1; /* Content sits below bars */
   width: 100%;
-  max-width: 1200px;
+  height: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* --- Mobile Nav --- */
@@ -493,13 +513,17 @@ body {
   .main-content-area {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
-    /* Add extra padding at bottom dynamically equal to the nav height + iOS/Android safe area */
-    padding: 1.25rem 0.75rem calc(90px + env(safe-area-inset-bottom)) !important;
+    /* Fixed Spacing: Topbar (72px) + Bottom Nav (80px) */
+    padding: 72px 1rem calc(80px + env(safe-area-inset-bottom)) 1rem !important;
     width: 100% !important;
     max-width: 100%;
+    height: 100%;
     margin-left: 0 !important;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    z-index: 10;
   }
   .mobile-hide {
     display: none !important;
@@ -567,10 +591,6 @@ body {
      gap: 0.25rem !important;
   }
   
-  h1 { font-size: 1.5rem !important; }
-  h2 { font-size: 1.35rem !important; }
-  h3 { font-size: 1.15rem !important; }
-  h4 { font-size: 1.05rem !important; }
   .bottom-nav {
     display: flex;
     justify-content: space-around;
@@ -578,7 +598,7 @@ body {
     background: var(--surface-color);
     border-top: 1px solid var(--glass-border);
     padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
-    z-index: 9999;
+    z-index: 1000; /* Targeted Stacking */
     
     /* Fixed overlay implementation */
     position: fixed;
@@ -586,6 +606,7 @@ body {
     left: 0;
     width: 100%;
     box-shadow: 0 -4px 12px rgba(0,0,0,0.05); /* Slight elevation glow */
+    pointer-events: auto; /* Ensure clicks pass through to items */
   }
   .bottom-nav-item {
     background: transparent;
@@ -611,13 +632,19 @@ body {
   
   /* Global Text Integrity (Strict Mode) */
   .badge, .status-label, .tag, #readiness-status {
-     white-space: nowrap !important;
+     white-space: normal !important; /* Allow wrapping on very small screens */
      display: inline-block !important;
+     word-break: break-all;
   }
   
   .glass.card {
      overflow: hidden !important; /* Contain all child overflows */
   }
+}
+  
+img, svg, canvas, iframe, video, table {
+  max-width: 100% !important;
+  height: auto;
 }
 
 
@@ -694,14 +721,16 @@ body {
 }
 
 .modal-content {
-  width: 90%;
-  max-width: 450px;
+  width: min(450px, 92vw); /* Responsive fluidity */
   padding: 2.5rem;
   background: var(--bg-color);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow-y: auto;
+  max-height: 90vh;
 }
 
 @keyframes modalPop {
@@ -874,13 +903,15 @@ html, body {
 }
 
 /* UI Polish: Global Text & Form Styles */
+strong, h1, h2, h3, h4 {
+  color: var(--text-primary);
+  overflow-wrap: break-word; /* Prevent text blowout */
+}
+
 p, span, label {
   color: var(--text-secondary);
   font-size: 13px;
-}
-
-strong, h1, h2, h3, h4 {
-  color: var(--text-primary);
+  overflow-wrap: break-word;
 }
 
 h1 {
@@ -1693,7 +1724,13 @@ body.light-mode .option-btn .option-holder {
   background: rgba(0, 0, 0, 0.7);
   z-index: 9999;
   transition: opacity 0.3s, visibility 0.3s;
+  pointer-events: none; /* Disabled by default */
+  visibility: hidden;
+}
+
+.tour-overlay.active {
   pointer-events: auto;
+  visibility: visible;
 }
 
 .tour-spotlight {
@@ -1709,7 +1746,7 @@ body.light-mode .option-btn .option-holder {
 
 .tour-bubble {
   position: absolute;
-  width: 320px;
+  width: min(320px, 85vw); /* Responsive width */
   background: var(--text-primary) !important;
   color: var(--bg-color) !important;
   border: 1px solid var(--glass-border);
@@ -1932,111 +1969,13 @@ body.light-mode .option-btn .option-holder {
   .glass.card { padding: 1rem !important; } 
   div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
 }
-
-/* Elite V2 Core Layout */
-.elite-layout {
-  display: grid;
-  grid-template-areas:
-    "header header"
-    "sidebar main-content";
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto 1fr;
-  min-height: 100vh;
-  width: 100%;
-}
-
-.branding-header {
-  grid-area: header;
-  height: 72px;
-  position: sticky;
-  top: 0;
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--glass-border);
-  background: var(--bg-color);
-  width: 100%;
-}
-
-.app-sidebar {
-  grid-area: sidebar;
-  width: 260px;
-  min-height: calc(100vh - 72px);
-  position: sticky;
-  top: 72px;
-  background: var(--card-bg);
-  border-right: 1px solid var(--glass-border);
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 1rem;
-  z-index: 1050;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.app-sidebar.collapsed {
-  width: 72px;
-  padding: 1.5rem 0.5rem;
-}
-
-.app-sidebar.collapsed .nav-item {
-  justify-content: center !important;
-  padding: 0.8rem 0;
-}
-
-.app-sidebar.collapsed .nav-item span {
-  display: none;
-}
-
-.app-sidebar.collapsed .nav-item i {
-  margin-right: 0 !important;
-  font-size: 1.4rem;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.nav-item {
-  width: 100%;
-  justify-content: flex-start !important;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.app-sidebar.collapsed .nav-item {
-  justify-content: center !important;
-  padding: 0.75rem 0;
-}
-
-.app-sidebar.collapsed .nav-item span {
-  display: none;
-}
-
-.main-content-area, 
-#dashboard-container, 
-#admin-container, 
-#exam-container, 
-#news-article-container, 
-#auth-container {
-  grid-area: main-content;
-  width: 100%;
-  padding: 2rem;
-  overflow-x: hidden;
-  min-height: calc(100vh - 72px);
-}
-
+/* News side-drawer refined (matches id="news-drawer") */
 /* News side-drawer refined (matches id="news-drawer") */
 .news-drawer {
   position: fixed;
   top: 0;
   right: -100%;
-  width: 400px;
+  width: min(400px, 92vw); /* Responsive drawer */
   height: 100%;
   background: var(--bg-color);
   box-shadow: -10px 0 30px rgba(0,0,0,0.3);
@@ -2065,6 +2004,12 @@ body.light-mode .option-btn .option-holder {
   backdrop-filter: blur(4px);
   z-index: 999;
   display: none;
+  pointer-events: none; /* Block clicks ONLY when active */
+}
+
+.sidebar-overlay.active {
+  display: block;
+  pointer-events: auto;
 }
 
 @media (max-width: 1024px) {

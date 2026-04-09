@@ -144,6 +144,8 @@ export const ResultsComponent = {
     document.getElementById('restart-exam').onclick = onRestart
     document.getElementById('review-exam').onclick = onReview
     document.getElementById('back-home').onclick = () => {
+        document.getElementById('back-home').style.opacity = '0.5';
+        console.log("Results: Navigating back to dashboard...");
         if (onBack) onBack(); else location.reload();
     }
     document.getElementById('results-back-btn').onclick = () => {
