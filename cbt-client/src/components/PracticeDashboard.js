@@ -121,7 +121,7 @@ export const PracticeDashboardComponent = {
 
         try {
           const { data: subjects } = await DataService.getSubjects(selectedExam)
-          subSelect.innerHTML = subjects.map(s => `<option value="${s.subject}">${s.subject}</option>`).join('')
+          subSelect.innerHTML = subjects.map(s => `<option value="${s.subject_name || s.subject}">${s.subject_name || s.subject}</option>`).join('')
           
           // Trigger first topic load
           subSelect.onchange()

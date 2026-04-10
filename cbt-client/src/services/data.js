@@ -7,15 +7,26 @@ export const DataService = {
     return { data: data || [], error }
   },
 
-  async getSubjects() {
-    const { data, error } = await supabase.from('subjects').select('*').order('subject_name')
+  async getSubjects(examType) {
+    let query = supabase.from('subjects').select('*').order('subject_name')
+    // Note: If we need strictly filtered subjects per exam, we'd join with questions or syllabus_topics
+    const { data, error } = await query
     return { data: data || [], error }
   },
-  async getTopics(subjectId, examId) {
+
+  async getPracticeQuestions(subject, topic = '', limit = 20) {
+    return await this.getQuestions({
+      subject,
+      topic,
+      limit,
+      randomize: true
+    })
+  },
+  async getTopics(subject, examId) {
     let query = supabase
       .from('syllabus_topics')
-      .select('id, topic')
-      .eq('subject_id', subjectId)
+      .select('topic, subjects!inner(subject_name)')
+      .eq('subjects.subject_name', subject)
 
     if (examId) query = query.eq('exam_id', examId)
 

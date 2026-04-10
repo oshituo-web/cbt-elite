@@ -129,21 +129,24 @@ export const ExamsDashboardComponent = {
           
           subList.innerHTML = '<div style="display:flex;justify-content:center;padding:1rem;grid-column:1/-1;"><div class="loader-spinner"></div></div>'
           const { data: subjects } = await DataService.getSubjects('JAMB')
-          const filtered = subjects.filter(s => s.subject.toLowerCase() !== 'use of english')
+          const filtered = subjects.filter(s => (s.subject_name || s.subject || '').toLowerCase() !== 'use of english')
           
-          subList.innerHTML = filtered.map(s => `
-              <label class="subject-checkbox-item ${profile.is_activated ? '' : 'locked'}">
-                  <input type="checkbox" value="${s.subject}" ${profile.is_activated ? '' : 'disabled'}>
-                  <span>${s.subject}</span>
-              </label>
-          `).join('')
+          subList.innerHTML = filtered.map(s => {
+              const name = s.subject_name || s.subject;
+              return `
+                  <label class="subject-checkbox-item ${this.profile.is_activated ? '' : 'locked'}">
+                      <input type="checkbox" value="${name}" ${this.profile.is_activated ? '' : 'disabled'}>
+                      <span>${name}</span>
+                  </label>
+              `
+          }).join('')
         } else {
           jambConfig.style.display = 'none'
           waecNecoConfig.style.display = 'block'
           
           eSub.innerHTML = '<option>Loading...</option>'
           const { data: subjects } = await DataService.getSubjects(selectedExam)
-          eSub.innerHTML = subjects.map(s => `<option value="${s.subject}">${s.subject}</option>`).join('')
+          eSub.innerHTML = subjects.map(s => `<option value="${s.subject_name || s.subject}">${s.subject_name || s.subject}</option>`).join('')
         }
       }
     })
