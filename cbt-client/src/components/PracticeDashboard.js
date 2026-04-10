@@ -139,7 +139,7 @@ export const PracticeDashboardComponent = {
       try {
         const { data: topics } = await DataService.getTopics(sub)
         if (topics) {
-          topicSelect.innerHTML += topics.map(t => `<option value="${t.topic}">${t.topic}</option>`).join('')
+          topicSelect.innerHTML += topics.map(t => `<option value="${t}">${t}</option>`).join('')
         }
       } catch (err) {
         console.warn("Failed to load topics", err)
