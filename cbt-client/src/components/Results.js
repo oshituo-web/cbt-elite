@@ -1,6 +1,7 @@
 import { DataService } from '../services/data'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
+import { TopicDeepDiveComponent } from './TopicDeepDive'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
@@ -105,51 +106,109 @@ export const ResultsComponent = {
           return '';
         })()}
 
+        <!-- PERFORMANCE BY TOPIC -->
         <div style="text-align: left;">
           <h3 style="font-family: 'Outfit'; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">
               ${isJambMock ? 'Performance by Subject' : 'Performance by Topic'}
           </h3>
-          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 4rem;">
-            ${Object.entries(statsGroup).map(([label, stats]) => {
-              const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
-              const isSuccess = percent >= 50
-              return `
-                <div class="glass" style="padding: 1.25rem; border-radius: 12px;">
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem;">
-                    <span style="font-weight: 800; color: var(--text-primary);">${label}</span>
-                    <span style="color: ${isSuccess ? 'var(--success)' : 'var(--error)'}; font-weight: 900; font-family: 'Outfit';">${stats.correct} / ${stats.total} (${percent}%)</span>
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem;">
+            ${(() => {
+              // Find weakest topic for AI Recommendation
+              let weakest = null
+              let minPercent = 101
+
+              return Object.entries(statsGroup).map(([label, stats]) => {
+                const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
+                const isSuccess = percent >= 50
+                
+                if (percent < minPercent && stats.total > 0) {
+                    minPercent = percent
+                    weakest = label
+                }
+                
+                this._weakestTopic = (minPercent < 60) ? weakest : null
+
+                return `
+                  <div class="glass" style="padding: 1.25rem; border-radius: 12px; border-left: 4px solid ${isSuccess ? 'var(--success)' : 'var(--error)'};">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                      <span style="font-weight: 800; color: var(--text-primary);">${label}</span>
+                      <span style="color: ${isSuccess ? 'var(--success)' : 'var(--error)'}; font-weight: 900; font-family: 'Outfit';">${stats.correct} / ${stats.total} (${percent}%)</span>
+                    </div>
+                    <div class="progress-v2-container">
+                      <div class="progress-v2-fill ${isSuccess ? 'success' : 'error'}" style="width: ${percent}%;"></div>
+                    </div>
                   </div>
-                  <div class="progress-v2-container">
-                    <div class="progress-v2-fill ${isSuccess ? 'success' : 'error'}" style="width: ${percent}%;"></div>
-                  </div>
-                </div>
-              `
-            }).join('')}
+                `
+              }).join('')
+            })()}
           </div>
         </div>
 
-        <div class="glass card" style="padding: 2.5rem; background: rgba(0,0,0,0.1); border-radius: 20px;">
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem;">What's your next move?</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center;">
-            <button class="btn-primary" id="restart-exam" style="flex: 1; min-width: 200px; height: 56px;">Retake Session</button>
-            <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 200px; height: 56px; border-color: var(--accent-primary); border-width: 2px;">Review Correction</button>
-            <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 200px; height: 56px;">← Back to Dashboard</button>
+        <!-- AI TUTOR SMART RECOMMENDATION -->
+        ${this._weakestTopic ? `
+          <div class="glass card scale-in mb-xl" style="background: var(--accent-gradient); border: none; padding: 2.5rem; text-align: left; color: white;">
+             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; opacity: 0.9;">
+               <i data-lucide="brain-circuit"></i>
+               <span style="font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">AI SMART TUTOR</span>
+             </div>
+             <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.75rem; margin-bottom: 0.75rem; line-height: 1.2;">Master "${this._weakestTopic}"</h3>
+             <p style="opacity: 0.9; margin-bottom: 2rem; font-weight: 500; font-size: 1rem;">I've identified this as your biggest bottleneck. Reviewing a few core concepts could boost your overall score by up to 15%.</p>
+             <div style="display: flex; gap: 1rem;">
+               <button id="deep-dive-btn" class="btn-secondary" style="background: white; color: var(--primary); border: none; font-weight: 800; padding: 0 1.5rem;">
+                 Read Topic Summary
+               </button>
+               <button id="auto-focus-btn" class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; padding: 0 1.5rem;">
+                 Challenge (10 Quest)
+               </button>
+             </div>
           </div>
+        ` : ''}
+
+        <div class="glass card" style="padding: 2.5rem; background: rgba(0,0,0,0.1); border-radius: 20px;">
+           <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem;">What's your next move?</p>
+           <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+             <button class="btn-primary" id="restart-exam" style="flex: 1; min-width: 180px; height: 50px;">Retake Session</button>
+             <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 180px; height: 50px; border-color: var(--accent-primary);">Review Correction</button>
+             <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 180px; height: 50px;">← Dashboard</button>
+           </div>
         </div>
 
       </div>
     `
 
 
-    document.getElementById('restart-exam').onclick = onRestart
-    document.getElementById('review-exam').onclick = onReview
-    document.getElementById('back-home').onclick = () => {
-        document.getElementById('back-home').style.opacity = '0.5';
-        console.log("Results: Navigating back to dashboard...");
-        if (onBack) onBack(); else location.reload();
+    // AI Tutor Listeners
+    const deepDiveBtn = document.getElementById('deep-dive-btn')
+    const autoFocusBtn = document.getElementById('auto-focus-btn')
+
+    if (deepDiveBtn) {
+      deepDiveBtn.onclick = () => {
+        TopicDeepDiveComponent.render(this._weakestTopic, subject, profile, (questions) => {
+           // Provide callback to start focused exam from modal
+           onReview(questions); // We can reuse onReview logic or custom
+        });
+      }
     }
-    document.getElementById('results-back-btn').onclick = () => {
-        if (onBack) onBack(); else location.reload();
+
+    if (autoFocusBtn) {
+      autoFocusBtn.onclick = async () => {
+         autoFocusBtn.disabled = true;
+         autoFocusBtn.innerHTML = '<div class="loader-spinner" style="width:16px;height:16px;"></div> Loading Challenge...';
+         
+         const { data: questions } = await DataService.getPracticeQuestions(subject, this._weakestTopic, 10);
+         if (questions && questions.length > 0) {
+            // Start the focus session
+            // We need a way to trigger the dashboard's start logic
+            // In Dashboard.js, the callback is passed. We can just use the onRestart or similar if we modify it.
+            // Better: ResultsComponent should have access to the main onStartExam callback.
+            // For now, let's assume we can trigger a retake with these specific questions.
+            onRestart(questions, 'practice', subject, examType); 
+         } else {
+            alert("Could not load challenge questions. Try another topic!");
+            autoFocusBtn.disabled = false;
+            autoFocusBtn.innerHTML = 'Challenge (10 Quest)';
+         }
+      }
     }
 
     if (window.lucide) window.lucide.createIcons();

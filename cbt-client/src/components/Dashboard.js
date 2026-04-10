@@ -410,149 +410,76 @@ export const DashboardComponent = {
           </details>
         </div>
         
-        <div style="margin-top: 2rem; border-top: 1px dashed var(--glass-border); padding-top: 2.5rem;">
-            <div class="dashboard-tabs" style="display: flex; gap: 1.25rem; margin-bottom: 2rem;">
-              <button id="view-practice" class="nav-tab active" style="flex: 1; height: 52px; font-weight: 800;"><i data-lucide="target" style="width: 20px; height: 20px;"></i> Practice</button>
-              <button id="view-exam" class="nav-tab" style="flex: 1; height: 52px; font-weight: 800;"><i data-lucide="trophy" style="width: 20px; height: 20px;"></i> Exams</button>
-            </div>
-            
-            <!-- (Resume Container moved to top) -->
-
-            <!-- Practice Mode Section -->
-            <div id="practice-section">
-              <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Choose Your Exam Type</h2>
-              <div class="dashboard-grid">
-                ${ExamCard({
-                  title: 'JAMB Practice',
-                  description: 'Topic-based objective practice',
-                  colorClass: 'jamb',
-                  icon: '<i data-lucide="target" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'JAMB',
-                  extraClass: 'practice-tier'
-                })}
-                ${ExamCard({
-                  title: 'WAEC Practice',
-                  description: 'Objective & Theory support',
-                  colorClass: 'waec',
-                  icon: '<i data-lucide="book" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'WAEC',
-                  extraClass: 'practice-tier'
-                })}
-                ${ExamCard({
-                  title: 'NECO Practice',
-                  description: 'Objective & Theory support',
-                  colorClass: 'neco',
-                  icon: '<i data-lucide="pen-tool" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'NECO',
-                  extraClass: 'practice-tier'
-                })}
+        <!-- QUICK ACTIONS GRID -->
+        <div class="dashboard-grid">
+          <div id="quick-practice-btn" class="glass card scale-in" style="cursor: pointer; border-bottom: 4px solid var(--primary);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="background: rgba(37, 99, 235, 0.1); padding: 0.75rem; border-radius: 12px; color: var(--primary);">
+                <i data-lucide="target"></i>
               </div>
-
-              <!-- Practice Config -->
-              <div id="practice-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 2.5rem;">
-                <h3 id="practice-title" style="margin-bottom: 2rem; font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--primary);">Configure Session</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-                  <div>
-                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Course / Subject</label>
-                    <select id="p-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);"></select>
-                  </div>
-                  <div id="p-topic-wrapper">
-                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Specific Topic</label>
-                    <select id="p-topic" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
-                      <option value="">All Topics (Recommended)</option>
-                    </select>
-                  </div>
-                  <div id="p-type-wrapper" style="display: none;">
-                    <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Question Type</label>
-                    <select id="p-type" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
-                      <option value="objective">Objective (CBT)</option>
-                      <option value="theory">Theory (Standard)</option>
-                    </select>
-                  </div>
-                </div>
-                <button id="p-start-btn" class="btn-dominant" style="margin-top: 2.5rem; width: 100%;">Start Practice Session</button>
-              </div>
-            </div>
-
-            <!-- Exam Mode Section -->
-            <div id="exam-section">
-              <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1rem;">Structured Mock Exams</h2>
-              <div class="dashboard-grid">
-                ${ExamCard({
-                  title: 'JAMB Mock',
-                  description: '180 Questions | 120 Mins',
-                  colorClass: 'jamb',
-                  icon: '<i data-lucide="target" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'JAMB',
-                  extraClass: 'exam-tier'
-                })}
-                ${ExamCard({
-                  title: 'WAEC Mock',
-                  description: 'Standard Full Exam',
-                  colorClass: 'waec',
-                  icon: '<i data-lucide="book" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'WAEC',
-                  extraClass: 'exam-tier'
-                })}
-                ${ExamCard({
-                  title: 'NECO Mock',
-                  description: 'Standard Full Exam',
-                  colorClass: 'neco',
-                  icon: '<i data-lucide="pen-tool" style="width: 24px; height: 24px;"></i>',
-                  dataExamTarget: 'NECO',
-                  extraClass: 'exam-tier'
-                })}
-              </div>
-
-              <!-- Exam Config -->
-              <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 2.5rem;">
-                <h3 id="exam-title" style="margin-bottom: 2rem; font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
-                
-                <div id="jamb-exam-config" style="display: none;">
-                    <p style="margin-bottom: 1.25rem; color: var(--accent-secondary); font-weight: 600;">English is mandatory. Select 3 additional subjects to complete your set.</p>
-                    <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; max-height: 250px; overflow-y: auto; padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                    </div>
-                </div>
-
-                <div id="waec-neco-exam-config" style="display: none;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                        <div>
-                            <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Subject</label>
-                            <select id="e-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);"></select>
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Assessment Format</label>
-                            <select id="e-type" class="glass-select" style="width: 100%; height: 48px; border-radius: var(--radius-md);">
-                                <option value="objective">Objective (Recommended)</option>
-                                <option value="theory">Theory (Graded by AI)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button id="e-start-btn" class="btn-dominant" style="margin-top: 2.5rem; width: 100%; background: var(--accent-gradient);">Begin Full Mock Exam</button>
-              </div>
-            </div>
-        </div>
-
-        <!-- PERFORMANCE INSIGHTS -->
-        <div id="analytics-section" style="margin-top: 4rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
-            <i data-lucide="bar-chart-2" style="color: var(--success); width: 28px; height: 28px;"></i> Personalized Analysis
-          </h2>
-          <div class="analytics-grid" style="gap: 1.5rem;">
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
-              <h4 style="margin-bottom: 1.5rem; color: var(--accent-primary); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Score History (Last 50 trials)</h4>
-              <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="score-history-chart" style="width: 100% !important; height: auto !important;"></canvas>
-              </div>
-            </div>
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
-              <h4 style="margin-bottom: 1.5rem; color: var(--success); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Subject Mastery (%)</h4>
-              <div style="flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="subject-mastery-chart" style="width: 100% !important; height: auto !important; max-width: 400px; margin: 0 auto;"></canvas>
+              <div>
+                <h4 style="font-weight: 800; font-family: 'Outfit'; margin: 0;">Practice Mode</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Topic-based focus</p>
               </div>
             </div>
           </div>
+
+          <div id="quick-exam-btn" class="glass card scale-in" style="cursor: pointer; border-bottom: 4px solid var(--accent-secondary);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="background: rgba(147, 51, 234, 0.1); padding: 0.75rem; border-radius: 12px; color: var(--accent-secondary);">
+                <i data-lucide="trophy"></i>
+              </div>
+              <div>
+                <h4 style="font-weight: 800; font-family: 'Outfit'; margin: 0;">Mock Exams</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Timed simulations</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-leaderboard" class="glass card scale-in" style="cursor: pointer; border-bottom: 4px solid var(--success);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="background: rgba(16, 185, 129, 0.1); padding: 0.75rem; border-radius: 12px; color: var(--success);">
+                <i data-lucide="bar-chart-3"></i>
+              </div>
+              <div>
+                <h4 style="font-weight: 800; font-family: 'Outfit'; margin: 0;">Rankings</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Global leaderboard</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYTICS SECTION -->
+        <div id="analytics-section" style="margin-top: 3rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="bar-chart-2" style="color: var(--success); width: 28px; height: 28px;"></i> Personalized Analysis
+          </h2>
+          <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+              <h4 style="margin-bottom: 1.5rem; color: var(--accent-primary); font-size: 0.9rem; font-weight: 800; text-transform: uppercase;">Recent Performance</h4>
+              <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                <canvas id="score-history-chart"></canvas>
+              </div>
+            </div>
+            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+              <h4 style="margin-bottom: 1.5rem; color: var(--success); font-size: 0.9rem; font-weight: 800; text-transform: uppercase;">Subject Mastery</h4>
+              <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                <canvas id="subject-mastery-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Guide Call-to-Action -->
+        <div class="glass card" style="margin-top: 3rem; background: var(--accent-gradient); border: none; padding: 2.5rem; display: flex; align-items: center; justify-content: space-between; overflow: visible;">
+           <div style="max-width: 60%; color: white;">
+              <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem;">Need a headstart?</h2>
+              <p style="opacity: 0.9; font-weight: 500; font-size: 0.95rem;">Unleash the full power of CBT Elite with our interactive platform guide.</p>
+              <button id="help-guide-btn" class="btn-secondary" style="margin-top: 1.5rem; background: white; color: var(--primary); border: none; font-weight: 800;">Launch Interactive Tour</button>
+           </div>
+           <div class="mobile-hide" style="transform: scale(2) rotate(-10deg); opacity: 0.2; color: white;">
+             <i data-lucide="graduation-cap" style="width: 80px; height: 80px;"></i>
+           </div>
         </div>
       </div>
 
@@ -634,6 +561,15 @@ export const DashboardComponent = {
              </div>
           </div>
         </div>
+        <!-- FOOTER / LEGAL -->
+        <footer style="margin-top: 5rem; padding: 3rem 1.5rem; text-align: center; border-top: 1px solid var(--glass-border); opacity: 0.7;">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: 500;">
+            CBT Elite is an independent educational platform and is not affiliated with JAMB, WAEC, or NECO. All trademarks belong to their respective owners.
+          </p>
+          <p style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
+            © 2026 CBT Elite Platform
+          </p>
+        </footer>
       </div>
     `
 
@@ -1047,52 +983,15 @@ export const DashboardComponent = {
     if (helpBtn) helpBtn.onclick = () => helpModal.style.display = 'flex'
     if (helpClose) helpClose.onclick = () => helpModal.style.display = 'none'
 
-    // 🔥 Quick Action Listeners
+    // 🔥 Quick Action Listeners (URL-based)
     const quickPracticeBtn = document.getElementById('quick-practice-btn')
     const quickExamBtn = document.getElementById('quick-exam-btn')
-    const weakPracticeBtn = document.getElementById('practice-weak-btn')
 
     if (quickPracticeBtn) {
-        quickPracticeBtn.onclick = () => {
-            const pSec = document.getElementById('practice-section')
-            const jambPractice = document.querySelector('.practice-tier[data-exam="JAMB"]')
-            
-            if (pSec) {
-                if (jambPractice) jambPractice.click() // Auto-trigger the first category
-                const scrollTarget = document.getElementById('dashboard-content') || document.querySelector('.dashboard-scroll-area')
-                if (scrollTarget) {
-                    scrollTarget.scrollTo({ top: pSec.offsetTop - 20, behavior: 'smooth' })
-                } else {
-                    window.scrollTo({ top: pSec.offsetTop - 20, behavior: 'smooth' })
-                }
-                
-                // Sync Bottom Nav Highlight
-                const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
-                navItems.forEach(nav => nav.classList.remove('active'))
-                document.querySelectorAll('[data-view="exams"]').forEach(v => v.classList.add('active'))
-            }
-        }
+        quickPracticeBtn.onclick = () => window.navigateTo('practice', profile)
     }
     if (quickExamBtn) {
-        quickExamBtn.onclick = () => {
-            const eSec = document.getElementById('exam-section')
-            const jambExam = document.querySelector('.exam-tier[data-exam="JAMB"]')
-            
-            if (eSec) {
-                if (jambExam) jambExam.click() // Auto-trigger the first category
-                const scrollTarget = document.getElementById('dashboard-content') || document.querySelector('.dashboard-scroll-area')
-                if (scrollTarget) {
-                    scrollTarget.scrollTo({ top: eSec.offsetTop - 20, behavior: 'smooth' })
-                } else {
-                    window.scrollTo({ top: eSec.offsetTop - 20, behavior: 'smooth' })
-                }
-                
-                // Sync Bottom Nav Highlight
-                const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
-                navItems.forEach(nav => nav.classList.remove('active'))
-                document.querySelectorAll('[data-view="exams"]').forEach(v => v.classList.add('active'))
-            }
-        }
+        quickExamBtn.onclick = () => window.navigateTo('exams', profile)
     }
     if (weakPracticeBtn) {
         weakPracticeBtn.onclick = () => {
@@ -1162,19 +1061,67 @@ export const DashboardComponent = {
   async renderCharts(userId) {
     const { history, mastery, error } = await DataService.getUserAnalytics(userId)
     const analyticsSection = document.getElementById('analytics-section')
+    
+    // Scenario 1: No Data (0 sessions)
     if (error || (!history.length && !mastery.length)) {
       analyticsSection.innerHTML = `
         <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bar-chart-2" style="color: var(--success); width: 24px; height: 24px;"></i> Performance Insights</h2>
         <div class="empty-state-card glass cta-pulse" style="display: flex; flex-direction: column; align-items: center;">
-           <div style="margin-bottom: 1.5rem; color: var(--accent-primary);"><i data-lucide="rocket" style="width: 48px; height: 48px;"></i></div>
-           <h3 style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.75rem;">Ready for your first session?</h3>
-           <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 400px; margin-bottom: 2rem;">Take your first practice test or mock exam to unlock personalized performance charts, subject mastery scores, and your readiness evaluation.</p>
-           <button class="primary" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Start Practicing Now</button>
+           <div style="margin-bottom: 1.5rem; color: var(--accent-primary);"><i data-lucide="brain-circuit" style="width: 48px; height: 48px;"></i></div>
+           <h3 style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.75rem;">Initializing AI Tutor...</h3>
+           <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 400px; margin-bottom: 2rem;">Take <strong>5 practice or exam sessions</strong> to calibrate the AI. This unlocks subject mastery charts and personalized readiness scores.</p>
+           <button class="primary" onclick="window.navigateTo('practice', currentProfile)">Start Your First Session</button>
         </div>
       `
+      if (window.lucide) window.lucide.createIcons({ root: analyticsSection })
       return
     }
+
     analyticsSection.style.opacity = '1'
+    
+    // Scenario 2: Calibration Mode (1-4 sessions)
+    const calibrationHeader = history.length < 5 ? `
+      <div class="glass" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 16px; border: 1.25px solid rgba(124, 58, 237, 0.3); background: rgba(124, 58, 237, 0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+           <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); font-weight: 800; font-size: 0.85rem;">
+             <i data-lucide="zap" style="width:16px;"></i> AI CALIBRATION IN PROGRESS
+           </div>
+           <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">${history.length} of 5 sessions</div>
+        </div>
+        <div class="progress-v2-container" style="height: 8px;">
+           <div class="progress-v2-fill" style="width: ${(history.length / 5) * 100}%; background: var(--accent-gradient);"></div>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem; font-weight: 500;">Complete ${5 - history.length} more sessions to unlock <strong>Subject Mastery Radar</strong> and <strong>Topic Bottleneck Analysis</strong>.</p>
+      </div>
+    ` : ''
+
+    // Re-render the section content to include calibration header if needed
+    analyticsSection.innerHTML = `
+      <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="bar-chart-2" style="color: var(--success); width: 24px; height: 24px;"></i> Performance Insights</h2>
+      ${calibrationHeader}
+      <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+          <h4 style="margin-bottom: 1.5rem; color: var(--accent-primary); font-size: 0.9rem; font-weight: 800; text-transform: uppercase;">Recent Performance</h4>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+            <canvas id="score-history-chart"></canvas>
+          </div>
+        </div>
+        ${history.length >= 2 ? `
+          <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px;">
+            <h4 style="margin-bottom: 1.5rem; color: var(--success); font-size: 0.9rem; font-weight: 800; text-transform: uppercase;">Subject Mastery</h4>
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+              <canvas id="subject-mastery-chart"></canvas>
+            </div>
+          </div>
+        ` : `
+          <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 350px; opacity: 0.6; align-items: center; justify-content: center; text-align: center;">
+             <i data-lucide="lock" style="color: var(--text-secondary); margin-bottom: 1rem;"></i>
+             <p style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);">Mastery radar unlocks<br>after 2 unique subjects.</p>
+          </div>
+        `}
+      </div>
+    `
+    if (window.lucide) window.lucide.createIcons({ root: analyticsSection })
 
     // Get current theme colors
     const style = getComputedStyle(document.body)

@@ -2,6 +2,9 @@ import { AuthService } from './src/services/auth'
 import { AuthComponent } from './src/components/Auth'
 import { ProfileSetupComponent } from './src/components/ProfileSetup'
 import { DashboardComponent } from './src/components/Dashboard'
+import { PracticeDashboardComponent } from './src/components/PracticeDashboard'
+import { ExamsDashboardComponent } from './src/components/ExamsDashboard'
+import { SettingsComponent } from './src/components/Settings'
 import { ExamComponent } from './src/components/Exam'
 import { ResultsComponent } from './src/components/Results'
 import { AdminComponent } from './src/components/Admin'
@@ -13,6 +16,139 @@ import './src/styles/main.css'
 
 let dashboardLoaded = false;
 let currentProfile = null;
+
+/**
+ * 🧭 Centralized URL-based Navigation Handler
+ */
+window.navigateTo = function(view, profile = currentProfile, pushState = true) {
+  if (!view || !profile) return;
+  
+  // 1. Update active states and handle routing metadata
+  const pathMap = {
+    'dashboard': '/dashboard',
+    'exams': '/exams',
+    'practice': '/practice',
+    'admin': '/admin',
+    'settings': '/settings',
+    'profile': '/profile'
+  };
+
+  const path = pathMap[view] || '/dashboard';
+  if (pushState) {
+    history.pushState({ view, profileId: profile.id }, '', path);
+  }
+  
+  // 1. Close all drawers/overlays first to ensure clean state
+  const moreDrawer = document.getElementById('more-drawer');
+  const newsDrawer = document.getElementById('news-drawer');
+  const overlay = document.getElementById('sidebar-overlay');
+  
+  if (view !== 'more') {
+    if (moreDrawer) moreDrawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  // 2. Update Active State for all navigation elements
+  const allNavItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .more-menu-item');
+  allNavItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.view === view);
+  });
+
+
+  // 3. Handle Modular Views
+  switch (view) {
+    case 'dashboard':
+      showDashboard(profile);
+      break;
+      
+    case 'admin':
+      showAdmin(profile);
+      break;
+      
+    case 'exams':
+      showExamsDashboard(profile);
+      break;
+
+    case 'practice':
+      showPracticeDashboard(profile);
+      break;
+      
+    case 'profile':
+      showDashboard(profile);
+      // Logic remained same but now it's a dedicated URL /profile
+      break;
+      
+    case 'settings':
+      showSettings(profile);
+      break;
+      
+    case 'more':
+      toggleMoreDrawer();
+      break;
+      
+    case 'logout':
+      if (confirm('Are you sure you want to sign out?')) {
+        AuthService.signOut().then(() => {
+           history.pushState(null, '', '/');
+           location.reload();
+        });
+      }
+      break;
+      
+    default:
+      showDashboard(profile);
+  }
+}
+
+// Global popstate for browser back/forward buttons
+window.onpopstate = (event) => {
+  if (event.state && event.state.view) {
+    navigateTo(event.state.view, currentProfile, false);
+  } else {
+    // Fallback to initial route
+    handleInitialRoute(currentProfile);
+  }
+};
+
+function showExamsDashboard(profile) {
+   currentProfile = profile;
+   hideAll();
+   ExamsDashboardComponent.render(profile, (questions, mode, subject, examType) => {
+     showExam(questions, profile, false, {}, mode, subject, examType);
+   });
+}
+
+function showPracticeDashboard(profile) {
+  currentProfile = profile;
+  hideAll();
+  PracticeDashboardComponent.render(profile, (questions, mode, subject, examType) => {
+    showExam(questions, profile, false, {}, mode, subject, examType);
+  });
+}
+
+function showSettings(profile) {
+   currentProfile = profile;
+   hideAll();
+   SettingsComponent.render(profile, () => navigateTo('dashboard', profile));
+}
+
+function handleInitialRoute(profile) {
+  const path = window.location.pathname;
+  if (path === '/exams') navigateTo('exams', profile, false);
+  else if (path === '/practice') navigateTo('practice', profile, false);
+  else if (path === '/admin' && (profile.role === 'admin' || profile.role === 'super-admin')) navigateTo('admin', profile, false);
+  else if (path === '/settings') navigateTo('settings', profile, false);
+  else navigateTo('dashboard', profile, false);
+}
+
+function toggleMoreDrawer() {
+  const drawer = document.getElementById('more-drawer');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (drawer && overlay) {
+    drawer.classList.toggle('active');
+    overlay.classList.toggle('active');
+  }
+}
 
 async function initApp() {
   // 🧭 0. GLOBAL ERROR LOGGING
@@ -76,7 +212,7 @@ async function initApp() {
             showProfileSetup(user);
         } else {
             updateHeaderProfile(profile);
-            showDashboard(profile);
+            handleInitialRoute(profile);
         }
         
         // Broadcast check can happen in background
@@ -105,7 +241,12 @@ function updateHeaderProfile(profile) {
 
   if (avatar) avatar.textContent = profile.username.charAt(0).toUpperCase()
   if (username) username.textContent = profile.username
-  if (adminBtn) adminBtn.style.display = (profile.role === 'admin' || profile.role === 'super-admin') ? 'flex' : 'none'
+  
+  const isAdmin = profile.role === 'admin' || profile.role === 'super-admin';
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none'
+  
+  const bottomAdminBtn = document.getElementById('bottom-admin-btn');
+  if (bottomAdminBtn) bottomAdminBtn.style.display = isAdmin ? 'flex' : 'none'
   
   if (streakText) streakText.textContent = `${profile.streak_count || 0}`
   
@@ -130,6 +271,11 @@ function setupGlobalActions(profile) {
   if (sidebarAdminBtn && profile.role !== 'admin' && profile.role !== 'super-admin') {
     sidebarAdminBtn.style.display = 'none'
   }
+  
+  const bottomAdminBtn = document.getElementById('bottom-admin-btn');
+  if (bottomAdminBtn && profile.role !== 'admin' && profile.role !== 'super-admin') {
+    bottomAdminBtn.style.display = 'none'
+  }
 
   // 9. Attach Global News Action
   const newsBtn = document.getElementById('global-news-btn')
@@ -139,13 +285,17 @@ function setupGlobalActions(profile) {
   if (newsBtn && newsDrawer && !newsBtn.dataset.init) {
     newsBtn.dataset.init = "true"
     newsBtn.onclick = async () => {
-      const isActive = newsDrawer.classList.contains('active') || newsDrawer.style.display === 'block'
+      const isActive = newsDrawer.classList.contains('active')
+      const overlay = document.getElementById('sidebar-overlay');
+      
       if (isActive) {
-        newsDrawer.classList.remove('active')
-        newsDrawer.style.display = 'none'
+        newsDrawer.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
       } else {
-        newsDrawer.style.display = 'block'
-        newsDrawer.classList.add('active')
+        // Close other drawers first
+        navigateTo('dashboard'); // Helper to clean state
+        newsDrawer.classList.add('active');
+        if (overlay) overlay.classList.add('active');
         
         // Fetch and Render News
         const contentArea = document.getElementById('news-drawer-content')
@@ -169,21 +319,17 @@ function setupGlobalActions(profile) {
                    </div>
                  `).join('')
 
-                 // Hook up click handlers for each news item
                  contentArea.querySelectorAll('.news-item-card').forEach(card => {
                    card.onclick = () => {
                      const nid = card.dataset.newsId
                      const article = newsItems.find(n => n.id === nid)
                      if (article) {
                        newsDrawer.classList.remove('active')
-                       newsDrawer.style.display = 'none'
-                       // Import and show article component
+                       if (overlay) overlay.classList.remove('active');
                        import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
                          const dash = document.getElementById('dashboard-container')
                          if (dash) dash.style.display = 'none'
-                         
                          NewsArticleComponent.render(article, () => {
-                           // Show current dashboard when back is clicked 
                            if (dash) dash.style.display = 'block'
                          })
                        })
@@ -191,7 +337,6 @@ function setupGlobalActions(profile) {
                    }
                  })
                  
-                 // Mark all as seen
                  const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
                  const newIds = newsItems.map(n => n.id)
                  const updatedSeen = [...new Set([...seenIds, ...newIds])]
@@ -207,13 +352,56 @@ function setupGlobalActions(profile) {
     }
   }
 
-  if (closeNewsBtn && newsDrawer && !closeNewsBtn.dataset.init) {
-    closeNewsBtn.dataset.init = "true"
+  if (closeNewsBtn) {
     closeNewsBtn.onclick = () => {
-       newsDrawer.classList.remove('active')
-       newsDrawer.style.display = 'none'
+      newsDrawer.classList.remove('active');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (overlay) overlay.classList.remove('active');
+    };
+  }
+
+  // 10. More Drawer Handlers
+  const moreDrawer = document.getElementById('more-drawer');
+  const closeMoreBtn = document.getElementById('close-more-drawer');
+  if (closeMoreBtn) closeMoreBtn.onclick = () => toggleMoreDrawer();
+  
+  const moreNewsBtn = document.getElementById('more-news-btn');
+  if (moreNewsBtn) {
+    moreNewsBtn.onclick = () => {
+      toggleMoreDrawer();
+      setTimeout(() => newsBtn?.click(), 300);
     }
   }
+  
+  const moreLogoutBtn = document.getElementById('more-logout-btn');
+  if (moreLogoutBtn) {
+    moreLogoutBtn.onclick = () => {
+      toggleMoreDrawer();
+      setTimeout(() => navigateTo('logout', profile), 300);
+    }
+  }
+
+  // Handle clicks on items inside More Drawer
+  const moreMenuItems = document.querySelectorAll('.more-menu-item[data-view]');
+  moreMenuItems.forEach(item => {
+    item.onclick = (e) => {
+      const view = item.dataset.view;
+      toggleMoreDrawer();
+      setTimeout(() => navigateTo(view, profile), 300);
+    }
+  });
+
+  // Sidebar overlay (click to close all)
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+  if (sidebarOverlay) {
+    sidebarOverlay.onclick = () => {
+      newsDrawer?.classList.remove('active');
+      moreDrawer?.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      document.getElementById('app-sidebar')?.classList.remove('active');
+    };
+  }
+
   
   if (sidebarToggle && sidebar && !sidebarToggle.dataset.init) {
     sidebarToggle.dataset.init = "true"
@@ -243,58 +431,13 @@ function setupGlobalActions(profile) {
 }
 
 function setupNavigation(profile) {
-  const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item')
+  currentProfile = profile; // Store for navigateTo helper
+  const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .more-menu-item')
   navItems.forEach(item => {
     item.onclick = (e) => {
+      e.preventDefault();
       const view = item.dataset.view
-      if (!view) return
-      
-      // Update Active State
-      navItems.forEach(nav => nav.classList.remove('active'))
-      document.querySelectorAll(`[data-view="${view}"]`).forEach(v => v.classList.add('active'))
-      
-      if (view === 'logout') {
-          navItems.forEach(nav => nav.classList.remove('active'))
-          const prevView = document.querySelector('.main-content-area > div:not([style*="display: none"])')?.id?.replace('-container', '') || 'dashboard'
-          document.querySelectorAll(`[data-view="${prevView}"]`).forEach(v => v.classList.add('active'))
-          
-          if (confirm('Are you sure you want to sign out?')) {
-            AuthService.signOut().then(() => location.reload())
-          }
-          return
-      }
-
-      if (view === 'dashboard') showDashboard(profile)
-      else if (view === 'admin') showAdmin(profile)
-      else if (view === 'exams') {
-        const dashboardBtn = document.getElementById('e-start-btn')
-        const mainView = document.getElementById('main-view')
-        
-        // Use persistence to ensure btn exists
-        showDashboard(profile)
-        
-        // Wait for potential render or just scroll if persistent
-        const scrollTarget = () => {
-             const btn = document.getElementById('e-start-btn')
-             if (btn && mainView) {
-                mainView.scrollTo({ top: btn.offsetTop - 100, behavior: 'smooth' })
-             }
-        }
-        
-        if (dashboardLoaded) scrollTarget()
-        else setTimeout(scrollTarget, 300)
-      }
-      else if (view === 'rankings') {
-          showDashboard(profile)
-          setTimeout(() => document.getElementById('show-leaderboard')?.click(), 100)
-      }
-      else if (view === 'profile') {
-          const mainView = document.getElementById('main-view')
-          showDashboard(profile)
-          if (mainView) {
-              setTimeout(() => mainView.scrollTo({ top: mainView.scrollHeight, behavior: 'smooth' }), 300)
-          }
-      }
+      window.navigateTo(view, profile);
     }
   })
 
@@ -380,13 +523,16 @@ function showResults(questions, userAnswers, profile, mode = 'practice', subject
 }
 
 function hideAll(isExam = false) {
-  document.getElementById('auth-container').style.display = 'none'
-  document.getElementById('dashboard-container').style.display = 'none'
-  document.getElementById('exam-container').style.display = 'none'
-  document.getElementById('admin-container').style.display = 'none'
-  if (document.getElementById('news-article-container')) {
-    document.getElementById('news-article-container').style.display = 'none'
-  }
+  const containers = [
+    'auth-container', 'dashboard-container', 'exam-container', 
+    'admin-container', 'settings-container', 'news-article-container',
+    'practice-container', 'exams-container'
+  ];
+  
+  containers.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 
   // Close News Drawer on any navigation
   const newsDrawer = document.getElementById('news-drawer')
