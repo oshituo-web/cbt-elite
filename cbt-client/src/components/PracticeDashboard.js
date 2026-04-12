@@ -97,12 +97,7 @@ export const PracticeDashboardComponent = {
       startBtn.innerHTML = 'Finding Questions...'; startBtn.disabled = true
       
       try {
-        const { data: questions } = await DataService.getQuestions({
-          subject_name: subject,
-          topic: topic || undefined,
-          limit: limit,
-          randomize: true
-        })
+        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit)
         
         if (questions && questions.length > 0) {
           this.onStartPractice(questions, 'practice', subject, '')
