@@ -154,10 +154,11 @@ export class Exam {
           </div>
 
           <div class="top-bar-right">
-            <button id="toggle-calc" class="btn-secondary" style="padding: 0 1.25rem; height: 40px; font-weight: 800; font-size: 0.75rem; border-color: var(--accent-primary); border-radius: var(--radius-md);">
-              <i data-lucide="calculator" style="width: 16px; height: 16px; margin-right: 0.4rem;"></i> CALC
+            <button id="toggle-calc" class="btn-secondary" style="padding: 0 0.75rem; height: 40px; border-color: var(--accent-primary); border-radius: var(--radius-md);">
+              <i data-lucide="calculator" style="width: 18px; height: 18px;"></i> 
+              <span class="calc-label" style="font-weight: 800; font-size: 0.75rem; margin-left: 0.3rem;">CALC</span>
             </button>
-            <div id="timer" class="timer-display" style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; color: var(--text-primary); margin-left: 1.5rem; letter-spacing: 0.05em;">00:00</div>
+            <div id="timer" class="timer-display">00:00</div>
           </div>
         </div>
 

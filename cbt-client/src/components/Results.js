@@ -46,16 +46,14 @@ export const ResultsComponent = {
     }
 
     const isJambMock = mode === 'exam' && examType === 'JAMB'
-    const statsGroup = {}
-    questions.forEach((q, i) => {
-        const key = isJambMock ? (q.subject || 'General') : (q.topic || 'General')
-        if (!statsGroup[key]) statsGroup[key] = { total: 0, correct: 0 }
-        statsGroup[key].total++
-        if (q.question_type !== 'theory') {
-            const correctAnswer = q.answers.find(a => a.is_correct)
-            if (userAnswers[i] === correctAnswer?.id) statsGroup[key].correct++
-        }
-    })
+    
+    // 🔥 FIX: Calculate stats purely from THIS session data
+    const sessionStats = Object.entries(statsGroup).map(([label, stats]) => ({
+        label,
+        percent: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+        total: stats.total,
+        correct: stats.correct
+    }))
 
     container.innerHTML = `
       <div class="results-view-container" style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; box-sizing: border-box;">
@@ -66,73 +64,31 @@ export const ResultsComponent = {
           
           <div style="margin-bottom: 2.5rem; padding-top: 1rem;">
             <h2 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.5rem;">Session Complete</h2>
-            <p style="color: var(--text-secondary); font-weight: 500;">Great effort! Here is your breakdown.</p>
           </div>
           
           <div style="margin-bottom: 2.5rem; width: 100%;">
             <div class="glass card" style="text-align: center; padding: 2rem 1rem; border: 2px solid var(--primary); background: rgba(37, 99, 235, 0.05); width: 100%; box-sizing: border-box;">
-              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 800; text-transform: uppercase;">Objective Score</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 800; text-transform: uppercase;">Final Score</div>
               <div style="font-size: clamp(2.5rem, 12vw, 4rem); font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
               <div style="font-size: 1.2rem; color: var(--text-primary); margin-top: 0.75rem; font-weight: 800;">${scorePercent}% Accuracy</div>
             </div>
           </div>
 
-          <!-- Premium CTA -->
-          ${(() => {
-            const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
-            if (subState.tier === 'premium' && !subState.shouldShowRenewCTA) return '';
-
-            if (!profile || !profile.activation_status) {
-              return `
-                <div class="glass card scale-in mb-xl" style="padding: 1.5rem; border-left: 6px solid var(--accent-primary); background: rgba(37, 99, 235, 0.05); text-align: left; width: 100%; box-sizing: border-box;">
-                  <h4 style="color: var(--accent-primary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="sparkles"></i> Boost Your Score</h4>
-                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Premium users get AI explanations that help them learn 2x faster.</p>
-                  <button class="btn-primary" style="width: 100%; max-width: 300px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                     Activate Lifetime Access
-                  </button>
-                </div>
-              `;
-            } else if (subState.shouldShowRenewCTA || subState.isExpired) {
-              return `
-                <div class="glass card scale-in mb-xl" style="padding: 1.5rem; border-left: 6px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05); text-align: left; width: 100%; box-sizing: border-box;">
-                  <h4 style="color: var(--accent-secondary); margin: 0 0 0.5rem 0; font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800;"><i data-lucide="rocket"></i> Renew Premium</h4>
-                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Keep enjoying AI explanations and unlimited exams.</p>
-                  <button class="btn-primary" style="background: var(--accent-secondary); width: 100%; max-width: 300px;" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                     Renew Now – ₦1,000
-                  </button>
-                </div>
-              `;
-            }
-            return '';
-          })()}
-
-          <!-- PERFORMANCE BY TOPIC -->
+          <!-- PERFORMANCE FOR THIS SESSION -->
           <div style="text-align: left; width: 100%;">
             <h3 style="font-family: 'Outfit'; margin-bottom: 1.25rem; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">
-                ${isJambMock ? 'By Subject' : 'By Topic'}
+                Performance Breakdown
             </h3>
             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2.5rem; width: 100%;">
-              ${(() => {
-                let weakest = null
-                let minPercent = 101
-
-                return Object.entries(statsGroup).map(([label, stats]) => {
-                  const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
-                  const isSuccess = percent >= 50
-                  if (percent < minPercent && stats.total > 0) { minPercent = percent; weakest = label; }
-                  this._weakestTopic = (minPercent < 60) ? weakest : null
-
-                  return `
-                    <div class="glass" style="padding: 1rem; border-radius: 12px; border-left: 4px solid ${isSuccess ? 'var(--success)' : 'var(--error)'}; width: 100%; box-sizing: border-box;">
-                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <span style="font-weight: 800; color: var(--text-primary);">${label}</span>
-                        <span style="color: ${isSuccess ? 'var(--success)' : 'var(--error)'}; font-weight: 900;">${stats.correct}/${stats.total} (${percent}%)</span>
-                      </div>
-                      <div class="progress-v2-container" style="height: 6px;"><div class="progress-v2-fill ${isSuccess ? 'success' : 'error'}" style="width: ${percent}%;"></div></div>
-                    </div>
-                  `
-                }).join('')
-              })()}
+              ${sessionStats.map(s => `
+                <div class="glass" style="padding: 1rem; border-radius: 12px; border-left: 4px solid ${s.percent >= 50 ? 'var(--success)' : 'var(--error)'}; width: 100%; box-sizing: border-box;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <span style="font-weight: 800; color: var(--text-primary);">${s.label}</span>
+                    <span style="color: ${s.percent >= 50 ? 'var(--success)' : 'var(--error)'}; font-weight: 900;">${s.correct}/${s.total} (${s.percent}%)</span>
+                  </div>
+                  <div class="progress-v2-container" style="height: 6px;"><div class="progress-v2-fill ${s.percent >= 50 ? 'success' : 'error'}" style="width: ${s.percent}%;"></div></div>
+                </div>
+              `).join('')}
             </div>
           </div>
 

@@ -201,12 +201,13 @@ export const DashboardComponent = {
                 </p>
               </div>
 
-              <div style="margin-top: 1rem;">
+              <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
                 ${(weakSubject) ? `
-                  <button id="practice-weak-btn" class="btn-primary" style="padding: 0 1rem; height: 40px; font-size: 0.85rem; width: 100%;"><i data-lucide="target" style="width: 16px;"></i> Target ${weakSubject.subject}</button>
+                  <button id="practice-weak-btn" class="btn-primary" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1;"><i data-lucide="target" style="width: 14px;"></i> Target ${weakSubject.subject}</button>
                 ` : `
-                  <button id="start-ai-workout" class="btn-dominant" style="width: 100%; height: 40px; font-size: 0.85rem;"><i data-lucide="sparkles" style="width: 16px;"></i> AI Workout</button>
+                  <button id="start-ai-workout" class="btn-dominant" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1;"><i data-lucide="sparkles" style="width: 14px;"></i> AI Workout</button>
                 `}
+                <button id="full-analysis-btn" class="btn-secondary" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1; border-color: var(--accent-primary); color: var(--accent-primary);"><i data-lucide="bar-chart-2" style="width: 14px;"></i> ANALYSIS</button>
               </div>
             </div>
          </div>
@@ -391,6 +392,14 @@ export const DashboardComponent = {
 
     const helpBtn = document.getElementById('help-guide-btn')
     if (helpBtn) helpBtn.onclick = () => TourGuide.start()
+
+    const fullAnalysisBtn = document.getElementById('full-analysis-btn')
+    if (fullAnalysisBtn) {
+        fullAnalysisBtn.onclick = () => {
+            const section = document.getElementById('analytics-section')
+            if (section) section.scrollIntoView({ behavior: 'smooth' })
+        }
+    }
 
     const quickPracticeBtn = document.getElementById('quick-practice-btn')
     const quickExamBtn = document.getElementById('quick-exam-btn')
