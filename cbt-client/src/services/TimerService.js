@@ -6,6 +6,8 @@ export const TimerService = {
     this.timeLeft = initialSeconds;
     this.stop(); // Clear any existing
     
+    if (onTick) onTick(this.timeLeft);
+
     this.timer = setInterval(() => {
       this.timeLeft--;
       if (onTick) onTick(this.timeLeft);

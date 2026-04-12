@@ -68,11 +68,12 @@ export const DataService = {
         if (randomIds && randomIds.length > 0) {
           query = query.in('id', randomIds.map(r => r.id))
         } else {
-          return { data: [], error: null, count: 0 }
+          console.warn("RPC returned no random questions. Falling back to sequential.")
+          query = query.limit(filters.limit || 20)
         }
       } catch (err) {
         console.error("DataService.getQuestions Randomization RPC Error:", err)
-        return { data: [], error: err, count: 0 }
+        query = query.limit(filters.limit || 20)
       }
     } else if (filters.offset !== undefined) {
       query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1)
@@ -128,7 +129,7 @@ export const DataService = {
     return await supabase.from('users').update(updates).eq('id', userId).select()
   },
 
-  async saveExamSession(userId, sessionData, questions, userAnswers) {
+  async saveExamSession(userId, sessionData, questions, userAnswers, isSyncing = false) {
     try {
       const { data: session, error: sError } = await supabase
         .from('exam_sessions')
@@ -152,8 +153,12 @@ export const DataService = {
       
       return { session, error: null }
     } catch (err) {
-      console.warn("Retrying session save via Offline Queue:", err)
-      await IndexedDbService.queueOfflineSession({ userId, sessionData, questions, userAnswers })
+      if (!isSyncing) {
+        console.warn("Retrying session save via Offline Queue:", err)
+        await IndexedDbService.queueOfflineSession({ userId, sessionData, questions, userAnswers })
+      } else {
+        console.warn("Offline Sync Failed for session (will retry later):", err)
+      }
       return { session: null, error: "Network lost. Result saved locally." }
     }
   },
@@ -240,7 +245,7 @@ export const DataService = {
     return await supabase.rpc('secure_deduct_credit', { p_user_id: userId, p_action: action })
   },
 
-  async getPracticeQuestions(subjectName, topic = '', limit = 20) {
+  async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '') {
     // 1. Resolve name to ID
     const { data: sub } = await supabase.from('subjects').select('id').eq('subject_name', subjectName).single()
     const subjectId = sub?.id
@@ -250,7 +255,8 @@ export const DataService = {
         subject_id: subjectId,
         topic: topic || undefined,
         limit: limit,
-        randomize: true
+        randomize: true,
+        exam_type: examType || undefined
     })
   },
 

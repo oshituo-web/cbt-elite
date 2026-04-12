@@ -126,7 +126,10 @@ export const ExamsDashboardComponent = {
           waecNecoConfig.style.display = 'none'
           subList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;"><div class="loader-spinner"></div></div>'
           const { data: subjects } = await DataService.getSubjects()
-          const filtered = subjects.filter(s => (s.subject_name || '').toLowerCase() !== 'use of english')
+          const filtered = subjects.filter(s => {
+              const name = (s.subject_name || '').toLowerCase();
+              return name !== 'use of english' && name !== 'english language' && name !== 'english';
+          })
           
           // 🔥 MOBILE FIX: Use a more robust grid with larger touch targets
           subList.innerHTML = filtered.map(s => `
@@ -140,7 +143,23 @@ export const ExamsDashboardComponent = {
           subList.querySelectorAll('label').forEach(lbl => {
               const input = lbl.querySelector('input');
               lbl.onclick = (e) => {
-                  if (e.target !== input) input.checked = !input.checked;
+                  if (e.target !== input) {
+                      // Only toggle if we are not at the limit OR we are unchecking
+                      const checkedCount = subList.querySelectorAll('input:checked').length;
+                      if (!input.checked && checkedCount >= 3) {
+                          alert('You can only select exactly 3 subjects. English is automatically included.');
+                          return;
+                      }
+                      input.checked = !input.checked;
+                  } else {
+                      // Check limit if clicked directly on input
+                      const checkedCount = subList.querySelectorAll('input:checked').length;
+                      if (input.checked && checkedCount > 3) {
+                          input.checked = false;
+                          alert('You can only select exactly 3 subjects. English is automatically included.');
+                          return;
+                      }
+                  }
                   lbl.style.background = input.checked ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.05)';
                   lbl.style.borderColor = input.checked ? 'var(--accent-secondary)' : 'var(--glass-border)';
               }
@@ -163,14 +182,15 @@ export const ExamsDashboardComponent = {
         if (selected.length !== 3) return alert('Select exactly 3 subjects.')
         startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         const fullLoad = ['Use of English', ...selected]
+        console.log("Starting JAMB Exam with subjects:", fullLoad)
         const allQuestions = []
         try {
           for (const s of fullLoad) {
             const limit = s === 'Use of English' ? 60 : 40
-            const { data } = await DataService.getPracticeQuestions(s, '', limit)
+            const { data } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB')
             allQuestions.push(...data)
           }
-          this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB')
+          this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB', fullLoad)
         } catch (err) {
           alert("Connection failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }

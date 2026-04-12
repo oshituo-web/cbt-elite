@@ -37,7 +37,7 @@
     <div id="app" class="elite-layout">
       <!-- \uD83D\uDED2 Phase 12: Consolidated Branding & System Top Bar -->
       <header id="app-header" class="glass branding-header">
-        <div class="header-content container-fluid" style="padding: 0 1.5rem;">
+        <div class="header-content container-fluid">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <button id="sidebar-toggle" class="header-icon-btn" title="Toggle Sidebar">
               <i data-lucide="menu"></i>
@@ -142,6 +142,10 @@
 
       <!-- 🖼️ Phase 10: Main Content Container -->
       <main id="main-view" class="main-content-area container">
+        <div id="global-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50vh; gap: 1rem;">
+          <div class="loader-spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
+          <p style="color: var(--text-secondary); font-family: 'Outfit'; font-weight: 500;">Initializing platform...</p>
+        </div>
         <div id="auth-container" style="display: none;"></div>
         <div id="dashboard-container" style="display: none;"></div>
         <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>

@@ -30,13 +30,46 @@ export const PracticeDashboardComponent = {
           </button>
           <div style="flex: 1; min-width: 200px;">
             <h1 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: var(--text-primary); margin: 0;">Practice Center</h1>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Master subjects at your own pace.</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Master subjects with focused 25-question standard pools.</p>
           </div>
         </header>
 
-        <!-- Practice Configuration -->
-        <div id="practice-config" class="glass card scale-in" style="padding: 2rem 1.5rem; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
-          <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-primary); margin-bottom: 1.5rem;">Configure Session</h3>
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; width: 100%;">
+          ${ExamCard({
+            title: 'JAMB Practice',
+            description: 'Focused practice on JAMB standard questions',
+            color: 'jamb',
+            icon: '🎯',
+            dataExamTarget: 'JAMB',
+            extraClass: 'practice-tier'
+          })}
+          ${ExamCard({
+            title: 'WAEC Practice',
+            description: 'Focused practice on WAEC standard questions',
+            color: 'waec',
+            icon: '📘',
+            dataExamTarget: 'WAEC',
+            extraClass: 'practice-tier'
+          })}
+          ${ExamCard({
+            title: 'NECO Practice',
+            description: 'Focused practice on NECO standard questions',
+            color: 'neco',
+            icon: '📝',
+            dataExamTarget: 'NECO',
+            extraClass: 'practice-tier'
+          })}
+        </div>
+
+        <!-- Practice Configuration Overlay -->
+        <div id="practice-config" class="glass card scale-in" style="display: none; padding: 2rem 1.5rem; max-width: 800px; margin: 2rem auto 0 auto; width: 100%; box-sizing: border-box;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem;">
+            <div>
+              <h3 id="practice-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-primary);">Configure Session</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Select subject and topic to begin.</p>
+            </div>
+            <button id="close-practice-config" class="btn-secondary" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; min-width: auto;">&times;</button>
+          </div>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
             <div>
@@ -50,64 +83,78 @@ export const PracticeDashboardComponent = {
                 <option value="">All Topics</option>
               </select>
             </div>
-
-            <div>
-              <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Questions</label>
-              <select id="p-limit" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
-                <option value="10">10 Questions (Quick)</option>
-                <option value="20" selected>20 Questions (Standard)</option>
-                <option value="40">40 Questions (Intense)</option>
-              </select>
-            </div>
           </div>
 
-          <button id="p-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 52px; background: var(--primary);">Start Practice Session</button>
+          <button id="p-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 52px; background: var(--primary);">Start Session</button>
         </div>
       </div>
     `
 
+    if (window.lucide) window.lucide.createIcons({ root: practiceContainer })
     this.setupListeners()
   },
 
   async setupListeners() {
+    const practiceContainer = document.getElementById('practice-container')
+    const configSection = document.getElementById('practice-config')
+    const closeBtn = document.getElementById('close-practice-config')
     const pSub = document.getElementById('p-subject')
     const pTopic = document.getElementById('p-topic')
-    const pLimit = document.getElementById('p-limit')
     const startBtn = document.getElementById('p-start-btn')
     const backBtn = document.getElementById('practice-back-btn')
+    const titleElement = document.getElementById('practice-title')
+    
+    let selectedPracticeType = ''
 
-    // Load Subjects
-    pSub.innerHTML = '<option>Loading...</option>'
-    const { data: subjects } = await DataService.getSubjects()
-    pSub.innerHTML = subjects.map(s => `<option value="${s.subject_name}">${s.subject_name}</option>`).join('')
+    practiceContainer.querySelectorAll('.practice-tier').forEach(tier => {
+      tier.onclick = async () => {
+        selectedPracticeType = tier.dataset.exam
+        titleElement.textContent = `${selectedPracticeType} Practice Session`
+        configSection.style.display = 'block'
+        configSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+        // Load Subjects dynamically upon selecting a type
+        pSub.innerHTML = '<option>Loading...</option>'
+        const { data: subjects } = await DataService.getSubjects()
+        // If it's JAMB, we might filter subjects or keep all. Since JAMB practice is typically objective. We list all subjects.
+        pSub.innerHTML = subjects.map(s => `<option value="${s.subject_name}">${s.subject_name}</option>`).join('')
+        pSub.dispatchEvent(new Event('change'))
+      }
+    })
+
+    if (closeBtn) closeBtn.onclick = () => configSection.style.display = 'none'
 
     pSub.onchange = async () => {
       pTopic.innerHTML = '<option value="">Loading topics...</option>'
-      const { data: topics } = await DataService.getTopics(subjects.find(s => s.subject_name === pSub.value).id)
-      pTopic.innerHTML = '<option value="">All Topics</option>' + topics.map(t => `<option value="${t}">${t}</option>`).join('')
+      const { data: subjects } = await DataService.getSubjects()
+      const match = subjects.find(s => s.subject_name === pSub.value)
+      if (match) {
+        const { data: topics } = await DataService.getTopics(match.id)
+        pTopic.innerHTML = '<option value="">All Topics</option>' + topics.map(t => `<option value="${t}">${t}</option>`).join('')
+      }
     }
-    // Trigger initial load
-    if (pSub.value) pSub.dispatchEvent(new Event('change'))
 
     startBtn.onclick = async () => {
       const subject = pSub.value
       const topic = pTopic.value
-      const limit = parseInt(pLimit.value)
+      // Note: number of questions for practice is strictly pegged to 25.
+      const limit = 25 
       
       startBtn.innerHTML = 'Finding Questions...'; startBtn.disabled = true
       
       try {
-        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit)
+        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType)
         
         if (questions && questions.length > 0) {
-          this.onStartPractice(questions, 'practice', subject, '')
+          // Pass the selected practice type backwards to be accessible in session metadata
+          this.onStartPractice(questions, 'practice', subject, selectedPracticeType)
         } else {
-          alert("No questions found for this selection.");
-          startBtn.innerHTML = 'Start Practice Session'; startBtn.disabled = false
+          alert(`No questions found for ${selectedPracticeType} ${subject}.`);
+          startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
         }
       } catch (err) {
         alert("Error loading questions.");
-        startBtn.innerHTML = 'Start Practice Session'; startBtn.disabled = false
+        startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
       }
     }
 

@@ -6,7 +6,7 @@ import { QuestionRenderer } from '../services/QuestionRenderer'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 export class Exam {
-  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}) {
+  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = []) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview)
     
     // Phase 4: Keyboard Shortcuts
@@ -35,10 +35,20 @@ export class Exam {
     
     if (this.examType === 'JAMB') {
       try {
-        const subjects = questions
-          .map(q => q.subject || q.subjects?.subject_name || 'General')
-          .filter(Boolean)
-        this.jambSubjects = [...new Set(subjects)]
+        if (intendedSubjects && intendedSubjects.length > 0) {
+          this.jambSubjects = intendedSubjects;
+        } else {
+          // Dynamic fallback with normalization
+          const subjects = questions
+            .map(q => {
+               const name = q.subject || q.subjects?.subject_name || 'General';
+               // Normalize common variants
+               if (name.toLowerCase().includes('english')) return 'Use of English';
+               return name;
+            })
+            .filter(Boolean)
+          this.jambSubjects = [...new Set(subjects)]
+        }
         this.activeJambSubject = this.jambSubjects[0] || 'General'
       } catch (err) {
         console.error("Exam constructor failed to map JAMB subjects:", err)
@@ -60,7 +70,7 @@ export class Exam {
       }
     } else if (this.mode === 'practice') {
       // Phase 17: Practice sessions
-      initialTime = isTheory ? (6 * 60) : (20 * 60) 
+      initialTime = 20 * 60 // 20 minutes strictly as requested
     }
 
     this.initialTime = initialTime
@@ -136,36 +146,44 @@ export class Exam {
     container.innerHTML = `
       <div class="exam-layout fade-in">
         <!-- Persistent Top Bar -->
-        <div class="exam-top-bar glass" style="border-bottom: 2px solid var(--accent-primary);">
-          <div class="top-bar-left">
-            <button id="exam-back-btn" class="btn-secondary" style="width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;" title="Go Back">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button id="mobile-map-toggle" class="btn-secondary mobile-only" style="padding: 0.5rem 1rem; border-radius: var(--radius-md); margin-right: 1rem; font-weight: 800; font-size: 0.8rem;">🗺️ VIEW MAP</button>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-               <span id="display-exam-type" class="badge" style="background: var(--primary); color: #ffffff; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 900; font-size: 0.75rem; font-family: 'Outfit';">...</span>
-               <span id="display-subject" class="subject-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">...</span>
+        <!-- 🏷️ Phase 12: New Dual-Layer Organized Header -->
+        <div class="exam-header-wrapper glass">
+          <div class="exam-header-primary">
+            <div class="header-left">
+              <button id="exam-back-btn" class="header-icon-btn" title="Go Back">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <span id="display-exam-type" class="badge-exam">...</span>
+            </div>
+
+            <div class="header-center">
+              <div id="q-meta" class="q-counter-mini">1 of 0</div>
+            </div>
+
+            <div class="header-right">
+              <button id="mobile-map-toggle" class="header-icon-btn" title="View Reference Map">
+                <i data-lucide="map"></i>
+              </button>
+              <button id="toggle-calc" class="header-icon-btn" title="Open Calculator">
+                <i data-lucide="calculator"></i>
+              </button>
+              <div id="timer" class="timer-mini">00:00</div>
             </div>
           </div>
-          
-          <div class="top-bar-center">
-            <div id="q-meta" class="q-counter" style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; color: var(--primary);">1 of 0</div>
-            <span id="display-topic" class="badge" style="background: var(--accent-secondary); color: #ffffff; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.7rem; margin-left: 1rem; display: none; font-family: 'Outfit';">...</span>
-          </div>
 
-          <div class="top-bar-right">
-            <button id="toggle-calc" class="btn-secondary" style="padding: 0 0.75rem; height: 40px; border-color: var(--accent-primary); border-radius: var(--radius-md);">
-              <i data-lucide="calculator" style="width: 18px; height: 18px;"></i> 
-              <span class="calc-label" style="font-weight: 800; font-size: 0.75rem; margin-left: 0.3rem;">CALC</span>
-            </button>
-            <div id="timer" class="timer-display">00:00</div>
+          <div class="exam-header-meta">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <i data-lucide="book-open" style="width: 14px; height: 14px; opacity: 0.7;"></i>
+               <span id="display-subject" class="meta-subject">...</span>
+            </div>
+            <span id="display-topic" class="meta-topic">...</span>
           </div>
         </div>
 
         <div class="exam-content-wrapper" id="exam-wrapper">
           <!-- Left side: Pinned Content (Passage) -->
-          <div id="pinned-content-area" class="glass" style="display: none;">
-             <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.1rem; line-height: 1.7; color: var(--text-primary); font-family: serif;"></div>
+          <div id="pinned-content-area" class="glass">
+             <div id="q-group-content-pinned" class="passage-container"></div>
           </div>
 
           <!-- Main Content -->
@@ -175,7 +193,7 @@ export class Exam {
 
             <div id="question-area" style="flex: 1;">
               <!-- Inline passage for mobile or fallback -->
-              <div id="q-group-content-inline" class="passage-container glass card" style="display: none; margin-bottom: 2rem; padding: 1.25rem; font-size: 1.1rem; line-height: 1.7; border-left: 6px solid var(--accent-primary); background: var(--bg-secondary); font-family: serif;"></div>
+              <div id="q-group-content-inline" class="passage-container glass card"></div>
               
               <div id="q-diagram" style="display: none; margin-bottom: 2.5rem;"></div>
               
@@ -531,10 +549,10 @@ export class Exam {
         
         const formattedContent = q.question_groups.content.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
         const fullHTML = `
-          <div style="font-weight: 900; margin-bottom: 1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem; font-family: 'Outfit';">
+          <div class="passage-header">
             <i data-lucide="book-open" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 0.4rem;"></i> ${headerText}
           </div>
-          <div style="font-family: 'Outfit', sans-serif; font-size: 1.05rem; line-height: 1.7; color: var(--text-primary);">
+          <div class="passage-body">
             ${sanitizeContent(formattedContent)}
           </div>`
         
@@ -939,8 +957,8 @@ export class Exam {
 export const ExamComponent = {
   _instance: null,
 
-  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null) {
-    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers)
+  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null, intendedSubjects = []) {
+    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers, intendedSubjects)
     this._instance.render((userAnswers, timeTaken, actualQuestions) => {
         if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions)
     }, onBack, resumeState)

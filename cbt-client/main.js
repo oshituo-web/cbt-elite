@@ -103,7 +103,7 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
 // Global popstate for browser back/forward buttons
 window.onpopstate = (event) => {
   if (event.state && event.state.view) {
-    navigateTo(event.state.view, currentProfile, false);
+    window.navigateTo(event.state.view, currentProfile, false);
   } else {
     // Fallback to initial route
     handleInitialRoute(currentProfile);
@@ -113,8 +113,8 @@ window.onpopstate = (event) => {
 function showExamsDashboard(profile) {
    currentProfile = profile;
    hideAll();
-   ExamsDashboardComponent.render(profile, (questions, mode, subject, examType) => {
-     showExam(questions, profile, false, {}, mode, subject, examType);
+   ExamsDashboardComponent.render(profile, (questions, mode, subject, examType, intendedSubjects = []) => {
+     showExam(questions, profile, false, {}, mode, subject, examType, null, intendedSubjects);
    });
 }
 
@@ -129,16 +129,16 @@ function showPracticeDashboard(profile) {
 function showSettings(profile) {
    currentProfile = profile;
    hideAll();
-   SettingsComponent.render(profile, () => navigateTo('dashboard', profile));
+   SettingsComponent.render(profile, () => window.navigateTo('dashboard', profile));
 }
 
 function handleInitialRoute(profile) {
   const path = window.location.pathname;
-  if (path === '/exams') navigateTo('exams', profile, false);
-  else if (path === '/practice') navigateTo('practice', profile, false);
-  else if (path === '/admin' && (profile.role === 'admin' || profile.role === 'super-admin')) navigateTo('admin', profile, false);
-  else if (path === '/settings') navigateTo('settings', profile, false);
-  else navigateTo('dashboard', profile, false);
+  if (path === '/exams') window.navigateTo('exams', profile, false);
+  else if (path === '/practice') window.navigateTo('practice', profile, false);
+  else if (path === '/admin' && (profile.role === 'admin' || profile.role === 'super-admin')) window.navigateTo('admin', profile, false);
+  else if (path === '/settings') window.navigateTo('settings', profile, false);
+  else window.navigateTo('dashboard', profile, false);
 }
 
 function toggleMoreDrawer() {
@@ -293,7 +293,7 @@ function setupGlobalActions(profile) {
         if (overlay) overlay.classList.remove('active');
       } else {
         // Close other drawers first
-        navigateTo('dashboard'); // Helper to clean state
+        window.navigateTo('dashboard'); // Helper to clean state
         newsDrawer.classList.add('active');
         if (overlay) overlay.classList.add('active');
         
@@ -377,7 +377,7 @@ function setupGlobalActions(profile) {
   if (moreLogoutBtn) {
     moreLogoutBtn.onclick = () => {
       toggleMoreDrawer();
-      setTimeout(() => navigateTo('logout', profile), 300);
+      setTimeout(() => window.navigateTo('logout', profile), 300);
     }
   }
 
@@ -387,7 +387,7 @@ function setupGlobalActions(profile) {
     item.onclick = (e) => {
       const view = item.dataset.view;
       toggleMoreDrawer();
-      setTimeout(() => navigateTo(view, profile), 300);
+      setTimeout(() => window.navigateTo(view, profile), 300);
     }
   });
 
@@ -506,11 +506,11 @@ function showAdmin(profile) {
   document.querySelectorAll('[data-view="admin"]').forEach(v => v.classList.add('active'))
 }
 
-function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null) {
+function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = []) {
   hideAll(true) // Pass true to hide layout for focus
   ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions) => {
     showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken)
-  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState)
+  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects)
 }
 
 function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0) {
@@ -533,6 +533,9 @@ function hideAll(isExam = false) {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
+
+  const gl = document.getElementById('global-loader');
+  if (gl) gl.style.display = 'none';
 
   // Close News Drawer on any navigation
   const newsDrawer = document.getElementById('news-drawer')
@@ -629,7 +632,8 @@ async function syncOfflineData() {
                 session.userId, 
                 session.sessionData, 
                 session.questions, 
-                session.userAnswers
+                session.userAnswers,
+                true // isSyncing flag
             )
             
             if (!error) {
