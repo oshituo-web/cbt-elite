@@ -240,9 +240,14 @@ export const DataService = {
     return await supabase.rpc('secure_deduct_credit', { p_user_id: userId, p_action: action })
   },
 
-  async getPracticeQuestions(subject, topic = '', limit = 20) {
+  async getPracticeQuestions(subjectName, topic = '', limit = 20) {
+    // 1. Resolve name to ID
+    const { data: sub } = await supabase.from('subjects').select('id').eq('subject_name', subjectName).single()
+    const subjectId = sub?.id
+
+    // 2. Fetch using correct ID
     return await this.getQuestions({
-        subject_name: subject,
+        subject_id: subjectId,
         topic: topic || undefined,
         limit: limit,
         randomize: true
