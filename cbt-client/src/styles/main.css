@@ -1356,27 +1356,41 @@ body.light-mode .q-grid-item.answered {
 
 @media (max-width: 768px) {
   .exam-top-bar {
-    padding: 0.5rem 0.75rem !important;
-    gap: 0.5rem !important;
+    padding: 0.5rem 0.5rem !important;
+    gap: 0.4rem !important;
   }
   
   .subject-title {
-    font-size: 0.9rem !important;
-    max-width: 80px;
+    font-size: 0.8rem !important; /* Smaller subject name */
+    max-width: 70px;
   }
   
   .q-counter {
-    font-size: 1rem !important;
-    padding: 0.3rem 0.6rem !important;
+    font-size: 0.9rem !important;
+    padding: 0.2rem 0.4rem !important;
   }
   
   .timer-display {
-    font-size: 1.1rem !important;
-    margin-left: 0.5rem !important;
+    font-size: 1rem !important;
+    padding: 0.2rem 0.5rem !important;
+    min-width: 65px !important;
+    margin-left: 0.2rem !important;
   }
   
-  #toggle-calc span {
-    display: none; /* Hide 'CALC' text, keep icon */
+  /* Make Calculator more noticeable */
+  #toggle-calc {
+    padding: 0 0.5rem !important;
+    border: 2px solid var(--accent-primary) !important;
+    background: rgba(37, 99, 235, 0.15) !important;
+  }
+  
+  #toggle-calc .lucide {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .calc-label {
+    display: none !important;
   }
 }
 
