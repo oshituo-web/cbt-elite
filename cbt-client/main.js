@@ -251,7 +251,7 @@ function updateHeaderProfile(profile) {
   if (streakText) streakText.textContent = `${profile.streak_count || 0}`
   
   if (tierHeader) {
-    const tier = profile.is_activated ? 'PREMIUM' : (profile.tier || 'FREE').toUpperCase()
+    const tier = profile.activation_status ? 'PREMIUM' : (profile.tier || 'FREE').toUpperCase()
     if (tierText) tierText.textContent = tier
     tierHeader.style.background = tier === 'PREMIUM' ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.05)'
   }
@@ -322,14 +322,14 @@ function setupGlobalActions(profile) {
                  contentArea.querySelectorAll('.news-item-card').forEach(card => {
                    card.onclick = () => {
                      const nid = card.dataset.newsId
-                     const article = newsItems.find(n => n.id === nid)
-                     if (article) {
+                     if (nid) {
                        newsDrawer.classList.remove('active')
                        if (overlay) overlay.classList.remove('active');
                        import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
                          const dash = document.getElementById('dashboard-container')
                          if (dash) dash.style.display = 'none'
-                         NewsArticleComponent.render(article, () => {
+                         // 🔥 FIX: Pass ID, not object
+                         NewsArticleComponent.render(nid, () => {
                            if (dash) dash.style.display = 'block'
                          })
                        })

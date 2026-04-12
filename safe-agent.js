@@ -3,30 +3,64 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
-require("dotenv").config();
+
+// ✅ FORCE .env LOADING
+require("dotenv").config({
+  path: path.resolve(__dirname, ".env"),
+});
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// -----------------------------
+// CHECK API KEY
+// -----------------------------
+if (!process.env.GOOGLE_API_KEY) {
+  console.log("\n❌ GOOGLE_API_KEY not found in .env");
+  process.exit(1);
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
-const args = process.argv.slice(2);
-const instruction = args[0];
+// -----------------------------
+// INPUT
+// -----------------------------
+const instruction = process.argv.slice(2).join(" ");
 
-// Root folders to scan
+if (!instruction) {
+  console.log('\nUsage: node safe-agent.js "your instruction"\n');
+  process.exit(1);
+}
+
+// -----------------------------
+// ✅ COMPATIBLE MODEL FOR YOUR API
+// -----------------------------
+const MODEL_NAME = "models/gemini-1.0-pro";
+
+// -----------------------------
+// GEMINI CALL
+// -----------------------------
+async function generate(prompt) {
+  const model = genAI.getGenerativeModel({
+    model: MODEL_NAME,
+  });
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+
+  return response.text();
+}
+
+// -----------------------------
+// FILE SCANNER
+// -----------------------------
 const ROOT_FOLDERS = ["cbt-client/src", "question-generator"];
 
-// Readline
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-// Recursively get files
 function getAllFiles(dir, fileList = []) {
   if (!fs.existsSync(dir)) return fileList;
 
   const files = fs.readdirSync(dir);
 
-  files.forEach(file => {
+  for (const file of files) {
     const fullPath = path.join(dir, file);
 
     if (fs.statSync(fullPath).isDirectory()) {
@@ -39,88 +73,102 @@ function getAllFiles(dir, fileList = []) {
     ) {
       fileList.push(fullPath);
     }
-  });
+  }
 
   return fileList;
 }
 
-// Collect files
 let allFiles = [];
 ROOT_FOLDERS.forEach(folder => {
   allFiles = allFiles.concat(getAllFiles(folder));
 });
 
-if (!instruction) {
-  console.log("\nUsage:");
-  console.log('node safe-agent.js "your instruction"\n');
-  process.exit(1);
-}
-
-if (allFiles.length === 0) {
-  console.log("❌ No files found.");
-  process.exit(1);
-}
-
-// Show file list
-console.log("\n📂 Select a file:\n");
-
-allFiles.forEach((file, index) => {
-  console.log(`${index + 1}. ${file}`);
-});
-
-// Ask user to pick file
-rl.question("\nEnter file number: ", async (num) => {
-  const fileIndex = parseInt(num) - 1;
-
-  if (!allFiles[fileIndex]) {
-    console.log("❌ Invalid selection.");
-    rl.close();
-    return;
-  }
-
-  const filePath = allFiles[fileIndex];
-  const fileContent = fs.readFileSync(filePath, "utf-8");
-
-  try {
-    console.log("\n🚀 Analyzing with AI...\n");
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-pro",
-    });
-
-    const prompt = `
+// -----------------------------
+// STEP 1: PICK BEST FILE
+// -----------------------------
+async function pickBestFile() {
+  const prompt = `
 You are a senior software engineer.
 
 TASK:
 ${instruction}
 
-FILE:
+PROJECT FILES:
+${allFiles.join("\n")}
+
+RULES:
+- Choose ONLY ONE best file to modify
+- Return ONLY the file path
+`;
+
+  return await generate(prompt);
+}
+
+// -----------------------------
+// STEP 2: EDIT FILE
+// -----------------------------
+async function editFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    throw new Error("File not found: " + filePath);
+  }
+
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+
+  const prompt = `
+You are a senior software engineer working on a CBT exam system.
+
+TASK:
+${instruction}
+
+FILE PATH:
 ${filePath}
 
-CONTENT:
+FILE CONTENT:
 ${fileContent}
 
 RULES:
 - Return ONLY the full updated file code
 - Do NOT explain anything
-- Improve UI, structure, and performance where applicable
+- Improve UI, structure, readability, and logic where needed
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const newCode = response.text();
+  const newCode = await generate(prompt);
+
+  return { filePath, fileContent, newCode };
+}
+
+// -----------------------------
+// MAIN EXECUTION
+// -----------------------------
+(async () => {
+  try {
+    console.log("\n🧠 AI is choosing best file...\n");
+
+    const filePath = (await pickBestFile()).trim();
+
+    console.log("🎯 Selected file:", filePath);
+
+    console.log("\n🚀 AI is editing file...\n");
+
+    const { fileContent, newCode } = await editFile(filePath);
 
     console.log("\n========= SUGGESTED UPDATE =========\n");
     console.log(newCode);
 
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
     rl.question("\nApply this change? (yes/no): ", (answer) => {
       if (answer.toLowerCase() === "yes") {
         const backupPath = filePath + ".bak";
+
         fs.writeFileSync(backupPath, fileContent);
         fs.writeFileSync(filePath, newCode);
 
-        console.log("\n✅ File updated!");
-        console.log(`📁 Backup saved: ${backupPath}`);
+        console.log("\n✅ File updated successfully!");
+        console.log("📁 Backup created:", backupPath);
       } else {
         console.log("\n❌ Cancelled.");
       }
@@ -129,7 +177,6 @@ RULES:
     });
 
   } catch (err) {
-    console.log("❌ Error:", err.message);
-    rl.close();
+    console.log("\n❌ Error:", err.message);
   }
-});
+})();

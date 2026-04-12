@@ -99,6 +99,12 @@ export class Exam {
     const container = document.getElementById('exam-container')
     container.style.display = 'block'
     
+    // 🔥 FIX: Reset scroll position to top immediately
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    container.scrollTop = 0;
+    document.body.classList.add('in-exam')
+    
     this._explanationsFreeAccess = false;
     try {
         const configResp = await DataService.getSystemConfig('explanations_free_access');
@@ -155,14 +161,14 @@ export class Exam {
           </div>
         </div>
 
-        <div class="exam-content-wrapper" id="exam-wrapper" style="display: flex; gap: 1rem; flex: 1; overflow: hidden; height: calc(100vh - 80px);">
+        <div class="exam-content-wrapper" id="exam-wrapper">
           <!-- Left side: Pinned Content (Passage) -->
-          <div id="pinned-content-area" class="glass" style="display: none; flex: 1; overflow-y: auto; padding: 1.25rem; border-right: 3px solid var(--accent-primary); width: 350px; max-width: 40vw;">
+          <div id="pinned-content-area" class="glass" style="display: none;">
              <div id="q-group-content-pinned" class="passage-container" style="font-size: 1.1rem; line-height: 1.7; color: var(--text-primary); font-family: serif;"></div>
           </div>
 
           <!-- Main Content -->
-          <div class="exam-main glass" style="flex: 1.5; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; position: relative;">
+          <div class="exam-main glass">
             <!-- Subject Tabs placed at the top of content area -->
             <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
 
@@ -934,12 +940,13 @@ export const ExamComponent = {
 
   render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null) {
     this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers)
-    return this._instance.render((userAnswers, timeTaken, actualQuestions) => {
+    this._instance.render((userAnswers, timeTaken, actualQuestions) => {
         if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions)
     }, onBack, resumeState)
   },
 
   hide() {
-    document.getElementById('exam-container').style.display = 'none'
+    const container = document.getElementById('exam-container')
+    if (container) container.style.display = 'none'
   }
 }

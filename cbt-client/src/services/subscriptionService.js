@@ -8,21 +8,18 @@ export const SubscriptionService = {
     
     let updates = {}
     const now = new Date()
-    const premiumUntil = user.premium_until ? new Date(user.premium_until) : null
 
     // 1. Check Tier Transition
     const resolvedTier = this.resolveUserTier(user)
     if (user.tier !== resolvedTier) {
-      updates.tier = resolvedTier
+      // NOTE: We cannot update 'tier' directly due to DB trigger. 
+      // If the tier needs to change to 'medium' due to expiry, 
+      // the system should ideally handle this via a DB cron or when the user re-authenticates.
+      // For now, we'll let the frontend resolve it dynamically.
     }
 
-    // 2. Check Daily Reset (AI Usage and Sessions)
+    // 2. Check Daily Reset (Sessions)
     const todayStr = now.toISOString().split('T')[0]
-    if (user.last_ai_reset_date !== todayStr) {
-      updates.ai_daily_usage = 0
-      updates.last_ai_reset_date = todayStr
-    }
-    
     if (user.last_session_date !== todayStr) {
       updates.daily_sessions = 0
       updates.last_session_date = todayStr
@@ -38,17 +35,21 @@ export const SubscriptionService = {
 
   canStartSession(user, type = 'practice', isSystemFree = false) {
     if (!user) return false
-    if (isSystemFree || user.tier === 'premium') return true
+    const tier = this.resolveUserTier(user, isSystemFree)
     
-    const dailyLimit = (user.tier === 'medium') 
-      ? (type === 'practice' ? 5 : 2) 
+    if (isSystemFree || tier === 'premium') return true
+    
+    const dailyLimit = (tier === 'medium') 
+      ? (type === 'practice' ? 8 : 3) 
       : (type === 'practice' ? 3 : 1)
 
     return (user.daily_sessions || 0) < dailyLimit
   },
 
   async incrementSessionCount(user) {
-    if (!user || user.tier === 'premium') return
+    const tier = this.resolveUserTier(user)
+    if (tier === 'premium') return
+    
     const { error } = await DataService.updateUser(user.id, { 
       daily_sessions: (user.daily_sessions || 0) + 1 
     })
@@ -59,22 +60,20 @@ export const SubscriptionService = {
     if (!user) return { canUse: false, reason: 'Please login to use AI' }
     if (isSystemFree) return { canUse: true, usage: 0, limit: 'Unlimited' }
 
-    if (user.tier === 'freemium' || user.tier === 'free') {
+    const tier = this.resolveUserTier(user)
+
+    if (tier === 'freemium') {
        return { canUse: false, reason: 'Activate your account for \u20A61,500 to unlock AI access' }
     }
     
-    if (user.tier === 'premium') {
-      const usage = user.ai_daily_usage || 0
-      if (usage >= 30) {
-        return { canUse: false, reason: "You've reached today's AI limit (30/day). Please continue tomorrow." }
-      }
-      return { canUse: true, usage: usage + 1, limit: 30 }
+    if (tier === 'premium') {
+      return { canUse: true, reason: 'Premium Unlimited' }
     }
 
-    if (user.tier === 'medium') {
+    if (tier === 'medium') {
       const credits = user.ai_credits || 0
       if (credits <= 0) {
-        return { canUse: false, reason: 'You have 0 AI credits left this month. Renew Premium for \u20A61,000 for unlimited AI.' }
+        return { canUse: false, reason: 'You have 0 AI credits left. Renew Premium for \u20A61,000 for unlimited AI.' }
       }
       return { canUse: true, credits: credits }
     }
@@ -84,18 +83,12 @@ export const SubscriptionService = {
 
   async useAICredit(user) {
     if (!user) return false
+    const tier = this.resolveUserTier(user)
     
-    if (user.tier === 'premium') {
-      await DataService.updateUser(user.id, { 
-        ai_daily_usage: (user.ai_daily_usage || 0) + 1 
-      })
-      return true
-    }
+    if (tier === 'premium') return true // Unlimited for premium (rate limited by Edge Function)
 
-    if (user.tier === 'medium') {
-      const { error } = await DataService.updateUser(user.id, { 
-        ai_credits: Math.max(0, (user.ai_credits || 0) - 1) 
-      })
+    if (tier === 'medium') {
+      const { error } = await DataService.useAICredit(user.id)
       return !error
     }
 

@@ -1,21 +1,47 @@
 export class ExamSessionManager {
   constructor(questions, initialAnswers = {}, shouldShuffle = true) {
-    // Phase 2: Randomization - Shuffle questions on start
     this.originalQuestions = [...questions];
-    this.questions = shouldShuffle ? this.shuffle([...questions]) : [...questions];
     this.userAnswers = initialAnswers;
     this.currentIndex = 0;
     this.startTime = Date.now();
-  }
-
-  shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+    
+    // Grouped Shuffle: Keep passages/groups together
+    if (shouldShuffle) {
+      this.questions = this.groupedShuffle([...questions]);
+    } else {
+      this.questions = [...questions];
     }
-    return array;
   }
 
+  groupedShuffle(questions) {
+    const groups = [];
+    const groupMap = new Map();
+    const ungrouped = [];
+
+    questions.forEach(q => {
+      if (q.group_id) {
+        if (!groupMap.has(q.group_id)) {
+          const group = { id: q.group_id, items: [] };
+          groups.push(group);
+          groupMap.set(q.group_id, group);
+        }
+        groupMap.get(q.group_id).items.push(q);
+      } else {
+        ungrouped.push({ items: [q] });
+      }
+    });
+
+    const allBundles = [...groups, ...ungrouped];
+    
+    // Shuffle the bundles
+    for (let i = allBundles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allBundles[i], allBundles[j]] = [allBundles[j], allBundles[i]];
+    }
+
+    // Flatten back
+    return allBundles.flatMap(b => b.items);
+  }
 
   getCurrentQuestion() {
     return this.questions[this.currentIndex];
@@ -46,10 +72,13 @@ export class ExamSessionManager {
   }
 
   getProgress() {
+    const total = this.questions.length;
+    const answered = Object.keys(this.userAnswers).length;
     return {
       current: this.currentIndex + 1,
-      total: this.questions.length,
-      percentage: Math.round(((this.currentIndex + 1) / this.questions.length) * 100)
+      total: total,
+      answered: answered,
+      percentage: total > 0 ? Math.round((answered / total) * 100) : 0
     };
   }
 
@@ -64,7 +93,9 @@ export class ExamSessionManager {
     this.questions.forEach((q, i) => {
       if (q.question_type !== 'theory') {
         const correctAnswer = q.answers?.find(a => a.is_correct)
-        if (this.userAnswers[i] && this.userAnswers[i] === correctAnswer?.id) correct++
+        if (this.userAnswers[i] && this.userAnswers[i] === correctAnswer?.id) {
+          correct++
+        }
       }
     })
     return {

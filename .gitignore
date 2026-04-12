@@ -38,3 +38,5 @@ supabase/.temp/
 # OS Files
 .DS_Store
 Thumbs.db
+# AI backups
+*.bak

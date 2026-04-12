@@ -22,8 +22,9 @@ export const SubscriptionManager = {
       return state;
     }
 
-    state.isActivated = !!user.is_activated;
-    state.premiumUntil = user.premium_until ? new Date(user.premium_until) : null;
+    // 🔥 FIX: Map to correct DB columns (activation_status and subscription_expiry)
+    state.isActivated = !!user.activation_status;
+    state.premiumUntil = user.subscription_expiry ? new Date(user.subscription_expiry) : null;
 
     if (!state.isActivated) {
       state.tier = 'freemium';
@@ -45,7 +46,7 @@ export const SubscriptionManager = {
         }
         state.shouldShowActivateCTA = false;
       } else {
-        state.tier = 'medium';
+        state.tier = 'medium'; // Activated but premium expired
         if (state.premiumUntil) {
            state.isExpired = true;
         }

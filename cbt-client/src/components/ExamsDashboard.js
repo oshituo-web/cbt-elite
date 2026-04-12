@@ -23,22 +23,21 @@ export const ExamsDashboardComponent = {
     examsContainer.style.display = 'block'
 
     examsContainer.innerHTML = `
-      <div class="container animate-fadeIn">
-        <header style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem;">
-          <button id="exams-back-btn" class="btn-secondary" style="width: 44px; height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back to Dashboard">
+      <div class="container animate-fadeIn" style="width: 100%; max-width: 1200px; padding: 1.5rem 1rem; box-sizing: border-box;">
+        <header style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <button id="exams-back-btn" class="btn-secondary" style="width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
-          <div>
-            <h1 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary);">Standard Mock Exams</h1>
-            <p style="color: var(--text-secondary); font-weight: 500;">Simulate real exam conditions with full syllabus coverage.</p>
+          <div style="flex: 1; min-width: 200px;">
+            <h1 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: var(--text-primary); margin: 0;">Standard Mock Exams</h1>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Simulate real exam conditions.</p>
           </div>
-          <div class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--accent-primary); border: 1px solid rgba(37, 99, 235, 0.2);"><i data-lucide="award"></i> Certify Mode</div>
         </header>
 
-        <div class="dashboard-grid">
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; width: 100%;">
           ${ExamCard({
             title: 'JAMB Mock',
-            description: 'Full 180 questions timed simulation',
+            description: '180 questions timed simulation',
             color: 'jamb',
             icon: '🎯',
             dataExamTarget: 'JAMB',
@@ -63,47 +62,44 @@ export const ExamsDashboardComponent = {
         </div>
 
         <!-- Exam Config Overlay -->
-        <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 3rem; padding: 2.5rem; max-width: 800px; margin-left: auto; margin-right: auto;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+        <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 1.5rem; max-width: 800px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem;">
             <div>
-              <h3 id="exam-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.5rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
-              <p style="font-size: 0.9rem; color: var(--text-secondary);">Select your subjects for the simulation.</p>
+              <h3 id="exam-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Select subjects for simulation.</p>
             </div>
-            <button id="close-exam-config" class="btn-secondary" style="width: 40px; height: 40px; border-radius: 50%; padding: 0;">&times;</button>
+            <button id="close-exam-config" class="btn-secondary" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; min-width: auto;">&times;</button>
           </div>
           
-          <!-- JAMB Specific: Mandatory English + 3 Subjects -->
           <div id="jamb-exam-config" style="display: none;">
-              <p style="margin-bottom: 1.25rem; color: var(--accent-secondary); font-weight: 600;">English is mandatory. Select 3 additional subjects to complete your set.</p>
-              <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; max-height: 300px; overflow-y: auto; padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border);">
+              <p style="margin-bottom: 1rem; color: var(--accent-secondary); font-weight: 600; font-size: 0.9rem;">English + 3 additional subjects.</p>
+              <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; max-height: 250px; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border); width: 100%; box-sizing: border-box;">
                  <div class="loader-spinner"></div>
               </div>
           </div>
 
-          <!-- WAEC/NECO Specific -->
           <div id="waec-neco-exam-config" style="display: none;">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                   <div>
-                      <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Subject</label>
-                      <select id="e-subject" class="glass-select" style="width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 1rem;"></select>
+                      <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Subject</label>
+                      <select id="e-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;"></select>
                   </div>
                   <div>
-                      <label style="display: block; font-size: 0.9rem; margin-bottom: 0.6rem; font-weight: 700; color: var(--text-primary);">Format</label>
-                      <select id="e-type" class="glass-select" style="width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 1rem;">
-                          <option value="objective">Objective (Recommended)</option>
-                          <option value="theory">Theory (Graded by AI)</option>
+                      <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Format</label>
+                      <select id="e-type" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
+                          <option value="objective">Objective</option>
+                          <option value="theory">Theory (AI Graded)</option>
                       </select>
                   </div>
               </div>
           </div>
 
-          <button id="e-start-btn" class="btn-dominant" style="margin-top: 2.5rem; width: 100%; height: 56px; background: var(--accent-gradient);">Begin Full Mock Exam</button>
+          <button id="e-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 52px; background: var(--accent-gradient);">Begin Mock Exam</button>
         </div>
       </div>
     `
 
     if (window.lucide) window.lucide.createIcons({ root: examsContainer })
-
     this.setupListeners()
   },
 
@@ -112,7 +108,6 @@ export const ExamsDashboardComponent = {
     const configSection = document.getElementById('exam-config')
     const closeBtn = document.getElementById('close-exam-config')
     const startBtn = document.getElementById('e-start-btn')
-    
     const jambConfig = document.getElementById('jamb-exam-config')
     const waecNecoConfig = document.getElementById('waec-neco-exam-config')
     const subList = document.getElementById('jamb-sub-list')
@@ -129,27 +124,33 @@ export const ExamsDashboardComponent = {
         if (selectedExam === 'JAMB') {
           jambConfig.style.display = 'block'
           waecNecoConfig.style.display = 'none'
+          subList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;"><div class="loader-spinner"></div></div>'
+          const { data: subjects } = await DataService.getSubjects()
+          const filtered = subjects.filter(s => (s.subject_name || '').toLowerCase() !== 'use of english')
           
-          subList.innerHTML = '<div style="display:flex;justify-content:center;padding:1rem;grid-column:1/-1;"><div class="loader-spinner"></div></div>'
-          const { data: subjects } = await DataService.getSubjects('JAMB')
-          const filtered = subjects.filter(s => (s.subject_name || s.subject || '').toLowerCase() !== 'use of english')
-          
-          subList.innerHTML = filtered.map(s => {
-              const name = s.subject_name || s.subject;
-              return `
-                  <label class="subject-checkbox-item ${this.profile.is_activated ? '' : 'locked'}">
-                      <input type="checkbox" value="${name}" ${this.profile.is_activated ? '' : 'disabled'}>
-                      <span>${name}</span>
-                  </label>
-              `
-          }).join('')
+          // 🔥 MOBILE FIX: Use a more robust grid with larger touch targets
+          subList.innerHTML = filtered.map(s => `
+              <label style="display:flex; align-items:center; gap:0.75rem; font-size:0.9rem; padding:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:12px; cursor:pointer; user-select:none; transition:all 0.2s;">
+                  <input type="checkbox" value="${s.subject_name}" style="width:20px; height:20px; accent-color:var(--accent-secondary); cursor:pointer;">
+                  <span style="font-weight:600; color:var(--text-primary);">${s.subject_name}</span>
+              </label>
+          `).join('')
+
+          // Add click feedback for labels
+          subList.querySelectorAll('label').forEach(lbl => {
+              const input = lbl.querySelector('input');
+              lbl.onclick = (e) => {
+                  if (e.target !== input) input.checked = !input.checked;
+                  lbl.style.background = input.checked ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.05)';
+                  lbl.style.borderColor = input.checked ? 'var(--accent-secondary)' : 'var(--glass-border)';
+              }
+          });
         } else {
           jambConfig.style.display = 'none'
           waecNecoConfig.style.display = 'block'
-          
           eSub.innerHTML = '<option>Loading...</option>'
-          const { data: subjects } = await DataService.getSubjects(selectedExam)
-          eSub.innerHTML = subjects.map(s => `<option value="${s.subject_name || s.subject}">${s.subject_name || s.subject}</option>`).join('')
+          const { data: subjects } = await DataService.getSubjects()
+          eSub.innerHTML = subjects.map(s => `<option value="${s.subject_name}">${s.subject_name}</option>`).join('')
         }
       }
     })
@@ -159,44 +160,34 @@ export const ExamsDashboardComponent = {
     startBtn.onclick = async () => {
       if (selectedExam === 'JAMB') {
         const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
-        if (selected.length !== 3) return alert('Please select exactly 3 subjects to accompany Use of English.')
-        
-        startBtn.innerHTML = '<div class="loader-spinner" style="width:20px;height:20px;"></div> Preparing 4-Subject Set...'
-        startBtn.disabled = true
-        
+        if (selected.length !== 3) return alert('Select exactly 3 subjects.')
+        startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         const fullLoad = ['Use of English', ...selected]
         const allQuestions = []
-        
         try {
           for (const s of fullLoad) {
             const limit = s === 'Use of English' ? 60 : 40
             const { data } = await DataService.getPracticeQuestions(s, '', limit)
             allQuestions.push(...data)
           }
-          this.onStartExam(allQuestions, 'exam', 'Full Set', 'JAMB')
+          this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB')
         } catch (err) {
-          alert("Failed to gather questions. Check connection.")
-          startBtn.innerHTML = 'Begin Full Mock Exam'
-          startBtn.disabled = false
+          alert("Connection failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }
       } else {
         const subject = eSub.value
-        const type = document.getElementById('e-type').value
-        const limit = selectedExam === 'WAEC' ? 50 : 60
-        
-        startBtn.innerHTML = '<div class="loader-spinner" style="width:20px;height:20px;"></div> Preparing Mock...'
-        startBtn.disabled = true
-        
+        startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         try {
-          const { data: questions } = await DataService.getPracticeQuestions(subject, '', limit)
+          const { data: questions } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60)
           this.onStartExam(questions, 'exam', subject, selectedExam)
         } catch (err) {
-          alert("Preparation failed.")
-          startBtn.innerHTML = 'Begin Full Mock Exam'
-          startBtn.disabled = false
+          alert("Failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }
       }
     }
+
+    const backBtn = document.getElementById('exams-back-btn')
+    if (backBtn) backBtn.onclick = () => window.navigateTo('dashboard')
   },
 
   hide() {
