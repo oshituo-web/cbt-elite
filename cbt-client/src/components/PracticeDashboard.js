@@ -25,7 +25,10 @@ export const PracticeDashboardComponent = {
 
     practiceContainer.innerHTML = `
       <div class="container animate-fadeIn">
-        <header style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <header style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem;">
+          <button id="practice-back-btn" class="btn-secondary" style="width: 44px; height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back to Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
           <div>
             <h1 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary);">Targeted Practice</h1>
             <p style="color: var(--text-secondary); font-weight: 500;">Master the syllabus one topic at a time.</p>
@@ -146,8 +149,16 @@ export const PracticeDashboardComponent = {
       }
     }
 
-    // 3. Close Config
     if (closeBtn) closeBtn.onclick = () => configSection.style.display = 'none'
+    
+    const backBtn = document.getElementById('practice-back-btn')
+    if (backBtn) {
+      backBtn.onclick = () => {
+        import('../../main').then(m => {
+          if (window.navigateTo) window.navigateTo('dashboard')
+        })
+      }
+    }
 
     // 4. Start Practice
     startBtn.onclick = async () => {

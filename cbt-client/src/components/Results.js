@@ -177,15 +177,10 @@ export const ResultsComponent = {
     `
 
 
-    // AI Tutor Listeners
-    const deepDiveBtn = document.getElementById('deep-dive-btn')
-    const autoFocusBtn = document.getElementById('auto-focus-btn')
-
     if (deepDiveBtn) {
       deepDiveBtn.onclick = () => {
         TopicDeepDiveComponent.render(this._weakestTopic, subject, profile, (questions) => {
-           // Provide callback to start focused exam from modal
-           onReview(questions); // We can reuse onReview logic or custom
+           onReview(questions);
         });
       }
     }
@@ -197,17 +192,43 @@ export const ResultsComponent = {
          
          const { data: questions } = await DataService.getPracticeQuestions(subject, this._weakestTopic, 10);
          if (questions && questions.length > 0) {
-            // Start the focus session
-            // We need a way to trigger the dashboard's start logic
-            // In Dashboard.js, the callback is passed. We can just use the onRestart or similar if we modify it.
-            // Better: ResultsComponent should have access to the main onStartExam callback.
-            // For now, let's assume we can trigger a retake with these specific questions.
             onRestart(questions, 'practice', subject, examType); 
          } else {
             alert("Could not load challenge questions. Try another topic!");
             autoFocusBtn.disabled = false;
             autoFocusBtn.innerHTML = 'Challenge (10 Quest)';
          }
+      }
+    }
+
+    // Main Control Buttons
+    const restartBtn = document.getElementById('restart-exam')
+    if (restartBtn) {
+      restartBtn.onclick = () => {
+        if (onRestart) onRestart(questions, mode, subject, examType)
+      }
+    }
+
+    const reviewBtn = document.getElementById('review-exam')
+    if (reviewBtn) {
+      reviewBtn.onclick = () => {
+        if (onReview) onReview(questions, userAnswers)
+      }
+    }
+
+    const homeBtn = document.getElementById('back-home')
+    if (homeBtn) {
+      homeBtn.onclick = () => {
+        if (onBack) onBack()
+        else location.reload()
+      }
+    }
+
+    const backBtn = document.getElementById('results-back-btn')
+    if (backBtn) {
+      backBtn.onclick = () => {
+        if (onBack) onBack()
+        else location.reload()
       }
     }
 

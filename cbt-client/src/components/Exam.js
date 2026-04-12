@@ -307,11 +307,26 @@ export class Exam {
   attachListeners(onFinish, onBack) {
     const backBtn = document.getElementById('exam-back-btn')
     if (backBtn) {
-      backBtn.onclick = () => {
-        if (!this.isReviewMode && !confirm("Are you sure you want to exit? Any unsaved progress will be lost.")) return;
+      backBtn.onclick = (e) => {
+        e.preventDefault()
+        if (!this.isReviewMode) {
+          if (!confirm("Are you sure you want to exit? Any unsaved progress for this session will be lost.")) return;
+        }
+        
+        // Stop timer and clean up
+        TimerService.stop()
+        window.removeEventListener('keydown', this._handleKeyDown)
         document.getElementById('exam-container').style.display = 'none'
-        if (onBack) onBack()
-        else location.reload()
+        
+        if (onBack) {
+          onBack()
+        } else {
+          // Fallback if callback missing
+          import('../../main').then(m => {
+            if (window.navigateTo) window.navigateTo('dashboard')
+            else location.reload()
+          }).catch(() => location.reload())
+        }
       }
     }
 

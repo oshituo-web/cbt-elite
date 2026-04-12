@@ -24,7 +24,10 @@ export const ExamsDashboardComponent = {
 
     examsContainer.innerHTML = `
       <div class="container animate-fadeIn">
-        <header style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <header style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem;">
+          <button id="exams-back-btn" class="btn-secondary" style="width: 44px; height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back to Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
           <div>
             <h1 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary);">Standard Mock Exams</h1>
             <p style="color: var(--text-secondary); font-weight: 500;">Simulate real exam conditions with full syllabus coverage.</p>

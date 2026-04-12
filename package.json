@@ -1,0 +1,25 @@
+{
+  "name": "cbt-app",
+  "version": "1.0.0",
+  "description": "CBT Elite is a professional-grade Computer-Based Testing (CBT) platform designed specifically for Nigerian examinations like **JAMB**, **WAEC**, and **NECO**. It features a modern, premium **Glassmorphic UI**, an intelligent question engine, and integrated AI-powered feedback.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oshituo-web/cbt-ellite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/oshituo-web/cbt-ellite/issues"
+  },
+  "homepage": "https://github.com/oshituo-web/cbt-ellite#readme",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.4.1"
+  }
+}
