@@ -29,8 +29,8 @@ export const ExamsDashboardComponent = {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <div style="flex: 1; min-width: 200px;">
-            <h1 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: var(--text-primary); margin: 0;">Standard Mock Exams</h1>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Simulate real exam conditions.</p>
+            <h1 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0;">Standard Mock Exams</h1>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">Simulate real exam conditions.</p>
           </div>
         </header>
 
@@ -62,11 +62,11 @@ export const ExamsDashboardComponent = {
         </div>
 
         <!-- Exam Config Overlay -->
-        <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 2rem; padding: 1.5rem; max-width: 800px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
+        <div id="exam-config" class="glass card scale-in" style="display: none; margin-top: 1.25rem; padding: 1.25rem; max-width: 800px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem;">
             <div>
-              <h3 id="exam-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.35rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary);">Select subjects for simulation.</p>
+              <h3 id="exam-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.15rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Select subjects for simulation.</p>
             </div>
             <button id="close-exam-config" class="btn-secondary" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; min-width: auto;">&times;</button>
           </div>
@@ -94,7 +94,7 @@ export const ExamsDashboardComponent = {
               </div>
           </div>
 
-          <button id="e-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 52px; background: var(--accent-gradient);">Begin Mock Exam</button>
+          <button id="e-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 50px; background: var(--accent-gradient);">Begin Mock Exam</button>
         </div>
       </div>
     `

@@ -161,8 +161,8 @@ export class Exam {
             </div>
 
             <div class="header-right">
-              <button id="mobile-map-toggle" class="header-icon-btn" title="View Reference Map">
-                <i data-lucide="map"></i>
+              <button id="mobile-map-toggle" class="header-icon-btn" title="Question Navigator">
+                <i data-lucide="layout-grid"></i>
               </button>
               <button id="toggle-calc" class="header-icon-btn" title="Open Calculator">
                 <i data-lucide="calculator"></i>

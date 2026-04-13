@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -121,22 +121,27 @@
         </div>
       </div>
 
-      <!-- 📱 Phase 10: Bottom Navigation (Mobile) -->
+      <!-- 📱 Bottom Navigation (Mobile Only) -->
       <nav id="bottom-nav" class="bottom-nav glass">
         <button class="bottom-nav-item active" data-view="dashboard" title="Home">
-          <i data-lucide="layout-dashboard"></i> <span>Home</span>
+          <i data-lucide="layout-dashboard"></i>
+          <span>Home</span>
         </button>
         <button class="bottom-nav-item" data-view="exams" title="Exams">
-          <i data-lucide="book-open-check"></i> <span>Exams</span>
+          <i data-lucide="book-open-check"></i>
+          <span>Exams</span>
         </button>
         <button class="bottom-nav-item" data-view="practice" title="Practice">
-          <i data-lucide="target"></i> <span>Practice</span>
+          <i data-lucide="target"></i>
+          <span>Practice</span>
         </button>
-        <button class="bottom-nav-item" id="bottom-admin-btn" data-view="admin" style="display: none;" title="Admin">
-          <i data-lucide="shield-alert"></i> <span>Admin</span>
+        <button class="bottom-nav-item" id="bottom-admin-btn" data-view="admin" style="display: none;" title="Admin Panel">
+          <i data-lucide="shield-alert"></i>
+          <span>Admin</span>
         </button>
-        <button class="bottom-nav-item" id="bottom-more-btn" data-view="more" title="More">
-          <i data-lucide="more-horizontal"></i> <span>More</span>
+        <button class="bottom-nav-item" id="bottom-more-btn" data-view="more" title="More Options">
+          <i data-lucide="grid-2x2"></i>
+          <span>More</span>
         </button>
       </nav>
 
@@ -154,26 +159,34 @@
         <div id="news-article-container" style="display: none;"></div>
       </main>
 
-      <!-- ☰ Phase 31: Global More Drawer (Bottom Sheet) -->
-      <div id="more-drawer" class="more-drawer glass">
+      <!-- More Options Drawer (Bottom sheet on mobile / Fly-out on desktop) -->
+      <div id="more-drawer" class="more-drawer">
         <div class="drawer-header">
-           <h3><i data-lucide="menu"></i> More Options</h3>
+           <h3><i data-lucide="grid-2x2"></i> More</h3>
            <button id="close-more-drawer" class="close-btn">&times;</button>
         </div>
         <div class="drawer-body">
            <div class="more-menu-list">
               <button class="more-menu-item" data-view="profile">
-                <i data-lucide="user-circle"></i> <span>My Profile</span>
-              </button>
-              <button class="more-menu-item" id="more-news-btn">
-                <i data-lucide="bell"></i> <span>News & Updates</span>
+                <i data-lucide="user-circle"></i>
+                <span>My Profile</span>
               </button>
               <button class="more-menu-item" data-view="settings">
-                <i data-lucide="settings"></i> <span>App Settings</span>
+                <i data-lucide="settings"></i>
+                <span>App Settings</span>
+              </button>
+              <button class="more-menu-item" id="more-news-btn">
+                <i data-lucide="bell"></i>
+                <span>News &amp; Updates</span>
+              </button>
+              <button class="more-menu-item" id="more-help-btn">
+                <i data-lucide="help-circle"></i>
+                <span>Help &amp; Guide</span>
               </button>
               <div class="menu-divider"></div>
               <button class="more-menu-item logout" id="more-logout-btn">
-                <i data-lucide="log-out"></i> <span>Sign Out</span>
+                <i data-lucide="log-out"></i>
+                <span>Sign Out</span>
               </button>
            </div>
         </div>

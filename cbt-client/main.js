@@ -1,4 +1,4 @@
-import { AuthService } from './src/services/auth'
+﻿import { AuthService } from './src/services/auth'
 import { AuthComponent } from './src/components/Auth'
 import { ProfileSetupComponent } from './src/components/ProfileSetup'
 import { DashboardComponent } from './src/components/Dashboard'
@@ -378,6 +378,15 @@ function setupGlobalActions(profile) {
     moreLogoutBtn.onclick = () => {
       toggleMoreDrawer();
       setTimeout(() => window.navigateTo('logout', profile), 300);
+    }
+  }
+
+  // Wire up Help button in More drawer
+  const moreHelpBtn = document.getElementById('more-help-btn');
+  if (moreHelpBtn) {
+    moreHelpBtn.onclick = () => {
+      toggleMoreDrawer();
+      setTimeout(() => TourGuide.start(profile), 300);
     }
   }
 

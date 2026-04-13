@@ -101,7 +101,7 @@ export const DashboardComponent = {
       <div id="dashboard-content" class="dashboard-scroll-area">
         
         <!-- DASHBOARD WELCOME -->
-        <div class="mb-md" style="padding-top: 0.5rem;">
+        <div class="mb-sm" style="padding-top: 0;">
           <h1 class="responsive-h1" style="font-family: 'Outfit'; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
             Welcome, ${this.profile.username || 'Student'} 
             <i data-lucide="sun" style="width: 28px; height: 28px; color: var(--warning);"></i>
@@ -110,9 +110,9 @@ export const DashboardComponent = {
         </div>
 
         <!-- QUICK ACTION SECTION -->
-        <div class="glass card scale-in mb-lg" style="text-align: center; padding: 1.5rem 1rem; border: 2px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface-color) 100%);">
-          <h2 style="font-family: 'Outfit'; font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--text-primary); font-weight: 800;">Elite Mastery</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Select your mode to begin.</p>
+        <div class="glass card scale-in mb-md" style="text-align: center; padding: 1.25rem 1rem; border: 2px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface-color) 100%);">
+          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 0.15rem; color: var(--text-primary); font-weight: 800;">Elite Mastery</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.85rem; line-height: 1.4;">Select your mode to begin.</p>
           <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; width: 100%;">
              <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1.25rem; flex: 1; min-width: 140px; font-size: 0.95rem;"><i data-lucide="target" style="width:18px;"></i> Practice</button>
              <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1.25rem; flex: 1; min-width: 140px; font-weight: 800;"><i data-lucide="trophy" style="width:18px;"></i> Mock Exam</button>
@@ -126,7 +126,7 @@ export const DashboardComponent = {
           if (subState.tier === "premium" && subState.daysRemaining > 5) return '';
 
           return `
-            <div class="glass card scale-in mb-lg" style="padding: 1.25rem; border: 1.5px solid ${subState.isExpired ? 'var(--error)' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? 'var(--warning)' : 'var(--accent-primary)')};">
+            <div class="glass card scale-in mb-md" style="padding: 1rem; border: 1.5px solid ${subState.isExpired ? 'var(--error)' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? 'var(--warning)' : 'var(--accent-primary)')};">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div style="flex: 1; min-width: 200px;">
                   <h4 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem;">
@@ -145,11 +145,11 @@ export const DashboardComponent = {
         })()}
 
          <!-- PROGRESS & ANALYTICS (Standardized Grid) -->
-         <div class="dashboard-responsive-grid mb-lg" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem;">
+         <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
             
             <!-- Progress Card -->
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 280px; justify-content: space-between;">
-              <h3 style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">Progress Overview</h3>
+            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between;">
+              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Progress Overview</h3>
               
               <div style="display: flex; gap: 1.5rem; align-items: center; justify-content: center; flex: 1;">
                  <div id="readiness-gauge-container" style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
@@ -160,27 +160,27 @@ export const DashboardComponent = {
                     <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1rem; color: var(--primary);">0%</div>
                  </div>
                  <div style="text-align: left;">
-                    <div id="readiness-label" style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Top Subject</div>
-                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">...</div>
-                    <div id="readiness-status" style="font-size: 0.8rem; font-weight: 700; color: var(--success);">Beginner</div>
+                     <div id="readiness-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Top Subject</div>
+                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">...</div>
+                    <div id="readiness-status" style="font-size: 0.75rem; font-weight: 700; color: var(--success);">Beginner</div>
                  </div>
               </div>
 
               <div style="display: flex; justify-content: space-around; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 1rem;">
                 <div style="text-align: center;">
-                  <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary);">${totalQuestions}</div>
+                  <div style="font-size: 1.35rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary);">${totalQuestions}</div>
                   <div style="font-size: 0.75rem; color: var(--text-secondary);">Attempted</div>
                 </div>
                 <div style="text-align: center;">
-                   <div style="font-size: 1.5rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary);">${history.length > 0 ? accuracy + '%' : '--'}</div>
+                   <div style="font-size: 1.35rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary);">${history.length > 0 ? accuracy + '%' : '--'}</div>
                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Accuracy</div>
                 </div>
               </div>
             </div>
 
             <!-- AI Insight Card -->
-            <div class="glass card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 280px; justify-content: space-between; border-left: 4px solid var(--accent-secondary);">
-              <h3 style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">AI Performance Analysis</h3>
+            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; border-left: 4px solid var(--accent-secondary);">
+              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">AI Performance Analysis</h3>
               
               <div style="flex: 1; display: flex; align-items: center;">
                 <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; font-weight: 500; margin: 0;">
@@ -213,7 +213,7 @@ export const DashboardComponent = {
          </div>
 
         <!-- QUICK ACTIONS GRID -->
-        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
           <div id="quick-practice-btn-grid" class="glass card scale-in" style="cursor: pointer; padding: 1rem; border-bottom: 3px solid var(--primary); align-items: center; flex-direction: row; gap: 0.75rem;">
             <div style="background: rgba(37, 99, 235, 0.1); padding: 0.5rem; border-radius: 10px; color: var(--primary);"><i data-lucide="target" style="width:20px;"></i></div>
             <div style="text-align: left;"><h4 style="font-weight: 800; font-size: 0.9rem; margin: 0;">Practice</h4></div>
@@ -229,8 +229,8 @@ export const DashboardComponent = {
         </div>
 
         <!-- ANALYTICS CHARTS -->
-        <div id="analytics-section" style="margin-top: 2.5rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        <div id="analytics-section" style="margin-top: 1.5rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
             <i data-lucide="bar-chart-2" style="color: var(--success); width: 24px;"></i> Analytics
           </h2>
           <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">

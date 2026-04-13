@@ -1,4 +1,4 @@
-* {
+﻿* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -36,13 +36,13 @@ html {
   /* Layout & Design Tokens */
   --space-xs: 4px;
   --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 20px;
-  --space-xl: 28px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
   
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 12px 30px rgba(0,0,0,0.15);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-lg: 0 12px 30px rgba(0,0,0,0.1);
   
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -60,14 +60,14 @@ html {
   --header-height: 72px;
   --sidebar-width: 250px;
   --sidebar-collapsed-width: 75px;
-  --bottom-nav-height: 80px;
+  --bottom-nav-height: 70px;
 }
 
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .details-premium {
@@ -158,7 +158,7 @@ body {
   font-family: var(--font-main);
   background-color: var(--bg-color);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100dvh;
   overflow-y: auto; /* Root scrolling enabled, overflow-x disabled */
   position: relative;
@@ -316,7 +316,7 @@ body {
 }
 
 .logo-text {
-  font-size: 1.85rem;
+  font-size: 1.75rem;
   font-weight: 900;
   letter-spacing: -0.03em;
   background: var(--accent-gradient);
@@ -329,9 +329,9 @@ body {
 }
 
 .lucide {
-  width: 1.25rem;
-  height: 1.25rem;
-  stroke-width: 2;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.25;
 }
 
 .streak-mini {
@@ -513,7 +513,7 @@ body {
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  /* 🔥 FIX: Remove width: 100% which causes overflow when combined with margin-left */
+  /* ðŸ”¥ FIX: Remove width: 100% which causes overflow when combined with margin-left */
   width: auto; 
   min-width: 0;
   height: 100vh;
@@ -541,9 +541,9 @@ body {
   }
 }
 
-/* --- Mobile Nav --- */
+/* --- Mobile Nav (Default: mobile-first flex) --- */
 .bottom-nav {
-  display: none;
+  display: flex;
 }
 
 /* =========================================
@@ -558,6 +558,9 @@ body {
   }
   #sidebar-toggle {
     display: none !important; /* Hide toggle when sidebar is naturally hidden */
+  }
+  .bottom-nav {
+    display: flex !important;
   }
   .main-content-area {
     margin-left: 0 !important;
@@ -663,11 +666,11 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 48px;
+    min-height: 44px;
     flex: 1;
-    padding: 6px 4px;
-    gap: 4px;
-    font-size: 0.7rem;
+    padding: 4px;
+    gap: 6px;
+    font-size: 0.75rem;
     font-weight: 500;
     transition: all 0.2s;
   }
@@ -878,21 +881,21 @@ button, .btn {
   gap: 0.6rem;
   border: 1.5px solid transparent;
   outline: none;
-  height: 44px;
-  font-size: 14px;
+  height: 46px;
+  font-size: 15px;
   user-select: none;
 }
 
-button:active, .btn:active {
-  transform: scale(0.98);
+button:active, .btn:active, .nav-item:active, .bottom-nav-item:active, .more-menu-item:active {
+  transform: scale(0.96);
 }
 
 .primary, .btn-primary {
   background: var(--accent-gradient);
   color: #FFFFFF !important;
   font-weight: 700;
-  padding: 0.75rem 1.75rem;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  padding: 0.6rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
   border-radius: 12px;
 }
 
@@ -903,7 +906,7 @@ button:active, .btn:active {
 
 /* Dominant Primary Button (High contrast) */
 .btn-dominant {
-  height: 52px; /* Taller height for primary CTA dominance */
+  height: 50px; /* Taller height for primary CTA dominance */
   font-size: 16px; /* Slightly larger text */
   font-weight: 800; /* Bolder text */
   letter-spacing: -0.01em;
@@ -928,7 +931,7 @@ button:active, .btn:active {
   border: 1.5px solid rgba(148, 163, 184, 0.2);
   color: var(--text-primary);
   font-weight: 700;
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   backdrop-filter: blur(4px);
 }
 
@@ -1489,22 +1492,32 @@ body.light-mode .q-grid-item.answered {
     max-width: 100px;
   }
 
+  /* HIDE question counter on small screens to free space */
   .q-counter-mini {
-    font-size: 0.85rem;
-    padding: 0.25rem 0.6rem;
+    display: none !important;
   }
 
+  /* Smaller timer on mobile so it doesn't crowd the header */
   .timer-mini {
-    font-size: 0.9rem;
-    padding: 0.25rem 0.5rem;
-    min-width: 55px;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.45rem;
+    min-width: 48px;
+    letter-spacing: 0;
   }
-}
+
+  /* Larger calc + map icons on mobile for easier tapping */
+  #toggle-calc .lucide,
+  #mobile-map-toggle .lucide {
+    width: 28px !important;
+    height: 28px !important;
   }
-  
-  #toggle-calc .lucide {
-    width: 20px !important;
-    height: 20px !important;
+
+  #toggle-calc,
+  #mobile-map-toggle {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    flex-shrink: 0;
   }
 
   .calc-label {
@@ -2029,7 +2042,7 @@ body.light-mode .option-btn .option-holder {
 }
 
 /* ==========================================================================
-   🧭 TOUR GUIDE & ONBOARDING STYLES
+   ðŸ§­ TOUR GUIDE & ONBOARDING STYLES
    ========================================================================== */
 
 .tour-overlay {
@@ -2139,7 +2152,7 @@ body.light-mode .option-btn .option-holder {
 }
 
 /* ==========================================================================
-   💡 SMART TOOLTIPS (data-tooltip)
+   ðŸ’¡ SMART TOOLTIPS (data-tooltip)
    ========================================================================== */
 
 [data-tooltip] {
@@ -2181,7 +2194,7 @@ body.light-mode .option-btn .option-holder {
 }
 
 /* ==========================================================================
-   📰 NEWS ARTICLE RESPONSIVENESS FIX
+   ðŸ“° NEWS ARTICLE RESPONSIVENESS FIX
    ========================================================================== */
 #news-article-container {
   position: fixed;
@@ -2485,85 +2498,136 @@ body.light-mode .option-btn .option-holder {
 }
 
 /* ==========================================================================
-   ☰ MORE DRAWER (Bottom Sheet / Sidebar)
+   MORE DRAWER - Premium Bottom Sheet (Mobile) / Fly-out Panel (Desktop)
    ========================================================================== */
+
+/* Mobile: slide-up bottom sheet */
 .more-drawer {
   position: fixed;
-  bottom: -100%;
+  bottom: -110%;
   left: 0;
   width: 100%;
   background: var(--surface-color);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
-  z-index: 6000 !important; /* 🔥 MATCH NEWS DRAWER */
+  box-shadow: 0 -12px 48px rgba(0,0,0,0.25);
+  z-index: 6000;
   transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+/* Drag handle indicator */
+.more-drawer::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
 }
 
 .more-drawer.active {
-  bottom: 0 !important;
+  bottom: 0;
 }
 
 .more-menu-list {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
+/* More menu items - clean compact rows */
 .more-menu-item {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 0.9rem 1.1rem;
   width: 100%;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 14px;
   color: var(--text-primary);
   font-weight: 600;
+  font-size: 0.95rem;
+  font-family: var(--font-main);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.more-menu-item .lucide {
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: color 0.18s ease;
 }
 
 .more-menu-item:hover {
-  background: rgba(124, 58, 237, 0.1);
-  border-color: var(--accent-primary);
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.2);
+  color: var(--accent-primary);
+}
+
+.more-menu-item:hover .lucide {
   color: var(--accent-primary);
 }
 
 .more-menu-item.logout {
   color: var(--error);
-  border-color: rgba(239, 68, 68, 0.1);
-  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.04);
+  margin-top: 0.25rem;
+}
+
+.more-menu-item.logout .lucide {
+  color: var(--error);
+  opacity: 0.85;
 }
 
 .more-menu-item.logout:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: var(--error);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .menu-divider {
   height: 1px;
   background: var(--glass-border);
-  margin: 0.75rem 0.5rem;
+  margin: 0.5rem 0.25rem;
 }
 
-/* Adjust for larger screens */
+/* Desktop: compact fly-out panel */
 @media (min-width: 769px) {
   .more-drawer {
-    width: 350px;
+    width: 300px;
     height: auto;
+    max-height: 80vh;
     bottom: unset;
-    top: 80px;
-    right: -400px;
+    top: var(--header-height);
+    right: -360px;
     left: unset;
     border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .more-drawer::before {
+    display: none;
   }
   
   .more-drawer.active {
-    right: 20px !important;
+    right: 20px;
+    bottom: unset;
   }
 }
 
