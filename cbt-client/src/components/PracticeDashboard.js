@@ -168,7 +168,8 @@ export const PracticeDashboardComponent = {
           startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
         }
       } catch (err) {
-        alert("Error loading questions.");
+        console.error("Practice Load Failed:", err);
+        alert(`Error loading questions: ${err.message || 'Connection timeout'}. Please check your internet and try again.`);
         startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
       }
     }

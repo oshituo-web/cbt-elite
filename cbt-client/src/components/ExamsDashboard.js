@@ -195,28 +195,46 @@ export const ExamsDashboardComponent = {
       if (selectedExam === 'JAMB') {
         const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
         if (selected.length !== 3) return alert('Select exactly 3 subjects.')
+        
         startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         const fullLoad = ['Use of English', ...selected]
         console.log("Starting JAMB Exam with subjects:", fullLoad)
         const allQuestions = []
+        
         try {
           for (const s of fullLoad) {
             const limit = s === 'Use of English' ? 60 : 40
-            const { data } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB')
-            allQuestions.push(...data)
+            const { data, error } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB')
+            if (error) throw new Error(error);
+            if (data) allQuestions.push(...data)
           }
+
+          if (allQuestions.length === 0) {
+            throw new Error("No questions found for the selected subjects");
+          }
+
           this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB', fullLoad)
         } catch (err) {
-          alert("Connection failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+          console.error("JAMB Load Failed:", err)
+          alert(`Error loading questions: ${err.message || 'Connection failed'}. Please check your internet and try again.`)
+          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }
       } else {
         const subject = eSub.value
         startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         try {
-          const { data: questions } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam)
+          const { data: questions, error } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam)
+          if (error) throw new Error(error);
+          
+          if (!questions || questions.length === 0) {
+            throw new Error(`No ${selectedExam} questions found for ${subject}`);
+          }
+
           this.onStartExam(questions, 'exam', subject, selectedExam)
         } catch (err) {
-          alert("Failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+          console.error("Exam Load Failed:", err)
+          alert(`Error loading questions: ${err.message || 'Failed'}. Please check your internet and try again.`)
+          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }
       }
     }

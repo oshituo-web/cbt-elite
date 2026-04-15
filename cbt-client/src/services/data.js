@@ -64,11 +64,19 @@ export const DataService = {
           p_question_type: filters.question_type || 'objective',
           p_limit: filters.limit || 20
         })
+        
         if (idError) throw idError
-        if (randomIds && randomIds.length > 0) {
-          query = query.in('id', randomIds.map(r => r.id))
+        
+        if (randomIds && Array.isArray(randomIds) && randomIds.length > 0) {
+          // 🔥 ROBUST MAP: Handle both [{id: '...'}, ...] and ['...', ...] formats
+          const ids = randomIds.map(r => (typeof r === 'object' && r !== null) ? r.id : r).filter(Boolean);
+          if (ids.length > 0) {
+            query = query.in('id', ids)
+          } else {
+            query = query.limit(filters.limit || 20)
+          }
         } else {
-          console.warn("RPC returned no random questions. Falling back to sequential.")
+          console.warn("RPC returned no random questions or invalid format. Falling back to sequential.")
           query = query.limit(filters.limit || 20)
         }
       } catch (err) {
@@ -82,40 +90,57 @@ export const DataService = {
     }
 
     const { data, error, count } = await query
+    
+    if (error) {
+        console.error("DataService.getQuestions Query Error:", error)
+        throw error // Throw to be caught by component level try-catch
+    }
+
     return { data: this._formatQuestions(data || []), error, count }
   },
 
   _formatQuestions(questions) {
     if (!Array.isArray(questions)) return []
     
-    questions.forEach(q => {
-      if (q.question_type === 'theory') {
-        const details = Array.isArray(q.theory_details) ? q.theory_details[0] : q.theory_details
-        if (details) {
-          q.model_answer = details.model_answer
-          q.key_points = details.key_points
-          q.max_score = details.max_score
-          q.marking_scheme = details.marking_scheme
-        }
-        q.answers = []
-      } else {
-        const qa = Array.isArray(q.question_answers) ? q.question_answers[0] : q.question_answers
-        if (qa && (qa.option_a || qa.option_A)) {
-          // 🔥 STABLE IDs: Always A, B, C, D regardless of database ID
-          q.answers = [
-            { id: 'A', db_id: qa.id_a, option_text: qa.option_a || qa.option_A, is_correct: qa.correct_option === 'A' },
-            { id: 'B', db_id: qa.id_b, option_text: qa.option_b || qa.option_B, is_correct: qa.correct_option === 'B' },
-            { id: 'C', db_id: qa.id_c, option_text: qa.option_c || qa.option_C, is_correct: qa.correct_option === 'C' },
-            { id: 'D', db_id: qa.id_d, option_text: qa.option_d || qa.option_D, is_correct: qa.correct_option === 'D' }
-          ]
-          const qe = Array.isArray(q.question_explanations) ? q.question_explanations[0] : q.question_explanations
-          q.explanation = qe?.explanation || qa.explanation || q.explanation
+    return questions.map(q => {
+      // Create a shallow copy to avoid mutating data if it's cached/reused elsewhere
+      const formatted = { ...q }
+      
+      try {
+        if (formatted.question_type === 'theory') {
+          const details = Array.isArray(formatted.theory_details) ? formatted.theory_details[0] : formatted.theory_details
+          if (details) {
+            formatted.model_answer = details.model_answer
+            formatted.key_points = details.key_points
+            formatted.max_score = details.max_score
+            formatted.marking_scheme = details.marking_scheme
+          }
+          formatted.answers = []
         } else {
-          q.answers = []
+          // Normalize options/answers
+          const qa = Array.isArray(formatted.question_answers) ? formatted.question_answers[0] : formatted.question_answers
+          if (qa && (qa.option_a || qa.option_A)) {
+            // 🔥 STABLE IDs: Always A, B, C, D regardless of database ID
+            formatted.answers = [
+              { id: 'A', db_id: qa.id_a, option_text: qa.option_a || qa.option_A, is_correct: qa.correct_option === 'A' },
+              { id: 'B', db_id: qa.id_b, option_text: qa.option_b || qa.option_B, is_correct: qa.correct_option === 'B' },
+              { id: 'C', db_id: qa.id_c, option_text: qa.option_c || qa.option_C, is_correct: qa.correct_option === 'C' },
+              { id: 'D', db_id: qa.id_d, option_text: qa.option_d || qa.option_D, is_correct: qa.correct_option === 'D' }
+            ]
+            const qe = Array.isArray(formatted.question_explanations) ? formatted.question_explanations[0] : formatted.question_explanations
+            formatted.explanation = qe?.explanation || qa.explanation || formatted.explanation
+          } else {
+            formatted.answers = []
+          }
         }
+      } catch (err) {
+        console.error("Question formatting failed for:", q.id, err)
+        // Ensure minimum required fields exist even if formatting fails
+        formatted.answers = formatted.answers || []
       }
+      
+      return formatted
     })
-    return questions
   },
 
   // --- USER & SESSIONS ---
@@ -249,38 +274,47 @@ export const DataService = {
     let subjectId = undefined;
     let examId = undefined;
 
-    if (subjectName) {
-        let { data: subs } = await supabase.from('subjects').select('id').eq('subject_name', subjectName);
-        if (!subs || subs.length === 0) {
-            let fuzzySearch = subjectName.toLowerCase().includes('english') ? '%English%' : `%${subjectName}%`;
-            const res = await supabase.from('subjects').select('id').ilike('subject_name', fuzzySearch);
-            subs = res.data;
+    try {
+        if (subjectName) {
+            let { data: subs, error: sErr } = await supabase.from('subjects').select('id').eq('subject_name', subjectName);
+            if (sErr) console.error("DataService.getPracticeQuestions Subject Select Error:", sErr);
+
+            if (!subs || subs.length === 0) {
+                let fuzzySearch = subjectName.toLowerCase().includes('english') ? '%English%' : `%${subjectName}%`;
+                const res = await supabase.from('subjects').select('id').ilike('subject_name', fuzzySearch);
+                subs = res.data;
+            }
+
+            if (subs && subs.length > 0) {
+                subjectId = subs[0].id;
+            } else {
+                console.error(`ERROR: Subject mapping failed for "${subjectName}". Refusing to fetch random subjects.`);
+                return { data: [], error: 'Subject mapping failed in DB', count: 0 };
+            }
         }
 
-        if (subs && subs.length > 0) {
-            subjectId = subs[0].id;
-        } else {
-            console.error(`ERROR: Subject mapping failed for "${subjectName}". Refusing to fetch random subjects.`);
-            return { data: [], error: 'Subject mapping failed in DB', count: 0 };
+        if (examType) {
+            // Also securely map the examType string (JAMB, WAEC, NECO) to its true exam_id
+            let { data: exams, error: eErr } = await supabase.from('exams').select('id').ilike('exam_name', `%${examType}%`);
+            if (eErr) console.error("DataService.getPracticeQuestions Exam Select Error:", eErr);
+            
+            if (exams && exams.length > 0) {
+                examId = exams[0].id;
+            }
         }
+
+        return await this.getQuestions({
+            subject_id: subjectId,
+            exam_id: examId,
+            topic: topic || undefined,
+            limit: limit,
+            randomize: true,
+            exam_type: examType || undefined // keep this just in case backend expects the literal string here too
+        })
+    } catch (err) {
+        console.error("DataService.getPracticeQuestions Fatal Error:", err);
+        throw err;
     }
-
-    if (examType) {
-        // Also securely map the examType string (JAMB, WAEC, NECO) to its true exam_id
-        let { data: exams } = await supabase.from('exams').select('id').ilike('exam_name', `%${examType}%`);
-        if (exams && exams.length > 0) {
-            examId = exams[0].id;
-        }
-    }
-
-    return await this.getQuestions({
-        subject_id: subjectId,
-        exam_id: examId,
-        topic: topic || undefined,
-        limit: limit,
-        randomize: true,
-        exam_type: examType || undefined // keep this just in case backend expects the literal string here too
-    })
   },
 
   async getGlobalStats(userId) {
