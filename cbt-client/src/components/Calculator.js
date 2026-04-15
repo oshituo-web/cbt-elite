@@ -12,24 +12,38 @@ export const CalculatorComponent = {
       position: fixed;
       right: 20px;
       bottom: 80px;
-      width: 220px;
-      padding: 1rem;
-      z-index: 1000;
+      width: 260px;
+      padding: 0;
+      z-index: 10000;
       display: none;
-      background: #333;
-      border: 1px solid var(--glass-border);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--primary);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.2), var(--shadow-lg);
+      overflow: hidden;
+      border-radius: 16px;
       pointer-events: all;
+      user-select: none;
+      font-family: 'Outfit', sans-serif;
     `
     calc.innerHTML = `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.75rem;">
-        <span style="color: var(--text-primary);">Calculator</span>
-        <button id="close-calc" style="padding: 2px 5px; background: none; color: var(--error); border: none; cursor: pointer;">X</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(37, 99, 235, 0.1); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <span style="font-weight: 900; font-size: 0.85rem; color: #60A5FA; letter-spacing: 1.5px; text-shadow: 0 0 8px rgba(96, 165, 250, 0.5);">CBT ELITE CALCULATOR</span>
+        <button id="close-calc" style="background: rgba(239, 68, 68, 0.1); color: #F87171; border: none; cursor: pointer; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 900; transition: all 0.2s;">&times;</button>
       </div>
-      <input type="text" id="calc-display" readonly style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: var(--text-primary); text-align: right; margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem;">
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
-        ${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+','C'].map(btn => `
-          <button class="calc-btn" data-val="${btn}" style="padding: 0.75rem; font-size: 0.875rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer;">${btn}</button>
-        `).join('')}
+      <div style="padding: 16px;">
+        <input type="text" id="calc-display" readonly placeholder="0" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; color: #FFFFFF; text-align: right; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); outline: none;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          ${['C', '/', '*', '-'].map(op => `
+            <button class="calc-btn" data-val="${op}" style="padding: 12px 0; font-size: 1rem; font-weight: 800; background: ${op === 'C' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(37, 99, 235, 0.15)'}; border: 1px solid ${op === 'C' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(37, 99, 235, 0.2)'}; color: ${op === 'C' ? '#F87171' : '#60A5FA'}; cursor: pointer; border-radius: 8px; transition: all 0.2s;">${op}</button>
+          `).join('')}
+          ${['7', '8', '9', '+', '4', '5', '6', '.', '1', '2', '3', '=', '0'].map(btn => {
+            const isOperator = ['+', '='].includes(btn);
+            const isZero = btn === '0';
+            return `
+              <button class="calc-btn" data-val="${btn}" style="padding: 12px 0; font-size: 1rem; font-weight: 700; background: ${isOperator ? 'var(--primary)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isOperator ? 'transparent' : 'rgba(255,255,255,0.08)'}; color: #FFFFFF; cursor: pointer; border-radius: 8px; transition: all 0.15s; ${isZero ? 'grid-column: span 3;' : ''}" onmouseover="this.style.background='${isOperator ? '#1D4ED8' : 'rgba(255,255,255,0.08)'}'" onmouseout="this.style.background='${isOperator ? 'var(--primary)' : 'rgba(255,255,255,0.03)'}'">${btn}</button>
+            `;
+          }).join('')}
+        </div>
       </div>
     `
     parent.appendChild(calc)

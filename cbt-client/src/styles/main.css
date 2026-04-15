@@ -1798,25 +1798,34 @@ body.light-mode .option-btn .option-holder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.25rem;
   background: var(--primary);
-  color: white;
-  font-weight: 800;
-  font-size: 0.8rem;
+  color: white !important;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.calc-header span {
+  color: #FFFFFF !important;
+  font-weight: 900 !important;
 }
 
 .calc-display {
-  background: #000000 !important; /* Always dark for contrast */
-  padding: 1.25rem;
+  background: #000000 !important;
+  padding: 1.5rem;
   text-align: right;
-  font-size: 2rem;
-  font-family: 'Outfit', monospace;
-  color: #10B981 !important; /* Digital Green */
-  min-height: 80px;
+  font-size: 2.25rem;
+  font-family: 'JetBrains Mono', 'Outfit', monospace;
+  color: #10B981 !important;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.1);
 }
 
 .calc-buttons {
@@ -1827,27 +1836,40 @@ body.light-mode .option-btn .option-holder {
 }
 
 .calc-btn {
-  padding: 1rem;
+  padding: 1.25rem;
   background: var(--surface-color) !important;
   color: var(--text-primary) !important;
   border: none;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  font-size: 1.1rem;
-  transition: all 0.2s;
+  font-size: 1.2rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .calc-btn:hover {
-  background: rgba(124, 58, 237, 0.1) !important;
+  background: rgba(37, 99, 235, 0.1) !important;
+  color: var(--primary) !important;
+  transform: scale(1.02);
 }
 
 .calc-btn.op {
   color: var(--primary) !important;
   background: rgba(37, 99, 235, 0.05) !important;
+  font-weight: 900;
 }
 
 .calc-btn.eq {
   background: var(--primary) !important;
+  color: #FFFFFF !important;
+  font-weight: 900;
+}
+
+.calc-btn.clear {
+  color: var(--error) !important;
+}
   color: white !important;
 }
 

@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
 
@@ -136,27 +137,31 @@ export const PracticeDashboardComponent = {
     }
 
     startBtn.onclick = async () => {
+      startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
+      
       const subject = pSub.value
       const topic = pTopic.value
       // Note: number of questions for practice is strictly pegged to 25.
       const limit = 25 
       
-      // Fetch system config for subscription check
-      const { data: configs } = await DataService.getGlobalConfigs(['explanations_free_access'])
-      const systemConfig = { explanations_free_access: false }
-      if (configs) {
-        configs.forEach(c => {
-          if (c.key === 'explanations_free_access') systemConfig.explanations_free_access = c.value === true || c.value === 'true'
-        })
-      }
-
-      if (!SubscriptionService.canStartSession(this.profile, 'practice', systemConfig)) {
-        return alert("Daily practice limit reached. Upgrade to Premium for unlimited access!")
-      }
-
-      startBtn.innerHTML = 'Finding Questions...'; startBtn.disabled = true
-      
       try {
+        // Fetch system config for subscription check
+        const { data: configs, error: configError } = await DataService.getGlobalConfigs(['explanations_free_access'])
+        if (configError) throw new Error("Failed to load configuration");
+
+        const systemConfig = { explanations_free_access: false }
+        if (configs) {
+          configs.forEach(c => {
+            if (c.key === 'explanations_free_access') systemConfig.explanations_free_access = c.value === true || c.value === 'true'
+          })
+        }
+
+        if (!SubscriptionService.canStartSession(this.profile, 'practice', systemConfig)) {
+          startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
+          return alert("Daily practice limit reached. Upgrade to Premium for unlimited access!")
+        }
+
+        startBtn.innerHTML = 'Finding Questions...'; 
         const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType)
         
         if (questions && questions.length > 0) {

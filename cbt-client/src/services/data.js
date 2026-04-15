@@ -2,6 +2,7 @@ import { supabase } from '../utils/supabase'
 import { IndexedDbService } from './indexedDbService'
 
 export const DataService = {
+  supabase,
   // --- CORE DATA ---
   async getExams() {
     const { data, error } = await supabase.from('exams').select('*').order('exam_name')
@@ -34,6 +35,7 @@ export const DataService = {
       .from('questions')
       .select(`
         *,
+        subjects (subject_name),
         question_groups (*),
         question_answers (*),
         question_explanations (explanation),
@@ -105,6 +107,9 @@ export const DataService = {
     return questions.map(q => {
       // Create a shallow copy to avoid mutating data if it's cached/reused elsewhere
       const formatted = { ...q }
+      
+      // Flatten subject name for grouping consistency
+      formatted.subject = q.subject || (Array.isArray(q.subjects) ? q.subjects[0]?.subject_name : q.subjects?.subject_name) || 'General'
       
       try {
         if (formatted.question_type === 'theory') {
@@ -423,6 +428,13 @@ export const DataService = {
 
   async getSystemConfig(key) {
     return await supabase.from('system_config').select('value').eq('key', key).maybeSingle()
+  },
+
+  async getGlobalConfigs(keys = []) {
+    let query = supabase.from('system_config').select('key, value')
+    if (keys.length > 0) query = query.in('key', keys)
+    const { data, error } = await query
+    return { data: data || [], error }
   },
 
   async getBookmarkCount(userId) {

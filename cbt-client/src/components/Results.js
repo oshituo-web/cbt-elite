@@ -6,34 +6,31 @@ import { TopicDeepDiveComponent } from './TopicDeepDive'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
+    const container = document.getElementById('dashboard-container')
+    container.style.display = 'block'
+    container.innerHTML = `
+      <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
+        <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
+        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Analyzing your scores</h2>
+        <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem;">Saving progress...</p>
+      </div>
+    `
+
     let systemConfig = {
         explanations_free_access: false,
         exams_free_access: false,
         ai_tutor_free_access: false
     };
 
-    try {
-        const { data: configs } = await supabase.from('system_config').select('key, value');
-        if (configs) {
-            configs.forEach(c => {
+    // Non-blocking config fetch with short timeout fallback
+    const configPromise = supabase.from('system_config').select('key, value').then(({ data }) => {
+        if (data) {
+            data.forEach(c => {
                 const val = c.value === true || c.value === 'true';
                 if (systemConfig.hasOwnProperty(c.key)) systemConfig[c.key] = val;
             });
         }
-    } catch (err) {
-        console.error("Results config fetch failed:", err);
-    }
-
-    const isSystemFree = systemConfig.explanations_free_access;
-    const container = document.getElementById('dashboard-container')
-    container.style.display = 'block'
-    container.innerHTML = `
-      <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
-        <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
-        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Analyzing Your Score</h2>
-        <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem;">Saving progress...</p>
-      </div>
-    `
+    }).catch(err => console.warn("Results config fetch non-critical failure:", err));
 
     const objQuestions = questions.filter(q => q.question_type !== 'theory')
     

@@ -21,7 +21,7 @@ export class ExamSessionManager {
     // 1. Group by subject name
     const subjectMap = {};
     questions.forEach(q => {
-      const sub = q.subject || 'General';
+      const sub = q.subject || (Array.isArray(q.subjects) ? q.subjects[0]?.subject_name : q.subjects?.subject_name) || 'General';
       if (!subjectMap[sub]) subjectMap[sub] = [];
       subjectMap[sub].push(q);
     });

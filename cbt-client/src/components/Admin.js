@@ -1360,63 +1360,83 @@ export const AdminComponent = {
   openNewsEditModal(news = null) {
     const isEditing = !!news
     const modalHtml = `
-      <div id="news-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
-        <div class="glass card" style="width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
-          <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">${isEditing ? 'Edit News Article' : 'Draft New Article'}</h3>
+      <div id="news-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; justify-content:center; align-items:center; padding:1rem; backdrop-filter: blur(4px);">
+        <div class="glass card" style="width: 100%; max-width: 750px; height: auto; max-height: 95vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1.5px solid var(--accent-primary); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div>
-               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Title</p>
-               <input type="text" id="edit-news-title" class="glass-input" value="${news ? news.title.replace(/"/g, '&quot;') : ''}" style="width: 100%;">
+          <!-- Modal Header -->
+          <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+            <h3 style="margin: 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">${isEditing ? 'Edit News Article' : 'Draft New Article'}</h3>
+            <button id="close-news-x" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem;">&times;</button>
+          </div>
+
+          <!-- Modal Body (Scrollable) -->
+          <div style="padding: 2rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                 <label style="font-size: 0.8rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Article Title</label>
+                 <input type="text" id="edit-news-title" class="glass-input" value="${news ? news.title.replace(/"/g, '&quot;') : ''}" placeholder="e.g. JAMB 2026 Registration Begins" style="width: 100%; height: 50px; font-weight: 600;">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                 <label style="font-size: 0.8rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Category</label>
+                 <select id="edit-news-category" class="glass-select" style="width: 100%; height: 50px; font-weight: 600;">
+                   <option value="JAMB" ${news && news.category === 'JAMB' ? 'selected' : ''}>JAMB</option>
+                   <option value="WAEC" ${news && news.category === 'WAEC' ? 'selected' : ''}>WAEC</option>
+                   <option value="NECO" ${news && news.category === 'NECO' ? 'selected' : ''}>NECO</option>
+                   <option value="Admission" ${news && news.category === 'Admission' ? 'selected' : ''}>Admission</option>
+                   <option value="Trending" ${news && news.category === 'Trending' ? 'selected' : ''}>Trending / Tech</option>
+                   <option value="General" ${news && news.category === 'General' ? 'selected' : ''}>General</option>
+                 </select>
+              </div>
             </div>
-            <div>
-               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Category</p>
-               <select id="edit-news-category" class="glass-select" style="width: 100%;">
-                 <option value="JAMB" ${news && news.category === 'JAMB' ? 'selected' : ''}>JAMB</option>
-                 <option value="WAEC" ${news && news.category === 'WAEC' ? 'selected' : ''}>WAEC</option>
-                 <option value="NECO" ${news && news.category === 'NECO' ? 'selected' : ''}>NECO</option>
-                 <option value="Admission" ${news && news.category === 'Admission' ? 'selected' : ''}>Admission</option>
-                 <option value="Trending" ${news && news.category === 'Trending' ? 'selected' : ''}>Trending / Tech</option>
-                 <option value="General" ${news && news.category === 'General' ? 'selected' : ''}>General</option>
-               </select>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <label style="font-size: 0.8rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Short Summary</label>
+              <textarea id="edit-news-summary" class="glass-input" placeholder="A brief hook visible on the dashboard cards..." style="width: 100%; min-height: 80px; font-size: 0.95rem; line-height: 1.5; padding: 1rem;">${news ? news.summary : ''}</textarea>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <label style="font-size: 0.8rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Full Article Content</label>
+              <textarea id="edit-news-content" class="glass-input" placeholder="Write the complete article body here. Supports simple spacing..." style="width: 100%; min-height: 250px; font-size: 0.95rem; line-height: 1.6; padding: 1rem;">${news ? news.content : ''}</textarea>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.15); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--glass-border);">
+              <label style="display: block; font-size: 0.8rem; color: var(--text-primary); margin-bottom: 0.75rem; font-weight: 700;">📎 PDF Attachment (Optional)</label>
+              ${news && news.attachment_url ? `<div style="font-size: 0.8rem; margin-bottom: 1rem; color: var(--accent-secondary); font-weight: 600;">Current: <a href="${news.attachment_url}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${news.attachment_name || 'View File'}</a></div>` : ''}
+              <input type="file" id="edit-news-attachment" accept=".pdf" class="glass-input" style="width: 100%; font-size: 0.85rem; padding: 0.6rem;">
             </div>
           </div>
 
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Short Summary (Visible on Dashboard Cards)</p>
-          <textarea id="edit-news-summary" class="glass-input" style="width: 100%; min-height: 80px; margin-bottom: 1rem; font-size: 0.9rem;">${news ? news.summary : ''}</textarea>
-
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Full Article Content (Visible in Reader Mode)</p>
-          <textarea id="edit-news-content" class="glass-input" style="width: 100%; min-height: 150px; margin-bottom: 1.5rem; font-size: 0.9rem;">${news ? news.content : ''}</textarea>
-
-          <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
-            <p style="font-size: 0.8rem; color: var(--accent-primary); margin-bottom: 0.5rem; font-weight: bold;">📎 Optional PDF Attachment (e.g. Timetable)</p>
-            ${news && news.attachment_url ? `<div style="font-size: 0.8rem; margin-bottom: 0.5rem;">Current Attachment: <a href="${news.attachment_url}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${news.attachment_name || 'View File'}</a></div>` : ''}
-            <input type="file" id="edit-news-attachment" accept=".pdf" class="glass-input" style="width: 100%; font-size: 0.8rem; padding: 0.4rem;">
-          </div>
-
-          <div style="display: flex; gap: 1rem;">
-            <button id="save-news-edit" class="primary" style="flex:1;">${isEditing ? 'Save Changes' : 'Publish Article'}</button>
-            <button id="cancel-news-edit" class="btn-secondary" style="flex:1;">Cancel</button>
+          <!-- Modal Footer (Sticky) -->
+          <div style="padding: 1.5rem 2rem; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); display: flex; gap: 1.25rem;">
+            <button id="cancel-news-edit" class="btn-secondary" style="flex:1; height: 54px; font-weight: 800; font-family: 'Outfit'; cursor: pointer; border-radius: 12px; font-size: 1rem;">Cancel</button>
+            <button id="save-news-edit" class="btn-primary" style="flex:2; height: 54px; font-weight: 900; font-family: 'Outfit'; cursor: pointer; border: none; background: var(--accent-gradient); color: white !important; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s;">
+              ${isEditing ? 'Save Changes' : 'Publish Article'}
+            </button>
           </div>
         </div>
       </div>
     `
     document.body.insertAdjacentHTML('beforeend', modalHtml)
     
+    document.getElementById('close-news-x').onclick = () => document.getElementById('news-edit-overlay').remove()
     document.getElementById('cancel-news-edit').onclick = () => document.getElementById('news-edit-overlay').remove()
+    
     document.getElementById('save-news-edit').onclick = async () => {
       const title = document.getElementById('edit-news-title').value.trim()
       const category = document.getElementById('edit-news-category').value
       const summary = document.getElementById('edit-news-summary').value.trim()
       const content = document.getElementById('edit-news-content').value.trim()
       
-      if (!title || !summary || !content) return alert('All fields are required.')
+      if (!title || !summary || !content) return alert('All required fields (Title, Summary, Content) must be filled.')
       
       const fileInput = document.getElementById('edit-news-attachment')
       const file = fileInput.files[0]
 
       const saveBtn = document.getElementById('save-news-edit')
-      saveBtn.textContent = file ? 'Uploading...' : (isEditing ? 'Saving...' : 'Publishing...')
+      const originalText = isEditing ? 'Save Changes' : 'Publish Article'
+      
+      saveBtn.textContent = file ? 'Uploading...' : 'Processing...'
       saveBtn.disabled = true
       
       let attachment_url = news ? news.attachment_url : null
@@ -1425,14 +1445,14 @@ export const AdminComponent = {
       if (file) {
         if (file.type !== 'application/pdf') {
             alert('Only PDF files are allowed.')
-            saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
+            saveBtn.textContent = originalText
             saveBtn.disabled = false
             return
         }
         const { url, error } = await DataService.adminUploadNewsAttachment(file)
         if (error) {
             alert('File Upload failed: ' + error.message)
-            saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
+            saveBtn.textContent = originalText
             saveBtn.disabled = false
             return
         }
@@ -1440,7 +1460,7 @@ export const AdminComponent = {
         attachment_name = file.name
       }
       
-      saveBtn.textContent = isEditing ? 'Saving...' : 'Publishing...'
+      saveBtn.textContent = isEditing ? 'Updating...' : 'Publishing...'
 
       let res;
       if (isEditing) {

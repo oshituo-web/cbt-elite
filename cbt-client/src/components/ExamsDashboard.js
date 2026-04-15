@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
 
@@ -178,29 +179,37 @@ export const ExamsDashboardComponent = {
     if (closeBtn) closeBtn.onclick = () => configSection.style.display = 'none'
 
     startBtn.onclick = async () => {
-      // Fetch system config for subscription check
-      const { data: configs } = await DataService.getGlobalConfigs(['exams_free_access'])
-      const systemConfig = { exams_free_access: false }
-      if (configs) {
-        configs.forEach(c => {
-          if (c.key === 'exams_free_access') systemConfig.exams_free_access = c.value === true || c.value === 'true'
-        })
-      }
+      startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true;
 
-      if (!SubscriptionService.canStartSession(this.profile, 'exam', systemConfig)) {
-        return alert("Daily exam limit reached. Upgrade to Premium for unlimited mock exams!")
-      }
+      try {
+        // Fetch system config for subscription check
+        const { data: configs, error: configError } = await DataService.getGlobalConfigs(['exams_free_access'])
+        if (configError) throw new Error("Failed to load configuration");
 
-      if (selectedExam === 'JAMB') {
-        const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
-        if (selected.length !== 3) return alert('Select exactly 3 subjects.')
-        
-        startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
-        const fullLoad = ['Use of English', ...selected]
-        console.log("Starting JAMB Exam with subjects:", fullLoad)
-        const allQuestions = []
-        
-        try {
+        const systemConfig = { exams_free_access: false }
+        if (configs) {
+          configs.forEach(c => {
+            if (c.key === 'exams_free_access') systemConfig.exams_free_access = c.value === true || c.value === 'true'
+          })
+        }
+
+        if (!SubscriptionService.canStartSession(this.profile, 'exam', systemConfig)) {
+          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+          return alert("Daily exam limit reached. Upgrade to Premium for unlimited mock exams!")
+        }
+
+        if (selectedExam === 'JAMB') {
+          const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
+          if (selected.length !== 3) {
+            startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+            return alert('Select exactly 3 subjects.')
+          }
+          
+          const fullLoad = ['Use of English', ...selected]
+          console.log("Starting JAMB Exam with subjects:", fullLoad)
+          const allQuestions = []
+          
+          startBtn.innerHTML = 'Loading Mocks...';
           for (const s of fullLoad) {
             const limit = s === 'Use of English' ? 60 : 40
             const { data, error } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB')
@@ -213,15 +222,8 @@ export const ExamsDashboardComponent = {
           }
 
           this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB', fullLoad)
-        } catch (err) {
-          console.error("JAMB Load Failed:", err)
-          alert(`Error loading questions: ${err.message || 'Connection failed'}. Please check your internet and try again.`)
-          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
-        }
-      } else {
-        const subject = eSub.value
-        startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
-        try {
+        } else {
+          const subject = eSub.value
           const { data: questions, error } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam)
           if (error) throw new Error(error);
           
@@ -230,11 +232,11 @@ export const ExamsDashboardComponent = {
           }
 
           this.onStartExam(questions, 'exam', subject, selectedExam)
-        } catch (err) {
-          console.error("Exam Load Failed:", err)
-          alert(`Error loading questions: ${err.message || 'Failed'}. Please check your internet and try again.`)
-          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
         }
+      } catch (err) {
+        console.error("Exam Load Failed:", err)
+        alert(`Error loading questions: ${err.message || 'Connection failed'}. Please check your internet and try again.`)
+        startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
       }
     }
 

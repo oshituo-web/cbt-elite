@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { supabase } from '../utils/supabase'
 import { sanitizeContent } from '../utils/sanitize'
 import { TimerService } from '../services/TimerService'
 import { ExamSessionManager } from '../services/ExamSessionManager'
@@ -131,10 +132,20 @@ export class Exam {
     container.scrollTop = 0;
     document.body.classList.add('in-exam')
     
-    this._explanationsFreeAccess = false;
+    this.systemConfig = {
+      explanations_free_access: false,
+      exams_free_access: false
+    };
+
     try {
-        const configResp = await DataService.getSystemConfig('explanations_free_access');
-        this._explanationsFreeAccess = configResp.data?.value === true || configResp.data?.value === 'true';
+        const { data: configs } = await DataService.getGlobalConfigs(['explanations_free_access', 'exams_free_access']);
+        if (configs) {
+            configs.forEach(c => {
+                if (this.systemConfig.hasOwnProperty(c.key)) {
+                    this.systemConfig[c.key] = c.value === true || c.value === 'true';
+                }
+            });
+        }
     } catch (err) {
         console.warn("Failed to fetch global config:", err);
     }
@@ -147,7 +158,7 @@ export class Exam {
     } else if (!this.isReviewMode) {
       // Enforcement: Session Limits
       try {
-        if (!SubscriptionService.canStartSession(this.profile, this.mode, this._explanationsFreeAccess)) {
+        if (!SubscriptionService.canStartSession(this.profile, this.mode, this.systemConfig)) {
           const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
           alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
           onBack()
@@ -288,7 +299,7 @@ export class Exam {
       <!-- Floating Calculator -->
       <div id="exam-calculator" class="calculator-modal glass scale-in" style="display: none;">
         <div class="calc-header">
-          <span>ELITE CALCULATOR</span>
+          <span style="color: white !important; font-weight: 900 !important; font-family: 'Outfit';">CBT ELITE CALCULATOR</span>
           <button id="close-calc">×</button>
         </div>
         <div class="calc-display" id="calc-display">0</div>
