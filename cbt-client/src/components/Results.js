@@ -5,19 +5,31 @@ import { TopicDeepDiveComponent } from './TopicDeepDive'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
-    let isSystemFree = false;
+    let systemConfig = {
+        explanations_free_access: false,
+        exams_free_access: false,
+        ai_tutor_free_access: false
+    };
+
     try {
-        const configResp = await DataService.getSystemConfig('explanations_free_access');
-        isSystemFree = configResp.data?.value === true || configResp.data?.value === 'true';
+        const { data: configs } = await supabase.from('system_config').select('key, value');
+        if (configs) {
+            configs.forEach(c => {
+                const val = c.value === true || c.value === 'true';
+                if (systemConfig.hasOwnProperty(c.key)) systemConfig[c.key] = val;
+            });
+        }
     } catch (err) {
-        console.warn("Failed to fetch global config:", err);
+        console.error("Results config fetch failed:", err);
     }
+
+    const isSystemFree = systemConfig.explanations_free_access;
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     container.innerHTML = `
       <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
         <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
-        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Finalizing Your Story</h2>
+        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Analyzing Your Score</h2>
         <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem;">Saving progress...</p>
       </div>
     `
@@ -48,6 +60,36 @@ export const ResultsComponent = {
     const isJambMock = mode === 'exam' && examType === 'JAMB'
     
     // 🔥 FIX: Calculate stats purely from THIS session data
+    const statsGroup = {};
+    objQuestions.forEach((q) => {
+        const qIdx = questions.indexOf(q);
+        const selectedId = userAnswers[qIdx];
+        const correctAnswer = q.answers.find(a => a.is_correct);
+        const isCorrect = selectedId === correctAnswer?.id;
+        
+        let label = q.topic || q.subject || 'General';
+        // For JAMB mock, group by subject if multiple
+        if (isJambMock && q.subject) label = q.subject;
+        
+        if (!statsGroup[label]) {
+            statsGroup[label] = { total: 0, correct: 0 };
+        }
+        statsGroup[label].total++;
+        if (isCorrect) {
+            statsGroup[label].correct++;
+        }
+    });
+
+    let weakestTopic = null;
+    let minScore = 200; // Above 100
+    for (const [topic, stats] of Object.entries(statsGroup)) {
+        const score = (stats.correct / stats.total) * 100;
+        if (score < minScore && topic !== 'General') {
+            minScore = score;
+            weakestTopic = topic;
+        }
+    }
+    this._weakestTopic = weakestTopic;
     const sessionStats = Object.entries(statsGroup).map(([label, stats]) => ({
         label,
         percent: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
@@ -94,12 +136,12 @@ export const ResultsComponent = {
 
           <!-- AI TUTOR SMART RECOMMENDATION -->
           ${this._weakestTopic ? `
-            <div class="glass card scale-in mb-xl" style="background: var(--accent-gradient); border: none; padding: 2rem 1rem; text-align: left; color: white; width: 100%; box-sizing: border-box;">
-               <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem;">Master "${this._weakestTopic}"</h3>
-               <p style="opacity: 0.9; margin-bottom: 1.5rem; font-size: 0.95rem;">Reviewing core concepts here could boost your score by up to 15%.</p>
+            <div class="glass card scale-in mb-xl" style="background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); border: none; padding: 2rem 1.5rem; text-align: left; color: #ffffff; width: 100%; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+               <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem; color: #ffffff;">Master "${this._weakestTopic}"</h3>
+               <p style="margin-bottom: 1.5rem; font-size: 1rem; font-weight: 500; color: rgba(255,255,255,0.95); line-height: 1.5;">Reviewing core concepts here could boost your score by up to 15%.</p>
                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                 <button id="deep-dive-btn" class="btn-secondary" style="background: white; color: var(--primary); border: none; font-weight: 800; flex: 1; min-width: 140px;">Summary</button>
-                 <button id="auto-focus-btn" class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; flex: 1; min-width: 140px;">Challenge</button>
+                 <button id="deep-dive-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Summary</button>
+                 <button id="auto-focus-btn" class="btn-secondary" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Challenge</button>
                </div>
             </div>
           ` : ''}

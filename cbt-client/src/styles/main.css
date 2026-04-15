@@ -1,4 +1,4 @@
-﻿* {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -235,12 +235,12 @@ body {
 
 @media (max-width: 480px) {
   .branding-header .header-content {
-      padding: 0 0.5rem;
+      padding: 0 0.25rem;
       gap: 0.25rem;
   }
 
   .header-actions {
-      gap: 1.25rem; /* Increased spacing between icons */
+      gap: 0.5rem; /* Decreased spacing between icons to make room */
   }
   
   /* Left align logo area and enlarge brand name */
@@ -256,7 +256,7 @@ body {
   }
   
   .logo-text .accent {
-      font-size: 1.8rem !important;
+      font-size: 1.2rem !important;
       font-weight: 900 !important; /* 'Elite' part made bolder */
       color: var(--accent-secondary); /* Give 'Elite' a distinct color accent */
   }
@@ -281,16 +281,26 @@ body {
       display: none !important;
   }
   
-  /* Strongly downscale stats to fit row or hide if extreme narrow */
   .header-center {
-      transform: scale(0.8);
-      transform-origin: center;
+      transform: none; /* removed scaling */
+      margin-left: auto;
+      margin-right: 0.5rem;
+  }
+  
+  #header-tier {
+      display: none !important;
   }
 }
 
 @media (max-width: 360px) {
   .header-center {
-      display: none !important; /* Hide stats bar on narrow Android to keep logo/actions on one line */
+      display: flex !important;
+  }
+  .header-actions {
+      gap: 0.25rem !important;
+  }
+  .header-icon-btn {
+      padding: 0.25rem !important;
   }
 }
 
@@ -1480,7 +1490,7 @@ body.light-mode .q-grid-item.answered {
 
 @media (max-width: 768px) {
   .exam-header-primary {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.25rem;
     gap: 0.5rem;
   }
   
@@ -1762,23 +1772,25 @@ body.light-mode .option-btn .option-holder {
   top: 100px;
   right: 50px;
   width: 280px;
-  padding: 1.25rem;
-  z-index: 2000;
+  padding: 0;
+  overflow: hidden;
+  z-index: 9999;
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   backdrop-filter: blur(20px);
-  background: rgba(30, 41, 59, 0.95);
+  background: var(--card-bg);
   border: 1px solid var(--glass-border);
 }
 
 @media (max-width: 600px) {
   .calculator-modal {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    right: auto;
-    width: 90%;
-    max-width: 300px;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    width: 85% !important;
+    max-width: 320px;
+    padding: 0;
   }
 }
 
@@ -1786,82 +1798,62 @@ body.light-mode .option-btn .option-holder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary);
+  color: white;
   font-weight: 800;
-  color: var(--accent-primary);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-#close-calc {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-#close-calc:hover {
-  color: var(--error);
+  font-size: 0.8rem;
 }
 
 .calc-display {
-  background: rgba(0,0,0,0.3);
+  background: #000000 !important; /* Always dark for contrast */
   padding: 1.25rem;
-  border-radius: 12px;
   text-align: right;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-family: 'Outfit', monospace;
-  margin-bottom: 1rem;
-  min-height: 70px;
-  color: white;
-  border: 1px solid var(--glass-border);
+  color: #10B981 !important; /* Digital Green */
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  word-break: break-all;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .calc-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.6rem;
+  gap: 1px;
+  background: var(--glass-border);
 }
 
 .calc-btn {
-  padding: 0.85rem;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,0.05);
-  color: white;
-  border-radius: 10px;
+  padding: 1rem;
+  background: var(--surface-color) !important;
+  color: var(--text-primary) !important;
+  border: none;
   font-weight: 700;
   cursor: pointer;
+  font-size: 1.1rem;
   transition: all 0.2s;
-  font-size: 1rem;
 }
 
 .calc-btn:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateY(-2px);
+  background: rgba(124, 58, 237, 0.1) !important;
 }
 
 .calc-btn.op {
-  color: var(--accent-primary);
-  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary) !important;
+  background: rgba(37, 99, 235, 0.05) !important;
 }
 
 .calc-btn.eq {
-  background: var(--accent-primary);
-  color: white;
-  grid-row: span 2;
+  background: var(--primary) !important;
+  color: white !important;
 }
 
 .calc-btn.clear {
-  color: var(--error);
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--error) !important;
+  background: rgba(239, 68, 68, 0.05) !important;
 }
 
 /* Phase 30: Admin Panel Responsive Architecture */

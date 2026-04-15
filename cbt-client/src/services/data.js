@@ -246,17 +246,40 @@ export const DataService = {
   },
 
   async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '') {
-    // 1. Resolve name to ID
-    const { data: sub } = await supabase.from('subjects').select('id').eq('subject_name', subjectName).single()
-    const subjectId = sub?.id
+    let subjectId = undefined;
+    let examId = undefined;
 
-    // 2. Fetch using correct ID
+    if (subjectName) {
+        let { data: subs } = await supabase.from('subjects').select('id').eq('subject_name', subjectName);
+        if (!subs || subs.length === 0) {
+            let fuzzySearch = subjectName.toLowerCase().includes('english') ? '%English%' : `%${subjectName}%`;
+            const res = await supabase.from('subjects').select('id').ilike('subject_name', fuzzySearch);
+            subs = res.data;
+        }
+
+        if (subs && subs.length > 0) {
+            subjectId = subs[0].id;
+        } else {
+            console.error(`ERROR: Subject mapping failed for "${subjectName}". Refusing to fetch random subjects.`);
+            return { data: [], error: 'Subject mapping failed in DB', count: 0 };
+        }
+    }
+
+    if (examType) {
+        // Also securely map the examType string (JAMB, WAEC, NECO) to its true exam_id
+        let { data: exams } = await supabase.from('exams').select('id').ilike('exam_name', `%${examType}%`);
+        if (exams && exams.length > 0) {
+            examId = exams[0].id;
+        }
+    }
+
     return await this.getQuestions({
         subject_id: subjectId,
+        exam_id: examId,
         topic: topic || undefined,
         limit: limit,
         randomize: true,
-        exam_type: examType || undefined
+        exam_type: examType || undefined // keep this just in case backend expects the literal string here too
     })
   },
 
@@ -386,5 +409,186 @@ export const DataService = {
   async syncOfflinePool() {
     const { data } = await supabase.from('questions').select('*, question_answers(*)').eq('is_active', true).limit(100)
     if (data) await IndexedDbService.saveQuestions(this._formatQuestions(data))
+  },
+
+  // --- ADMIN: USER MANAGEMENT ---
+  async getAllUsers() {
+    const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
+    return { data: data || [], error }
+  },
+
+  async updateUserRole(email, role) {
+    return await supabase.from('users').update({ role }).eq('email', email)
+  },
+
+  async flagUser(userId, reason) {
+    return await supabase.from('users').update({ 
+      is_flagged: true, 
+      flag_reason: reason 
+    }).eq('id', userId)
+  },
+
+  // --- ADMIN: SYLLABUS ---
+  async getFullSyllabus() {
+    const { data, error } = await supabase
+      .from('syllabus_topics')
+      .select(`
+        *,
+        exams (exam_name),
+        subjects (subject_name)
+      `)
+      .order('topic')
+    return { data: data || [], error }
+  },
+
+  async addSyllabusTopic(examId, subjectId, topic) {
+    return await supabase.from('syllabus_topics').insert({
+      exam_id: examId,
+      subject_id: subjectId,
+      topic,
+      importance: 1
+    })
+  },
+
+  async deleteSyllabusTopic(id) {
+    return await supabase.from('syllabus_topics').delete().eq('id', id)
+  },
+
+  async updateSyllabusTopic(id, updates) {
+    return await supabase.from('syllabus_topics').update(updates).eq('id', id)
+  },
+
+  // --- ADMIN: QUESTIONS ---
+  async deleteQuestion(id) {
+    return await supabase.from('questions').delete().eq('id', id)
+  },
+
+  async deactivateQuestion(id) {
+    return await supabase.from('questions').update({ is_active: false }).eq('id', id)
+  },
+
+  async updateQuestionAnswers(questionId, updates) {
+    // Check if record exists first to decide insert/update
+    const { data: existing } = await supabase.from('question_answers').select('id').eq('question_id', questionId).maybeSingle()
+    if (existing) {
+      return await supabase.from('question_answers').update(updates).eq('question_id', questionId)
+    } else {
+      return await supabase.from('question_answers').insert({ question_id: questionId, ...updates })
+    }
+  },
+
+  async bulkAddQuestions(questions) {
+    // Basic bulk insert
+    const { data, error } = await supabase.from('questions').insert(questions.map(q => ({
+      question_text: q.question_text,
+      exam_type: q.exam_type,
+      subject: q.subject,
+      topic: q.topic,
+      explanation: q.explanation,
+      is_active: true
+    }))).select()
+    
+    if (error) return { error }
+
+    // After inserting questions, we need to insert their answers
+    // Note: This is an approximation. Real bulk insert for related records is more complex.
+    // For now, we'll just return the count of questions.
+    return { count: data?.length || 0, error: null }
+  },
+
+  // --- ADMIN: REPORTS ---
+  async getQuestionReports() {
+    const { data, error } = await supabase
+      .from('question_reports')
+      .select(`
+        *,
+        questions (id, question_text)
+      `)
+      .order('created_at', { ascending: false })
+    return { data: data || [], error }
+  },
+
+  async updateReportStatus(id, status) {
+    return await supabase.from('question_reports').update({ status }).eq('id', id)
+  },
+
+  // --- ADMIN: MARKETING & CONFIG ---
+  async getPromoCodes() {
+    return await supabase.from('promo_codes').select('*').order('created_at', { ascending: false })
+  },
+
+  async addPromoCode(code, percent, expiry) {
+    return await supabase.from('promo_codes').insert({ code, percent, expiry })
+  },
+
+  async deletePromoCode(id) {
+    return await supabase.from('promo_codes').delete().eq('id', id)
+  },
+
+  async updateSystemConfig(key, value) {
+    const { data: existing } = await supabase.from('system_config').select('id').eq('key', key).maybeSingle()
+    if (existing) {
+      return await supabase.from('system_config').update({ value }).eq('key', key)
+    } else {
+      return await supabase.from('system_config').insert({ key, value })
+    }
+  },
+
+  // --- ADMIN: ANALYTICS & AUDIT ---
+  async getGlobalAnalytics() {
+    const { data: sessions } = await supabase.from('exam_sessions').select('score_percentage')
+    const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true })
+    const { count: questionCount } = await supabase.from('questions').select('*', { count: 'exact', head: true })
+    
+    const avgScore = sessions && sessions.length > 0 
+      ? Math.round(sessions.reduce((acc, s) => acc + (s.score_percentage || 0), 0) / sessions.length)
+      : 0
+
+    return {
+      stats: {
+        totalUsers: userCount || 0,
+        totalQuestions: questionCount || 0,
+        averagePerformance: avgScore
+      },
+      sessions: sessions || [],
+      error: null
+    }
+  },
+
+  async getRevenueStats() {
+    return await supabase.from('users').select('tier, email')
+  },
+
+  async getAuditLogs() {
+    return await supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false }).limit(100)
+  },
+
+  async logAdminAction(adminEmail, action, targetId, details) {
+    try {
+      return await supabase.from('admin_audit_logs').insert({
+        admin_email: adminEmail,
+        action,
+        target_id: targetId,
+        details: String(details)
+      })
+    } catch (e) {
+      console.error("Audit log failed (table might missing):", e)
+      return { error: e }
+    }
+  },
+
+  async aiRegenerateQuestion(qid, reason, details) {
+    try {
+      const { data, error } = await supabase.functions.invoke('gemini-api', {
+        body: { 
+          action: 'repair', 
+          payload: { qid, reason, details } 
+        }
+      })
+      if (error) throw error
+      return { data, error: null }
+    } catch (err) {
+      return { data: null, error: err.message }
+    }
   }
 }

@@ -372,7 +372,7 @@ function setupGlobalActions(profile) {
       setTimeout(() => newsBtn?.click(), 300);
     }
   }
-  
+  // Wire up Logout button in More drawer
   const moreLogoutBtn = document.getElementById('more-logout-btn');
   if (moreLogoutBtn) {
     moreLogoutBtn.onclick = () => {
@@ -380,7 +380,31 @@ function setupGlobalActions(profile) {
       setTimeout(() => window.navigateTo('logout', profile), 300);
     }
   }
-
+
+  // Wire up Contact Us button in More drawer
+  const moreContactBtn = document.getElementById('more-contact-btn');
+  if (moreContactBtn && !moreContactBtn.dataset.init) {
+    moreContactBtn.dataset.init = "true";
+    moreContactBtn.onclick = (e) => {
+      e.preventDefault();
+      toggleMoreDrawer();
+      const subject = encodeURIComponent(`Inquiry from ${profile?.username || 'User'}`);
+      const body = encodeURIComponent(`Hello CBT Elite Team,\n\n[Your message here]\n\nRegards,\n${profile?.username || 'User'}`);
+      window.location.href = `mailto:cbtellite@gmail.com?subject=${subject}&body=${body}`;
+    }
+  }
+
+  // Wire up About Us button in More drawer
+  const moreAboutBtn = document.getElementById('more-about-btn');
+  if (moreAboutBtn && !moreAboutBtn.dataset.init) {
+    moreAboutBtn.dataset.init = "true";
+    moreAboutBtn.onclick = (e) => {
+      e.preventDefault();
+      toggleMoreDrawer();
+      showAboutModal();
+    }
+  }
+
   // Wire up Help button in More drawer
   const moreHelpBtn = document.getElementById('more-help-btn');
   if (moreHelpBtn) {
@@ -390,7 +414,8 @@ function setupGlobalActions(profile) {
     }
   }
 
-  // Handle clicks on items inside More Drawer
+
+  // Handle clicks on items inside More Drawer (Profile, Settings)
   const moreMenuItems = document.querySelectorAll('.more-menu-item[data-view]');
   moreMenuItems.forEach(item => {
     item.onclick = (e) => {
@@ -440,25 +465,36 @@ function setupGlobalActions(profile) {
 }
 
 function setupNavigation(profile) {
-  currentProfile = profile; // Store for navigateTo helper
-  const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .more-menu-item')
+  currentProfile = profile; 
+  // Only target elements with data-view to prevent overwriting specific handlers
+  const navItems = document.querySelectorAll('.nav-item[data-view], .bottom-nav-item[data-view], .more-menu-item[data-view]')
   navItems.forEach(item => {
     item.onclick = (e) => {
       e.preventDefault();
       const view = item.dataset.view
-      window.navigateTo(view, profile);
+      if (view) {
+        // If it's a more-menu-item, close the drawer first
+        if (item.classList.contains('more-menu-item')) {
+          toggleMoreDrawer();
+        }
+        window.navigateTo(view, profile);
+      }
     }
   })
 
-  const logoutBtn = document.getElementById('logout-btn')
-  if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-      if (confirm('Are you sure you want to sign out?')) {
-        await AuthService.signOut()
-        location.reload()
+  // Wire up both logout buttons
+  const logoutBtns = ['logout-btn', 'more-logout-btn'];
+  logoutBtns.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.onclick = async () => {
+        if (confirm('Are you sure you want to sign out?')) {
+          await AuthService.signOut()
+          location.reload()
+        }
       }
     }
-  }
+  });
 }
 
 function showAuth() {
@@ -660,3 +696,56 @@ async function syncOfflineData() {
 }
 
 initApp();
+
+function showAboutModal() {
+  const existing = document.getElementById('about-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'about-modal';
+  modal.className = 'modal-overlay';
+  modal.style.display = 'flex';
+  modal.style.zIndex = '10000';
+
+  modal.innerHTML = `
+    <div class="modal-content glass" style="width: min(600px, 92vw); max-height: 85vh; overflow-y: auto; padding: 0; border-radius: 24px;">
+      <div style="background: var(--primary); padding: 2rem; color: white; position: relative;">
+        <h2 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 0.5rem;">About CBT Elite</h2>
+        <p style="opacity: 0.9; font-weight: 500;">The Future of Exam Preparation</p>
+        <button id="close-about-modal" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">&times;</button>
+      </div>
+      <div style="padding: 2.5rem; color: var(--text-primary);">
+        <div style="margin-bottom: 2rem;">
+          <h3 style="color: var(--accent-primary); font-family: 'Outfit'; margin-bottom: 1rem;">Our Mission</h3>
+          <p style="line-height: 1.7; font-size: 1.05rem; color: var(--text-secondary);">CBT Elite is Nigeria's most advanced examination preparation platform. We specialize in providing high-quality, AI-powered study tools for JAMB, WAEC, and NECO candidates. Our mission is to empower students with the technology they need to excel in their academic pursuits through realistic simulations and deep analytics.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="glass card" style="padding: 1.25rem; border: 1px solid var(--glass-border);">
+            <h4 style="margin-bottom: 0.5rem; color: var(--primary);">AI-Powered</h4>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Personalized explanations and performance tracking driven by advanced AI.</p>
+          </div>
+          <div class="glass card" style="padding: 1.25rem; border: 1px solid var(--glass-border);">
+            <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Realistic</h4>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Exam interfaces designed to mimic actual JAMB and WAEC software perfectly.</p>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+          <p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">
+            Version 2.1.0 - Built for Excellence.
+            <br>
+            &copy; 2026 CBT Elite Learning Systems.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const closeBtn = document.getElementById('close-about-modal');
+  closeBtn.onclick = () => modal.remove();
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+

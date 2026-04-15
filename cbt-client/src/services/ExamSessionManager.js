@@ -1,5 +1,5 @@
 export class ExamSessionManager {
-  constructor(questions, initialAnswers = {}, shouldShuffle = true) {
+  constructor(questions, initialAnswers = {}, shouldShuffle = true, groupBySubject = false) {
     this.originalQuestions = [...questions];
     this.userAnswers = initialAnswers;
     this.currentIndex = 0;
@@ -7,10 +7,43 @@ export class ExamSessionManager {
     
     // Grouped Shuffle: Keep passages/groups together
     if (shouldShuffle) {
-      this.questions = this.groupedShuffle([...questions]);
+      if (groupBySubject) {
+        this.questions = this.subjectGroupedShuffle([...questions]);
+      } else {
+        this.questions = this.groupedShuffle([...questions]);
+      }
     } else {
       this.questions = [...questions];
     }
+  }
+
+  subjectGroupedShuffle(questions) {
+    // 1. Group by subject name
+    const subjectMap = {};
+    questions.forEach(q => {
+      const sub = q.subject || 'General';
+      if (!subjectMap[sub]) subjectMap[sub] = [];
+      subjectMap[sub].push(q);
+    });
+
+    // 2. For each subject, apply groupedShuffle to keep passages/groups together
+    // 3. Keep the order of subjects as they appear or are defined (English usually first)
+    const subjects = Object.keys(subjectMap);
+    // Sort to ensure "Use of English" or "English" is first if it exists
+    subjects.sort((a, b) => {
+        const aLow = a.toLowerCase();
+        const bLow = b.toLowerCase();
+        if (aLow.includes('english')) return -1;
+        if (bLow.includes('english')) return 1;
+        return a.localeCompare(b);
+    });
+
+    const finalQuestions = [];
+    subjects.forEach(sub => {
+      finalQuestions.push(...this.groupedShuffle(subjectMap[sub]));
+    });
+
+    return finalQuestions;
   }
 
   groupedShuffle(questions) {

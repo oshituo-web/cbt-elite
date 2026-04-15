@@ -7,7 +7,7 @@ import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = []) {
-    this.session = new ExamSessionManager(questions, pastAnswers, !isReview)
+    this.session = new ExamSessionManager(questions, pastAnswers, !isReview, examType === 'JAMB')
     
     // Phase 4: Keyboard Shortcuts
     this._handleKeyDown = (e) => {
@@ -75,6 +75,22 @@ export class Exam {
 
     this.initialTime = initialTime
     this.remainingTime = initialTime
+
+    // Fetch granular config for feature unlocks
+    this.systemConfig = {
+      explanations_free_access: false,
+      exams_free_access: false,
+      ai_tutor_free_access: false
+    }
+    supabase.from('system_config').select('key, value').then(({ data }) => {
+      if (data) {
+        data.forEach(c => {
+          if (this.systemConfig.hasOwnProperty(c.key)) {
+            this.systemConfig[c.key] = c.value === true || c.value === 'true'
+          }
+        })
+      }
+    })
   }
 
   saveState() {
@@ -270,35 +286,35 @@ export class Exam {
       </div>
 
       <!-- Floating Calculator -->
-      <div id="exam-calculator" class="calculator-modal glass scale-in" style="display: none; border: 2px solid var(--accent-primary); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-xl);">
-        <div class="calc-header" style="background: var(--accent-primary); padding: 1rem 1.5rem; color: white; font-weight: 900; font-family: 'Outfit'; font-size: 0.9rem; letter-spacing: 0.1em; display: flex; justify-content: space-between; align-items: center;">
+      <div id="exam-calculator" class="calculator-modal glass scale-in" style="display: none;">
+        <div class="calc-header">
           <span>ELITE CALCULATOR</span>
-          <button id="close-calc" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">×</button>
+          <button id="close-calc">×</button>
         </div>
-        <div class="calc-display" id="calc-display" style="padding: 1.5rem; background: rgba(0,0,0,0.2); font-family: 'Outfit'; font-weight: 900; font-size: 2.5rem; text-align: right; color: var(--text-primary);">0</div>
-        <div class="calc-buttons" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--glass-border); padding: 1px;">
-          <button class="calc-btn clear" data-val="C" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--error);">C</button>
-          <button class="calc-btn op" data-val="/" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">÷</button>
-          <button class="calc-btn op" data-val="*" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">×</button>
-          <button class="calc-btn clear" data-val="DEL" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--error);">⌫</button>
+        <div class="calc-display" id="calc-display">0</div>
+        <div class="calc-buttons">
+          <button class="calc-btn clear" data-val="C">C</button>
+          <button class="calc-btn op" data-val="/">÷</button>
+          <button class="calc-btn op" data-val="*">×</button>
+          <button class="calc-btn clear" data-val="DEL">⌫</button>
           
-          <button class="calc-btn" data-val="7" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">7</button>
-          <button class="calc-btn" data-val="8" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">8</button>
-          <button class="calc-btn" data-val="9" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">9</button>
-          <button class="calc-btn op" data-val="-" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">-</button>
+          <button class="calc-btn" data-val="7">7</button>
+          <button class="calc-btn" data-val="8">8</button>
+          <button class="calc-btn" data-val="9">9</button>
+          <button class="calc-btn op" data-val="-">-</button>
           
-          <button class="calc-btn" data-val="4" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">4</button>
-          <button class="calc-btn" data-val="5" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">5</button>
-          <button class="calc-btn" data-val="6" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">6</button>
-          <button class="calc-btn op" data-val="+" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem; color: var(--primary);">+</button>
+          <button class="calc-btn" data-val="4">4</button>
+          <button class="calc-btn" data-val="5">5</button>
+          <button class="calc-btn" data-val="6">6</button>
+          <button class="calc-btn op" data-val="+">+</button>
           
-          <button class="calc-btn" data-val="1" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">1</button>
-          <button class="calc-btn" data-val="2" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">2</button>
-          <button class="calc-btn" data-val="3" style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">3</button>
-          <button class="calc-btn eq" data-val="=" style="grid-row: span 2; background: var(--accent-primary); color: white; border: none; font-weight: 900; font-size: 1.5rem;">=</button>
+          <button class="calc-btn" data-val="1">1</button>
+          <button class="calc-btn" data-val="2">2</button>
+          <button class="calc-btn" data-val="3">3</button>
+          <button class="calc-btn eq" data-val="=">=</button>
           
-          <button class="calc-btn" style="grid-column: span 2; padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;" data-val="0">0</button>
-          <button class="calc-btn" data-val="." style="padding: 1.25rem; font-weight: 800; background: var(--surface-color); border: none; font-size: 1.2rem;">.</button>
+          <button class="calc-btn" style="grid-column: span 2;" data-val="0">0</button>
+          <button class="calc-btn" data-val=".">.</button>
         </div>
       </div>
     `
@@ -309,7 +325,19 @@ export class Exam {
         const timerDiv = document.getElementById('timer')
         if (timerDiv) {
           timerDiv.textContent = TimerService.formatTime(time)
-          if (time <= 300) timerDiv.style.color = 'var(--error)'
+          
+          if (time === 300) {
+              alert("Wait! You have exactly 5 minutes remaining!");
+          }
+          
+          if (time <= 120) {
+              timerDiv.style.color = 'var(--error)'
+          } else if (time <= 300) {
+              timerDiv.style.color = '#F59E0B' // Amber
+          } else {
+              timerDiv.style.color = 'var(--text-primary)'
+          }
+          
           // Save state every 30 seconds to persist timer
           if (time % 30 === 0) this.saveState()
         }
@@ -356,9 +384,23 @@ export class Exam {
     }
 
     document.getElementById('next-btn').onclick = () => {
+      if (this.examType === 'JAMB' && !this.isReviewMode) {
+        const currentQ = this.session.getCurrentQuestion();
+        const nextQ = this.session.questions[this.session.currentIndex + 1];
+        if (nextQ && nextQ.subject !== (currentQ.subject || this.activeJambSubject)) {
+          if (!confirm(`End of ${currentQ.subject || 'current subject'}. Switch to ${nextQ.subject}?`)) return;
+        }
+      }
       if (this.session.next()) this.updateUI()
     }
     document.getElementById('prev-btn').onclick = () => {
+      if (this.examType === 'JAMB' && !this.isReviewMode) {
+        const currentQ = this.session.getCurrentQuestion();
+        const prevQ = this.session.questions[this.session.currentIndex - 1];
+        if (prevQ && prevQ.subject !== (currentQ.subject || this.activeJambSubject)) {
+          if (!confirm(`Go back to ${prevQ.subject}?`)) return;
+        }
+      }
       if (this.session.prev()) this.updateUI()
     }
     
@@ -460,7 +502,11 @@ export class Exam {
     if (val === 'C') {
       this._calcState = { current: '0', operator: null, previous: null, reset: false }
     } else if (val === 'DEL') {
-      this._calcState.current = this._calcState.current.length > 1 ? this._calcState.current.slice(0, -1) : '0'
+      if (this._calcState.reset) {
+        this._calcState.current = '0'
+      } else {
+        this._calcState.current = this._calcState.current.length > 1 ? this._calcState.current.slice(0, -1) : '0'
+      }
     } else if (val === '=') {
       if (this._calcState.operator && this._calcState.previous !== null) {
         const res = this._solve(this._calcState.previous, this._calcState.current, this._calcState.operator)
@@ -470,8 +516,10 @@ export class Exam {
         this._calcState.reset = true
       }
     } else if (['+', '-', '*', '/'].includes(val)) {
-      if (this._calcState.operator && this._calcState.previous !== null) {
-        this._calcState.previous = this._solve(this._calcState.previous, this._calcState.current, this._calcState.operator)
+      if (this._calcState.operator && this._calcState.previous !== null && !this._calcState.reset) {
+        const res = this._solve(this._calcState.previous, this._calcState.current, this._calcState.operator)
+        this._calcState.current = String(res)
+        this._calcState.previous = this._calcState.current
       } else {
         this._calcState.previous = this._calcState.current
       }
@@ -691,11 +739,11 @@ export class Exam {
         
         const isPremium = subState.tier === 'premium'
         if (!isPremium && !isFreeAccess && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
-          SubscriptionService.useAICredit(this.profile).then(success => {
+          SubscriptionService.useAICredit(this.profile, this.systemConfig).then(success => {
             if (success) this._deductedQuestions.add(qId)
           })
         } else if (isPremium && aiStatus.canUse && !this._deductedQuestions.has(qId)) {
-          SubscriptionService.useAICredit(this.profile).then(() => this._deductedQuestions.add(qId))
+          SubscriptionService.useAICredit(this.profile, this.systemConfig).then(() => this._deductedQuestions.add(qId))
         }
 
         if (q.question_type === 'theory') {

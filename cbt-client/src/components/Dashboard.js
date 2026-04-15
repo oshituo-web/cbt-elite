@@ -29,15 +29,26 @@ export const DashboardComponent = {
     
     let history = []
     let mastery = []
-    let isSystemFree = false
+    let systemConfig = {
+        explanations_free_access: false,
+        exams_free_access: false,
+        ai_tutor_free_access: false
+    }
 
     try {
         const analytics = await DataService.getUserAnalytics(profile.id)
         history = analytics.history || []
         mastery = analytics.mastery || []
         
-        const configResp = await DataService.getSystemConfig('explanations_free_access')
-        isSystemFree = configResp.data?.value === true || configResp.data?.value === 'true'
+        // Fetch all toggles
+        const { data: configs } = await supabase.from('system_config').select('key, value')
+        if (configs) {
+            configs.forEach(c => {
+                const val = c.value === true || c.value === 'true'
+                if (systemConfig.hasOwnProperty(c.key)) systemConfig[c.key] = val
+            })
+        }
+        isSystemFree = systemConfig.explanations_free_access // For legacy checks
     } catch (err) {
         console.error("Dashboard data fetch failed:", err)
     }
@@ -246,11 +257,11 @@ export const DashboardComponent = {
         </div>
 
         <!-- Help Guide CTA -->
-        <div class="glass card" style="margin-top: 2.5rem; background: var(--accent-gradient); border: none; padding: 1.5rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1rem; text-align: center;">
-           <div style="flex: 1; min-width: 200px; color: white;">
-              <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; margin-bottom: 0.25rem;">Need a headstart?</h3>
-              <p style="opacity: 0.9; font-size: 0.85rem; margin-bottom: 1rem;">Unleash the full power of CBT Elite.</p>
-              <button id="help-guide-btn" class="btn-secondary" style="background: white; color: var(--primary); border: none; font-weight: 800; width: 100%; height: 40px; font-size: 0.85rem;">Launch Tour</button>
+        <div class="glass card scale-in" style="margin-top: 2.5rem; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); border: none; padding: 2rem 1.5rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+           <div style="flex: 1; min-width: 200px; color: #ffffff;">
+              <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.35rem; color: #ffffff;">Need a headstart?</h3>
+              <p style="font-size: 1rem; font-weight: 500; color: rgba(255,255,255,0.95); margin-bottom: 1.5rem; line-height: 1.5;">Unleash the full power of CBT Elite.</p>
+              <button id="help-guide-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; width: 100%; max-width: 240px; height: 48px; font-size: 0.95rem; border-radius: 12px; margin: 0 auto; display: block;">Launch Tour</button>
            </div>
         </div>
 

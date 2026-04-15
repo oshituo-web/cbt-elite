@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
 
 export const ExamsDashboardComponent = {
@@ -177,6 +178,19 @@ export const ExamsDashboardComponent = {
     if (closeBtn) closeBtn.onclick = () => configSection.style.display = 'none'
 
     startBtn.onclick = async () => {
+      // Fetch system config for subscription check
+      const { data: configs } = await supabase.from('system_config').select('key, value')
+      const systemConfig = { exams_free_access: false }
+      if (configs) {
+        configs.forEach(c => {
+          if (c.key === 'exams_free_access') systemConfig.exams_free_access = c.value === true || c.value === 'true'
+        })
+      }
+
+      if (!SubscriptionService.canStartSession(this.profile, 'exam', systemConfig)) {
+        return alert("Daily exam limit reached. Upgrade to Premium for unlimited mock exams!")
+      }
+
       if (selectedExam === 'JAMB') {
         const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
         if (selected.length !== 3) return alert('Select exactly 3 subjects.')
@@ -198,7 +212,7 @@ export const ExamsDashboardComponent = {
         const subject = eSub.value
         startBtn.innerHTML = 'Preparing...'; startBtn.disabled = true
         try {
-          const { data: questions } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60)
+          const { data: questions } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam)
           this.onStartExam(questions, 'exam', subject, selectedExam)
         } catch (err) {
           alert("Failed."); startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false

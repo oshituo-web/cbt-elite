@@ -33,10 +33,15 @@ export const SubscriptionService = {
     return user
   },
 
-  canStartSession(user, type = 'practice', isSystemFree = false) {
+  canStartSession(user, type = 'practice', config = {}) {
     if (!user) return false
-    const tier = this.resolveUserTier(user, isSystemFree)
     
+    // Check if the specific system-wide free access is enabled
+    const isExamsFree = config.exams_free_access === true || config.exams_free_access === 'true'
+    const isExplFree = config.explanations_free_access === true || config.explanations_free_access === 'true'
+    const isSystemFree = type === 'exam' ? isExamsFree : isExplFree
+    
+    const tier = this.resolveUserTier(user, isSystemFree)
     if (isSystemFree || tier === 'premium') return true
     
     const dailyLimit = (tier === 'medium') 
@@ -56,9 +61,13 @@ export const SubscriptionService = {
     return !error
   },
 
-  canUseAI(user, isSystemFree = false) {
+  canUseAI(user, config = {}) {
     if (!user) return { canUse: false, reason: 'Please login to use AI' }
-    if (isSystemFree) return { canUse: true, usage: 0, limit: 'Unlimited' }
+    
+    // Check if system-wide free access is enabled for AI or via old legacy flag
+    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || (config.explanations_free_access === true || config.explanations_free_access === 'true')
+    
+    if (isFree) return { canUse: true, usage: 0, limit: 'Unlimited' }
 
     const tier = this.resolveUserTier(user)
 
@@ -81,8 +90,11 @@ export const SubscriptionService = {
     return { canUse: false, reason: 'Upgrade to use AI' }
   },
 
-  async useAICredit(user) {
+  async useAICredit(user, config = {}) {
     if (!user) return false
+    
+    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || (config.explanations_free_access === true || config.explanations_free_access === 'true')
+    if (isFree) return true
     const tier = this.resolveUserTier(user)
     
     if (tier === 'premium') return true // Unlimited for premium (rate limited by Edge Function)

@@ -120,12 +120,37 @@ export const AdminComponent = {
               <div>
                 <h2 style="margin-bottom: 1.5rem;">System Controls</h2>
                 
-                <!-- NEW: Explanations Toggle -->
-                <div class="glass card" style="padding: 1rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
-                  <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">🔓 Explanations Access</h3>
-                  <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Turn this ON to allow ALL users (including Free) to view question explanations.</p>
-                  <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button id="toggle-explanations-btn" class="glass" style="padding: 0.6rem 1.2rem; font-weight: 700; border-color: var(--accent-secondary); color: var(--accent-secondary);">Loading...</button>
+                <!-- Global Feature Toggles -->
+                <div class="glass card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
+                  <h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-family: 'Outfit';">🔓 Premium Feature Controls</h3>
+                  
+                  <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <!-- Explanations Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                      <div>
+                        <strong style="font-size: 0.9rem; display: block;">Question Explanations</strong>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to view explanations</span>
+                      </div>
+                      <button id="toggle-explanations-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
+                    </div>
+
+                    <!-- Mock Exams Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                      <div>
+                        <strong style="font-size: 0.9rem; display: block;">Mock Exams</strong>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to take Full Mock Exams</span>
+                      </div>
+                      <button id="toggle-exams-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
+                    </div>
+
+                    <!-- AI Tutor Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                      <div>
+                        <strong style="font-size: 0.9rem; display: block;">AI Tutor Access</strong>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to use AI feedback</span>
+                      </div>
+                      <button id="toggle-ai-tutor-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
+                    </div>
                   </div>
                 </div>
 
@@ -321,23 +346,29 @@ export const AdminComponent = {
         }
     }
 
-    const toggleExplBtn = document.getElementById('toggle-explanations-btn')
-    if (toggleExplBtn) {
-        toggleExplBtn.onclick = async () => {
-            const currentState = toggleExplBtn.dataset.state === 'true'
+    // Premium Feature Toggles
+    const setupToggle = (btnId, configKey) => {
+        const btn = document.getElementById(btnId)
+        if (!btn) return
+        btn.onclick = async () => {
+            const currentState = btn.dataset.state === 'true'
             const newState = !currentState
-            toggleExplBtn.disabled = true
-            toggleExplBtn.textContent = 'Updating...'
+            btn.disabled = true
+            btn.textContent = 'Updating...'
             
-            const { error } = await DataService.updateSystemConfig('explanations_free_access', newState)
+            const { error } = await DataService.updateSystemConfig(configKey, newState)
             if (error) alert('Error: ' + error.message)
             else {
-                await DataService.logAdminAction(this._adminProfile.email, 'Toggle Explanations Free', 'global', `New State: ${newState}`)
+                await DataService.logAdminAction(this._adminProfile.email, `Toggle ${configKey}`, 'global', `New State: ${newState}`)
                 this.loadMarketing()
             }
-            toggleExplBtn.disabled = false
+            btn.disabled = false
         }
     }
+
+    setupToggle('toggle-explanations-btn', 'explanations_free_access')
+    setupToggle('toggle-exams-btn', 'exams_free_access')
+    setupToggle('toggle-ai-tutor-btn', 'ai_tutor_free_access')
 
     const addPromoBtn = document.getElementById('add-promo-btn')
     if (addPromoBtn) {
@@ -1459,15 +1490,21 @@ export const AdminComponent = {
         if (data) broadcastInput.value = data.value || ''
     }
 
-    const toggleExplBtn = document.getElementById('toggle-explanations-btn')
-    if (toggleExplBtn) {
-        const { data } = await DataService.getSystemConfig('explanations_free_access')
-        const isFree = data?.value === true || data?.value === 'true'
-        toggleExplBtn.dataset.state = isFree
-        toggleExplBtn.textContent = isFree ? '✅ ENABLED (Free)' : '🔒 DISABLED (Locked)'
-        toggleExplBtn.style.background = isFree ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)'
-        toggleExplBtn.style.color = isFree ? '#4caf50' : 'var(--accent-secondary)'
+    const updateBtn = async (btnId, key) => {
+        const btn = document.getElementById(btnId)
+        if (!btn) return
+        const { data } = await DataService.getSystemConfig(key)
+        const isActive = data?.value === true || data?.value === 'true'
+        btn.dataset.state = isActive
+        btn.textContent = isActive ? '✅ ENABLED (Free)' : '🔒 DISABLED (Locked)'
+        btn.style.background = isActive ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)'
+        btn.style.color = isActive ? '#4caf50' : 'var(--accent-secondary)'
+        btn.style.borderColor = isActive ? '#4caf50' : 'var(--accent-secondary)'
     }
+
+    await updateBtn('toggle-explanations-btn', 'explanations_free_access')
+    await updateBtn('toggle-exams-btn', 'exams_free_access')
+    await updateBtn('toggle-ai-tutor-btn', 'ai_tutor_free_access')
   }
 }
 

@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
 
 export const PracticeDashboardComponent = {
@@ -140,6 +141,19 @@ export const PracticeDashboardComponent = {
       // Note: number of questions for practice is strictly pegged to 25.
       const limit = 25 
       
+      // Fetch system config for subscription check
+      const { data: configs } = await supabase.from('system_config').select('key, value')
+      const systemConfig = { explanations_free_access: false }
+      if (configs) {
+        configs.forEach(c => {
+          if (c.key === 'explanations_free_access') systemConfig.explanations_free_access = c.value === true || c.value === 'true'
+        })
+      }
+
+      if (!SubscriptionService.canStartSession(this.profile, 'practice', systemConfig)) {
+        return alert("Daily practice limit reached. Upgrade to Premium for unlimited access!")
+      }
+
       startBtn.innerHTML = 'Finding Questions...'; startBtn.disabled = true
       
       try {
