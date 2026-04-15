@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { TopicDeepDiveComponent } from './TopicDeepDive'

@@ -1,4 +1,5 @@
 import { DataService } from '../services/data'
+import { supabase } from '../utils/supabase'
 import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { TourGuide } from '../utils/TourGuide'
@@ -34,6 +35,7 @@ export const DashboardComponent = {
         exams_free_access: false,
         ai_tutor_free_access: false
     }
+    let isSystemFree = false
 
     try {
         const analytics = await DataService.getUserAnalytics(profile.id)
