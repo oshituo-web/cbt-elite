@@ -1,5 +1,4 @@
 import { DataService } from '../services/data'
-import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
 
@@ -180,7 +179,7 @@ export const ExamsDashboardComponent = {
 
     startBtn.onclick = async () => {
       // Fetch system config for subscription check
-      const { data: configs } = await supabase.from('system_config').select('key, value')
+      const { data: configs } = await DataService.getGlobalConfigs(['exams_free_access'])
       const systemConfig = { exams_free_access: false }
       if (configs) {
         configs.forEach(c => {
