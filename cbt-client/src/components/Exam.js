@@ -6,6 +6,7 @@ import { ExamSessionManager } from '../services/ExamSessionManager'
 import { QuestionRenderer } from '../services/QuestionRenderer'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
+import { AiService } from '../services/aiService'
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = []) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview, examType === 'JAMB')
@@ -216,7 +217,7 @@ export class Exam {
           <!-- Main Content -->
           <div class="exam-main glass">
             <!-- Subject Tabs placed at the top of content area -->
-            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
+            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
 
             <div id="question-area" style="flex: 1;">
               <!-- Inline passage for mobile or fallback -->
@@ -224,23 +225,23 @@ export class Exam {
               
               <div id="q-diagram" style="display: none; margin-bottom: 2.5rem;"></div>
               
-              <div id="q-text" style="font-size: 1.35rem; line-height: 1.6; margin-bottom: 3rem; font-weight: 600; color: var(--text-primary); font-family: 'Outfit';">...</div>
+              <div id="q-text" style="font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem; font-weight: 600; color: var(--text-primary); font-family: 'Outfit';">...</div>
 
               <div id="options-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
               
               <div id="explanation-container" class="glass card scale-in" style="margin-top: 3.5rem; padding: 2.5rem; display: none; border-left: 6px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);"></div>
             </div>
 
-            <div class="exam-footer" style="margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div class="exam-footer" style="margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
               <div style="display: flex; gap: 1rem;">
-                <button id="prev-btn" class="btn-secondary" style="height: 52px; padding: 0 1.5rem; font-weight: 800;">PREVIOUS</button>
-                <button id="next-btn" class="btn-primary" style="height: 52px; padding: 0 2rem; font-weight: 900;">NEXT QUESTION</button>
+                <button id="prev-btn" class="btn-secondary" style="height: 48px; padding: 0 1.25rem; font-weight: 800;">PREVIOUS</button>
+                <button id="next-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 900;">NEXT QUESTION</button>
               </div>
               
               <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.8rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT ISSUE</button>
-                <button id="toggle-bookmark" class="btn-secondary" style="height: 48px; border-radius: var(--radius-md); font-weight: 800; padding: 0 1.25rem;">💾 SAVE</button>
-                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 48px; padding: 0 1.5rem;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 52px; padding: 0 2.5rem; background: var(--accent-secondary); font-weight: 900;">FINISH EXAM</button>'}
+                <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.75rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT ISSUE</button>
+                <button id="toggle-bookmark" class="btn-secondary" style="height: 44px; border-radius: var(--radius-md); font-weight: 800; padding: 0 1rem;">💾 SAVE</button>
+                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 44px; padding: 0 1.25rem;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 48px; padding: 0 2rem; background: var(--accent-secondary); font-weight: 900;">FINISH EXAM</button>'}
               </div>
             </div>
           </div>
@@ -425,6 +426,63 @@ export class Exam {
         document.getElementById('confirm-finish').onclick = () => {
           modal.style.display = 'none'
           this.finish(onFinish, true)
+        }
+      }
+    }
+
+    const aiBtn = document.getElementById('ask-ai-tutor-btn')
+    if (aiBtn) {
+      aiBtn.onclick = async () => {
+        const q = this.session.getCurrentQuestion()
+        const userAStatus = SubscriptionManager.getUserSubscriptionState(this.profile, this.systemConfig.explanations_free_access)
+        
+        if (!userAStatus.canUseAI && !this.systemConfig.ai_tutor_free_access) {
+            alert("Elite AI is a Premium feature. Upgrade to unlock deep dives and infinite learning!")
+            document.getElementById('upgrade-modal').style.display = 'flex'
+            return
+        }
+
+        aiBtn.disabled = true
+        aiBtn.innerHTML = '<div class="loader-spinner" style="width:18px;height:18px;"></div> CONSULTING AI...'
+        
+        const responseArea = document.getElementById('ai-response-area')
+        responseArea.style.display = 'block'
+        responseArea.innerHTML = `
+          <div style="padding: 1.5rem; background: rgba(124, 58, 237, 0.05); border-radius: 16px; border: 1.5px solid var(--accent-secondary); position: relative;">
+            <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.75rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem;">
+               <i data-lucide="sparkles" style="width: 14px;"></i> ELITE AI TUTOR
+            </div>
+            <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; font-weight: 500; font-family: 'Outfit';">Elite AI is analyzing the question and your response path...</p>
+          </div>
+        `
+        if (window.lucide) window.lucide.createIcons({ root: responseArea })
+
+        try {
+          const userChoiceId = this.session.userAnswers[this.session.currentIndex]
+          const explanation = await AiService.getDeepExplanation(q, userChoiceId, q.answers.find(a => a.is_correct)?.id)
+          
+          responseArea.innerHTML = `
+            <div style="padding: 2rem; background: rgba(124, 58, 237, 0.07); border-radius: 16px; border: 1.5px solid var(--accent-secondary); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+              <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.8rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.6rem;">
+                 <i data-lucide="sparkles" style="width: 16px;"></i> ELITE AI INSIGHT
+              </div>
+              <div style="color: var(--text-primary); font-size: 1.1rem; line-height: 1.8; font-weight: 500; font-family: 'Outfit'; white-space: pre-wrap;">${sanitizeContent(explanation)}</div>
+              <div style="margin-top: 1.5rem; text-align: right; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.6;">Verified by Elite Learning Engine</div>
+            </div>
+          `
+          if (window.lucide) window.lucide.createIcons({ root: responseArea })
+          responseArea.scrollIntoView({ behavior: 'smooth', block: 'end' })
+          
+          // Deduct credit
+          if (!this._deductedQuestions.has(q.id)) {
+            SubscriptionService.useAICredit(this.profile, this.systemConfig).then(() => this._deductedQuestions.add(q.id))
+          }
+        } catch (err) {
+          responseArea.innerHTML = `<div style="color: var(--error); padding: 1rem; border: 1px solid var(--error); border-radius: 12px; font-weight: 600;">⚠️ ${err.message}</div>`
+        } finally {
+          aiBtn.disabled = false
+          aiBtn.innerHTML = '<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> ELITE AI: DEEP DIVE'
+          if (window.lucide) window.lucide.createIcons({ root: aiBtn })
         }
       }
     }
@@ -801,7 +859,14 @@ export class Exam {
               ${aiStatus.usage ? `<span style="color: var(--accent-secondary); opacity: 0.8;">${aiStatus.usage}/30 DAILY AI USED</span>` : ''}
             </div>
             <div style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; font-family: 'Outfit'; font-weight: 500;">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
-            ${ctaHtml}
+            <div id="ai-response-area" style="margin-top: 1.5rem; display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem; animation: fadeIn 0.4s ease;"></div>
+            <div style="margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+               <button id="ask-ai-tutor-btn" class="btn-dominant" style="height: 48px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; padding: 0 1.5rem; display: ${aiStatus.canUse ? 'flex' : 'none'}; align-items: center; gap: 0.5rem; background: var(--accent-gradient); border: none; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);">
+                  <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                  ELITE AI: DEEP DIVE
+               </button>
+               ${ctaHtml}
+            </div>
           `
         }
       }
@@ -840,7 +905,7 @@ export class Exam {
     if (!container || this.examType !== 'JAMB') return
     container.style.display = 'flex'
     container.innerHTML = this.jambSubjects.map(sub => `
-      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.75rem 1.75rem; border-radius: 30px; font-size: 0.9rem; font-weight: 800; border: 2px solid ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'rgba(255,255,255,0.03)'}; color: ${sub === this.activeJambSubject ? 'white' : 'var(--text-secondary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Outfit';">
+      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.5rem 1.25rem; border-radius: 30px; font-size: 0.82rem; font-weight: 800; border: 2px solid ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'rgba(255,255,255,0.03)'}; color: ${sub === this.activeJambSubject ? 'white' : 'var(--text-secondary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Outfit';">
         ${sub}
       </button>
     `).join('')

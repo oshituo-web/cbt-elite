@@ -158,11 +158,45 @@ export const DashboardComponent = {
         })()}
 
          <!-- PROGRESS & ANALYTICS (Standardized Grid) -->
-         <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+          <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             
-            <!-- Progress Card -->
+            <!-- Daily Goal Card -->
+            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; position: relative; overflow: hidden; border-top: 4px solid var(--accent-primary);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Daily Goal Track</h3>
+                <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--accent-primary); font-size: 0.7rem;">Elite 50</span>
+              </div>
+              
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem;">
+                <!-- Circular Progress -->
+                <div style="position: relative; width: 100px; height: 100px;">
+                  <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="3" />
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-dasharray="${dailyGoalPct}, 100" stroke-linecap="round" style="transition: stroke-dasharray 1s ease-out; filter: drop-shadow(0 0 4px var(--accent-primary));" />
+                  </svg>
+                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary);">${todayQuestions}</div>
+                    <div style="font-size: 0.6rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: -2px;">Done</div>
+                  </div>
+                </div>
+                
+                <div style="text-align: center;">
+                  <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.2rem;">
+                    ${dailyGoalPct >= 100 ? "🎉 Daily Goal Hit!" : `${dailyGoalLimit - todayQuestions} more to go`}
+                  </p>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">Target: 50 questions daily</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">${dailyGoalPct >= 100 ? 'Goal Mastered' : 'On Track'}</div>
+                 <div style="font-size: 0.85rem; font-weight: 900; color: var(--accent-primary);">${Math.round(dailyGoalPct)}%</div>
+              </div>
+            </div>
+
+            <!-- Readiness Progress Card -->
             <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between;">
-              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Progress Overview</h3>
+              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Study Stats</h3>
               
               <div style="display: flex; gap: 1.5rem; align-items: center; justify-content: center; flex: 1;">
                  <div id="readiness-gauge-container" style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
@@ -173,9 +207,9 @@ export const DashboardComponent = {
                     <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1rem; color: var(--primary);">0%</div>
                  </div>
                  <div style="text-align: left;">
-                     <div id="readiness-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Top Subject</div>
-                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">...</div>
-                    <div id="readiness-status" style="font-size: 0.75rem; font-weight: 700; color: var(--success);">Beginner</div>
+                      <div id="readiness-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Primary Track</div>
+                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.95rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;">...</div>
+                    <div id="readiness-status" style="font-size: 0.75rem; font-weight: 700; color: var(--success);">Elite Readiness</div>
                  </div>
               </div>
 
@@ -408,10 +442,7 @@ export const DashboardComponent = {
 
     const fullAnalysisBtn = document.getElementById('full-analysis-btn')
     if (fullAnalysisBtn) {
-        fullAnalysisBtn.onclick = () => {
-            const section = document.getElementById('analytics-section')
-            if (section) section.scrollIntoView({ behavior: 'smooth' })
-        }
+        fullAnalysisBtn.onclick = () => window.navigateTo('analytics', profile)
     }
 
     const quickPracticeBtn = document.getElementById('quick-practice-btn')

@@ -1249,7 +1249,7 @@ h1 {
   gap: 1.25rem;
   padding: 0.75rem 1.25rem 1.25rem 1.25rem;
   overflow: hidden;
-  height: calc(100vh - 120px); /* Account for header and footer roughly */
+  min-height: 0; /* Important for flex child to shrink */
 }
 
 #pinned-content-area {
@@ -1605,7 +1605,8 @@ body.in-exam .container {
   flex-direction: row; /* Desktop Default */
   gap: 1.5rem;
   padding: 1rem 1.5rem 1.5rem 1.5rem;
-  height: calc(100vh - var(--header-height));
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -1613,8 +1614,8 @@ body.in-exam .container {
   .exam-content-wrapper {
     flex-direction: column !important;
     overflow-y: auto !important;
-    height: auto !important;
-    min-height: calc(100vh - 60px);
+    flex: 1;
+    min-height: 0;
     padding: 0.5rem !important;
   }
   
@@ -1690,8 +1691,9 @@ body.in-exam .container {
     border-radius: 6px;
   }
   #q-text {
-    font-size: 1rem !important;
-    margin-bottom: 1rem !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.5 !important;
   }
   .q-grid-item {
     padding: 0.25rem;

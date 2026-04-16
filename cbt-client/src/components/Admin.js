@@ -8,193 +8,309 @@ export const AdminComponent = {
     container.style.display = 'block'
     this._adminProfile = profile // Store for auditing
     container.innerHTML = `
-      <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem 0; border-bottom: 2px solid var(--accent-primary);">
-        <h1 style="font-family: 'Outfit'; font-size: 1.5rem;">Admin Control Panel</h1>
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-          <button id="admin-back-home" class="btn-secondary">← Back to Dashboard</button>
-          <span>Logged as: <strong>${profile.role}</strong></span>
-        </div>
-      </header>
+      <div class="admin-elite-wrapper" style="animation: fadeIn 0.4s ease;">
+        <header class="glass" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; padding: 1.5rem 2rem; border-radius: 20px; border-bottom: 2px solid var(--accent-primary); margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+             <div style="background: var(--accent-gradient); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);">
+                <i data-lucide="shield-check" style="color: white; width: 24px;"></i>
+             </div>
+             <div>
+                <h1 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; margin: 0; color: var(--text-primary);">Elite Command Center</h1>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">System Authorization: ${profile.role}</p>
+             </div>
+          </div>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="mobile-hide" style="text-align: right; margin-right: 1rem; border-right: 1px solid var(--glass-border); padding-right: 1.5rem;">
+               <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 700;">ADMINISTRATOR</div>
+               <div style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary);">${profile.username}</div>
+            </div>
+            <button id="admin-back-home" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700; border-radius: 12px;">
+               <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> EXIT PANEL
+            </button>
+          </div>
+        </header>
 
-      <div id="admin-grid" class="admin-layout-grid" style="margin-top: 2rem;">
-        <nav id="admin-nav" class="admin-nav">
-          <button class="nav-tab active" data-tab="questions">Manage Questions</button>
-          <button class="nav-tab" data-tab="syllabus">Manage Syllabus</button>
-          <button class="nav-tab" data-tab="users">Manage Users</button>
-          <button class="nav-tab" data-tab="reports">Question Reports</button>
-          <button class="nav-tab" data-tab="marketing">💰 Marketing</button>
-          <button class="nav-tab" data-tab="news">📰 Manage News</button>
-          <button class="nav-tab" data-tab="analytics" style="color: var(--accent-primary);">📈 Platform Analytics</button>
-          ${(profile.role === 'admin' || profile.role === 'super-admin') ? '<button class="nav-tab" data-tab="audit">📜 Audit Logs</button>' : ''}
-          ${(profile.role === 'admin' || profile.role === 'super-admin') ? '<button class="nav-tab" data-tab="staff">👥 Staff</button>' : ''}
-        </nav>
-        
-        <main id="admin-main">
+        <div id="admin-grid" class="admin-layout-grid" style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;">
+          <nav id="admin-nav" class="glass" style="padding: 1.5rem; border-radius: 24px; display: flex; flex-direction: column; gap: 0.5rem; sticky; top: 2rem;">
+            <button class="nav-tab active" data-tab="questions" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="database" style="width: 18px;"></i> Questions</button>
+            <button class="nav-tab" data-tab="syllabus" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="book-open" style="width: 18px;"></i> Syllabus</button>
+            <button class="nav-tab" data-tab="users" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="users" style="width: 18px;"></i> Users</button>
+            <button class="nav-tab" data-tab="reports" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="flag" style="width: 18px;"></i> Reports</button>
+            <button class="nav-tab" data-tab="marketing" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="zap" style="width: 18px;"></i> Marketing</button>
+            <button class="nav-tab" data-tab="news" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="newspaper" style="width: 18px;"></i> News</button>
+            <button class="nav-tab" data-tab="analytics" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-primary);"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</button>
+            <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
+            ${(profile.role === 'admin' || profile.role === 'super-admin') ? `
+              <button class="nav-tab" data-tab="audit" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="scroll-text" style="width: 18px;"></i> Audit Logs</button>
+              <button class="nav-tab" data-tab="staff" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="user-cog" style="width: 18px;"></i> Staff</button>
+            ` : ''}
+          </nav>
+          
+          <main id="admin-main">
           <!-- Analytics Tab (Phase 3) -->
           <div id="admin-analytics-tab" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
-              <h2>Platform Analytics</h2>
-              <div id="analytics-refresh" class="btn-secondary" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem;">Refresh Data</div>
+              <h2 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Platform Analytics</h2>
+              <button id="analytics-refresh" class="btn-secondary" style="height: 36px; padding: 0 1rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">
+                 <i data-lucide="refresh-cw" style="width: 14px; margin-right: 0.4rem;"></i> REFRESH DATA
+              </button>
             </div>
-            <div id="analytics-summary" class="admin-stats-grid" style="margin-bottom: 2rem;">
-              <!-- Quick Stats Cards -->
+            
+            <div id="analytics-summary" class="admin-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+              <!-- Quick Stats Cards will be injected here -->
             </div>
-            <div class="glass card" style="padding: 2rem; margin-bottom: 2rem;">
-              <h3 style="margin-bottom: 1.5rem;">Global Score Distribution</h3>
-              <canvas id="global-scores-chart" height="300"></canvas>
-            </div>
-            <div class="glass card" style="padding: 2rem;">
-              <h3 style="margin-bottom: 1.5rem;">Estimated Revenue Growth (User Tiers)</h3>
-              <canvas id="revenue-growth-chart" height="300"></canvas>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+               <div class="glass card" style="padding: 2rem; border-radius: 20px;">
+                  <h3 style="font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                     <i data-lucide="bar-chart" style="color: var(--accent-primary); width: 20px;"></i> Global Score Distribution
+                  </h3>
+                  <canvas id="global-scores-chart" height="280"></canvas>
+               </div>
+               <div class="glass card" style="padding: 2rem; border-radius: 20px;">
+                  <h3 style="font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                     <i data-lucide="line-chart" style="color: var(--accent-secondary); width: 20px;"></i> Growth Projection (Users)
+                  </h3>
+                  <canvas id="revenue-growth-chart" height="280"></canvas>
+               </div>
             </div>
           </div>
 
           <!-- Questions Tab -->
           <div id="admin-questions-tab">
-            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <h2>Database Questions</h2>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                  <button id="bulk-import-btn" class="btn-secondary" style="padding: 0.5rem 1rem;">📦 Bulk Import (.csv)</button>
-                  <button id="add-question-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Question</button>
-                  <input type="file" id="bulk-import-input" accept=".csv" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">Question Repository</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Manage exam database and content updates</p>
+              </div>
+              <div style="display: flex; gap: 0.75rem;">
+                <button id="bulk-import-btn" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem;">
+                   <i data-lucide="upload-cloud" style="width: 18px;"></i> BULK IMPORT
+                </button>
+                <button id="add-question-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem;">
+                   <i data-lucide="plus" style="width: 18px;"></i> ADD NEW
+                </button>
+                <input type="file" id="bulk-import-input" accept=".csv" style="display: none;">
+              </div>
+            </div>
+
+            <div class="glass card" style="padding: 2rem; margin-bottom: 2.5rem; border-radius: 20px;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+                <div style="flex: 2;">
+                   <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Search Database</label>
+                   <div style="position: relative;">
+                     <i data-lucide="search" style="position: absolute; left: 1rem; top: 12px; width: 18px; color: var(--text-secondary);"></i>
+                     <input type="text" id="question-search" placeholder="Filter by text, ID or keywords..." class="glass-input" style="width: 100%; height: 44px; padding-left: 3rem;">
+                   </div>
+                </div>
+                <div>
+                   <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Exam Type</label>
+                   <select id="filter-exam" class="glass-select" style="width: 100%; height: 44px;"><option value="">All Exams</option></select>
+                </div>
+                <div>
+                   <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Subject</label>
+                   <select id="filter-subject" class="glass-select" style="width: 100%; height: 44px;"><option value="">All Subjects</option></select>
+                </div>
+                <div>
+                   <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Topic</label>
+                   <select id="filter-topic" class="glass-select" style="width: 100%; height: 44px;"><option value="">All Topics</option></select>
                 </div>
               </div>
-              <div class="admin-filters-grid">
-                <input type="text" id="question-search" placeholder="Search text..." class="glass-input">
-                <select id="filter-exam" class="glass-select"><option value="">All Exams</option></select>
-                <select id="filter-subject" class="glass-select"><option value="">All Subjects</option></select>
-                <select id="filter-topic" class="glass-select"><option value="">All Topics</option></select>
+            </div>
+
+            <div id="pagination-controls-top" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+              <span id="question-count-display" style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);"></span>
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button id="prev-page-top" class="btn-secondary" style="height: 38px; padding: 0 1rem; font-size: 0.8rem;"><i data-lucide="chevron-left" style="width:16px;"></i></button>
+                <span style="font-weight: 800; font-size: 0.9rem; color: var(--text-primary);">Page Controls</span>
+                <button id="next-page-top" class="btn-secondary" style="height: 38px; padding: 0 1rem; font-size: 0.8rem;"><i data-lucide="chevron-right" style="width:16px;"></i></button>
               </div>
             </div>
-            <div id="pagination-controls-top" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-              <span id="question-count-display" style="font-size: 0.875rem;"></span>
-              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <button id="prev-page-top" class="btn-secondary">Previous Page</button>
-                <button id="next-page-top" class="btn-secondary">Next Page</button>
-              </div>
+            
+            <div id="questions-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
+               <div class="loader-spinner" style="margin: 4rem auto;"></div>
             </div>
-            <div id="questions-list" style="display: flex; flex-direction: column; gap: 1rem;">Loading...</div>
           </div>
 
           <!-- Syllabus Tab -->
           <div id="admin-syllabus-tab" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-              <h2>Exam Syllabus</h2>
-              <button id="add-syllabus-btn" class="primary">+ Add Topic</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">Exam Syllabus</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Configure subjects and topics for all exam types</p>
+              </div>
+              <button id="add-syllabus-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem;">
+                 <i data-lucide="book-plus" style="width: 18px;"></i> ADD NEW TOPIC
+              </button>
             </div>
-            <div id="syllabus-list">Loading...</div>
+            <div id="syllabus-list" style="display: flex; flex-direction: column; gap: 1rem;">
+               <div class="loader-spinner" style="margin: 3rem auto;"></div>
+            </div>
           </div>
 
           <!-- Users Tab -->
           <div id="admin-users-tab" style="display: none;">
-            <h2>Manage Users</h2>
-            <div id="users-list" style="margin-top: 1rem;">Loading...</div>
+            <div style="margin-bottom: 2.5rem;">
+              <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">User Management</h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Monitor accounts, subscriptions, and system access</p>
+            </div>
+            <div id="users-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+               <div class="loader-spinner" style="margin: 3rem auto;"></div>
+            </div>
           </div>
 
           <!-- User Reports Tab -->
           <div id="admin-reports-tab" style="display: none;">
-            <h2>Question Reports</h2>
-            <div id="reports-list" style="margin-top: 1rem;">Loading...</div>
+            <div style="margin-bottom: 2.5rem;">
+              <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">Question Reports</h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Address student feedback and content corrections</p>
+            </div>
+            <div id="reports-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+               <div class="loader-spinner" style="margin: 3rem auto;"></div>
+            </div>
           </div>
 
           <!-- Marketing Tab -->
           <div id="admin-marketing-tab" style="display: none;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-              <!-- Promo Codes -->
-              <div>
-                <h2 style="margin-bottom: 1.5rem;">Promo Codes</h2>
-                <div class="glass card" style="padding: 1rem; margin-bottom: 2rem;">
-                  <h3 style="font-size: 1rem; margin-bottom: 1rem;">Create New Code</h3>
-                  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <input type="text" id="promo-code-input" placeholder="CODE (e.g. SAVE50)" class="glass-input">
-                    <input type="number" id="promo-percent-input" placeholder="Discount %" class="glass-input">
-                    <input type="date" id="promo-expiry-input" class="glass-input">
-                    <button id="add-promo-btn" class="primary" style="padding: 0.75rem;">Create Code</button>
-                  </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2.5rem;">
+              <!-- Promo Codes Section -->
+              <section>
+                <div style="margin-bottom: 2rem;">
+                  <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="ticket" style="color: var(--accent-primary);"></i> Promo System
+                  </h2>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Create and manage student discount codes</p>
                 </div>
-                <div id="promo-codes-list">Loading codes...</div>
-              </div>
-              
-              <!-- Global Settings & Broadcast -->
-              <div>
-                <h2 style="margin-bottom: 1.5rem;">System Controls</h2>
-                
-                <!-- Global Feature Toggles -->
-                <div class="glass card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-secondary);">
-                  <h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-family: 'Outfit';">🔓 Premium Feature Controls</h3>
-                  
+
+                <div class="glass card" style="padding: 2rem; margin-bottom: 2rem; border-radius: 20px;">
+                  <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem; text-transform: uppercase;">Generate New Code</h3>
                   <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-                    <!-- Explanations Toggle -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                       <div>
-                        <strong style="font-size: 0.9rem; display: block;">Question Explanations</strong>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to view explanations</span>
+                        <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; display: block; margin-bottom: 0.5rem;">CODE STRING</label>
+                        <input type="text" id="promo-code-input" placeholder="e.g. ELITE50" class="glass-input" style="width: 100%; font-weight: 700;">
                       </div>
-                      <button id="toggle-explanations-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
-                    </div>
-
-                    <!-- Mock Exams Toggle -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
                       <div>
-                        <strong style="font-size: 0.9rem; display: block;">Mock Exams</strong>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to take Full Mock Exams</span>
+                        <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; display: block; margin-bottom: 0.5rem;">DISCOUNT %</label>
+                        <input type="number" id="promo-percent-input" placeholder="Percentage" class="glass-input" style="width: 100%; font-weight: 700;">
                       </div>
-                      <button id="toggle-exams-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
                     </div>
-
-                    <!-- AI Tutor Toggle -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-                      <div>
-                        <strong style="font-size: 0.9rem; display: block;">AI Tutor Access</strong>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to use AI feedback</span>
-                      </div>
-                      <button id="toggle-ai-tutor-btn" class="glass" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; min-width: 120px;">Loading...</button>
+                    <div>
+                      <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; display: block; margin-bottom: 0.5rem;">EXPIRATION DATE</label>
+                      <input type="date" id="promo-expiry-input" class="glass-input" style="width: 100%;">
                     </div>
+                    <button id="add-promo-btn" class="btn-primary" style="height: 50px; font-weight: 900; border-radius: 12px; margin-top: 0.5rem;">
+                       <i data-lucide="plus-circle" style="width: 18px; margin-right: 0.5rem;"></i> CREATE PROMO CODE
+                    </button>
                   </div>
                 </div>
-
-                <div class="glass card" style="padding: 1rem;">
-                  <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Announcement Banner</h3>
-                  <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">This message will appear at the top of all user dashboards.</p>
-                  <textarea id="broadcast-message-input" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1rem;" placeholder="Enter message or leave blank to clear..."></textarea>
-                  <button id="save-broadcast-btn" class="primary" style="width: 100%; padding: 0.75rem;">Push Broadcast</button>
+                <div id="promo-codes-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                   <div class="loader-spinner" style="margin: 2rem auto;"></div>
                 </div>
-              </div>
+              </section>
+              
+              <!-- System Controls Section -->
+              <section>
+                <div style="margin-bottom: 2rem;">
+                  <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="settings-2" style="color: var(--accent-secondary);"></i> System Engine
+                  </h2>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Configure global platform feature availability</p>
+                </div>
+                
+                <div class="glass card" style="padding: 2.5rem; border-radius: 20px; border-left: 4px solid var(--accent-secondary);">
+                   <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2rem; text-transform: uppercase;">Global Feature Toggles</h3>
+                   <div id="system-config-toggles" style="display: flex; flex-direction: column; gap: 1.75rem;">
+                      <!-- Explanations Toggle -->
+                      <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                          <strong style="font-size: 0.95rem; display: block; color: var(--text-primary);">Question Explanations</strong>
+                          <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to view AI solutions</span>
+                        </div>
+                        <button id="toggle-explanations-btn" class="glass" style="padding: 0.6rem 1.25rem; font-size: 0.75rem; font-weight: 800; border-radius: 8px;">Loading...</button>
+                      </div>
+
+                      <!-- Mock Exams Toggle -->
+                      <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                          <strong style="font-size: 0.95rem; display: block; color: var(--text-primary);">Mock Exams</strong>
+                          <span style="font-size: 0.75rem; color: var(--text-secondary);">Allow free users to take Full Mocks</span>
+                        </div>
+                        <button id="toggle-exams-btn" class="glass" style="padding: 0.6rem 1.25rem; font-size: 0.75rem; font-weight: 800; border-radius: 8px;">Loading...</button>
+                      </div>
+
+                      <!-- AI Tutor Toggle -->
+                      <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <div>
+                          <strong style="font-size: 0.95rem; display: block; color: var(--text-primary);">AI Tutor Access</strong>
+                          <span style="font-size: 0.75rem; color: var(--text-secondary);">Enable Gemini-powered feedback</span>
+                        </div>
+                        <button id="toggle-ai-tutor-btn" class="glass" style="padding: 0.6rem 1.25rem; font-size: 0.75rem; font-weight: 800; border-radius: 8px;">Loading...</button>
+                      </div>
+                   </div>
+                </div>
+
+                <div class="glass card" style="padding: 2rem; border-radius: 20px; margin-top: 2rem; border-left: 4px solid var(--error);">
+                   <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem; text-transform: uppercase;">Announcement Banner</h3>
+                   <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Visible at the top of all dashboards.</p>
+                   <textarea id="broadcast-message-input" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.25rem; padding: 1rem; font-size: 0.9rem;" placeholder="Enter message..."></textarea>
+                   <button id="save-broadcast-btn" class="btn-secondary" style="width: 100%; padding: 0.75rem; font-weight: 800; border-color: var(--error); color: #ff6b6b;">
+                      <i data-lucide="radio" style="width: 18px; margin-right: 0.5rem;"></i> PUSH BROADCAST
+                   </button>
+                </div>
+              </section>
             </div>
           </div>
 
           <!-- News Management Tab -->
           <div id="admin-news-tab" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
-              <h2>Manage News & Updates</h2>
-              <button id="add-news-btn" class="primary" style="padding: 0.5rem 1rem;">+ Add Article</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">News & Updates</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Draft and publish system-wide announcements</p>
+              </div>
+              <button id="add-news-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem;">
+                 <i data-lucide="plus-circle" style="width: 18px;"></i> ADD ARTICLE
+              </button>
             </div>
-            <div id="admin-news-list">Loading news...</div>
+            <div id="admin-news-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
+               <div class="loader-spinner" style="margin: 3rem auto;"></div>
+            </div>
           </div>
 
           <!-- Audit Logs Tab (Super Admin Only) -->
           <div id="admin-audit-tab" style="display: none;">
-            <h2>Administrative Audit Logs</h2>
-            <div id="audit-logs-list" style="margin-top: 1rem; font-family: monospace; font-size: 0.8rem;">Loading logs...</div>
+            <div style="margin-bottom: 2.5rem;">
+              <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">System Audit Logs</h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Review all administrative actions for transparency</p>
+            </div>
+            <div class="glass card" style="padding: 1.5rem; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; height: 500px; overflow-y: auto;">
+              <div id="audit-logs-list">Loading logs...</div>
+            </div>
           </div>
 
           <!-- Staff Tab (Super Admin Only) -->
           <div id="admin-staff-tab" style="display: none;">
-            <h2>Staff Management</h2>
-            <div class="glass card" style="padding: 1rem; margin-top: 1rem;">
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Promote a user by Gmail address.</p>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <input type="email" id="staff-email-input" placeholder="User email..." class="glass-input" style="flex: 1; min-width: 200px;">
-                <select id="staff-role-select" class="glass-select">
+            <div style="margin-bottom: 2.5rem;">
+              <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">Staff Management</h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Assign administrative roles and permissions</p>
+            </div>
+            
+            <div class="glass card" style="padding: 2rem; border-radius: 20px; margin-bottom: 2.5rem; border-left: 4px solid var(--accent-primary);">
+              <h3 style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem; text-transform: uppercase;">Promote / Revoke Privileges</h3>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <input type="email" id="staff-email-input" placeholder="User email address..." class="glass-input" style="flex: 2; min-width: 250px; height: 50px;">
+                <select id="staff-role-select" class="glass-select" style="flex: 1; min-width: 150px; height: 50px;">
                   <option value="moderator">Moderator</option>
                   <option value="admin">Admin</option>
                   <option value="user">Revoke (User)</option>
                 </select>
-                <button id="assign-staff-btn" class="primary">Assign Role</button>
+                <button id="assign-staff-btn" class="btn-primary" style="height: 50px; padding: 0 2rem; font-weight: 900; border-radius: 12px;">ASSIGN ROLE</button>
               </div>
             </div>
-            <div id="staff-list" style="margin-top: 1.5rem;"></div>
+            <div id="staff-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+                <div class="loader-spinner" style="margin: 2rem auto;"></div>
+            </div>
           </div>
 
         </main>
@@ -238,6 +354,8 @@ export const AdminComponent = {
         else if (target === 'analytics') this.loadGlobalAnalytics()
         else if (target === 'audit') this.loadAuditLogs()
         else if (target === 'staff') this.loadStaff()
+
+        if (window.lucide) window.lucide.createIcons()
       }
     })
 
@@ -486,18 +604,38 @@ export const AdminComponent = {
     `
     
     list.innerHTML = questions.map(q => `
-      <div class="glass q-item" style="padding: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-left: 3px solid var(--accent-primary); margin-bottom: 0.75rem;">
-        <div style="flex: 1; min-width: 0; word-break: break-word;">
-          <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.4;">${q.question_text.substring(0, 150)}...</div>
-          <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.exam_type}</span>
-            <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.subject}</span>
-            <span class="badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px;">${q.topic}</span>
+      <div class="glass q-item" style="padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; border-left: 4px solid var(--accent-primary); margin-bottom: 1rem; border-radius: 12px; transition: transform 0.2s;">
+        
+        <div style="display: flex; align-items: center; gap: 1.25rem; flex: 1; min-width: 0;">
+          ${q.diagram_url ? `
+            <div style="width: 50px; height: 50px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); flex-shrink: 0;">
+              <img src="${q.diagram_url}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          ` : `
+            <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px dashed var(--glass-border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+              <i data-lucide="image" style="width: 18px; opacity: 0.3;"></i>
+            </div>
+          `}
+          
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${q.question_text.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span style="font-size: 0.65rem; background: var(--accent-gradient); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${q.exam_type}</span>
+              <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--accent-secondary); border: 1px solid rgba(124, 58, 237, 0.2); padding: 2px 8px; border-radius: 4px; font-weight: 700;">${q.subject}</span>
+              ${q.topic ? `<span style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 500;">• ${q.topic}</span>` : ''}
+            </div>
           </div>
         </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0;">
-          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">✏️ Edit</button>
-          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">🗑️ Delete</button>
+
+        <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;" title="Edit Question">
+            <i data-lucide="edit-3" style="width: 16px;"></i>
+          </button>
+          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);" title="Delete Question">
+            <i data-lucide="trash-2" style="width: 16px;"></i>
+          </button>
         </div>
       </div>
     `).join('')
@@ -574,60 +712,71 @@ export const AdminComponent = {
     const explanation = qa.explanation || question.explanation || '';
 
     const modalHtml = `
-      <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem;">
-        <div class="glass card scale-in" style="width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="margin: 0; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
-              📝 Edit Question
-              <span class="badge" style="background: rgba(255,255,255,0.1);">Full Control</span>
-            </h3>
-            <button id="cancel-q-edit-x" style="background: transparent; border: none; color: var(--error); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <div id="q-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
+        <div class="glass card scale-in" style="width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; padding: 0; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+          
+          <div style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white;">
+                 <i data-lucide="edit-3" style="width: 20px;"></i>
+               </div>
+               <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.4rem;">Edit Question</h3>
+            </div>
+            <button id="cancel-q-edit-x" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+               <i data-lucide="x" style="width: 20px;"></i>
+            </button>
           </div>
           
-          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem;">
+          <div style="padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem;">
             <div>
-              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Question Text</label>
-              <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 100px; font-size: 0.95rem; border-color: rgba(255,255,255,0.2);">${question.question_text || ''}</textarea>
+              <label style="font-size: 0.75rem; color: var(--accent-primary); margin-bottom: 0.75rem; display: block; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Question Formulation</label>
+              <textarea id="edit-q-text" class="glass-input" style="width: 100%; min-height: 120px; font-size: 1rem; line-height: 1.6; padding: 1.25rem;">${question.question_text || ''}</textarea>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
-              <div>
-                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option A</label>
-                <input type="text" id="edit-opt-a" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optA.replace(/"/g, '&quot;')}">
-              </div>
-              <div>
-                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option B</label>
-                <input type="text" id="edit-opt-b" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optB.replace(/"/g, '&quot;')}">
-              </div>
-              <div>
-                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option C</label>
-                <input type="text" id="edit-opt-c" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optC.replace(/"/g, '&quot;')}">
-              </div>
-              <div>
-                <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Option D</label>
-                <input type="text" id="edit-opt-d" class="glass-input" style="width: 100%; font-size: 0.9rem; border-color: rgba(255,255,255,0.1);" value="${optD.replace(/"/g, '&quot;')}">
+            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border);">
+              <label style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1.25rem; display: block; font-weight: 800; text-transform: uppercase;">Options Configuration</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: block; font-weight: 700;">Option A</label>
+                  <input type="text" id="edit-opt-a" class="glass-input" style="width: 100%; font-size: 0.9rem;" value="${optA.replace(/"/g, '&quot;')}">
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: block; font-weight: 700;">Option B</label>
+                  <input type="text" id="edit-opt-b" class="glass-input" style="width: 100%; font-size: 0.9rem;" value="${optB.replace(/"/g, '&quot;')}">
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: block; font-weight: 700;">Option C</label>
+                  <input type="text" id="edit-opt-c" class="glass-input" style="width: 100%; font-size: 0.9rem;" value="${optC.replace(/"/g, '&quot;')}">
+                </div>
+                <div>
+                  <label style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: block; font-weight: 700;">Option D</label>
+                  <input type="text" id="edit-opt-d" class="glass-input" style="width: 100%; font-size: 0.9rem;" value="${optD.replace(/"/g, '&quot;')}">
+                </div>
               </div>
             </div>
 
-            <div>
-              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Correct Answer</label>
-              <select id="edit-correct" class="glass-input" style="width: 100%; max-width: 200px; cursor: pointer; border-color: rgba(255,255,255,0.2);">
-                <option value="A" ${correctOpt === 'A' ? 'selected' : ''}>Option A</option>
-                <option value="B" ${correctOpt === 'B' ? 'selected' : ''}>Option B</option>
-                <option value="C" ${correctOpt === 'C' ? 'selected' : ''}>Option C</option>
-                <option value="D" ${correctOpt === 'D' ? 'selected' : ''}>Option D</option>
-              </select>
-            </div>
-
-            <div>
-              <label style="font-size: 0.8rem; color: #ccc; margin-bottom: 0.5rem; display: block; font-weight: 600;">Official Explanation (Optional)</label>
-              <textarea id="edit-explanation" class="glass-input" style="width: 100%; min-height: 80px; font-size: 0.9rem; border-color: rgba(255,255,255,0.2);">${explanation}</textarea>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+              <div>
+                <label style="font-size: 0.75rem; color: var(--accent-primary); margin-bottom: 0.75rem; display: block; font-weight: 800; text-transform: uppercase;">Key / Correct Answer</label>
+                <select id="edit-correct" class="glass-select" style="width: 100%; height: 50px;">
+                  <option value="A" ${correctOpt === 'A' ? 'selected' : ''}>Option A (Primary)</option>
+                  <option value="B" ${correctOpt === 'B' ? 'selected' : ''}>Option B</option>
+                  <option value="C" ${correctOpt === 'C' ? 'selected' : ''}>Option C</option>
+                  <option value="D" ${correctOpt === 'D' ? 'selected' : ''}>Option D</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem; display: block; font-weight: 800; text-transform: uppercase;">Solution Explanation</label>
+                <textarea id="edit-explanation" class="glass-input" style="width: 100%; min-height: 50px; padding: 0.75rem; font-size: 0.9rem;">${explanation}</textarea>
+              </div>
             </div>
           </div>
 
-          <div style="display: flex; gap: 1rem;">
-            <button id="save-q-edit" class="primary" style="flex:2; padding: 1rem; font-weight: 700;">✅ Save All Changes</button>
-            <button id="cancel-q-edit-btn" class="btn-secondary" style="flex:1; padding: 1rem;">Cancel</button>
+          <div style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); display: flex; gap: 1rem;">
+            <button id="save-q-edit" class="btn-primary" style="flex:2; height: 54px; font-weight: 900; font-family: 'Outfit'; font-size: 1.1rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+               <i data-lucide="save" style="width: 20px;"></i> PERSIST CHANGES
+            </button>
+            <button id="cancel-q-edit-btn" class="btn-secondary" style="flex:1; height: 54px; font-weight: 800; border-radius: 12px;">Discard</button>
           </div>
         </div>
       </div>
@@ -705,20 +854,53 @@ export const AdminComponent = {
       return
     }
 
-    list.innerHTML = users.map(u => `
-      <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-        <div style="flex: 1; min-width: 200px; word-break: break-all;">
-          <strong>${u.username || 'Unknown'}</strong> (${u.email})
-          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: ${SubscriptionService.resolveUserTier(u) === 'premium' ? 'var(--accent-secondary)' : (SubscriptionService.resolveUserTier(u) === 'medium' ? 'var(--accent-primary)' : '#666')}">${SubscriptionService.resolveUserTier(u).toUpperCase()}</span>
-          ${u.is_activated ? '<span class="badge" style="margin-left: 0.25rem; font-size: 0.65rem; padding: 1px 5px; background: var(--success); opacity: 0.9;">LIFETIME</span>' : ''}
-          <span class="badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 2px 6px; background: var(--accent-primary); opacity: 0.8;">${u.role || 'user'}</span>
+    list.innerHTML = users.map(u => {
+      const tier = SubscriptionService.resolveUserTier(u);
+      const tierColor = tier === 'premium' ? 'var(--accent-secondary)' : (tier === 'medium' ? 'var(--accent-primary)' : '#666');
+      const lastSeen = u.last_seen ? new Date(u.last_seen).toLocaleDateString() : 'N/A';
+      
+      return `
+        <div class="glass card user-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; border-top: 3px solid ${tierColor}; border-radius: 16px; transition: transform 0.2s; position: relative; overflow: hidden;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 40px; height: 40px; border-radius: 10px; background: ${tierColor}20; color: ${tierColor}; display: flex; align-items: center; justify-content: center;">
+                 <i data-lucide="user" style="width: 20px;"></i>
+               </div>
+               <div>
+                 <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1rem; line-height: 1.2;">${u.username || 'Unknown'}</div>
+                 <div style="font-size: 0.75rem; color: var(--text-secondary);">${u.email}</div>
+               </div>
+            </div>
+            <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+               <i data-lucide="settings" style="width: 14px;"></i>
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.6rem; background: ${tierColor}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">${tier}</span>
+            ${u.is_activated ? '<span style="font-size: 0.6rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">LIFETIME</span>' : ''}
+            <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">${u.role || 'user'}</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border);">
+            <div>
+              <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">AI Credits</div>
+              <div style="font-family: 'Outfit'; font-weight: 800; color: var(--accent-primary); font-size: 1.1rem;">${u.ai_credits || 0}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Last Seen</div>
+              <div style="font-family: 'Outfit'; font-weight: 700; color: var(--text-primary); font-size: 0.9rem;">${lastSeen}</div>
+            </div>
+          </div>
+
+          <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem;">
+            <i data-lucide="calendar" style="width: 12px;"></i>
+            Joined ${new Date(u.created_at).toLocaleDateString()}
+          </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="font-size: 0.8rem; color: var(--text-primary);">Credits: ${u.ai_credits || 0}</div>
-          <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem;">Edit User</button>
-        </div>
-      </div>
-    `).join('')
+      `;
+    }).join('')
 
     // Attach User Edit Listeners
     document.querySelectorAll('.edit-user-btn').forEach(btn => {
@@ -731,52 +913,89 @@ export const AdminComponent = {
   },
 
   openUserEditModal(user) {
+    const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleDateString() : 'Never';
     const modalHtml = `
-      <div id="user-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1rem;">
-        <div class="glass card" style="width: 100%; max-width: 500px; padding: 2rem; border: 1px solid var(--accent-primary);">
-          <h3 style="margin-bottom: 1.5rem; font-family: 'Outfit';">Edit User: ${user.username || user.email}</h3>
+      <div id="user-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
+        <div class="glass card scale-in" style="width: 100%; max-width: 550px; padding: 0; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden;">
           
-          <div style="margin-bottom: 1.25rem;">
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Subscription Tier</p>
-            <select id="edit-user-tier" class="glass-select" style="width: 100%;">
-              <option value="freemium" ${user.tier === 'freemium' || user.tier === 'free' ? 'selected' : ''}>Freemium (Basic)</option>
-              <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated)</option>
-              <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Premium (Monthly Pro)</option>
-            </select>
-          </div>
-
-          <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-            <input type="checkbox" id="edit-user-activated" ${user.is_activated ? 'checked' : ''} style="width: 18px; height: 18px;">
-            <label for="edit-user-activated" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">Lifetime Activated (₦1,500 Paid)</label>
-          </div>
-
-          <div style="margin-bottom: 1.25rem;">
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Premium Expiration (premium_until)</p>
-            <input type="datetime-local" id="edit-user-premium-until" class="glass-input" value="${user.premium_until ? new Date(user.premium_until).toISOString().slice(0, 16) : ''}" style="width: 100%;">
-          </div>
-
-          <div style="margin-bottom: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">AI Monthly Credits</p>
-              <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
+          <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white;">
+                 <i data-lucide="user-cog" style="width: 18px;"></i>
+               </div>
+               <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.25rem;">Member Settings</h3>
             </div>
-            <div>
-              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Today's AI Usage</p>
-              <input type="number" id="edit-user-ai-usage" class="glass-input" value="${user.ai_daily_usage || 0}" style="width: 100%;">
-            </div>
+            <button id="close-user-x" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; transition: color 0.2s;">
+               <i data-lucide="x" style="width: 20px;"></i>
+            </button>
           </div>
 
-          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-            <button id="save-user-edit" class="primary" style="flex:1;">Save User</button>
-            <button id="cancel-user-edit" class="btn-secondary" style="flex:1;">Cancel</button>
+          <div style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid var(--glass-border);">
+               <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; color: white; text-transform: uppercase;">
+                 ${(user.username || user.email || '?').charAt(0)}
+               </div>
+               <div>
+                 <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1.1rem;">${user.username || 'System Member'}</div>
+                 <div style="font-size: 0.75rem; color: var(--text-secondary);">${user.email}</div>
+               </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+              <div>
+                <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Access Level</label>
+                <select id="edit-user-tier" class="glass-select" style="width: 100%;">
+                  <option value="freemium" ${user.tier === 'freemium' || user.tier === 'free' ? 'selected' : ''}>Free Tier</option>
+                  <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated)</option>
+                  <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Elite Pro (Monthly)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Account Status</label>
+                <div style="display: flex; align-items: center; gap: 0.75rem; height: 44px;">
+                   <input type="checkbox" id="edit-user-activated" ${user.is_activated ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--success);">
+                   <label for="edit-user-activated" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer; font-weight: 600;">Lifetime Paid</label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Elite Subscription Expiry</label>
+              <div style="position: relative;">
+                <input type="datetime-local" id="edit-user-premium-until" class="glass-input" value="${user.premium_until ? new Date(user.premium_until).toISOString().slice(0, 16) : ''}" style="width: 100%; padding-left: 1rem;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">AI Credits Bank</label>
+                <input type="number" id="edit-user-credits" class="glass-input" value="${user.ai_credits || 0}" style="width: 100%;">
+              </div>
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Daily AI Burn</label>
+                <input type="number" id="edit-user-ai-usage" class="glass-input" value="${user.ai_daily_usage || 0}" style="width: 100%;">
+              </div>
+            </div>
+
+            <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+               <div style="display: flex; gap: 1rem;">
+                 <button id="save-user-edit" class="btn-primary" style="flex:2; height: 50px; font-weight: 800; font-family: 'Outfit';">COMMIT UPDATES</button>
+                 <button id="cancel-user-edit" class="btn-secondary" style="flex:1; height: 50px; font-weight: 700;">CANCEL</button>
+               </div>
+               <button id="flag-user-btn" style="width: 100%; height: 44px; background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 10px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s;">
+                  <i data-lucide="flag" style="width: 14px;"></i> FLAG FOR SUSPICIOUS ACTIVITY
+               </button>
+            </div>
           </div>
-          <button id="flag-user-btn" class="glass" style="width: 100%; border-color: var(--error); color: var(--error); padding: 0.75rem;">🚩 Flag for Suspicious Activity</button>
         </div>
       </div>
     `
     document.body.insertAdjacentHTML('beforeend', modalHtml)
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('user-edit-overlay') })
 
-    document.getElementById('cancel-user-edit').onclick = () => document.getElementById('user-edit-overlay').remove()
+    document.getElementById('close-user-x').onclick = () => document.getElementById('user-edit-overlay').remove()
     document.getElementById('save-user-edit').onclick = async () => {
       const tier = document.getElementById('edit-user-tier').value
       const is_activated = document.getElementById('edit-user-activated').checked
@@ -821,13 +1040,13 @@ export const AdminComponent = {
 
   async loadSyllabus() {
     const list = document.getElementById('syllabus-list')
-    list.innerHTML = 'Loading syllabus...'
+    if (!list) return
+    list.innerHTML = '<div class="loader-spinner" style="margin: 3rem auto;"></div>'
     
     try {
       const { data: fullSyllabus, error } = await DataService.getFullSyllabus()
       if (error) throw error
 
-      // Group by Exam -> Subject -> Topics
       const hierarchy = {}
       fullSyllabus.forEach(item => {
         const examName = item.exams?.exam_name || 'Uncategorized'
@@ -843,38 +1062,51 @@ export const AdminComponent = {
         })
       })
 
-      // Fetch all Exams and Subjects for the "Add Topic" drop downs if needed, 
-      // but simpler to just show them in situ.
-      
       list.innerHTML = Object.entries(hierarchy).map(([examName, subjects]) => `
-        <div class="exam-group" style="margin-bottom: 1rem;">
-          <div class="glass syllabus-header exam-toggle" style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent-primary);">
-            <strong style="font-size: 1.1rem; color: var(--accent-primary);">${examName}</strong>
-            <span>▼</span>
+        <div class="exam-group" style="margin-bottom: 1.25rem;">
+          <div class="glass syllabus-header exam-toggle" style="padding: 1.25rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(59, 130, 246, 0.08); border-left: 4px solid var(--accent-primary); border-radius: 12px; transition: background 0.2s;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; color: white;">
+                 <i data-lucide="graduation-cap" style="width: 16px;"></i>
+               </div>
+               <strong style="font-family: 'Outfit'; font-size: 1.1rem; color: var(--text-primary);">${examName}</strong>
+            </div>
+            <i data-lucide="chevron-down" class="toggle-icon" style="width: 20px; color: var(--text-secondary); transition: transform 0.3s;"></i>
           </div>
-          <div class="subjects-container" style="display: none; padding-left: 1rem; margin-top: 0.5rem;">
+          <div class="subjects-container" style="display: none; padding-left: 1.5rem; margin-top: 0.75rem; border-left: 2px solid var(--glass-border); margin-left: 1rem;">
             ${Object.entries(subjects).map(([subName, topics]) => `
-              <div class="subject-group" style="margin-bottom: 0.5rem;">
-                <div class="glass syllabus-header subject-toggle" style="padding: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; background: rgba(255, 255, 255, 0.03);">
-                  <span style="font-weight: 600;">${subName}</span>
-                  <span style="font-size: 0.8rem; color: var(--text-primary);">${topics.length} Topics ▼</span>
+              <div class="subject-group" style="margin-bottom: 0.75rem;">
+                <div class="glass syllabus-header subject-toggle" style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid var(--glass-border);">
+                  <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <i data-lucide="book" style="width: 14px; color: var(--accent-secondary);"></i>
+                    <span style="font-weight: 700; font-family: 'Outfit';">${subName}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">${topics.length} Topics</span>
+                    <i data-lucide="chevron-down" class="toggle-icon" style="width: 16px; color: var(--text-secondary);"></i>
+                  </div>
                 </div>
-                <div class="topics-container" style="display: none; padding: 0.5rem; border-left: 1px solid var(--glass-border); margin-left: 0.5rem;">
-                  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
-                    <input type="text" placeholder="New topic name..." class="glass-input add-topic-input" style="flex: 1; min-width: 150px; padding: 0.4rem; font-size: 0.8rem;">
-                    <button class="primary add-topic-btn" data-exam="${examName}" data-subject="${subName}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Add</button>
+                <div class="topics-container" style="display: none; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 10px; margin-top: 0.5rem; border: 1px dashed var(--glass-border);">
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div style="position: relative; flex: 1; min-width: 200px;">
+                      <i data-lucide="plus-circle" style="position: absolute; left: 0.75rem; top: 11px; width: 14px; color: var(--text-secondary);"></i>
+                      <input type="text" placeholder="New topic name..." class="glass-input add-topic-input" style="width: 100%; padding: 0.5rem 0.5rem 0.5rem 2.25rem; font-size: 0.85rem; height: 38px;">
+                    </div>
+                    <button class="btn-primary add-topic-btn" data-exam="${examName}" data-subject="${subName}" style="padding: 0 1.25rem; font-size: 0.8rem; height: 38px; font-weight: 800; border-radius: 8px;">ADD TOPIC</button>
                   </div>
                   ${topics.map(t => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.75rem; margin-bottom: 2px; background: rgba(255,255,255,0.02); border-radius: 4px; font-size: 0.85rem;">
-                      <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
-                        <span title="Importance (1-5)">
-                            <select class="glass-select topic-weight-select" data-id="${t.id}" style="padding: 1px 4px; font-size: 0.7rem; border-color: rgba(255,255,255,0.1); width: auto;">
-                                ${[1,2,3,4,5].map(w => `<option value="${w}" ${t.importance == w ? 'selected' : ''}>${w}⭐</option>`).join('')}
+                    <div class="topic-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; margin-bottom: 4px; background: rgba(255,255,255,0.015); border-radius: 8px; font-size: 0.9rem; border: 1px solid transparent; transition: border 0.2s;">
+                      <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                        <span title="Weighting / Importance">
+                            <select class="glass-select topic-weight-select" data-id="${t.id}" style="padding: 2px 6px; font-size: 0.7rem; width: auto; height: 28px; background: rgba(0,0,0,0.3);">
+                                ${[1,2,3,4,5].map(w => `<option value="${w}" ${t.importance == w ? 'selected' : ''}>${w} ★</option>`).join('')}
                             </select>
                         </span>
-                        <span>${t.topic}</span>
+                        <span style="font-weight: 500;">${t.topic}</span>
                       </div>
-                      <button class="delete-topic-btn" data-id="${t.id}" style="background: none; border: none; cursor: pointer; font-size:1rem; opacity: 0.6; padding: 0;">🗑️</button>
+                      <button class="delete-topic-btn" data-id="${t.id}" style="width: 32px; height: 32px; background: none; border: none; color: var(--error); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.4; transition: opacity 0.2s;">
+                        <i data-lucide="trash-2" style="width: 14px;"></i>
+                      </button>
                     </div>
                   `).join('')}
                 </div>
@@ -885,8 +1117,9 @@ export const AdminComponent = {
       `).join('')
 
       this.setupSyllabusListeners()
+      if (window.lucide) window.lucide.createIcons({ root: list })
     } catch (err) {
-      list.innerHTML = `<div style="color: var(--error);">Error: ${err.message}</div>`
+      list.innerHTML = `<div style="padding: 2rem; color: var(--error); text-align: center;">Error: ${err.message}</div>`
     }
   },
 
@@ -895,8 +1128,11 @@ export const AdminComponent = {
     document.querySelectorAll('.exam-toggle').forEach(el => {
       el.onclick = () => {
         const next = el.nextElementSibling
-        next.style.display = next.style.display === 'none' ? 'block' : 'none'
-        el.querySelector('span').textContent = next.style.display === 'none' ? '▼' : '▲'
+        const icon = el.querySelector('.toggle-icon')
+        const isOpen = next.style.display === 'block'
+        next.style.display = isOpen ? 'none' : 'block'
+        if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)'
+        el.style.background = isOpen ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.15)'
       }
     })
 
@@ -904,17 +1140,21 @@ export const AdminComponent = {
     document.querySelectorAll('.subject-toggle').forEach(el => {
       el.onclick = () => {
         const next = el.nextElementSibling
-        next.style.display = next.style.display === 'none' ? 'block' : 'none'
+        const icon = el.querySelector('.toggle-icon')
+        const isOpen = next.style.display === 'block'
+        next.style.display = isOpen ? 'none' : 'block'
+        if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)'
       }
     })
 
     // Delete topic
     document.querySelectorAll('.delete-topic-btn').forEach(btn => {
-      btn.onclick = async (e) => {
-        if (!confirm('Are you sure you want to delete this topic?')) return
+      btn.onclick = async () => {
+        if (!confirm('Permanently delete this syllabus topic?')) return
         const id = btn.getAttribute('data-id')
+        btn.disabled = true
         const { error } = await DataService.deleteSyllabusTopic(id)
-        if (error) alert('Error deleting: ' + error.message)
+        if (error) alert('Error: ' + error.message)
         else this.loadSyllabus()
       }
     })
@@ -938,7 +1178,8 @@ export const AdminComponent = {
     // Add topic
     document.querySelectorAll('.add-topic-btn').forEach(btn => {
       btn.onclick = async (e) => {
-        const input = btn.previousElementSibling
+        const wrapper = btn.previousElementSibling
+        const input = wrapper.querySelector('input')
         const topicName = input.value.trim()
         if (!topicName) return
         
@@ -975,38 +1216,70 @@ export const AdminComponent = {
       return
     }
     
-    list.innerHTML = data.map(r => `
-      <div class="glass" style="padding: 1rem; margin-bottom: 1.5rem; border-left: 4px solid ${r.status?.includes('resolved') ? 'var(--success)' : (r.status === 'dismissed' ? '#666' : 'var(--error)')};">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-          <div>
-            <strong style="color: ${r.status?.includes('resolved') ? 'var(--success)' : 'var(--error)'}; text-transform: uppercase; font-size: 0.75rem;">${r.reason}</strong>
-            <span class="badge" style="margin-left: 0.5rem; background: rgba(255,255,255,0.1); font-size: 0.65rem;">${r.status || 'pending'}</span>
+    list.innerHTML = data.map(r => {
+      const isResolved = r.status?.includes('resolved');
+      const isDismissed = r.status === 'dismissed';
+      const statusColor = isResolved ? 'var(--success)' : (isDismissed ? 'var(--text-secondary)' : 'var(--error)');
+      
+      return `
+        <div class="glass card report-card" style="padding: 1.75rem; border-radius: 20px; border-left: 5px solid ${statusColor}; margin-bottom: 1.5rem; transition: transform 0.2s;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="background: ${statusColor}20; color: ${statusColor}; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="${isResolved ? 'check-circle' : 'alert-circle'}" style="width: 20px;"></i>
+              </div>
+              <div>
+                <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1.1rem; text-transform: capitalize;">${r.reason}</div>
+                <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Status: ${r.status || 'pending'}</div>
+              </div>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 20px;">
+              <i data-lucide="clock" style="width: 12px; vertical-align: middle; margin-right: 4px;"></i>
+              ${new Date(r.created_at).toLocaleDateString()}
+            </span>
           </div>
-          <span style="font-size: 0.7rem; color: #aaa;">${new Date(r.created_at).toLocaleString()}</span>
-        </div>
-        
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
-          <div style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.5rem;">Student Feedback:</div>
-          <p style="font-size: 1rem; color: var(--text-primary); margin: 0;">"${r.details || 'No details provided.'}"</p>
-        </div>
 
-        <div style="font-size: 0.85rem; color: #888; border: 1px dashed rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-          <strong style="display: block; margin-bottom: 0.5rem; color: #ccc;">Target Question Content:</strong> 
-          <div style="font-style: italic; line-height: 1.4;">${r.questions?.question_text}</div>
-        </div>
-        
-        ${(!r.status || r.status === 'pending') ? `
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button class="primary ai-fix-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" data-reason="${r.reason}" data-details="${r.details || ''}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">🪄 AI Fix</button>
-            <button class="btn-secondary edit-report-q-btn" data-qid="${r.questions?.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">📝 Edit</button>
-            <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
-            <button class="btn-secondary resolve-report-btn" data-id="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Mark Resolved</button>
-            <button class="btn-secondary deactivate-question-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--error);">Deactivate</button>
-            <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Dismiss</button>
+          <div style="background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 1.25rem;">
+            <div style="font-size: 0.65rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em;">Student Feedback</div>
+            <p style="font-size: 1rem; color: var(--text-primary); margin: 0; line-height: 1.5; font-weight: 500;">"${r.details || 'No details provided.'}"</p>
           </div>
-        ` : `<div style="font-size: 0.85rem; color: var(--success); font-style: italic; background: rgba(76, 175, 80, 0.1); padding: 0.5rem 1rem; border-radius: 6px; display: inline-block;">✅ Managed: ${r.status}</div>`}
-      </div>
-    `).join('')
+
+          <div style="background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 12px; border: 1px dashed var(--glass-border); margin-bottom: 1.75rem;">
+            <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.75rem;">Target Question Reference</div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; font-style: italic;">
+              ${r.questions?.question_text || 'Scale reference unavailable.'}
+            </div>
+          </div>
+
+          ${(!r.status || r.status === 'pending') ? `
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+              <button class="btn-primary ai-fix-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" data-reason="${r.reason}" data-details="${r.details || ''}" style="height: 42px; padding: 0 1.25rem; font-size: 0.85rem; font-weight: 800; border-radius: 10px;">
+                 <i data-lucide="sparkles" style="width: 16px; margin-right: 6px;"></i> AI REPAIR
+              </button>
+              <button class="btn-secondary edit-report-q-btn" data-qid="${r.questions?.id}" style="height: 42px; padding: 0 1.25rem; font-size: 0.85rem; font-weight: 700; border-radius: 10px;">
+                 <i data-lucide="edit-2" style="width: 16px; margin-right: 6px;"></i> MANUAL EDIT
+              </button>
+              <div style="width: 1px; height: 24px; background: var(--glass-border); margin: 0 0.5rem;"></div>
+              <button class="btn-secondary resolve-report-btn" data-id="${r.id}" style="height: 42px; padding: 0 1rem; font-size: 0.8rem; font-weight: 700; border-radius: 10px;">
+                 RESOLVE
+              </button>
+              <button class="btn-secondary deactivate-question-btn" data-qid="${r.questions?.id}" data-rid="${r.id}" style="height: 42px; padding: 0 1rem; font-size: 0.8rem; font-weight: 700; border-radius: 10px; color: var(--error); border-color: rgba(239, 68, 68, 0.2);">
+                 DEACTIVATE
+              </button>
+              <button class="btn-secondary dismiss-report-btn" data-id="${r.id}" style="height: 42px; padding: 0 1rem; font-size: 0.8rem; font-weight: 700; border-radius: 10px;">
+                 DISMISS
+              </button>
+            </div>
+          ` : `
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--success); font-weight: 800; font-size: 0.85rem; background: rgba(34, 197, 94, 0.1); padding: 0.75rem 1.25rem; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2);">
+               <i data-lucide="check-circle-2" style="width: 18px;"></i>
+               ACTION TAKEN: ${r.status.toUpperCase()}
+            </div>
+          `}
+        </div>
+      `;
+    }).join('')
 
     // Attach Listeners
     document.querySelectorAll('.edit-report-q-btn').forEach(btn => {
@@ -1079,58 +1352,82 @@ export const AdminComponent = {
 
     // Show Comparison Modal
     const modalHtml = `
-      <div id="ai-fix-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem;">
-        <div class="glass card" style="width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 2rem; border: 1px solid var(--accent-primary);">
-          <h2 style="margin-bottom: 1.5rem; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.75rem;">
-            🪄 AI Proposed Correction
-            <span class="badge" style="background: var(--accent-primary); font-size: 0.7rem;">ELITE MODE</span>
-          </h2>
+      <div id="ai-fix-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
+        <div class="glass card scale-in" style="width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; padding: 0; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-            <div style="opacity: 0.6;">
-              <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem; color: var(--error);">Current Version (Reported)</h3>
-              <div class="glass" style="padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
-                <p><strong>Q:</strong> ${btn.closest('.glass').querySelector('div[style*="italic"]').textContent}</p>
-              </div>
+          <div style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white;">
+                 <i data-lucide="sparkles" style="width: 20px;"></i>
+               </div>
+               <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.4rem;">AI Proposed Correction</h3>
             </div>
-            
-            <div style="border-left: 2px solid var(--accent-primary); padding-left: 2rem;">
-              <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem; color: var(--success);">AI Revised Version</h3>
-              <div class="glass" style="padding: 1rem; border-radius: 8px; font-size: 0.95rem; border-color: var(--success);">
-                <p style="margin-bottom: 1rem;"><strong>Q:</strong> ${fix.question_text}</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem;">
-                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'A' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">A: ${fix.option_a}</div>
-                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'B' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">B: ${fix.option_b}</div>
-                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'C' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">C: ${fix.option_c}</div>
-                  <div style="padding: 0.4rem; border: 1px solid ${fix.correct_option === 'D' ? 'var(--success)' : 'rgba(255,255,255,0.05)'}; border-radius: 4px;">D: ${fix.option_d}</div>
+            <button id="reject-ai-fix-x" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+               <i data-lucide="x" style="width: 20px;"></i>
+            </button>
+          </div>
+
+          <div style="padding: 2.5rem; display: flex; flex-direction: column; gap: 2.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
+              <div>
+                <div style="font-size: 0.7rem; color: #ef4444; text-transform: uppercase; font-weight: 800; margin-bottom: 1rem; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-lucide="alert-triangle" style="width: 14px;"></i> Current Reported Version
                 </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 0.75rem; border-radius: 4px; border-left: 3px solid var(--success);">
-                  <strong style="font-size: 0.7rem; display: block; margin-bottom: 0.25rem;">REVISED EXPLANATION:</strong>
-                  <p style="font-size: 0.85rem; margin: 0;">${fix.explanation}</p>
+                <div class="glass" style="padding: 1.5rem; border-radius: 16px; font-size: 1rem; line-height: 1.6; border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.02);">
+                  <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Question Text:</div>
+                  <p style="margin: 0;">${btn.closest('.glass').querySelector('div[style*="italic"]').textContent}</p>
+                </div>
+              </div>
+              
+              <div>
+                <div style="font-size: 0.7rem; color: var(--success); text-transform: uppercase; font-weight: 800; margin-bottom: 1rem; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-lucide="check-circle" style="width: 14px;"></i> Elite AI Revised Version
+                </div>
+                <div class="glass" style="padding: 1.5rem; border-radius: 16px; font-size: 1rem; line-height: 1.6; border-color: var(--success); background: rgba(34, 197, 94, 0.05); border-width: 1.5px;">
+                  <div style="color: var(--success); font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;">Regenerated Content:</div>
+                  <p style="margin-bottom: 1.5rem; font-weight: 500;">${fix.question_text}</p>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <div style="padding: 0.75rem; border: 1.5px solid ${fix.correct_option === 'A' ? 'var(--success)' : 'var(--glass-border)'}; border-radius: 10px; font-size: 0.85rem; background: ${fix.correct_option === 'A' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)'};"><span style="font-weight: 800; margin-right: 0.5rem;">A:</span> ${fix.option_a}</div>
+                    <div style="padding: 0.75rem; border: 1.5px solid ${fix.correct_option === 'B' ? 'var(--success)' : 'var(--glass-border)'}; border-radius: 10px; font-size: 0.85rem; background: ${fix.correct_option === 'B' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)'};"><span style="font-weight: 800; margin-right: 0.5rem;">B:</span> ${fix.option_b}</div>
+                    <div style="padding: 0.75rem; border: 1.5px solid ${fix.correct_option === 'C' ? 'var(--success)' : 'var(--glass-border)'}; border-radius: 10px; font-size: 0.85rem; background: ${fix.correct_option === 'C' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)'};"><span style="font-weight: 800; margin-right: 0.5rem;">C:</span> ${fix.option_c}</div>
+                    <div style="padding: 0.75rem; border: 1.5px solid ${fix.correct_option === 'D' ? 'var(--success)' : 'var(--glass-border)'}; border-radius: 10px; font-size: 0.85rem; background: ${fix.correct_option === 'D' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.02)'};"><span style="font-weight: 800; margin-right: 0.5rem;">D:</span> ${fix.option_d}</div>
+                  </div>
+
+                  <div style="background: rgba(34, 197, 94, 0.08); padding: 1rem; border-radius: 12px; border: 1px dashed var(--success);">
+                    <div style="font-size: 0.65rem; color: var(--success); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Intelligent Explanation:</div>
+                    <p style="font-size: 0.85rem; margin: 0; line-height: 1.5;">${fix.explanation}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div style="display: flex; gap: 1rem;">
-            <button id="approve-ai-fix" class="primary" style="flex: 2; padding: 1rem;">✅ Approve & Update Database</button>
-            <button id="reject-ai-fix" class="btn-secondary" style="flex: 1; padding: 1rem;">Cancel</button>
+          <div style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); display: flex; gap: 1rem;">
+            <button id="approve-ai-fix" class="btn-primary" style="flex:2; height: 54px; font-weight: 900; font-family: 'Outfit'; font-size: 1.1rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+               <i data-lucide="check-circle" style="width: 20px;"></i> COMMIT AI REPAIR
+            </button>
+            <button id="reject-ai-fix" class="btn-secondary" style="flex:1; height: 54px; font-weight: 800; border-radius: 12px;">Discard</button>
           </div>
         </div>
       </div>
     `
     document.body.insertAdjacentHTML('beforeend', modalHtml)
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('ai-fix-overlay') })
 
-    document.getElementById('reject-ai-fix').onclick = () => {
+    const closeModal = () => {
       document.getElementById('ai-fix-overlay').remove()
       btn.disabled = false
       btn.textContent = "🪄 AI Fix"
     }
 
+    document.getElementById('reject-ai-fix').onclick = closeModal
+    document.getElementById('reject-ai-fix-x').onclick = closeModal
+
     document.getElementById('approve-ai-fix').onclick = async () => {
       const saveBtn = document.getElementById('approve-ai-fix')
       saveBtn.disabled = true
-      saveBtn.textContent = "Updating Database..."
+      saveBtn.textContent = "Syncing..."
 
       // Perform updates
       await DataService.updateQuestion(qid, { question_text: fix.question_text })
@@ -1147,7 +1444,7 @@ export const AdminComponent = {
       
       document.getElementById('ai-fix-overlay').remove()
       this.loadReports()
-      alert("Question successfully repaired and explanation updated!")
+      alert("Question successfully repaired across all platform clusters.")
     }
   },
 
@@ -1163,19 +1460,37 @@ export const AdminComponent = {
     }
 
     summary.innerHTML = `
-      <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: var(--text-primary);">Total Students</div>
-        <div style="font-size: 2rem; font-weight: 700; color: var(--accent-primary);">${stats.totalUsers}</div>
+      <div class="glass card stat-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; border-top: 4px solid var(--accent-primary); border-radius: 16px; transition: transform 0.2s;">
+        <div style="background: rgba(124, 58, 237, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); border: 1px solid rgba(124, 58, 237, 0.2);">
+          <i data-lucide="users" style="width: 24px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Total Students</div>
+          <div style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${stats.totalUsers}</div>
+        </div>
       </div>
-      <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: var(--text-primary);">Database Size</div>
-        <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${stats.totalQuestions} Questions</div>
+
+      <div class="glass card stat-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; border-top: 4px solid var(--success); border-radius: 16px; transition: transform 0.2s;">
+        <div style="background: rgba(34, 197, 94, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2);">
+          <i data-lucide="database" style="width: 24px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Question Bank</div>
+          <div style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${stats.totalQuestions}</div>
+        </div>
       </div>
-      <div class="glass card" style="text-align: center;">
-        <div style="font-size: 0.8rem; color: var(--text-primary);">Avg Performance</div>
-        <div style="font-size: 2rem; font-weight: 700; color: #ffeb3b;">${stats.averagePerformance}%</div>
+
+      <div class="glass card stat-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; border-top: 4px solid #facc15; border-radius: 16px; transition: transform 0.2s;">
+        <div style="background: rgba(250, 204, 21, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #facc15; border: 1px solid rgba(250, 204, 21, 0.2);">
+          <i data-lucide="award" style="width: 24px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Avg Performance</div>
+          <div style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${stats.averagePerformance}%</div>
+        </div>
       </div>
     `
+    if (window.lucide) window.lucide.createIcons({ root: summary })
 
     // Process distribution (0-10, 11-20...)
     const brackets = new Array(10).fill(0)
@@ -1238,27 +1553,48 @@ export const AdminComponent = {
 
   async loadAuditLogs() {
     const list = document.getElementById('audit-logs-list')
-    list.innerHTML = 'Loading system logs...'
+    if (!list) return
+    list.innerHTML = '<div class="loader-spinner" style="margin: 2rem auto;"></div>'
     const { data, error } = await DataService.getAuditLogs()
     
     if (error) {
-        list.innerHTML = `<div style="color: var(--error);">Error: ${error.message}</div>`
+        list.innerHTML = `<div style="padding: 2rem; color: var(--error); text-align: center;">Error loading logs: ${error.message}</div>`
         return
     }
 
     if (!data || data.length === 0) {
-        list.innerHTML = 'No logs available.'
+        list.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary); opacity: 0.5;">
+            <i data-lucide="activity" style="width: 40px; margin-bottom: 1rem; display: block; margin-left: auto; margin-right: auto;"></i>
+            <p>No administrative activities recorded yet.</p>
+          </div>
+        `
     } else {
-        list.innerHTML = data.map(log => `
-            <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary);">
-                <span style="color: var(--accent-primary); font-weight: 700;">[${new Date(log.created_at).toLocaleTimeString()}]</span>
-                <span style="color: var(--text-primary);">${log.admin_email}:</span>
-                <span style="color: var(--success);">${log.action}</span>
-                <span style="font-size: 0.7rem; opacity: 0.7;">(ID: ${log.target_id || 'N/A'})</span>
-                <div style="font-size: 0.7rem; margin-top: 2px; opacity: 0.5;">${log.details}</div>
+        list.innerHTML = data.map(log => {
+          const isSecurity = log.action?.toLowerCase().includes('delete') || log.action?.toLowerCase().includes('flag');
+          const statusColor = isSecurity ? 'var(--error)' : 'var(--accent-primary)';
+          
+          return `
+            <div class="glass card audit-row" style="padding: 1.25rem; margin-bottom: 1rem; border-radius: 12px; border-left: 4px solid ${statusColor}; transition: background 0.2s; display: flex; gap: 1.25rem; align-items: center;">
+                <div style="background: rgba(255,255,255,0.03); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                  <i data-lucide="${isSecurity ? 'shield-alert' : 'terminal'}" style="width: 18px; color: ${statusColor};"></i>
+                </div>
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <span style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 0.95rem;">${log.action}</span>
+                    <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 10px;">
+                      ${new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                    <span style="color: var(--accent-secondary); font-weight: 700;">${log.admin_email}</span> — ${log.details}
+                  </div>
+                </div>
             </div>
-        `).join('')
+          `;
+        }).join('')
     }
+    if (window.lucide) window.lucide.createIcons({ root: list })
   },
 
   async loadStaff() {
@@ -1274,19 +1610,51 @@ export const AdminComponent = {
     )
     
     list.innerHTML = `
-      <h3 style="margin-bottom: 1rem; font-family: 'Outfit'; font-size: 1rem;">Current Staff Members</h3>
-      ${staff.map(s => `
-        <div class="glass" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-          <div>
-            <strong>${s.username || 'Staff'}</strong> (${s.email})
-            <span class="badge" style="margin-left: 0.5rem; background: var(--accent-primary); padding: 2px 6px; font-size: 0.7rem;">${s.role || (s.email === 'oshituo@gmail.com' ? 'super-admin' : 'user')}</span>
-          </div>
-          ${(s.role !== 'super-admin' && s.email !== 'oshituo@gmail.com') ? `
-            <div style="font-size: 0.75rem; color: #aaa;">Use the form above to change role</div>
-          ` : '<em style="font-size: 0.75rem; color: var(--accent-secondary);">System Owner</em>'}
-        </div>
-      `).join('')}
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <i data-lucide="shield-check" style="width: 20px; color: var(--accent-primary);"></i>
+        <h3 style="margin: 0; font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Active Personnel</h3>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+        ${staff.map(s => {
+          const isOwner = s.email === 'oshituo@gmail.com';
+          const role = s.role || (isOwner ? 'super-admin' : 'user');
+          const roleColor = isOwner ? 'var(--accent-secondary)' : 'var(--accent-primary)';
+          
+          return `
+            <div class="glass card staff-card" style="padding: 1.5rem; border-radius: 16px; border-top: 3px solid ${roleColor}; transition: transform 0.2s; position: relative; overflow: hidden;">
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 44px; height: 44px; border-radius: 12px; background: ${roleColor}20; color: ${roleColor}; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="${isOwner ? 'crown' : 'shield'}" style="width: 20px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1rem; line-height: 1.2;">${s.username || 'Staff Member'}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${s.email}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <span style="font-size: 0.6rem; background: ${roleColor}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">${role}</span>
+                ${isOwner ? '<span style="font-size: 0.6rem; background: rgba(255,255,255,0.05); color: var(--accent-secondary); border: 1px solid var(--accent-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 800;">OWNER</span>' : ''}
+              </div>
+
+              <div style="padding-top: 1rem; border-top: 1px solid var(--glass-border); font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                ${isOwner ? `
+                  <i data-lucide="info" style="width: 14px; color: var(--accent-secondary);"></i>
+                  <span>System Owner: All permissions granted.</span>
+                ` : `
+                  <i data-lucide="settings-2" style="width: 14px;"></i>
+                  <span>Use form above to re-assign role.</span>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     `
+    if (window.lucide) window.lucide.createIcons({ root: list })
   },
 
   async loadNews() {
@@ -1312,19 +1680,31 @@ export const AdminComponent = {
     }
 
     list.innerHTML = news.map(n => `
-      <div class="glass" style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--accent-primary);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+      <div class="glass card news-item-card" style="padding: 1.5rem; border-radius: 16px; border-left: 4px solid var(--accent-primary); margin-bottom: 1.25rem; transition: transform 0.2s;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 250px;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-               <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3B82F6; font-size: 0.7rem;">${n.category}</span>
-               <span style="font-size: 0.75rem; color: #aaa;">${new Date(n.created_at).toLocaleDateString()}</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+               <span style="font-size: 0.65rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">${n.category}</span>
+               <span style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
+                 <i data-lucide="calendar" style="width: 12px;"></i>
+                 ${new Date(n.created_at).toLocaleDateString()}
+               </span>
+               ${n.attachment_url ? `
+                 <span style="font-size: 0.75rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.25rem; font-weight: 600;">
+                   <i data-lucide="paperclip" style="width: 12px;"></i> PDF
+                 </span>
+               ` : ''}
             </div>
-            <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.5rem;">${n.title}</strong>
-            <p style="font-size: 0.85rem; color: var(--text-secondary);">${n.summary}</p>
+            <h4 style="font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0;">${n.title}</h4>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">${n.summary}</div>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">✏️ Edit</button>
-            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">🗑️ Delete</button>
+          <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;" title="Edit Article">
+              <i data-lucide="edit-3" style="width: 16px;"></i>
+            </button>
+            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--error); border-color: rgba(239, 68, 68, 0.2);" title="Delete Article">
+              <i data-lucide="trash-2" style="width: 16px;"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -1360,13 +1740,20 @@ export const AdminComponent = {
   openNewsEditModal(news = null) {
     const isEditing = !!news
     const modalHtml = `
-      <div id="news-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; justify-content:center; align-items:center; padding:1rem; backdrop-filter: blur(4px);">
-        <div class="glass card" style="width: 100%; max-width: 750px; height: auto; max-height: 95vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1.5px solid var(--accent-primary); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+      <div id="news-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
+        <div class="glass card scale-in" style="width: 100%; max-width: 800px; height: auto; max-height: 95vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
           
           <!-- Modal Header -->
-          <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
-            <h3 style="margin: 0; font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">${isEditing ? 'Edit News Article' : 'Draft New Article'}</h3>
-            <button id="close-news-x" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem;">&times;</button>
+          <div style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+               <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white;">
+                 <i data-lucide="newspaper" style="width: 20px;"></i>
+               </div>
+               <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.4rem;">${isEditing ? 'Modernize Article' : 'Draft Elite News'}</h3>
+            </div>
+            <button id="close-news-x" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+               <i data-lucide="x" style="width: 20px;"></i>
+            </button>
           </div>
 
           <!-- Modal Body (Scrollable) -->
@@ -1483,25 +1870,39 @@ export const AdminComponent = {
   async loadMarketing() {
     const codeList = document.getElementById('promo-codes-list')
     if (codeList) {
-        codeList.innerHTML = 'Loading codes...'
+        codeList.innerHTML = '<div class="loader-spinner" style="margin: 2rem auto;"></div>'
         const { data } = await DataService.getPromoCodes()
         if (!data || data.length === 0) {
-            codeList.innerHTML = '<p style="font-size: 0.8rem; color: #888;">No active codes.</p>'
+            codeList.innerHTML = `
+              <div style="text-align: center; padding: 2rem; opacity: 0.5;">
+                <i data-lucide="ticket" style="width: 32px; margin-bottom: 0.5rem; display: block; margin-left: auto; margin-right: auto;"></i>
+                <p style="font-size: 0.85rem;">No active promo codes</p>
+              </div>
+            `
         } else {
             codeList.innerHTML = data.map(c => `
-                <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 0.25rem; border-radius: 4px; display: flex; justify-content: space-between;">
-                    <span><strong>${c.code}</strong> - ${c.percent}%</span>
-                    <button class="delete-promo-btn" data-id="${c.id}" style="background: none; border: none; color: #ff6b6b; cursor: pointer;">🗑️</button>
+                <div class="glass card promo-item" style="padding: 1rem 1.25rem; background: rgba(255,255,255,0.03); margin-bottom: 0.75rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <div style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; letter-spacing: 0.05em;">${c.code}</div>
+                      <div style="font-size: 0.75rem; color: var(--success); font-weight: 800; background: rgba(34, 197, 94, 0.1); padding: 2px 8px; border-radius: 4px;">-${c.percent}%</div>
+                    </div>
+                    <button class="delete-promo-btn" data-id="${c.id}" style="width: 32px; height: 32px; background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                        <i data-lucide="trash-2" style="width: 14px;"></i>
+                    </button>
                 </div>
             `).join('')
             
             document.querySelectorAll('.delete-promo-btn').forEach(btn => {
                 btn.onclick = async () => {
+                    if (!confirm(`Revoke promo code ${btn.closest('.promo-item').querySelector('[style*="transparent"]').textContent}?`)) return
+                    btn.disabled = true
+                    btn.innerHTML = '...'
                     await DataService.deletePromoCode(btn.dataset.id)
                     this.loadMarketing()
                 }
             })
         }
+        if (window.lucide) window.lucide.createIcons({ root: codeList })
     }
 
     const broadcastInput = document.getElementById('broadcast-message-input')
@@ -1516,10 +1917,20 @@ export const AdminComponent = {
         const { data } = await DataService.getSystemConfig(key)
         const isActive = data?.value === true || data?.value === 'true'
         btn.dataset.state = isActive
-        btn.textContent = isActive ? '✅ ENABLED (Free)' : '🔒 DISABLED (Locked)'
-        btn.style.background = isActive ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.1)'
-        btn.style.color = isActive ? '#4caf50' : 'var(--accent-secondary)'
-        btn.style.borderColor = isActive ? '#4caf50' : 'var(--accent-secondary)'
+        
+        btn.innerHTML = isActive 
+          ? `<i data-lucide="unlock" style="width: 14px;"></i> ENABLED`
+          : `<i data-lucide="lock" style="width: 14px;"></i> DISABLED`
+        
+        btn.className = isActive ? 'btn-primary' : 'btn-secondary'
+        btn.style.width = '140px'
+        btn.style.justifyContent = 'center'
+        btn.style.gap = '0.5rem'
+        btn.style.display = 'flex'
+        btn.style.alignItems = 'center'
+        btn.style.fontSize = '0.75rem'
+
+        if (window.lucide) window.lucide.createIcons({ root: btn })
     }
 
     await updateBtn('toggle-explanations-btn', 'explanations_free_access')

@@ -1,4 +1,4 @@
-﻿import { AuthService } from './src/services/auth'
+import { AuthService } from './src/services/auth'
 import { AuthComponent } from './src/components/Auth'
 import { ProfileSetupComponent } from './src/components/ProfileSetup'
 import { DashboardComponent } from './src/components/Dashboard'
@@ -9,6 +9,7 @@ import { ExamComponent } from './src/components/Exam'
 import { ResultsComponent } from './src/components/Results'
 import { AdminComponent } from './src/components/Admin'
 import { NewsArticleComponent } from './src/components/NewsArticle'
+import { AnalyticsComponent } from './src/components/Analytics'
 import { IndexedDbService } from './src/services/indexedDbService'
 import { DataService } from './src/services/data'
 import { TourGuide } from './src/utils/TourGuide'
@@ -30,7 +31,8 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
     'practice': '/practice',
     'admin': '/admin',
     'settings': '/settings',
-    'profile': '/profile'
+    'profile': '/profile',
+    'analytics': '/analytics'
   };
 
   const path = pathMap[view] || '/dashboard';
@@ -80,6 +82,10 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
       
     case 'settings':
       showSettings(profile);
+      break;
+      
+    case 'analytics':
+      showAnalytics(profile);
       break;
       
     case 'more':
@@ -537,6 +543,12 @@ function showDashboard(profile) {
   dashboardLoaded = true
 }
 
+function showAnalytics(profile) {
+  currentProfile = profile;
+  hideAll();
+  AnalyticsComponent.render(profile, () => window.navigateTo('dashboard', profile));
+}
+
 function showNewsArticle(article, profile) {
   hideAll()
   NewsArticleComponent.render(article, () => showDashboard(profile))
@@ -571,7 +583,7 @@ function hideAll(isExam = false) {
   const containers = [
     'auth-container', 'dashboard-container', 'exam-container', 
     'admin-container', 'settings-container', 'news-article-container',
-    'practice-container', 'exams-container'
+    'practice-container', 'exams-container', 'analytics-container'
   ];
   
   containers.forEach(id => {
