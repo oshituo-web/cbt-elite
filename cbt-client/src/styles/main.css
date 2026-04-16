@@ -1502,9 +1502,20 @@ body.light-mode .q-grid-item.answered {
     max-width: 100px;
   }
 
-  /* HIDE question counter on small screens to free space */
+  /* RE-ENABLED: Compact question counter on small screens */
   .q-counter-mini {
-    display: none !important;
+    display: flex !important;
+    padding: 0.15rem 0.45rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    min-width: 0 !important;
+    margin-right: auto !important;
+    margin-left: 0.5rem !important;
+  }
+
+  .badge-exam {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.5rem !important;
   }
 
   /* Smaller timer on mobile so it doesn't crowd the header */
@@ -1626,6 +1637,17 @@ body.in-exam .container {
     margin-bottom: 5rem !important; /* Breath for buttons */
   }
 
+  .passage-container {
+    max-height: 350px !important;
+    overflow-y: auto !important;
+    padding: 1rem !important;
+    border: 1px solid var(--accent-primary) !important;
+    background: rgba(37, 99, 235, 0.05) !important;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .exam-top-bar {
     padding: 0.5rem !important;
     height: auto !important;
@@ -1648,8 +1670,8 @@ body.in-exam .container {
   border-radius: 12px;
   color: var(--text-primary);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 800;
+  font-size: 1.15rem;
   margin-bottom: 1rem;
   cursor: pointer;
   position: relative;
@@ -1671,10 +1693,21 @@ body.in-exam .container {
   background: var(--bg-color);
   border: 2px solid var(--border-color);
   border-radius: 10px;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 1.25rem;
   transition: all 0.2s;
   color: var(--text-primary);
+}
+
+body.light-mode .option-btn,
+body.light-mode .option-btn span,
+body.light-mode .option-btn div {
+  color: #000000 !important;
+}
+
+body.light-mode .option-holder {
+  color: #000000 !important;
+  border-color: rgba(0,0,0,0.3) !important;
 }
 
 @media (max-width: 600px) {

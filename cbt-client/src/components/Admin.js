@@ -1431,14 +1431,14 @@ export const AdminComponent = {
 
       // Perform updates
       await DataService.updateQuestion(qid, { question_text: fix.question_text })
-      await supabase.from('question_answers').update({
+      await DataService.updateQuestionAnswers(qid, {
         option_a: fix.option_a,
         option_b: fix.option_b,
         option_c: fix.option_c,
         option_d: fix.option_d,
         correct_option: fix.correct_option,
         explanation: fix.explanation
-      }).eq('question_id', qid)
+      })
 
       await DataService.updateReportStatus(rid, 'resolved (AI fix applied)')
       
@@ -1507,17 +1507,32 @@ export const AdminComponent = {
         datasets: [{
           label: 'Number of Students',
           data: brackets,
-          backgroundColor: 'rgba(76, 175, 80, 0.5)',
-          borderColor: '#4caf50',
-          borderWidth: 1
+          backgroundColor: 'rgba(77, 182, 172, 0.4)',
+          borderColor: '#4db6ac',
+          borderWidth: 2,
+          borderRadius: 4
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: { family: 'Outfit', weight: 'bold' },
+            bodyFont: { family: 'Inter' }
+          }
+        },
         scales: {
-          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-          x: { grid: { display: false } }
+          y: { 
+            beginAtZero: true, 
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 } }
+          },
+          x: { 
+            grid: { display: false },
+            ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 } }
+          }
         }
       }
     })
@@ -1539,13 +1554,25 @@ export const AdminComponent = {
                 labels: ['Free Tier (0 NGN)', 'Premium Tier (1500 NGN)'],
                 datasets: [{
                     data: [tierCounts.free, tierCounts.premium],
-                    backgroundColor: ['rgba(255, 255, 255, 0.1)', 'rgba(79, 70, 229, 0.6)'],
-                    borderWidth: 0
+                    backgroundColor: ['rgba(255, 255, 255, 0.05)', 'rgba(77, 182, 172, 0.6)'],
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'bottom', labels: { color: '#ccc' } } }
+                plugins: { 
+                  legend: { 
+                    position: 'bottom', 
+                    labels: { 
+                      color: 'rgba(255,255,255,0.7)',
+                      font: { family: 'Outfit', size: 11, weight: 'bold' },
+                      padding: 20,
+                      usePointStyle: true
+                    } 
+                  } 
+                },
+                cutout: '70%'
             }
         })
     }

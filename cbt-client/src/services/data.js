@@ -524,22 +524,39 @@ export const DataService = {
   },
 
   async bulkAddQuestions(questions) {
-    // Basic bulk insert
-    const { data, error } = await supabase.from('questions').insert(questions.map(q => ({
-      question_text: q.question_text,
-      exam_type: q.exam_type,
-      subject: q.subject,
-      topic: q.topic,
-      explanation: q.explanation,
-      is_active: true
-    }))).select()
+    let successCount = 0;
     
-    if (error) return { error }
+    for (const q of questions) {
+      const { data: question, error: qErr } = await supabase.from('questions').insert({
+        question_text: q.question_text,
+        exam_type: q.exam_type,
+        subject: q.subject,
+        topic: q.topic,
+        explanation: q.explanation || '',
+        is_active: true
+      }).select().single()
 
-    // After inserting questions, we need to insert their answers
-    // Note: This is an approximation. Real bulk insert for related records is more complex.
-    // For now, we'll just return the count of questions.
-    return { count: data?.length || 0, error: null }
+      if (qErr) {
+        console.error("Bulk Import Error on Question:", qErr)
+        continue
+      }
+
+      if (q.answers && Array.isArray(q.answers)) {
+        const { error: aErr } = await this.updateQuestionAnswers(question.id, {
+          option_a: q.answers[0]?.text || '',
+          option_b: q.answers[1]?.text || '',
+          option_c: q.answers[2]?.text || '',
+          option_d: q.answers[3]?.text || '',
+          correct_option: q.answers.find(a => a.is_correct)?.id || 
+                          (q.answers[0]?.is_correct ? 'A' : (q.answers[1]?.is_correct ? 'B' : (q.answers[2]?.is_correct ? 'C' : 'D'))),
+          explanation: q.explanation || ''
+        })
+        if (aErr) console.error("Bulk Import Error on Answers:", aErr)
+      }
+      successCount++
+    }
+    
+    return { count: successCount, error: null }
   },
 
   // --- ADMIN: REPORTS ---

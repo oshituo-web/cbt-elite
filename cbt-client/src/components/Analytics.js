@@ -73,6 +73,16 @@ export const AnalyticsComponent = {
               </div>
             </div>
 
+            <!-- ELITE AI SYNTHESIS -->
+            <div class="glass card scale-in" style="padding: 2.5rem; margin-bottom: 3rem; background: rgba(124, 58, 237, 0.05); border: 1.5px solid var(--accent-secondary); position: relative; overflow: hidden; border-radius: 20px;">
+              <h3 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                <i data-lucide="sparkles" style="width: 28px; height: 28px;"></i> Elite AI Synthesis
+              </h3>
+              <div id="analytics-ai-synthesis" style="font-size: 1.1rem; color: var(--text-primary); line-height: 1.8; font-weight: 500;">
+                <div style="display:flex; align-items:center; gap:10px;"><div class="loader-spinner" style="width:20px;height:20px;"></div> <span style="color:var(--text-secondary);">Analyzing your historical data trajectory...</span></div>
+              </div>
+            </div>
+
             <!-- MIDDLE SECTION: GRAPHS & SUBJECTS -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
               <!-- Score Trend Chart -->
@@ -159,6 +169,20 @@ export const AnalyticsComponent = {
 
       // 3. Lucide Icons
       if (window.lucide) window.lucide.createIcons({ root: container })
+
+      // 4. Lazy Load Full AI Synthesis
+      if (isPremium) {
+        import('../services/aiService').then(async ({ AiService }) => {
+            try {
+                const synthesis = await AiService.getAIPerformanceSummary(analytics, false);
+                const el = document.getElementById('analytics-ai-synthesis');
+                if (el) el.innerHTML = synthesis;
+            } catch (e) {
+                const el = document.getElementById('analytics-ai-synthesis');
+                if (el) el.innerHTML = "<p style='color:var(--error);'>Synthesis currently unavailable.</p>";
+            }
+        }).catch(e => console.error("Synthesis Load Error:", e));
+      }
 
     } catch (err) {
       console.error("Analytics load crash:", err)

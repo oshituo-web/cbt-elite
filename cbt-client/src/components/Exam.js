@@ -7,6 +7,8 @@ import { QuestionRenderer } from '../services/QuestionRenderer'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { AiService } from '../services/aiService'
+import { CalculatorComponent } from './Calculator'
+
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = []) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview, examType === 'JAMB')
@@ -139,7 +141,7 @@ export class Exam {
     };
 
     try {
-        const { data: configs } = await DataService.getGlobalConfigs(['explanations_free_access', 'exams_free_access']);
+        const { data: configs } = await DataService.getGlobalConfigs(['explanations_free_access', 'exams_free_access', 'ai_tutor_free_access']);
         if (configs) {
             configs.forEach(c => {
                 if (this.systemConfig.hasOwnProperty(c.key)) {
@@ -151,6 +153,14 @@ export class Exam {
         console.warn("Failed to fetch global config:", err);
     }
     
+    if (this.isReviewMode && this.profile?.id) {
+        try {
+            this.userAnalytics = await DataService.getUserAnalytics(this.profile.id);
+        } catch (e) {
+            console.warn("Failed to load user analytics for AI tutor:", e);
+        }
+    }
+
     if (resumeState) {
       this.session.userAnswers = resumeState.userAnswers || {}
       this.session.currentIndex = resumeState.currentIndex || 0
@@ -216,8 +226,8 @@ export class Exam {
 
           <!-- Main Content -->
           <div class="exam-main glass">
-            <!-- Subject Tabs placed at the top of content area -->
-            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; overflow-x: auto; padding-bottom: 0.75rem;"></div>
+            <!-- Subject Selection Tabs (JAMB Mock Only) -->
+            <div id="jamb-tabs-container" style="display: none; justify-content: flex-start; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding: 0.4rem 0.5rem; position: sticky; top: 2px; z-index: 1000; background: var(--bg-color); border-bottom: 2px solid var(--accent-primary); scrollbar-width: none; border-radius: 0 0 10px 10px; min-height: 40px;"></div>
 
             <div id="question-area" style="flex: 1;">
               <!-- Inline passage for mobile or fallback -->
@@ -296,37 +306,6 @@ export class Exam {
           </div>
         </div>
       </div>
-
-      <!-- Floating Calculator -->
-      <div id="exam-calculator" class="calculator-modal glass scale-in" style="display: none;">
-        <div class="calc-header">
-          <span style="color: white !important; font-weight: 900 !important; font-family: 'Outfit';">CBT ELITE CALCULATOR</span>
-          <button id="close-calc">×</button>
-        </div>
-        <div class="calc-display" id="calc-display">0</div>
-        <div class="calc-buttons">
-          <button class="calc-btn clear" data-val="C">C</button>
-          <button class="calc-btn op" data-val="/">÷</button>
-          <button class="calc-btn op" data-val="*">×</button>
-          <button class="calc-btn clear" data-val="DEL">⌫</button>
-          
-          <button class="calc-btn" data-val="7">7</button>
-          <button class="calc-btn" data-val="8">8</button>
-          <button class="calc-btn" data-val="9">9</button>
-          <button class="calc-btn op" data-val="-">-</button>
-          
-          <button class="calc-btn" data-val="4">4</button>
-          <button class="calc-btn" data-val="5">5</button>
-          <button class="calc-btn" data-val="6">6</button>
-          <button class="calc-btn op" data-val="+">+</button>
-          
-          <button class="calc-btn" data-val="1">1</button>
-          <button class="calc-btn" data-val="2">2</button>
-          <button class="calc-btn" data-val="3">3</button>
-          <button class="calc-btn eq" data-val="=">=</button>
-          
-          <button class="calc-btn" style="grid-column: span 2;" data-val="0">0</button>
-          <button class="calc-btn" data-val=".">.</button>
         </div>
       </div>
     `
@@ -430,63 +409,6 @@ export class Exam {
       }
     }
 
-    const aiBtn = document.getElementById('ask-ai-tutor-btn')
-    if (aiBtn) {
-      aiBtn.onclick = async () => {
-        const q = this.session.getCurrentQuestion()
-        const userAStatus = SubscriptionManager.getUserSubscriptionState(this.profile, this.systemConfig.explanations_free_access)
-        
-        if (!userAStatus.canUseAI && !this.systemConfig.ai_tutor_free_access) {
-            alert("Elite AI is a Premium feature. Upgrade to unlock deep dives and infinite learning!")
-            document.getElementById('upgrade-modal').style.display = 'flex'
-            return
-        }
-
-        aiBtn.disabled = true
-        aiBtn.innerHTML = '<div class="loader-spinner" style="width:18px;height:18px;"></div> CONSULTING AI...'
-        
-        const responseArea = document.getElementById('ai-response-area')
-        responseArea.style.display = 'block'
-        responseArea.innerHTML = `
-          <div style="padding: 1.5rem; background: rgba(124, 58, 237, 0.05); border-radius: 16px; border: 1.5px solid var(--accent-secondary); position: relative;">
-            <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.75rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem;">
-               <i data-lucide="sparkles" style="width: 14px;"></i> ELITE AI TUTOR
-            </div>
-            <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; font-weight: 500; font-family: 'Outfit';">Elite AI is analyzing the question and your response path...</p>
-          </div>
-        `
-        if (window.lucide) window.lucide.createIcons({ root: responseArea })
-
-        try {
-          const userChoiceId = this.session.userAnswers[this.session.currentIndex]
-          const explanation = await AiService.getDeepExplanation(q, userChoiceId, q.answers.find(a => a.is_correct)?.id)
-          
-          responseArea.innerHTML = `
-            <div style="padding: 2rem; background: rgba(124, 58, 237, 0.07); border-radius: 16px; border: 1.5px solid var(--accent-secondary); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-              <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.8rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.6rem;">
-                 <i data-lucide="sparkles" style="width: 16px;"></i> ELITE AI INSIGHT
-              </div>
-              <div style="color: var(--text-primary); font-size: 1.1rem; line-height: 1.8; font-weight: 500; font-family: 'Outfit'; white-space: pre-wrap;">${sanitizeContent(explanation)}</div>
-              <div style="margin-top: 1.5rem; text-align: right; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.6;">Verified by Elite Learning Engine</div>
-            </div>
-          `
-          if (window.lucide) window.lucide.createIcons({ root: responseArea })
-          responseArea.scrollIntoView({ behavior: 'smooth', block: 'end' })
-          
-          // Deduct credit
-          if (!this._deductedQuestions.has(q.id)) {
-            SubscriptionService.useAICredit(this.profile, this.systemConfig).then(() => this._deductedQuestions.add(q.id))
-          }
-        } catch (err) {
-          responseArea.innerHTML = `<div style="color: var(--error); padding: 1rem; border: 1px solid var(--error); border-radius: 12px; font-weight: 600;">⚠️ ${err.message}</div>`
-        } finally {
-          aiBtn.disabled = false
-          aiBtn.innerHTML = '<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> ELITE AI: DEEP DIVE'
-          if (window.lucide) window.lucide.createIcons({ root: aiBtn })
-        }
-      }
-    }
-
     const exitBtn = document.getElementById('exam-exit-review')
     if (exitBtn) {
       exitBtn.onclick = () => {
@@ -528,17 +450,7 @@ export class Exam {
 
     const toggleCalc = document.getElementById('toggle-calc')
     if (toggleCalc) {
-      toggleCalc.onclick = () => {
-        const calc = document.getElementById('exam-calculator')
-        calc.style.display = calc.style.display === 'none' ? 'block' : 'none'
-      }
-    }
-
-    const closeCalc = document.getElementById('close-calc')
-    if (closeCalc) {
-      closeCalc.onclick = () => {
-        document.getElementById('exam-calculator').style.display = 'none'
-      }
+      toggleCalc.onclick = () => CalculatorComponent.toggle()
     }
 
     const mapToggle = document.getElementById('mobile-map-toggle')
@@ -554,67 +466,6 @@ export class Exam {
         overlay.classList.remove('drawer-open')
       }
     }
-
-    document.querySelectorAll('.calc-btn').forEach(btn => {
-      btn.onclick = () => this.handleCalculator(btn.dataset.val)
-    })
-  }
-
-  handleCalculator(val) {
-    const display = document.getElementById('calc-display')
-    if (!display) return
-
-    if (!this._calcState) {
-      this._calcState = { current: '0', operator: null, previous: null, reset: false }
-    }
-
-    if (val === 'C') {
-      this._calcState = { current: '0', operator: null, previous: null, reset: false }
-    } else if (val === 'DEL') {
-      if (this._calcState.reset) {
-        this._calcState.current = '0'
-      } else {
-        this._calcState.current = this._calcState.current.length > 1 ? this._calcState.current.slice(0, -1) : '0'
-      }
-    } else if (val === '=') {
-      if (this._calcState.operator && this._calcState.previous !== null) {
-        const res = this._solve(this._calcState.previous, this._calcState.current, this._calcState.operator)
-        this._calcState.current = String(res)
-        this._calcState.operator = null
-        this._calcState.previous = null
-        this._calcState.reset = true
-      }
-    } else if (['+', '-', '*', '/'].includes(val)) {
-      if (this._calcState.operator && this._calcState.previous !== null && !this._calcState.reset) {
-        const res = this._solve(this._calcState.previous, this._calcState.current, this._calcState.operator)
-        this._calcState.current = String(res)
-        this._calcState.previous = this._calcState.current
-      } else {
-        this._calcState.previous = this._calcState.current
-      }
-      this._calcState.operator = val
-      this._calcState.reset = true
-    } else {
-      if (this._calcState.current === '0' || this._calcState.reset) {
-        this._calcState.current = val
-        this._calcState.reset = false
-      } else {
-        if (val === '.' && this._calcState.current.includes('.')) return
-        this._calcState.current += val
-      }
-    }
-
-    display.textContent = this._calcState.current
-  }
-
-  _solve(a, b, op) {
-    const n1 = parseFloat(a)
-    const n2 = parseFloat(b)
-    if (op === '+') return n1 + n2
-    if (op === '-') return n1 - n2
-    if (op === '*') return n1 * n2
-    if (op === '/') return n2 !== 0 ? n1 / n2 : 'Error'
-    return n2
   }
 
   updateUI() {
@@ -815,9 +666,31 @@ export class Exam {
           SubscriptionService.useAICredit(this.profile, this.systemConfig).then(() => this._deductedQuestions.add(qId))
         }
 
+        let ctaHtml = '';
+        if (!isPremium && (isFreeAccess || aiStatus.canUse)) {
+           if (subState.shouldShowActivateCTA) {
+              ctaHtml = `
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border-radius: 12px; border: 1px dashed var(--accent-primary); text-align: left; width: 100%;">
+                  <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">🚀 GO PREMIUM FOR UNLIMITED</h5>
+                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Activate for ₦1,500 to unlock unlimited explanations and AI insights.</p>
+                  <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-primary); color: var(--accent-primary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">ACTIVATE NOW</button>
+                </div>
+              `;
+           } else if (subState.shouldShowRenewCTA) {
+              ctaHtml = `
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(147, 51, 234, 0.05); border-radius: 12px; border: 1px dashed var(--accent-secondary); text-align: left; width: 100%;">
+                  <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">⚡ RENEW ELITE ACCESS</h5>
+                  <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Renew Premium to maintain your unlimited AI study track.</p>
+                  <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-secondary); color: var(--accent-secondary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">RENEW PREMIUM</button>
+                </div>
+              `;
+           }
+        }
+
+        let mainContentHtml = '';
         if (q.question_type === 'theory') {
           const graded = q.graded || {}
-          expDiv.innerHTML = `
+          mainContentHtml = `
             <div style="font-weight: 900; color: var(--accent-primary); margin-bottom: 1.5rem; display: flex; justify-content: space-between; font-family: 'Outfit'; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">
               <span>Grading Details</span>
               ${isPremium ? '<span style="color: var(--success); opacity: 0.8;">✨ AI GRADED</span>' : ''}
@@ -832,42 +705,81 @@ export class Exam {
             </div>
           `
         } else {
-          let ctaHtml = '';
-          if (!isPremium && (isFreeAccess || aiStatus.canUse)) {
-             if (subState.shouldShowActivateCTA) {
-                ctaHtml = `
-                  <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border-radius: 12px; border: 1px dashed var(--accent-primary); text-align: left;">
-                    <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">🚀 GO PREMIUM FOR UNLIMITED</h5>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Activate for ₦1,500 to unlock unlimited explanations and AI insights.</p>
-                    <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-primary); color: var(--accent-primary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">ACTIVATE NOW</button>
-                  </div>
-                `;
-             } else if (subState.shouldShowRenewCTA) {
-                ctaHtml = `
-                  <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(147, 51, 234, 0.05); border-radius: 12px; border: 1px dashed var(--accent-secondary); text-align: left;">
-                    <h5 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-family: 'Outfit'; font-weight: 800;">⚡ RENEW ELITE ACCESS</h5>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; font-weight: 500;">Renew Premium to maintain your unlimited AI study track.</p>
-                    <button class="btn-secondary" style="height: 40px; font-size: 0.8rem; border-color: var(--accent-secondary); color: var(--accent-secondary); font-weight: 800;" onclick="document.getElementById('upgrade-modal').style.display='flex'">RENEW PREMIUM</button>
-                  </div>
-                `;
-             }
-          }
-
-          expDiv.innerHTML = `
+          mainContentHtml = `
             <div style="font-weight: 900; color: var(--accent-primary); margin-bottom: 1rem; display: flex; justify-content: space-between; font-family: 'Outfit'; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;">
               <span>EXPLANATION</span>
               ${aiStatus.usage ? `<span style="color: var(--accent-secondary); opacity: 0.8;">${aiStatus.usage}/30 DAILY AI USED</span>` : ''}
             </div>
             <div style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; font-family: 'Outfit'; font-weight: 500;">${sanitizeContent(q.explanation || 'No explanation available for this question.')}</div>
-            <div id="ai-response-area" style="margin-top: 1.5rem; display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem; animation: fadeIn 0.4s ease;"></div>
-            <div style="margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-               <button id="ask-ai-tutor-btn" class="btn-dominant" style="height: 48px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; padding: 0 1.5rem; display: ${aiStatus.canUse ? 'flex' : 'none'}; align-items: center; gap: 0.5rem; background: var(--accent-gradient); border: none; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);">
-                  <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
-                  ELITE AI: DEEP DIVE
-               </button>
-               ${ctaHtml}
-            </div>
           `
+        }
+
+        expDiv.innerHTML = `
+          ${mainContentHtml}
+          <div id="ai-response-area" style="margin-top: 1.5rem; display: none; border-top: 1px solid var(--glass-border); padding-top: 1.5rem; animation: fadeIn 0.4s ease;"></div>
+          <div style="margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+             <button id="ask-ai-tutor-btn-dynamic" class="btn-dominant" style="height: 48px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; padding: 0 1.5rem; display: ${aiStatus.canUse ? 'flex' : 'none'}; align-items: center; gap: 0.5rem; background: var(--accent-gradient); border: none; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);">
+                <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                ELITE AI: DEEP DIVE
+             </button>
+             ${ctaHtml}
+          </div>
+        `
+
+        const aiDynamicBtn = document.getElementById('ask-ai-tutor-btn-dynamic')
+        if (aiDynamicBtn) {
+            aiDynamicBtn.onclick = async () => {
+                const qType = q.question_type;
+                const userChoiceId = qType === 'theory' ? (q.graded?.user_answer || "Theory Response") : this.session.userAnswers[this.session.currentIndex];
+                const correctChoiceId = qType === 'theory' ? q.model_answer : q.answers?.find(a => a.is_correct)?.id;
+
+                if (!subState.canUseAI && !this.systemConfig.ai_tutor_free_access) {
+                    alert("Elite AI is a Premium feature. Upgrade to unlock deep dives and infinite learning!");
+                    document.getElementById('upgrade-modal').style.display = 'flex';
+                    return;
+                }
+
+                aiDynamicBtn.disabled = true;
+                aiDynamicBtn.innerHTML = '<div class="loader-spinner" style="width:18px;height:18px;"></div> CONSULTING AI...';
+                
+                const responseArea = document.getElementById('ai-response-area');
+                responseArea.style.display = 'block';
+                responseArea.innerHTML = `
+                  <div style="padding: 1.5rem; background: rgba(124, 58, 237, 0.05); border-radius: 16px; border: 1.5px solid var(--accent-secondary); position: relative;">
+                    <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.75rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem;">
+                       <i data-lucide="sparkles" style="width: 14px;"></i> ELITE AI TUTOR
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; font-weight: 500; font-family: 'Outfit';">Elite AI is analyzing your specific history and performance structure...</p>
+                  </div>
+                `;
+                if (window.lucide) window.lucide.createIcons({ root: responseArea });
+
+                try {
+                  const explanation = await AiService.getDeepExplanation(q, userChoiceId, correctChoiceId, this.userAnalytics);
+                  
+                  responseArea.innerHTML = `
+                    <div style="padding: 2rem; background: rgba(124, 58, 237, 0.07); border-radius: 16px; border: 1.5px solid var(--accent-secondary); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                      <div style="font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary); font-size: 0.8rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.6rem;">
+                         <i data-lucide="sparkles" style="width: 16px;"></i> ELITE AI (TAILORED INSIGHT)
+                      </div>
+                      <div style="color: var(--text-primary); font-size: 1.1rem; line-height: 1.8; font-weight: 500; font-family: 'Outfit'; white-space: pre-wrap;">${sanitizeContent(explanation)}</div>
+                      <div style="margin-top: 1.5rem; text-align: right; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.6;">Powered by Adaptive Memory</div>
+                    </div>
+                  `;
+                  if (window.lucide) window.lucide.createIcons({ root: responseArea });
+                  responseArea.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                  
+                  if (!this._deductedQuestions.has(q.id)) {
+                    SubscriptionService.useAICredit(this.profile, this.systemConfig).then(() => this._deductedQuestions.add(q.id));
+                  }
+                } catch (err) {
+                  responseArea.innerHTML = `<div style="color: var(--error); padding: 1rem; border: 1px solid var(--error); border-radius: 12px; font-weight: 600;">⚠️ ${err.message}</div>`;
+                } finally {
+                  aiDynamicBtn.disabled = false;
+                  aiDynamicBtn.innerHTML = '<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> ELITE AI: DEEP DIVE';
+                  if (window.lucide) window.lucide.createIcons({ root: aiDynamicBtn });
+                }
+            };
         }
       }
       if (window.lucide) window.lucide.createIcons();
@@ -904,11 +816,13 @@ export class Exam {
     const container = document.getElementById('jamb-tabs-container')
     if (!container || this.examType !== 'JAMB') return
     container.style.display = 'flex'
-    container.innerHTML = this.jambSubjects.map(sub => `
-      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.5rem 1.25rem; border-radius: 30px; font-size: 0.82rem; font-weight: 800; border: 2px solid ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${sub === this.activeJambSubject ? 'var(--accent-primary)' : 'rgba(255,255,255,0.03)'}; color: ${sub === this.activeJambSubject ? 'white' : 'var(--text-secondary)'}; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Outfit';">
-        ${sub}
+    container.innerHTML = this.jambSubjects.map(sub => {
+      const isCurrent = sub === this.activeJambSubject;
+      return `
+      <button class="jamb-tab-btn" data-subject="${sub}" style="flex-shrink: 0; white-space: nowrap; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 900; border: 2px solid ${isCurrent ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${isCurrent ? 'var(--accent-primary)' : 'rgba(255,255,255,0.08)'}; color: ${isCurrent ? 'white' : 'var(--text-primary)'} !important; cursor: pointer; transition: all 0.2s; font-family: 'Outfit'; line-height: 1;">
+        ${sub.toUpperCase()}
       </button>
-    `).join('')
+    `}).join('')
 
     container.querySelectorAll('.jamb-tab-btn').forEach(btn => {
       btn.onclick = () => {
@@ -916,7 +830,11 @@ export class Exam {
         if (targetSub !== this.activeJambSubject) {
            this.activeJambSubject = targetSub
            this.renderJambTabs()
-           const firstIndex = this.session.questions.findIndex(question => question.subject === targetSub)
+           const firstIndex = this.session.questions.findIndex(q => {
+              const name = (q.subject || q.subjects?.subject_name || '').toLowerCase()
+              if (targetSub === 'Use of English' && name.includes('english')) return true
+              return (q.subject || q.subjects?.subject_name) === targetSub
+           })
            if (firstIndex !== -1) {
               this.session.currentIndex = firstIndex
               this.updateUI()

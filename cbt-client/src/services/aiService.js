@@ -12,19 +12,35 @@ export const AiService = {
    * @param {Object} question - The question object.
    * @param {string} userChoiceId - The ID of the answer the user selected.
    * @param {string} correctChoiceId - The ID of the correct answer.
+   * @param {Object} userAnalytics - Historical user data to tailor the tutor's memory.
    * @returns {Promise<string>} - The AI generated explanation.
    */
-  async getDeepExplanation(question, userChoiceId, correctChoiceId) {
+  async getDeepExplanation(question, userChoiceId, correctChoiceId, userAnalytics = null) {
     if (!GEMINI_API_KEY) {
       throw new Error("Elite AI is currently unavailable (M-API-KEY missing).")
     }
 
-    const userChoice = question.answers.find(a => a.id === userChoiceId)?.answer_text || "None"
-    const correctChoice = question.answers.find(a => a.id === correctChoiceId)?.answer_text || "Unknown"
+    const userChoice = question.answers.find(a => a.id === userChoiceId)?.answer_text || (userChoiceId && typeof userChoiceId === 'string' ? userChoiceId : "None");
+    const correctChoice = question.answers.find(a => a.id === correctChoiceId)?.answer_text || (correctChoiceId && typeof correctChoiceId === 'string' ? correctChoiceId : "Unknown");
+
+    let contextSection = "";
+    if (userAnalytics && userAnalytics.mastery) {
+        const weakSubjects = userAnalytics.mastery.filter(m => m.average < 60).map(m => m.subject).join(", ");
+        const strongSubjects = userAnalytics.mastery.filter(m => m.average >= 70).map(m => m.subject).join(", ");
+        
+        contextSection = `
+        STUDENT PROFILE BACKGROUND:
+        - The student has past weaknesses in: ${weakSubjects || 'None systematically yet.'}
+        - The student has demonstrated strength in: ${strongSubjects || 'Currently building foundations.'}
+        - Tone Instruction: Acknowledge their journey. If this topic aligns with their weaknesses, encourage them actively and break it down more granularly. If it's a strength, praise their consistency and offer a more advanced abstract perspective. Connect it to their broader goals.
+        `;
+    }
 
     const prompt = `
       You are "Elite AI", a world-class academic tutor. 
       Analyze the following academic question and provide a deep, friendly, and structured explanation.
+      
+      ${contextSection}
       
       QUESTION: ${question.question_text}
       ${question.question_groups?.content ? `CONTEXT/PASSAGE: ${question.question_groups.content}` : ''}
@@ -61,5 +77,115 @@ export const AiService = {
       console.error("AiService Error:", err)
       throw err
     }
+  },
+
+  /**
+   * Generates a dynamic HTML study guide for a specific topic, tailored by historical weak/strong points.
+   */
+  async getTopicDeepDive(topic, subject, userAnalytics = null) {
+    if (!GEMINI_API_KEY) {
+      throw new Error("Elite AI is currently unavailable (M-API-KEY missing).")
+    }
+
+    let memoryContext = "The student is exploring this topic.";
+    if (userAnalytics && userAnalytics.mastery) {
+        const subData = userAnalytics.mastery.find(m => m.subject.toLowerCase() === (subject || '').toLowerCase());
+        if (subData) {
+            if (subData.average < 50) memoryContext = `The student has historically struggled with ${subject} (Mastery: ${subData.average}%). Break this concept down fundamentally. Focus on building confidence.`;
+            else if (subData.average > 70) memoryContext = `The student is strong in ${subject} (Mastery: ${subData.average}%). Keep the explanation crisp, advanced, and focus on nuanced edge cases.`;
+            else memoryContext = `The student has average proficiency in ${subject} (${subData.average}%). Provide a solid, balanced overview.`;
+        }
+    }
+
+    const prompt = `
+      You are "Elite AI", a world-class academic tutor.
+      Topic: "${topic}" within the subject "${subject || 'General'}".
+      Context on Student: ${memoryContext}
+      
+      Create a highly targeted study guide (max 150 words). 
+      Include 2-3 key bullet points and one core rule, formula, or fundamental law if applicable.
+      Return the response formatted purely in HTML tags (e.g. <h3>, <ul>, <li>, <p>) so it can be injected directly into a web interface. Do not include markdown formatting or backticks.
+      Ensure the tone aligns with the Context on Student.
+    `;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+        })
+      });
+
+      if (!response.ok) throw new Error("Elite AI is currently resting. Please try again later.");
+
+      const data = await response.json();
+      let htmlText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No summary available.";
+      return htmlText.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
+    } catch (err) {
+      console.error("AiService Deep Dive Error:", err);
+      throw err;
+    }
+  },
+
+  /**
+   * Translates raw JSON performance metrics into human-readable, bespoke AI strategy.
+   * @param {Object} analytics - The raw user analytics object { history, mastery }
+   * @param {boolean} shortVersion - If true, returns a 2-sentence summary instead of full HTML blocks.
+   * @returns {Promise<string>}
+   */
+  async getAIPerformanceSummary(analytics, shortVersion = false) {
+     if (!GEMINI_API_KEY) {
+       throw new Error(shortVersion ? "AI Insights unavailable." : "Elite AI Strategy engine offline. Add your API key.");
+     }
+
+     if (!analytics || !analytics.mastery || analytics.mastery.length === 0) {
+        return shortVersion 
+            ? "Analyzing your initial baseline... complete a few more practices!" 
+            : `<div style="text-align: center; color: var(--text-secondary); padding: 1.5rem;">Need more session data to establish an Elite AI baseline. Complete a practice module to begin.</div>`;
+     }
+
+     // Compress Analytics Payload for Token Efficiency
+     const payload = {
+        totalSessions: analytics.history?.length || 0,
+        subjects: analytics.mastery.map(m => ({ sub: m.subject, score: m.average, limit: m.total_attempted }))
+     };
+
+     const promptShort = `
+        You are "Elite AI", a precise academic advisor. 
+        Analyze the following student data payload: ${JSON.stringify(payload)}
+        Write exactly TWO sentences. Identify their strongest point, then direct their focus to their weakest point with a short encouraging remark.
+        Output purely plain text (no markdown formatting or styles).
+     `;
+
+     const promptLong = `
+        You are "Elite AI", a master academic strategist.
+        Analyze this student's data payload: ${JSON.stringify(payload)}
+        
+        Write a robust, 2-3 paragraph performance synthesis targeted directly AT the student (e.g., "Looking at your recent sessions..."). 
+        Identify their dominant strengths and deeply analyze their core weaknesses, suggesting a strategic path forward.
+        Return the response cleanly formatted in HTML using <p> tags with bolding (<strong>) for subjects or key metrics. 
+        Do not use markdown backticks. Do not include raw JSON. Maintain an elite, encouraging, and authoritative tone.
+     `;
+
+     try {
+       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           contents: [{ parts: [{ text: shortVersion ? promptShort : promptLong }] }],
+           generationConfig: { temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
+         })
+       });
+
+       if (!response.ok) throw new Error("API call failed.");
+       const data = await response.json();
+       let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Strategy synthesis unavailable.";
+       return text.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
+     } catch (err) {
+       console.error("AI Performance Error:", err);
+       return shortVersion ? "AI Synthesis unavailable right now." : "<p style='color:var(--error);'>Could not load AI synthesis at this time.</p>";
+     }
   }
 }

@@ -572,8 +572,8 @@ function showExam(questions, profile, isReview = false, pastAnswers = {}, mode =
 
 function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0) {
   hideAll()
-  ResultsComponent.render(questions, userAnswers, () => {
-    showExam(questions, profile, false, {}, mode, subject, examType) // Retake same questions
+  ResultsComponent.render(questions, userAnswers, (newQs, newMode, newSubj, newExam) => {
+    showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType) // Retake same questions or load custom focus questions
   }, () => {
     showExam(questions, profile, true, userAnswers, mode, subject, examType) // Review mode
   }, profile, mode, subject, examType, timeTaken, () => showDashboard(profile))

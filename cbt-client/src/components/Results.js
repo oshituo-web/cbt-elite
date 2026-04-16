@@ -189,7 +189,17 @@ export const ResultsComponent = {
     if (reviewBtn) reviewBtn.onclick = () => onReview(questions, userAnswers)
 
     const homeBtn = document.getElementById('back-home')
-    if (homeBtn) homeBtn.onclick = () => onBack ? onBack() : location.reload()
+    if (homeBtn) {
+      homeBtn.onclick = () => {
+        if (typeof window.navigateTo === 'function') {
+          window.navigateTo('dashboard', profile);
+        } else if (onBack) {
+          onBack();
+        } else {
+          location.reload();
+        }
+      }
+    }
 
     const backBtn = document.getElementById('results-back-btn')
     if (backBtn) backBtn.onclick = () => onBack ? onBack() : location.reload()

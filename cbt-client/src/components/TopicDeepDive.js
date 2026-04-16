@@ -1,3 +1,5 @@
+import { AiService } from '../services/aiService'
+
 export const TopicDeepDiveComponent = {
   render(topic, subject, profile, onStartFocus) {
     const modalId = 'topic-deep-dive-modal';
@@ -10,8 +12,13 @@ export const TopicDeepDiveComponent = {
       document.body.appendChild(modal);
     }
     
-    // Simulate Topic Content (Template System)
-    const content = this.getTopicSummary(topic, subject);
+    // Initial Loading State
+    const content = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 2rem; color: var(--text-primary);">
+         <div class="loader-spinner" style="width: 40px; height: 40px; margin-bottom: 1.5rem;"></div>
+         <p style="font-family: 'Outfit'; font-weight: 500; font-size: 1.1rem; animation: pulse 1.5s infinite;">Elite AI is compiling your study guide for ${topic}...</p>
+      </div>
+    `;
     
     modal.style.display = 'flex';
     modal.innerHTML = `
@@ -46,6 +53,26 @@ export const TopicDeepDiveComponent = {
     if (window.lucide) window.lucide.createIcons({ root: modal });
 
     this.setupListeners(onStartFocus, topic, subject);
+
+    // Fetch real content via Elite AI
+    import('../services/data').then(({ DataService }) => {
+        return DataService.getUserAnalytics(profile.id);
+    }).then(analytics => {
+        return AiService.getTopicDeepDive(topic, subject, analytics);
+    }).then(html => {
+        const contentDiv = modal.querySelector('.study-card-content');
+        if (contentDiv) {
+           contentDiv.innerHTML = `<div style="animation: fadeIn 0.4s ease;">${html}</div>`;
+        }
+    }).catch(err => {
+        const contentDiv = modal.querySelector('.study-card-content');
+        if (contentDiv) {
+           contentDiv.innerHTML = `
+             <div style="color:var(--error); padding: 1rem; border: 1px solid var(--error); border-radius: 12px; margin-bottom: 1rem;">⚠️ ${err.message}</div>
+             ${this.getTopicSummary(topic, subject)}
+           `;
+        }
+    });
   },
 
   setupListeners(onStartFocus, topic, subject) {

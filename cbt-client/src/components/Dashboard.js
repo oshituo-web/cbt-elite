@@ -107,8 +107,14 @@ export const DashboardComponent = {
             if (potentialWeakSubjects.length > 0) {
                 weakSubject = potentialWeakSubjects.reduce((prev, curr) => ((prev.average || 0) < (curr.average || 0)) ? prev : curr)
             }
-        } catch (e) { console.error(e) }
+    } catch (e) { console.error(e) }
     }
+
+    const badgesHTML = badges.length > 0 ? `
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+        ${badges.map(b => `<span class="badge glass" title="${b.title}" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.65rem; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03);">${b.emoji} ${b.title}</span>`).join('')}
+      </div>
+    ` : '';
 
     container.innerHTML = `
       <div id="dashboard-content" class="dashboard-scroll-area">
@@ -160,6 +166,24 @@ export const DashboardComponent = {
          <!-- PROGRESS & ANALYTICS (Standardized Grid) -->
           <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             
+            <!-- Daily Streak Card -->
+            <div class="glass card scale-in" style="padding: 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Learning Streak</h3>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.7rem;">Active</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                <div class="streak-flame-container ${this.profile.streak_count > 0 ? 'active' : ''}">
+                  <i data-lucide="flame" style="width: 64px; height: 64px; color: ${this.profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
+                </div>
+                <div style="font-family: 'Outfit'; font-size: 3.5rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_count || 0}</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Day Streak</div>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin: 0; font-weight: 500;">
+                ${this.profile.streak_count > 0 ? "You're on fire! Keep it up." : "Start a session to begin your streak."}
+              </p>
+            </div>
+
             <!-- Daily Goal Card -->
             <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; position: relative; overflow: hidden; border-top: 4px solid var(--accent-primary);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
@@ -223,6 +247,7 @@ export const DashboardComponent = {
                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Accuracy</div>
                 </div>
               </div>
+              ${badgesHTML}
             </div>
 
             <!-- AI Insight Card -->
@@ -230,21 +255,9 @@ export const DashboardComponent = {
               <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">AI Performance Analysis</h3>
               
               <div style="flex: 1; display: flex; align-items: center;">
-                <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; font-weight: 500; margin: 0;">
-                  ${(() => {
-                      if (history.length < 5) return `Keep practicing! Complete <strong>${5 - history.length} more sessions</strong> to unlock deep AI analysis of your mastery gaps.`;
-                      
-                      const sorted = [...(mastery || [])].sort((a,b) => (b.average || 0) - (a.average || 0));
-                      if (sorted.length === 0) return "Analyzing your initial sessions... Keep up the pace to build your performance profile!";
-                      
-                      const best = sorted[0];
-                      const worst = sorted[sorted.length - 1];
-                      let insight = `Your strength is <strong>${best.subject}</strong> (${best.average}%). `;
-                      if (worst && worst.subject !== best.subject) {
-                          insight += `Mastery in <strong>${worst.subject}</strong> is at ${worst.average}%. Focused practice here is advised.`;
-                      }
-                      return insight;
-                  })()}
+                <p id="dashboard-ai-summary" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; font-weight: 500; margin: 0;">
+                  <span class="loader-spinner" style="width:14px; height:14px; display:inline-block; margin-right: 8px;"></span>
+                  Elite AI is calculating your mastery profile...
                 </p>
               </div>
 
@@ -439,6 +452,18 @@ export const DashboardComponent = {
 
     const helpBtn = document.getElementById('help-guide-btn')
     if (helpBtn) helpBtn.onclick = () => TourGuide.start()
+
+    // Lazy load the Dashboard AI Strategy Summary
+    import('../services/aiService').then(async ({ AiService }) => {
+        try {
+            const shortSummary = await AiService.getAIPerformanceSummary(analytics, true);
+            const el = document.getElementById('dashboard-ai-summary');
+            if (el) el.innerHTML = shortSummary;
+        } catch (e) {
+            const el = document.getElementById('dashboard-ai-summary');
+            if (el) el.innerHTML = "Keep practicing to build your performance profile!";
+        }
+    }).catch(e => console.error("AiService lazy load failed", e));
 
     const fullAnalysisBtn = document.getElementById('full-analysis-btn')
     if (fullAnalysisBtn) {
