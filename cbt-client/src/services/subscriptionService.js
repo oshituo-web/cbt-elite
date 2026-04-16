@@ -36,17 +36,32 @@ export const SubscriptionService = {
   canStartSession(user, type = 'practice', config = {}) {
     if (!user) return false
     
-    // Check if the specific system-wide free access is enabled
+    // Check if any specific system-wide free access is enabled
     const isExamsFree = config.exams_free_access === true || config.exams_free_access === 'true'
     const isExplFree = config.explanations_free_access === true || config.explanations_free_access === 'true'
-    const isSystemFree = type === 'exam' ? isExamsFree : isExplFree
+    const isAIFree = config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true'
+
+    // If ANY of these are true, we treat the platform as being in promotional "Free Access" mode
+    const isSystemFree = isExamsFree || isExplFree || isAIFree
     
     const tier = this.resolveUserTier(user, isSystemFree)
     if (isSystemFree || tier === 'premium') return true
     
+    // Dynamic Limits with hardcoded fallbacks
+    const limits = {
+      practice: {
+        medium: parseInt(config.daily_practice_limit_medium || 8),
+        free: parseInt(config.daily_practice_limit_free || 3)
+      },
+      exam: {
+        medium: parseInt(config.daily_exam_limit_medium || 3),
+        free: parseInt(config.daily_exam_limit_free || 1)
+      }
+    }
+
     const dailyLimit = (tier === 'medium') 
-      ? (type === 'practice' ? 8 : 3) 
-      : (type === 'practice' ? 3 : 1)
+      ? limits[type].medium 
+      : limits[type].free
 
     return (user.daily_sessions || 0) < dailyLimit
   },
@@ -64,15 +79,19 @@ export const SubscriptionService = {
   canUseAI(user, config = {}) {
     if (!user) return { canUse: false, reason: 'Please login to use AI' }
     
-    // Check if system-wide free access is enabled for AI or via old legacy flag
-    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || (config.explanations_free_access === true || config.explanations_free_access === 'true')
+    // Check global free access toggles
+    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || 
+                   (config.explanations_free_access === true || config.explanations_free_access === 'true')
     
     if (isFree) return { canUse: true, usage: 0, limit: 'Unlimited' }
 
     const tier = this.resolveUserTier(user)
 
     if (tier === 'freemium') {
-       return { canUse: false, reason: 'Activate your account for \u20A61,500 to unlock AI access' }
+       return { 
+         canUse: false, 
+         reason: `Upgrade your account to Premium to unlock AI Tutor features.` 
+       }
     }
     
     if (tier === 'premium') {
@@ -82,7 +101,10 @@ export const SubscriptionService = {
     if (tier === 'medium') {
       const credits = user.ai_credits || 0
       if (credits <= 0) {
-        return { canUse: false, reason: 'You have 0 AI credits left. Renew Premium for \u20A61,000 for unlimited AI.' }
+        return { 
+          canUse: false, 
+          reason: `You have 0 AI credits remaining. Renew your Premium subscription for full unlimited access.` 
+        }
       }
       return { canUse: true, credits: credits }
     }
@@ -93,12 +115,16 @@ export const SubscriptionService = {
   async useAICredit(user, config = {}) {
     if (!user) return false
     
-    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || (config.explanations_free_access === true || config.explanations_free_access === 'true')
+    const isFree = (config.ai_tutor_free_access === true || config.ai_tutor_free_access === 'true') || 
+                   (config.explanations_free_access === true || config.explanations_free_access === 'true')
     if (isFree) return true
+
     const tier = this.resolveUserTier(user)
     
-    if (tier === 'premium') return true // Unlimited for premium (rate limited by Edge Function)
+    // Premium has unlimited usage
+    if (tier === 'premium') return true 
 
+    // Medium uses database credits
     if (tier === 'medium') {
       const { error } = await DataService.useAICredit(user.id)
       return !error

@@ -4,13 +4,13 @@ const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 1000; 
+const TOTAL_QUESTIONS_TO_GENERATE = 15; 
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
 
 // TARGET FOCUS (Set to null for full run)
-const TARGET_EXAM = null;
-const TARGET_SUBJECTS = []; 
+const TARGET_EXAM = 'JAMB';
+const TARGET_SUBJECTS = ['Physics']; 
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -174,7 +174,7 @@ async function saveToDatabase(items) {
                 difficulty: (q.difficulty || 'Medium').charAt(0).toUpperCase() + (q.difficulty || 'Medium').slice(1),
                 group_id: groupId,
                 tags: q.tags || [],
-                explanation: null
+                explanation: q.explanation || null
             });
             originals.push(q);
             knowledgeBase.add(cleanText); // Add instantly to memory block duplicates in same concurrent run

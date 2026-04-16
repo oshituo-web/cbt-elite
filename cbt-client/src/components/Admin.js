@@ -259,6 +259,73 @@ export const AdminComponent = {
                    </button>
                 </div>
               </section>
+
+              <!-- Tier Limits & Pricing Section -->
+              <section>
+                <div style="margin-bottom: 2rem;">
+                  <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="shield-check" style="color: var(--accent-primary);"></i> Tier Management
+                  </h2>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Set session limits and AI credits for each tier</p>
+                </div>
+
+                <div class="glass card" style="padding: 2rem; border-radius: 20px; border-left: 4px solid var(--accent-primary);">
+                   <div style="display: grid; gap: 2rem;">
+                      <!-- Freemium Limits -->
+                      <div>
+                        <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 1rem;">Freemium (Free Tier)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DAILY PRACTICE LIMIT</label>
+                             <input type="number" id="cfg-practice-free" class="glass-input" style="width: 100%;">
+                           </div>
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DAILY EXAM LIMIT</label>
+                             <input type="number" id="cfg-exam-free" class="glass-input" style="width: 100%;">
+                           </div>
+                        </div>
+                      </div>
+
+                      <!-- Medium Limits -->
+                      <div>
+                        <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 1rem;">Medium (Activated Tier)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DAILY PRACTICE LIMIT</label>
+                             <input type="number" id="cfg-practice-med" class="glass-input" style="width: 100%;">
+                           </div>
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DAILY EXAM LIMIT</label>
+                             <input type="number" id="cfg-exam-med" class="glass-input" style="width: 100%;">
+                           </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                           <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DEFAULT AI CREDITS (On Activation)</label>
+                           <input type="number" id="cfg-ai-credits-medium" class="glass-input" style="width: 100%;">
+                        </div>
+                      </div>
+
+                      <!-- Global Pricing -->
+                      <div style="padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                        <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--text-primary); text-transform: uppercase; margin-bottom: 1rem;">Elite Pricing (₦)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">LIFETIME ACCESS</label>
+                             <input type="number" id="cfg-price-lifetime" class="glass-input" style="width: 100%;">
+                           </div>
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">MONTHLY RENEWAL</label>
+                             <input type="number" id="cfg-price-monthly" class="glass-input" style="width: 100%;">
+                           </div>
+                        </div>
+                      </div>
+
+                      <button id="save-limits-btn" class="btn-primary" style="width: 100%; height: 50px; font-weight: 900; border-radius: 12px; margin-top: 1rem;">
+                         <i data-lucide="save" style="width: 18px; margin-right: 0.5rem;"></i> PERSIST TIER CONFIGURATION
+                      </button>
+                   </div>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -464,6 +531,45 @@ export const AdminComponent = {
         }
     }
 
+    const saveLimitsBtn = document.getElementById('save-limits-btn')
+    if (saveLimitsBtn) {
+        saveLimitsBtn.onclick = async () => {
+            saveLimitsBtn.textContent = 'Saving...'
+            saveLimitsBtn.disabled = true
+            
+            const configs = {
+                daily_goal_target: document.getElementById('cfg-daily-goal').value,
+                daily_practice_limit_free: document.getElementById('cfg-practice-free').value,
+                daily_exam_limit_free: document.getElementById('cfg-exam-free').value,
+                daily_practice_limit_medium: document.getElementById('cfg-practice-med').value,
+                daily_exam_limit_medium: document.getElementById('cfg-exam-med').value,
+                ai_credits_initial_medium: document.getElementById('cfg-ai-credits-medium').value,
+                pricing_lifetime: document.getElementById('cfg-price-lifetime').value,
+                pricing_monthly: document.getElementById('cfg-price-monthly').value
+            }
+
+            let hasError = false
+            for (const [key, val] of Object.entries(configs)) {
+                if (val) {
+                    const { error } = await DataService.updateSystemConfig(key, val)
+                    if (error) {
+                        alert(`Error updating ${key}: ${error.message}`)
+                        hasError = true
+                        break
+                    }
+                }
+            }
+
+            if (!hasError) {
+                await DataService.logAdminAction(this._adminProfile.email, 'Update Limits/Pricing', 'global', 'Multiple keys updated')
+                alert('Limits and pricing updated successfully!')
+                this.loadMarketing()
+            }
+            saveLimitsBtn.textContent = 'Persist Limits & Pricing'
+            saveLimitsBtn.disabled = false
+        }
+    }
+
     // Premium Feature Toggles
     const setupToggle = (btnId, configKey) => {
         const btn = document.getElementById(btnId)
@@ -629,12 +735,12 @@ export const AdminComponent = {
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;" title="Edit Question">
-            <i data-lucide="edit-3" style="width: 16px;"></i>
+        <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+          <button class="btn-secondary edit-q-btn" data-id="${q.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Edit Question">
+            <i data-lucide="edit-3" style="width: 14px;"></i> Edit
           </button>
-          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);" title="Delete Question">
-            <i data-lucide="trash-2" style="width: 16px;"></i>
+          <button class="btn-secondary delete-q-btn" data-id="${q.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Delete Question">
+            <i data-lucide="trash-2" style="width: 14px;"></i> Delete
           </button>
         </div>
       </div>
@@ -872,8 +978,8 @@ export const AdminComponent = {
                  <div style="font-size: 0.75rem; color: var(--text-secondary);">${u.email}</div>
                </div>
             </div>
-            <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-               <i data-lucide="settings" style="width: 14px;"></i>
+            <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
+               <i data-lucide="settings" style="width: 12px;"></i> EDIT USER
             </button>
           </div>
 
@@ -944,11 +1050,11 @@ export const AdminComponent = {
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
               <div>
-                <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Access Level</label>
+                <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Tier (Access Level)</label>
                 <select id="edit-user-tier" class="glass-select" style="width: 100%;">
-                  <option value="freemium" ${user.tier === 'freemium' || user.tier === 'free' ? 'selected' : ''}>Free Tier</option>
-                  <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated)</option>
-                  <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Elite Pro (Monthly)</option>
+                  <option value="freemium" ${user.tier === 'freemium' ? 'selected' : ''}>Freemium (Free)</option>
+                  <option value="medium" ${user.tier === 'medium' ? 'selected' : ''}>Medium (Activated Standard)</option>
+                  <option value="premium" ${user.tier === 'premium' ? 'selected' : ''}>Premium (Elite Pro Active)</option>
                 </select>
               </div>
 
@@ -962,10 +1068,11 @@ export const AdminComponent = {
             </div>
 
             <div>
-              <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Elite Subscription Expiry</label>
+              <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Manual Expiry Override</label>
               <div style="position: relative;">
-                <input type="datetime-local" id="edit-user-premium-until" class="glass-input" value="${user.premium_until ? new Date(user.premium_until).toISOString().slice(0, 16) : ''}" style="width: 100%; padding-left: 1rem;">
+                <input type="datetime-local" id="edit-user-expiry" class="glass-input" value="${user.subscription_expiry ? new Date(user.subscription_expiry).toISOString().slice(0, 16) : ''}" style="width: 100%; padding-left: 1rem;">
               </div>
+              <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem;">Select "Premium" above to auto-set 30 days, or override here.</p>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
@@ -990,32 +1097,52 @@ export const AdminComponent = {
             </div>
           </div>
         </div>
-      </div>
-    `
+      `;
     document.body.insertAdjacentHTML('beforeend', modalHtml)
     if (window.lucide) window.lucide.createIcons({ root: document.getElementById('user-edit-overlay') })
 
     document.getElementById('close-user-x').onclick = () => document.getElementById('user-edit-overlay').remove()
+    
+    const tierSelect = document.getElementById('edit-user-tier')
+    const expiryInput = document.getElementById('edit-user-expiry')
+    
+    // Tier Change Helper Logic
+    tierSelect.onchange = () => {
+      const tier = tierSelect.value
+      if (tier === 'premium') {
+          const nextMonth = new Date()
+          nextMonth.setDate(nextMonth.getDate() + 30)
+          expiryInput.value = nextMonth.toISOString().slice(0, 16)
+      } else if (tier === 'medium') {
+          const yesterday = new Date()
+          yesterday.setDate(yesterday.getDate() - 1)
+          expiryInput.value = yesterday.toISOString().slice(0, 16)
+      } else {
+          expiryInput.value = ''
+      }
+    }
+
     document.getElementById('save-user-edit').onclick = async () => {
-      const tier = document.getElementById('edit-user-tier').value
-      const is_activated = document.getElementById('edit-user-activated').checked
-      const ai_credits = parseInt(document.getElementById('edit-user-credits').value)
-      const ai_daily_usage = parseInt(document.getElementById('edit-user-ai-usage').value)
-      const premium_until_val = document.getElementById('edit-user-premium-until').value
-      const premium_until = premium_until_val ? new Date(premium_until_val).toISOString() : null
+      const updates = {
+        tier: tierSelect.value,
+        activation_status: tierSelect.value !== 'freemium',
+        subscription_expiry: expiryInput.value || null,
+        ai_credits: parseInt(document.getElementById('edit-user-credits').value) || 0,
+        ai_daily_usage: parseInt(document.getElementById('edit-user-ai-usage').value) || 0
+      }
       
       const saveBtn = document.getElementById('save-user-edit')
       saveBtn.textContent = 'Saving...'
       saveBtn.disabled = true
       
-      const { error } = await DataService.updateUser(user.id, { tier, is_activated, ai_credits, ai_daily_usage, premium_until })
+      const { error } = await DataService.updateUser(user.id, updates)
       if (error) {
         alert('Error: ' + error.message)
-        saveBtn.textContent = 'Save User'
+        saveBtn.textContent = 'Commit Updates'
         saveBtn.disabled = false
       } else {
         // Log Action
-        await DataService.logAdminAction(this._adminProfile.email, 'Update User', user.id, `Tier: ${tier}, Credits: ${ai_credits}`)
+        await DataService.logAdminAction(this._adminProfile.email, 'Update User', user.id, `Tier: ${updates.tier}, Credits: ${updates.ai_credits}`)
         document.getElementById('user-edit-overlay').remove()
         this.loadUsers()
       }
@@ -1725,12 +1852,12 @@ export const AdminComponent = {
             <h4 style="font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0;">${n.title}</h4>
             <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">${n.summary}</div>
           </div>
-          <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;" title="Edit Article">
-              <i data-lucide="edit-3" style="width: 16px;"></i>
+          <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Edit Article">
+              <i data-lucide="edit-3" style="width: 14px;"></i> Edit
             </button>
-            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--error); border-color: rgba(239, 68, 68, 0.2);" title="Delete Article">
-              <i data-lucide="trash-2" style="width: 16px;"></i>
+            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--error); border-color: rgba(239, 68, 68, 0.2); font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Delete Article">
+              <i data-lucide="trash-2" style="width: 14px;"></i> Delete
             </button>
           </div>
         </div>
@@ -1913,8 +2040,8 @@ export const AdminComponent = {
                       <div style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; letter-spacing: 0.05em;">${c.code}</div>
                       <div style="font-size: 0.75rem; color: var(--success); font-weight: 800; background: rgba(34, 197, 94, 0.1); padding: 2px 8px; border-radius: 4px;">-${c.percent}%</div>
                     </div>
-                    <button class="delete-promo-btn" data-id="${c.id}" style="width: 32px; height: 32px; background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
-                        <i data-lucide="trash-2" style="width: 14px;"></i>
+                    <button class="delete-promo-btn" data-id="${c.id}" style="height: 32px; padding: 0 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
+                        <i data-lucide="trash-2" style="width: 12px;"></i> REVOKE
                     </button>
                 </div>
             `).join('')
@@ -1963,6 +2090,26 @@ export const AdminComponent = {
     await updateBtn('toggle-explanations-btn', 'explanations_free_access')
     await updateBtn('toggle-exams-btn', 'exams_free_access')
     await updateBtn('toggle-ai-tutor-btn', 'ai_tutor_free_access')
+
+    // Populated Numeric/String configs
+    const configsToLoad = [
+        { id: 'cfg-daily-goal', key: 'daily_goal_target' },
+        { id: 'cfg-practice-free', key: 'daily_practice_limit_free' },
+        { id: 'cfg-exam-free', key: 'daily_exam_limit_free' },
+        { id: 'cfg-practice-med', key: 'daily_practice_limit_medium' },
+        { id: 'cfg-exam-med', key: 'daily_exam_limit_medium' },
+        { id: 'cfg-ai-credits-medium', key: 'ai_credits_initial_medium' },
+        { id: 'cfg-price-lifetime', key: 'pricing_lifetime' },
+        { id: 'cfg-price-monthly', key: 'pricing_monthly' }
+    ]
+
+    for (const item of configsToLoad) {
+        const el = document.getElementById(item.id)
+        if (el) {
+            const { data } = await DataService.getSystemConfig(item.key)
+            if (data) el.value = data.value || ''
+        }
+    }
   }
 }
 

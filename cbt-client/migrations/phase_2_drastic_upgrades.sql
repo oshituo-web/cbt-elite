@@ -49,6 +49,8 @@ CREATE OR REPLACE FUNCTION sync_user_performance(
 DECLARE
     v_week_start DATE := date_trunc('week', now())::DATE;
     v_topic RECORD;
+    v_last_session DATE;
+    v_streak INT;
 BEGIN
     -- Update Weekly Summary
     INSERT INTO weekly_summaries (user_id, week_start_date, total_questions_answered, average_score_percentage, total_study_duration_seconds)
@@ -69,6 +71,25 @@ BEGIN
             total_correct = topic_mastery.total_correct + (CASE WHEN v_topic.is_correct THEN 1 ELSE 0 END),
             mastery_percentage = ROUND(((topic_mastery.total_correct + (CASE WHEN v_topic.is_correct THEN 1 ELSE 0 END))::FLOAT / (topic_mastery.total_attempted + 1)::FLOAT) * 100);
     END LOOP;
+
+    -- Update User Streak and Stats
+    SELECT last_session_date, COALESCE(streak_count, 0) INTO v_last_session, v_streak
+    FROM users WHERE id = p_user_id;
+
+    IF v_last_session IS NULL THEN
+        v_streak := 1;
+    ELSIF v_last_session = (CURRENT_DATE - INTERVAL '1 day')::DATE THEN
+        v_streak := v_streak + 1;
+    ELSIF v_last_session < (CURRENT_DATE - INTERVAL '1 day')::DATE THEN
+        v_streak := 1;
+    -- IF v_last_session = CURRENT_DATE, keep v_streak as is
+    END IF;
+
+    UPDATE users SET
+        streak_count = v_streak,
+        last_session_date = CURRENT_DATE,
+        total_questions_answered = COALESCE(total_questions_answered, 0) + p_total_questions
+    WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

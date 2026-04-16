@@ -5,8 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const BATCH_SIZE = 20;          // Questions per batch
-const DELAY_MS = 4000;          // 4 second delay between each question (safe for free tier)
+const BATCH_SIZE = 5;          // Questions per batch
+const DELAY_MS = 2000;          // 2 second delay between each question (safe for free tier)
 const BATCH_PAUSE_MS = 10000;   // 10 second pause between batches
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));

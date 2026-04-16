@@ -2726,3 +2726,248 @@ body.light-mode .option-btn .option-holder {
   border-color: var(--error);
   transform: rotate(90deg);
 }
+
+/* =========================================
+   EXAM INTERFACE & BOTTOM SHEET
+   ========================================= */
+
+.exam-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.exam-header-wrapper {
+  height: auto;
+  min-height: 80px;
+  z-index: 1001;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.exam-header-primary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  height: 60px;
+}
+
+.exam-header-meta {
+  padding: 0.4rem 1.5rem;
+  background: rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+
+.exam-content-wrapper {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 340px; /* Desktop: Content | Sidebar */
+  overflow: hidden;
+  height: calc(100vh - 80px);
+}
+
+.exam-main {
+  overflow-y: auto;
+  padding: 2.5rem;
+  scrollbar-width: thin;
+}
+
+.exam-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-color);
+  border-left: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Mobile specific overrides for bottom sheet */
+@media (max-width: 900px) {
+  .exam-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .exam-sidebar {
+    position: fixed;
+    bottom: -100%; /* Hidden by default */
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 70vh; /* Premium bottom sheet height */
+    z-index: 10000;
+    border-left: none;
+    border-top: 2px solid var(--accent-primary);
+    border-radius: 32px 32px 0 0;
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
+    padding: 2.5rem 1.5rem 1.5rem;
+  }
+
+  /* Handle for the bottom sheet */
+  .exam-sidebar::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 5px;
+    background: var(--glass-border);
+    border-radius: 10px;
+  }
+
+  .exam-sidebar.drawer-open {
+    transform: translateY(-100%);
+    bottom: 0;
+  }
+
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .drawer-overlay.drawer-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .exam-main {
+    padding: 1.5rem;
+  }
+}
+
+/* Question Grid Styling */
+#question-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.q-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-secondary);
+}
+
+.q-circle:hover {
+  transform: scale(1.1);
+  background: rgba(124, 58, 237, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.q-circle.active {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.q-circle.answered {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--accent-primary);
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.q-circle.review {
+  border-style: dashed;
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+/* Accuracy indicators for review mode */
+.q-circle.correct {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.q-circle.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border-color: var(--error);
+}
+
+/* Pinned passage logic */
+#pinned-content-area {
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-right: 1px solid var(--glass-border);
+}
+
+@media (max-width: 900px) {
+  #pinned-content-area {
+    display: none !important;
+  }
+}
+
+/* =========================================
+   DASHBOARD STREAK & ANIMATIONS
+   ========================================= */
+
+@keyframes pulse-flame {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4)); opacity: 0.8; }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.7)); opacity: 1; }
+  100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4)); opacity: 0.8; }
+}
+
+.streak-flame-container.active i {
+  animation: pulse-flame 2s infinite ease-in-out;
+  color: var(--warning) !important;
+}
+
+.streak-flame-container:not(.active) i {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+/* AI Fix Modal Comparison Refinements */
+#ai-fix-overlay .glass {
+  background: rgba(13, 17, 23, 0.8);
+  backdrop-filter: blur(20px);
+}
+
+.pulse {
+  animation: pulse-soft 2s infinite;
+}
+
+@keyframes pulse-soft {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

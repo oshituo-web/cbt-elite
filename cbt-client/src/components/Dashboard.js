@@ -33,7 +33,11 @@ export const DashboardComponent = {
     let systemConfig = {
         explanations_free_access: false,
         exams_free_access: false,
-        ai_tutor_free_access: false
+        ai_tutor_free_access: false,
+        daily_goal_target: 50,
+        pricing_lifetime: '₦1,500',
+        pricing_monthly: '₦1,000',
+        ai_credits_initial_medium: 10
     }
     let isSystemFree = false
 
@@ -46,8 +50,16 @@ export const DashboardComponent = {
         const { data: configs } = await supabase.from('system_config').select('key, value')
         if (configs) {
             configs.forEach(c => {
-                const val = c.value === true || c.value === 'true'
-                if (systemConfig.hasOwnProperty(c.key)) systemConfig[c.key] = val
+                if (systemConfig.hasOwnProperty(c.key)) {
+                  const val = c.value;
+                  if (val === 'true' || val === 'false') {
+                    systemConfig[c.key] = (val === 'true')
+                  } else if (!isNaN(val) && val !== '') {
+                    systemConfig[c.key] = Number(val)
+                  } else {
+                    systemConfig[c.key] = val
+                  }
+                }
             })
         }
         isSystemFree = systemConfig.explanations_free_access // For legacy checks
@@ -89,7 +101,7 @@ export const DashboardComponent = {
         accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
     }
     
-    const dailyGoalLimit = 50
+    const dailyGoalLimit = systemConfig.daily_goal_target || 50
     const dailyGoalPct = Math.min((todayQuestions / dailyGoalLimit) * 100, 100)
     
     // Determine Achievements
@@ -142,21 +154,41 @@ export const DashboardComponent = {
         <!-- Dynamic Tier-Based UI -->
         ${(() => {
           const subState = SubscriptionManager.getUserSubscriptionState(profile, isSystemFree);
+          
+          // Hidden for active premium users with plenty of time
           if (subState.tier === "premium" && subState.daysRemaining > 5) return '';
 
+          let title = "Activate Full Access";
+          let subtitle = "Unlock all subjects and AI explanations.";
+          let btnText = `Upgrade – ${systemConfig.pricing_lifetime || '₦1,500'}`;
+          let borderStyle = 'var(--accent-primary)';
+          let btnBg = 'var(--primary)';
+
+          if (subState.tier === 'medium') {
+              title = "Membership Standard";
+              subtitle = `Your Elite subscription expired. You have ${profile.ai_credits || 0} AI credits remaining.`;
+              btnText = "Renew Premium";
+              borderStyle = 'var(--accent-secondary)';
+              btnBg = 'var(--accent-secondary)';
+          } else if (subState.isExpired || (subState.tier === 'premium' && subState.daysRemaining <= 5)) {
+              title = subState.daysRemaining <= 5 ? "Expiring Soon" : "Premium Expired";
+              subtitle = subState.daysRemaining <= 5 
+                ? `Your Elite access ends in ${subState.daysRemaining} days. Renew now to stay ahead.` 
+                : "Renew now to restore unlimited sessions and AI features.";
+              btnText = "Renew Now";
+              borderStyle = subState.daysRemaining <= 5 ? 'var(--warning)' : 'var(--error)';
+              btnBg = subState.daysRemaining <= 5 ? 'var(--warning)' : 'var(--error)';
+          }
+
           return `
-            <div class="glass card scale-in mb-md" style="padding: 1rem; border: 1.5px solid ${subState.isExpired ? 'var(--error)' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? 'var(--warning)' : 'var(--accent-primary)')};">
+            <div class="glass card scale-in mb-md" style="padding: 1rem; border: 1.5px solid ${borderStyle}; background: linear-gradient(90deg, ${borderStyle}05 0%, transparent 100%);">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div style="flex: 1; min-width: 200px;">
-                  <h4 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem;">
-                    ${subState.isExpired ? 'Premium Expired' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? 'Expiring Soon' : 'Activate Full Access')}
-                  </h4>
-                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
-                    ${subState.isExpired ? 'Renew now to restore full AI access.' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? `Your access ends in ${subState.daysRemaining} days.` : 'Unlock all subjects and AI explanations.')}
-                  </p>
+                  <h4 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem;">${title}</h4>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">${subtitle}</p>
                 </div>
-                <button class="btn-dominant" style="height: 44px; padding: 0 1.25rem; font-size: 0.9rem; min-width: 140px; background: ${subState.isExpired ? 'var(--error)' : (subState.daysRemaining <= 5 && subState.tier === 'premium' ? 'var(--warning)' : 'var(--primary)')};" onclick="document.getElementById('upgrade-modal').style.display='flex'">
-                  ${subState.isActivated ? 'Renew Now' : 'Upgrade – ₦1,500'}
+                <button class="btn-dominant" style="height: 44px; padding: 0 1.25rem; font-size: 0.9rem; min-width: 140px; background: ${btnBg};" onclick="document.getElementById('upgrade-modal').style.display='flex'">
+                  ${btnText}
                 </button>
               </div>
             </div>
@@ -338,12 +370,13 @@ export const DashboardComponent = {
           <div style="display: flex; flex-direction: column; gap: 1rem;">
             <div class="glass card" style="padding: 1.25rem; border: 2px solid var(--accent-primary); background: rgba(37, 99, 235, 0.05);">
               <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">LIFETIME ACCESS</h4>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-primary); margin: 0.4rem 0;">₦1,500</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-primary); margin: 0.4rem 0;">${systemConfig.pricing_lifetime}</div>
               <button id="pay-lifetime-btn" class="btn-dominant" style="width: 100%; height: 48px;">ACTIVATE NOW</button>
             </div>
             <div class="glass card" style="padding: 1.25rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
               <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">MONTHLY RENEWAL</h4>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-secondary); margin: 0.4rem 0;">₦1,000</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-secondary); margin: 0.4rem 0;">${typeof systemConfig.pricing_monthly === 'number' ? '₦' + systemConfig.pricing_monthly : systemConfig.pricing_monthly}</div>
+              <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Unlimited AI & Unlimited Sessions</p>
               <button id="pay-monthly-btn" class="btn-dominant" style="width: 100%; height: 48px; background: var(--accent-secondary);">RENEW NOW</button>
             </div>
           </div>
@@ -401,10 +434,16 @@ export const DashboardComponent = {
                    const { error } = await DataService.subscribeUser(profile.id, 'monthly')
                    rpcError = error
                 }
-                if (!rpcError) {
-                    alert(`Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`)
-                    location.reload()
-                } else { alert("Upgrade failed. Contact support.") }
+                 if (!rpcError) {
+                     // If first time activation, also grant initial credits if configured
+                     if (isFirstTime && systemConfig.ai_credits_initial_medium > 0) {
+                        await DataService.updateUser(profile.id, { 
+                          ai_credits: systemConfig.ai_credits_initial_medium 
+                        })
+                     }
+                     alert(`Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`)
+                     location.reload()
+                 } else { alert("Upgrade failed. Contact support.") }
             },
             onClose: () => alert('Transaction cancelled.')
         })

@@ -1,5 +1,6 @@
 import { supabase } from '../utils/supabase'
 import { IndexedDbService } from './indexedDbService'
+import { AiService } from './aiService'
 
 export const DataService = {
   supabase,
@@ -225,6 +226,29 @@ export const DataService = {
       created_at: s.completed_at
     })) : []
 
+    const { data: statsData } = await supabase
+      .from('user_responses')
+      .select('is_correct, time_spent_seconds, questions(subject)')
+      .eq('user_id', userId)
+
+    const stats = {
+      overall: { total: 0, correct: 0, time: 0 },
+      bySubject: {}
+    }
+
+    if (statsData) {
+      statsData.forEach(r => {
+        const sub = r.questions?.subject || 'General'
+        stats.overall.total++
+        if (r.is_correct) stats.overall.correct++
+        stats.overall.time += (r.time_spent_seconds || 0)
+
+        if (!stats.bySubject[sub]) stats.bySubject[sub] = { total: 0, correct: 0 }
+        stats.bySubject[sub].total++
+        if (r.is_correct) stats.bySubject[sub].correct++
+      })
+    }
+
     const { data: masteryData, error: mError } = await supabase
       .from('topic_mastery')
       .select('subject, mastery_percentage, total_attempted')
@@ -246,7 +270,7 @@ export const DataService = {
       total_attempted: subjectMap[sub].total_attempted
     }))
 
-    return { history, mastery: processedMastery, error: hError || mError }
+    return { history, mastery: processedMastery, stats, error: hError || mError }
   },
 
   async getReadinessScore(userId, subjectName) {
@@ -354,26 +378,12 @@ export const DataService = {
 
     // --- AI SERVICES ---
     async getAIExplanation(question, selectedId = null) {
-      const correctAns = question.answers?.find(a => a.is_correct)
-      const selectedAns = selectedId ? question.answers?.find(a => a.id === selectedId) : null
-
       try {
-        const { data, error } = await supabase.functions.invoke('gemini-api', {
-          body: { 
-            action: 'explain', 
-            payload: { 
-              questionText: question.question_text,
-              correctAnswer: correctAns?.option_text || 'Unknown',
-              studentAnswer: selectedAns?.option_text || 'Skipped'
-            } 
-          }
-        })
-        if (error) throw error
-
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
-        const jsonMatch = text.match(/\{.*\}/s)
-        const aiResult = JSON.parse(jsonMatch ? jsonMatch[0] : text)
-        return { explanation: aiResult.explanation }
+        const correctAns = question.answers?.find(a => a.is_correct)
+        const correctId = correctAns?.id || 'unknown'
+        
+        const explanation = await AiService.getDeepExplanation(question, selectedId, correctId)
+        return { explanation }
       } catch (err) {
         console.error("AI Error:", err)
         return { explanation: "Our AI Tutor is currently busy. Please try again in a few moments." }
@@ -474,6 +484,10 @@ export const DataService = {
     }).eq('id', userId)
   },
 
+  async updateUser(userId, updates) {
+    return await supabase.from('users').update(updates).eq('id', userId).select()
+  },
+
   // --- ADMIN: SYLLABUS ---
   async getFullSyllabus() {
     const { data, error } = await supabase
@@ -505,6 +519,10 @@ export const DataService = {
   },
 
   // --- ADMIN: QUESTIONS ---
+  async updateQuestion(id, updates) {
+    return await supabase.from('questions').update(updates).eq('id', id)
+  },
+
   async deleteQuestion(id) {
     return await supabase.from('questions').delete().eq('id', id)
   },
@@ -642,13 +660,11 @@ export const DataService = {
 
   async aiRegenerateQuestion(qid, reason, details) {
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-api', {
-        body: { 
-          action: 'repair', 
-          payload: { qid, reason, details } 
-        }
-      })
-      if (error) throw error
+      // Fetch question context first
+      const { data: q } = await supabase.from('questions').select('question_text').eq('id', qid).single()
+      if (!q) throw new Error("Question not found")
+
+      const data = await AiService.repairQuestion(q.question_text, reason, details)
       return { data, error: null }
     } catch (err) {
       return { data: null, error: err.message }

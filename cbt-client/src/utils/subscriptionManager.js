@@ -1,9 +1,15 @@
 export const SubscriptionManager = {
+  /**
+   * 🗺️ Strict Tier Model Resolution
+   * freemium: Not activated
+   * medium: Activated but subscription expired (grace access)
+   * premium: Activated and Active
+   */
   getUserSubscriptionState(user, isSystemFree = false) {
     const state = {
       tier: 'freemium',
       isActivated: false,
-      premiumUntil: null,
+      subscriptionExpiry: null,
       daysRemaining: 0,
       isExpired: false,
       shouldShowRenewCTA: false,
@@ -22,9 +28,11 @@ export const SubscriptionManager = {
       return state;
     }
 
-    // 🔥 FIX: Map to correct DB columns (activation_status and subscription_expiry)
-    state.isActivated = !!user.activation_status;
-    state.premiumUntil = user.subscription_expiry ? new Date(user.subscription_expiry) : null;
+    // Standardize database column mapping
+    // Handle aliases like 'premium_until' or 'subscription_expiry'
+    state.isActivated = !!(user.activation_status || user.is_activated);
+    const expiryDate = user.subscription_expiry || user.premium_until || user.subscription_until;
+    state.subscriptionExpiry = expiryDate ? new Date(expiryDate) : null;
 
     if (!state.isActivated) {
       state.tier = 'freemium';
@@ -32,24 +40,18 @@ export const SubscriptionManager = {
       state.shouldShowRenewCTA = false;
     } else {
       const now = new Date();
-      if (state.premiumUntil && now < state.premiumUntil) {
+      if (state.subscriptionExpiry && now < state.subscriptionExpiry) {
         state.tier = 'premium';
         
-        // Calculate days remaining
-        const diffTime = Math.abs(state.premiumUntil - now);
+        const diffTime = Math.abs(state.subscriptionExpiry - now);
         state.daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        if (state.daysRemaining <= 5) {
-          state.shouldShowRenewCTA = true;
-        } else {
-          state.shouldShowRenewCTA = false;
-        }
+        state.shouldShowRenewCTA = state.daysRemaining <= 5;
         state.shouldShowActivateCTA = false;
       } else {
-        state.tier = 'medium'; // Activated but premium expired
-        if (state.premiumUntil) {
-           state.isExpired = true;
-        }
+        // Activated but expired = Medium Tier
+        state.tier = 'medium'; 
+        state.isExpired = !!state.subscriptionExpiry;
         state.shouldShowRenewCTA = true;
         state.shouldShowActivateCTA = false;
       }

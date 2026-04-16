@@ -12,19 +12,23 @@ export const AnalyticsComponent = {
     `
 
     try {
-      const { data: analytics, error } = await DataService.getUserAnalytics(profile.id)
+      const { history, mastery, stats, error } = await DataService.getUserAnalytics(profile.id)
       if (error) throw error
 
-      const stats = analytics.stats || { overall: { total: 0, correct: 0, time: 0 }, bySubject: {} }
-      const history = analytics.history || []
-      const mastery = analytics.mastery || []
-      
+      // 1. Fetch System Config for Free Access Toggles (Check all major features)
+      const { data: configs } = await DataService.getGlobalConfigs([
+        'explanations_free_access', 
+        'exams_free_access', 
+        'ai_tutor_free_access'
+      ]);
+      const isSystemFree = configs?.some(c => c.value === true || c.value === 'true');
+
       const accuracy = stats.overall.total > 0 ? Math.round((stats.overall.correct / stats.overall.total) * 100) : 0
       const hours = (stats.overall.time / 3600).toFixed(1)
 
-      // 1. Premium Gating check
-      const state = SubscriptionService.resolveUserTier(profile)
-      const isPremium = state === 'premium' || profile.is_activated
+      // 2. Premium Gating check (Includes system-wide free mode)
+      const state = SubscriptionService.resolveUserTier(profile, isSystemFree)
+      const isPremium = state === 'premium' || profile.is_activated || isSystemFree
 
       container.innerHTML = `
         <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative;">

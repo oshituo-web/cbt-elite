@@ -4,7 +4,8 @@
  */
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const GEMINI_MODEL = "gemini-1.5-flash"
+const GEMINI_MODEL = "gemini-1.5-flash-latest"
+const BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`
 
 export const AiService = {
   /**
@@ -60,7 +61,7 @@ export const AiService = {
     `
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +110,7 @@ export const AiService = {
     `;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -170,7 +171,7 @@ export const AiService = {
      `;
 
      try {
-       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+       const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({
@@ -187,5 +188,62 @@ export const AiService = {
        console.error("AI Performance Error:", err);
        return shortVersion ? "AI Synthesis unavailable right now." : "<p style='color:var(--error);'>Could not load AI synthesis at this time.</p>";
      }
+  },
+
+  /**
+   * AI-powered question repair for administrators.
+   */
+  async repairQuestion(questionText, reason, details) {
+    if (!GEMINI_API_KEY) {
+      throw new Error("Elite AI Repair engine offline.");
+    }
+
+    const prompt = `
+      You are "Elite AI", a content auditor.
+      An academic question has been reported for: "${reason}".
+      Student Feedback: "${details}"
+      
+      ORIGINAL QUESTION: ${questionText}
+      
+      TASK: 
+      1. Correct any errors (factual, grammatical, or formatting).
+      2. Ensure exactly 4 clear options (A, B, C, D).
+      3. Identify the correct option.
+      4. Provide a robust pedagogical explanation.
+      
+      RETURN ONLY A JSON OBJECT with these keys:
+      {
+        "question_text": "...",
+        "option_a": "...",
+        "option_b": "...",
+        "option_c": "...",
+        "option_d": "...",
+        "correct_option": "A" | "B" | "C" | "D",
+        "explanation": "..."
+      }
+      Do not include any other text or markdown backticks.
+    `;
+
+    try {
+      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1200 }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`AI Repair service unavailable (HTTP ${response.status}: ${errorData.error?.message || 'Unknown Error'})`);
+      }
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      return JSON.parse(text);
+    } catch (err) {
+      console.error("AI Repair Error:", err);
+      throw err;
+    }
   }
 }

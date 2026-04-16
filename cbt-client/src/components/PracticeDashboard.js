@@ -146,13 +146,19 @@ export const PracticeDashboardComponent = {
       
       try {
         // Fetch system config for subscription check
-        const { data: configs, error: configError } = await DataService.getGlobalConfigs(['explanations_free_access'])
+        const { data: configs, error: configError } = await DataService.getGlobalConfigs([
+          'explanations_free_access',
+          'exams_free_access',
+          'ai_tutor_free_access',
+          'daily_practice_limit_free',
+          'daily_practice_limit_medium'
+        ])
         if (configError) throw new Error("Failed to load configuration");
 
-        const systemConfig = { explanations_free_access: false }
+        const systemConfig = {}
         if (configs) {
           configs.forEach(c => {
-            if (c.key === 'explanations_free_access') systemConfig.explanations_free_access = c.value === true || c.value === 'true'
+            systemConfig[c.key] = c.value
           })
         }
 
