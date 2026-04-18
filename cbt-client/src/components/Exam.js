@@ -192,10 +192,7 @@ export class Exam {
                 <i data-lucide="chevron-left"></i>
               </button>
               <span id="display-exam-type" class="badge-exam">...</span>
-            </div>
-
-            <div class="header-center">
-              <div id="q-meta" class="q-counter-mini">1 of 0</div>
+              <div id="q-meta" class="q-counter-mini" style="margin-left: 0.5rem; opacity: 0.8; font-size: 0.75rem;">1 of 0</div>
             </div>
 
             <div class="header-right">
@@ -244,8 +241,8 @@ export class Exam {
 
             <div class="exam-footer" style="margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
               <div style="display: flex; gap: 1rem;">
-                <button id="prev-btn" class="btn-secondary" style="height: 48px; padding: 0 1.25rem; font-weight: 800;">PREVIOUS</button>
-                <button id="next-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 900;">NEXT QUESTION</button>
+                <button id="prev-btn" class="btn-secondary" style="height: 54px; padding: 0 1.5rem; font-weight: 800;">PREVIOUS</button>
+                <button id="next-btn" class="btn-primary" style="height: 54px; padding: 0 2rem; font-weight: 900; min-width: 160px;">NEXT QUESTION <i data-lucide="chevron-right" style="width: 18px; margin-left: 0.5rem;"></i></button>
               </div>
               
               <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
@@ -258,9 +255,9 @@ export class Exam {
 
           <!-- Sidebar Navigation -->
           <div class="drawer-overlay" id="exam-drawer-overlay"></div>
-          <div class="exam-sidebar glass" id="exam-sidebar" style="padding: 2rem; border-left: 1px solid var(--glass-border);">
+          <div class="exam-sidebar glass" id="exam-sidebar">
             <div style="font-weight: 900; margin-bottom: 1.5rem; font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary); font-family: 'Outfit';">Question Map</div>
-            <div id="question-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem;"></div>
+            <div id="question-grid"></div>
             
             <div style="margin-top: auto; padding-top: 2rem;">
               <div class="progress-v2-container" style="margin-bottom: 0.75rem;">
@@ -465,6 +462,12 @@ export class Exam {
         sidebar.classList.remove('drawer-open')
         overlay.classList.remove('drawer-open')
       }
+    }
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+      // Also target the root explicitly just in case
+      window.lucide.createIcons({ root: container });
     }
   }
 

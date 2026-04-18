@@ -2,7 +2,7 @@ import { DataService } from '../services/data'
 import { SubscriptionService } from '../services/subscriptionService'
 
 export const AnalyticsComponent = {
-  async render(profile, onBack) {
+  async render(profile, onBack, onStartPractice) {
     const container = document.getElementById('analytics-container')
     container.style.display = 'block'
     container.innerHTML = `
@@ -48,9 +48,14 @@ export const AnalyticsComponent = {
               <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: 2.25rem; color: var(--text-primary); margin: 0;">Elite Insights</h1>
               <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; margin-top: 0.25rem;">Advanced Performance Analytics & Mastery</p>
             </div>
-            <button id="analytics-back-btn" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700;">
-               <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> DASHBOARD
-            </button>
+            <div style="display: flex; gap: 0.75rem;">
+                <button id="show-recap-btn" class="glass-btn" style="height: 48px; border: 1.5px solid var(--accent-primary); color: var(--accent-primary); padding: 0 1.5rem; font-weight: 700; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; background: rgba(37, 99, 235, 0.05);">
+                    <i data-lucide="bar-chart-2" style="width: 18px;"></i> RECAP
+                </button>
+                <button id="analytics-back-btn" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700;">
+                    <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> DASHBOARD
+                </button>
+            </div>
           </header>
 
           <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''}">
@@ -75,6 +80,23 @@ export const AnalyticsComponent = {
                 <div style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: var(--text-primary);">${hours}h</div>
                 <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Equivalent to ${Math.round(hours/1.5)} Full Sessions</div>
               </div>
+
+              <div class="glass card" style="padding: 2rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03);">
+                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1rem;">Projected JAMB Score</div>
+                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: #f59e0b;">...</div>
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Based on weighted subject mastery</div>
+              </div>
+            </div>
+
+            <!-- TODAY'S FOCUS CARD -->
+            <div id="ai-today-focus-card" class="glass card scale-in" style="padding: 1.5rem 2rem; margin-bottom: 2rem; border-left: 4px solid var(--accent-primary); display: none; align-items: center; gap: 1.5rem; background: rgba(37, 99, 235, 0.05);">
+               <div style="background: var(--accent-primary); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);">
+                  <i data-lucide="zap" style="color: white; width: 22px;"></i>
+               </div>
+               <div>
+                  <h4 style="font-family: 'Outfit'; font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">Elite Recommendation for Today</h4>
+                  <p id="ai-today-focus-text" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0; line-height: 1.4;">Calculating your focus points...</p>
+               </div>
             </div>
 
             <!-- ELITE AI SYNTHESIS -->
@@ -130,6 +152,7 @@ export const AnalyticsComponent = {
                     <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Topic</th>
                     <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Proficiency</th>
                     <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Status</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,12 +169,17 @@ export const AnalyticsComponent = {
                         </div>
                       </td>
                       <td style="padding: 1.25rem 1rem;">
-                        <span class="badge" style="background: ${m.mastery_percentage > 70 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${m.mastery_percentage > 70 ? 'var(--success)' : 'var(--text-secondary)'}; font-size: 0.7rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 6px; background: ${m.mastery_percentage > 70 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${m.mastery_percentage > 70 ? 'var(--success)' : 'var(--text-secondary)'};">
                           ${m.mastery_percentage > 70 ? 'MASTERED' : 'LEARNING'}
                         </span>
                       </td>
+                      <td style="padding: 1.25rem 1rem;">
+                        <button class="topic-dive-trigger btn-secondary" data-topic="${m.topic}" data-subject="${m.subject}" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 800; border-radius: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary); min-width: 100px;">
+                          DEEP DIVE
+                        </button>
+                      </td>
                     </tr>
-                  `).join('') : `<tr><td colspan="4" style="text-align:center; padding: 3rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
+                  `).join('') : `<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
                 </tbody>
               </table>
             </div>
@@ -164,6 +192,38 @@ export const AnalyticsComponent = {
 
       // 2. Attach Listeners
       document.getElementById('analytics-back-btn').onclick = onBack
+      
+      const recapBtn = document.getElementById('show-recap-btn');
+      if (recapBtn) {
+          recapBtn.onclick = () => {
+             if (typeof window.navigateTo === 'function') {
+                 window.navigateTo('recap', profile);
+             }
+          };
+      }
+
+      document.querySelectorAll('.topic-dive-trigger').forEach(btn => {
+          btn.onclick = async () => {
+              const { topic, subject } = btn.dataset;
+              btn.disabled = true;
+              btn.innerHTML = '<div class="loader-spinner" style="width:14px; height:14px;"></div>';
+              
+              const { TopicDeepDiveComponent } = await import('./TopicDeepDive');
+              TopicDeepDiveComponent.render(topic, subject, profile, async () => {
+                  // This is the "Master this Topic" callback
+                  const { data: questions } = await DataService.getPracticeQuestions(subject, topic, 10);
+                  if (questions && questions.length > 0) {
+                      onStartPractice(questions, 'practice', subject, 'Practice');
+                  } else {
+                      alert("Not enough questions found for a focused session yet.");
+                  }
+              });
+              
+              btn.disabled = false;
+              btn.innerHTML = 'DEEP DIVE';
+          };
+      });
+
       const upgradeBtn = document.getElementById('insights-upgrade-btn')
       if (upgradeBtn) {
         upgradeBtn.onclick = () => {
@@ -174,9 +234,26 @@ export const AnalyticsComponent = {
       // 3. Lucide Icons
       if (window.lucide) window.lucide.createIcons({ root: container })
 
-      // 4. Lazy Load Full AI Synthesis
+      // 4. Lazy Load Full AI Synthesis & Predictive Metrics
       if (isPremium) {
         import('../services/aiService').then(async ({ AiService }) => {
+            const analytics = { history, mastery, stats };
+            
+            // Set Projected Score
+            const projectedScore = AiService.getPredictedJAMBScore(analytics);
+            const scoreEl = document.getElementById('projected-score-display');
+            if (scoreEl) scoreEl.textContent = projectedScore > 0 ? `${projectedScore}/400` : 'Baseline Needed';
+
+            // Set Today's Focus
+            const focusCard = document.getElementById('ai-today-focus-card');
+            const focusText = document.getElementById('ai-today-focus-text');
+            if (focusCard && focusText) {
+                focusCard.style.display = 'flex';
+                const focus = await AiService.generateTodayFocus(analytics);
+                focusText.textContent = focus;
+                if (window.lucide) window.lucide.createIcons({ root: focusCard });
+            }
+
             try {
                 const synthesis = await AiService.getAIPerformanceSummary(analytics, false);
                 const el = document.getElementById('analytics-ai-synthesis');

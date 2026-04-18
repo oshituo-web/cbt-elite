@@ -75,6 +75,15 @@ export const ExamsDashboardComponent = {
           
           <div id="jamb-exam-config" style="display: none;">
               <p style="margin-bottom: 1rem; color: var(--accent-secondary); font-weight: 600; font-size: 0.9rem;">English + 3 additional subjects.</p>
+              
+              <div id="combo-templates" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                <span style="font-size: 0.7rem; color: var(--text-secondary); width: 100%; font-weight: 800; text-transform: uppercase;">Quick Select Combo</span>
+                <button class="combo-btn glass" data-combo="Physics,Chemistry,Biology" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Medicine/Science</button>
+                <button class="combo-btn glass" data-combo="Mathematics,Physics,Chemistry" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Engineering</button>
+                <button class="combo-btn glass" data-combo="Literature in English,Government,Christian Religious Studies" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Law/Arts</button>
+                <button class="combo-btn glass" data-combo="Economics,Government,Mathematics" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Social Sciences</button>
+              </div>
+
               <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; max-height: 250px; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border); width: 100%; box-sizing: border-box;">
                  <div class="loader-spinner"></div>
               </div>
@@ -97,6 +106,19 @@ export const ExamsDashboardComponent = {
           </div>
 
           <button id="e-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 50px; background: var(--accent-gradient);">Begin Mock Exam</button>
+        </div>
+
+        <!-- Mock History Section -->
+        <div id="mock-history-section" style="margin-top: 4rem;">
+            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; color: var(--text-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                Mock Performance History
+            </h2>
+            <div id="mock-history-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
+                <div style="grid-column: 1/-1; padding: 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                    Loading your mock history...
+                </div>
+            </div>
         </div>
       </div>
     `
@@ -165,6 +187,20 @@ export const ExamsDashboardComponent = {
                   lbl.style.background = input.checked ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.05)';
                   lbl.style.borderColor = input.checked ? 'var(--accent-secondary)' : 'var(--glass-border)';
               }
+          });
+
+          // Handle Combo Templates
+          configSection.querySelectorAll('.combo-btn').forEach(btn => {
+              btn.onclick = () => {
+                  const combo = btn.dataset.combo.split(',');
+                  const inputs = subList.querySelectorAll('input');
+                  inputs.forEach(input => {
+                      input.checked = combo.includes(input.value);
+                      const lbl = input.closest('label');
+                      lbl.style.background = input.checked ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.05)';
+                      lbl.style.borderColor = input.checked ? 'var(--accent-secondary)' : 'var(--glass-border)';
+                  });
+              };
           });
         } else {
           jambConfig.style.display = 'none'
@@ -248,6 +284,44 @@ export const ExamsDashboardComponent = {
 
     const backBtn = document.getElementById('exams-back-btn')
     if (backBtn) backBtn.onclick = () => window.navigateTo('dashboard')
+
+    this.loadHistory()
+  },
+
+  async loadHistory() {
+    const list = document.getElementById('mock-history-list')
+    if (!list) return
+
+    const { data: history, error } = await DataService.getMockHistory(this.profile.id, 'JAMB')
+    if (error || !history || history.length === 0) {
+        list.innerHTML = `
+            <div style="grid-column: 1/-1; padding: 3rem; text-align: center; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--glass-border);">
+                <p style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">No full mock sessions found yet.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">Complete a 180-question simulation to see your history here.</p>
+            </div>
+        `
+        return
+    }
+
+    list.innerHTML = history.map(session => {
+        const date = new Date(session.completed_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+        const score = session.score_percentage || 0;
+        const color = score >= 70 ? 'var(--success)' : score >= 50 ? 'var(--accent-primary)' : 'var(--error)';
+        
+        return `
+            <div class="glass card scale-in" style="padding: 1.5rem; border-left: 4px solid ${color};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">${date}</span>
+                    <span style="font-size: 0.8rem; font-weight: 900; color: ${color}; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;">${score}%</span>
+                </div>
+                <h4 style="font-family: 'Outfit'; font-size: 1.1rem; color: var(--text-primary); margin: 0 0 0.5rem 0;">JAMB Mock Session</h4>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span>${session.total_questions} Questions • ${Math.round(session.time_spent / 60)} mins</span>
+                </div>
+            </div>
+        `
+    }).join('')
   },
 
   hide() {

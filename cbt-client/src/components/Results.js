@@ -8,15 +8,28 @@ export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
-    container.innerHTML = `
-      <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
-        <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
-        <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Analyzing your scores</h2>
-        <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem;">Saving progress...</p>
-      </div>
-    `
+    try {
+      container.innerHTML = `
+        <div class="glass card scale-in" style="width: min(800px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
+          <div class="loader-spinner mb-lg" style="margin: 0 auto; width: 48px; height: 48px;"></div>
+          <h2 style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Analyzing your scores</h2>
+          <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem;">Saving progress...</p>
+        </div>
+      `
+    } catch (err) {
+      console.error("FATAL: Results rendering crashed:", err)
+      container.innerHTML = `
+        <div class="glass card scale-in" style="width: min(500px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
+          <h2 style="font-family: 'Outfit'; color: var(--error);">Something went wrong</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">We couldn't process your results, but your progress was saved.</p>
+          <button class="btn-primary" onclick="location.reload()">Return to Dashboard</button>
+        </div>
+      `
+      return
+    }
 
-    let systemConfig = {
+    try {
+      let systemConfig = {
         explanations_free_access: false,
         exams_free_access: false,
         ai_tutor_free_access: false
@@ -44,11 +57,14 @@ export const ResultsComponent = {
 
     const scorePercent = objQuestions.length > 0 ? Math.round((correct / objQuestions.length) * 100) : 0
     
+    const answeredCount = Object.values(userAnswers || {}).filter(a => a !== null && a !== "").length;
+    
     if (profile && profile.id) {
         DataService.saveExamSession(profile.id, {
             session_type: mode,
             subject: subject || 'Various',
             total_questions: questions.length,
+            answered_questions: answeredCount,
             correct_answers: correct,
             time_taken_seconds: timeTaken,
             score_percentage: scorePercent
@@ -60,21 +76,26 @@ export const ResultsComponent = {
     // 🔥 FIX: Calculate stats purely from THIS session data
     const statsGroup = {};
     objQuestions.forEach((q) => {
-        const qIdx = questions.indexOf(q);
-        const selectedId = userAnswers[qIdx];
-        const correctAnswer = q.answers.find(a => a.is_correct);
-        const isCorrect = selectedId === correctAnswer?.id;
-        
-        let label = q.topic || q.subject || 'General';
-        // For JAMB mock, group by subject if multiple
-        if (isJambMock && q.subject) label = q.subject;
-        
-        if (!statsGroup[label]) {
-            statsGroup[label] = { total: 0, correct: 0 };
-        }
-        statsGroup[label].total++;
-        if (isCorrect) {
-            statsGroup[label].correct++;
+        try {
+            const qIdx = questions.indexOf(q);
+            const selectedId = userAnswers[qIdx];
+            const answers = q.answers || []; // Defensive check
+            const correctAnswer = answers.find(a => a.is_correct);
+            const isCorrect = selectedId && correctAnswer && selectedId === correctAnswer.id;
+            
+            let label = q.topic || q.subject || 'General';
+            // For JAMB mock, group by subject if multiple
+            if (isJambMock && q.subject) label = q.subject;
+            
+            if (!statsGroup[label]) {
+                statsGroup[label] = { total: 0, correct: 0 };
+            }
+            statsGroup[label].total++;
+            if (isCorrect) {
+                statsGroup[label].correct++;
+            }
+        } catch (e) {
+            console.warn("Topic calculation failed for question:", q.id, e);
         }
     });
 
@@ -112,6 +133,35 @@ export const ResultsComponent = {
               <div style="font-size: clamp(2.5rem, 12vw, 4rem); font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
               <div style="font-size: 1.2rem; color: var(--text-primary); margin-top: 0.75rem; font-weight: 800;">${scorePercent}% Accuracy</div>
             </div>
+          </div>
+
+          <!-- ELITE REWARDS (COINS) -->
+          <div class="glass card scale-in mb-md" style="padding: 1.25rem; border: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+               <div style="background: rgba(245, 158, 11, 0.15); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; border: 2px solid #f59e0b;">
+                 <i data-lucide="coins" style="width: 24px;"></i>
+               </div>
+               <div style="text-align: left;">
+                 <h4 style="font-family: 'Outfit'; font-weight: 800; font-size: 1rem; color: var(--text-primary); margin: 0;">Elite Rewards</h4>
+                 <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Performance-based earnings</p>
+               </div>
+            </div>
+            <div style="text-align: right;">
+               <div style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: #f59e0b; line-height: 1;">+${Math.floor((objQuestions.length * (scorePercent / 100)) / 2)}</div>
+               <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary);">ELITE COINS</div>
+            </div>
+            ${(() => {
+                const currentDaily = profile?.daily_questions_count || 0;
+                if (currentDaily < 50 && currentDaily + answeredCount >= 50) {
+                    return `
+                    <div style="flex-basis: 100%; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(245, 158, 11, 0.2); text-align: left; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="star" style="width: 14px; color: var(--warning); fill: var(--warning);"></i>
+                        <span style="font-size: 0.75rem; font-weight: 800; color: #f59e0b;">DAILY GOAL HIT! +50 BONUS COINS</span>
+                    </div>
+                    `;
+                }
+                return '';
+            })()}
           </div>
 
           <!-- PERFORMANCE FOR THIS SESSION -->
@@ -204,6 +254,17 @@ export const ResultsComponent = {
     const backBtn = document.getElementById('results-back-btn')
     if (backBtn) backBtn.onclick = () => onBack ? onBack() : location.reload()
 
-    if (window.lucide) window.lucide.createIcons();
+      if (window.lucide) window.lucide.createIcons();
+
+    } catch (err) {
+      console.error("Results component fatal error:", err);
+      container.innerHTML = `
+        <div class="glass card scale-in" style="width: min(500px, 92vw); margin: 3rem auto; padding: 2.5rem 1rem; text-align: center;">
+          <h2 style="font-family: 'Outfit'; color: var(--error);">Something went wrong</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">We couldn't display your scores properly, but your exam has been saved.</p>
+          <button class="btn-primary" onclick="location.reload()">Return to Dashboard</button>
+        </div>
+      `;
+    }
   }
 }

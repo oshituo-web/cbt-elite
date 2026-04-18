@@ -1130,52 +1130,6 @@ h1 {
     font-size: 1.25rem !important;
   }
 
-  .exam-layout {
-    flex-direction: column;
-    height: auto;
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  .exam-main {
-    padding: 1rem;
-    height: auto;
-  }
-
-  .exam-sidebar {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 85%;
-    max-width: 350px;
-    height: 100vh;
-    max-height: 100vh;
-    z-index: 2000;
-    background: var(--bg-color);
-    box-shadow: -5px 0 25px rgba(0,0,0,0.5);
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 20px 0 0 20px;
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-  
-  .exam-sidebar.drawer-open {
-    right: 0;
-  }
-  
-  .drawer-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    z-index: 1999;
-    backdrop-filter: blur(2px);
-  }
-  
-  .drawer-overlay.drawer-open {
-    display: block;
-  }
-
   #admin-grid {
     grid-template-columns: 1fr !important;
     gap: 1rem;
@@ -1231,94 +1185,6 @@ h1 {
 }
 
 /* Phase 5: Restored & Optimized Exam Layout */
-.exam-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
-  gap: 0;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  padding: 0;
-  overflow: hidden;
-}
-
-.exam-content-wrapper {
-  display: flex;
-  flex: 1;
-  gap: 1.25rem;
-  padding: 0.75rem 1.25rem 1.25rem 1.25rem;
-  overflow: hidden;
-  min-height: 0; /* Important for flex child to shrink */
-}
-
-#pinned-content-area {
-  flex: 1.5; /* Large enough for readable passage */
-  padding: 1.75rem;
-  border-radius: 16px;
-  overflow-y: auto;
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.1);
-  display: none; /* Controlled by JS but styled for when shown */
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary) transparent;
-}
-
-.passage-header {
-  font-weight: 900;
-  margin-bottom: 1.25rem;
-  color: var(--accent-primary);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  font-family: 'Outfit', sans-serif;
-  opacity: 0.9;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.passage-body {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: var(--text-primary);
-  text-align: justify;
-}
-
-@media (max-width: 900px) {
-  #q-group-content-inline {
-    max-height: 300px; /* Cap height on mobile to ensure question is visible */
-    overflow-y: auto;
-    margin-bottom: 1.5rem;
-    padding: 1.25rem;
-    border-left: 6px solid var(--accent-primary);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-  }
-}
-
-.exam-main {
-  flex: 2.5; /* Larger for focus on question/options */
-  padding: 2.25rem;
-  display: flex;
-  flex-direction: column;
-  border-radius: 16px;
-  overflow-y: auto;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--glass-border);
-  scrollbar-width: thin;
-}
-
-.exam-sidebar {
-  flex: 1;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  border-radius: 16px;
-}
 .q-grid-item {
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--glass-border);
@@ -1444,6 +1310,7 @@ body.light-mode .q-grid-item.answered {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-left: -8px; /* Shift a little left */
 }
 
 .q-counter-mini {
@@ -1490,8 +1357,8 @@ body.light-mode .q-grid-item.answered {
 
 @media (max-width: 768px) {
   .exam-header-primary {
-    padding: 0.5rem 0.75rem 0.5rem 0.25rem;
-    gap: 0.5rem;
+    padding: 0.5rem 0.4rem 0.5rem 0.15rem; /* Push left/right elements outward */
+    gap: 0.4rem;
   }
   
   .exam-header-meta {
@@ -1510,7 +1377,8 @@ body.light-mode .q-grid-item.answered {
     border-radius: 6px !important;
     min-width: 0 !important;
     margin-right: auto !important;
-    margin-left: 0.5rem !important;
+    margin-left: 0.2rem !important; /* Shift counter a little left */
+    transform: translateX(-5px); /* Extra nudge left */
   }
 
   .badge-exam {
@@ -1580,80 +1448,7 @@ body.in-exam #sidebar-overlay {
   display: none !important;
 }
 
-body.in-exam .main-content-area {
-  margin: 0 !important;
-  padding: 0 !important;
-  max-width: 100vw !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  z-index: 4000;
-}
 
-body.in-exam .container {
-  max-width: none !important;
-  padding: 0 !important;
-}
-
-#exam-container {
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 5000;
-  background: var(--bg-color);
-}
-
-/* Ensure the wrapper respects mobile column flow */
-.exam-content-wrapper {
-  display: flex;
-  flex-direction: row; /* Desktop Default */
-  gap: 1.5rem;
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-@media (max-width: 900px) {
-  .exam-content-wrapper {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    flex: 1;
-    min-height: 0;
-    padding: 0.5rem !important;
-  }
-  
-  .exam-main {
-    flex: none !important;
-    width: 100% !important;
-    padding: 1rem !important;
-    margin-bottom: 5rem !important; /* Breath for buttons */
-  }
-
-  .passage-container {
-    max-height: 350px !important;
-    overflow-y: auto !important;
-    padding: 1rem !important;
-    border: 1px solid var(--accent-primary) !important;
-    background: rgba(37, 99, 235, 0.05) !important;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .exam-top-bar {
-    padding: 0.5rem !important;
-    height: auto !important;
-    min-height: 60px;
-  }
-}
 
 /* Phase 4 & 11: Optimized Option Buttons for Production */
 .option-btn {
@@ -2805,7 +2600,8 @@ body.light-mode .option-btn .option-holder {
 
   .exam-sidebar {
     position: fixed;
-    bottom: -100%; /* Hidden by default */
+    bottom: 0; /* Anchored to bottom */
+    transform: translateY(100%); /* Hidden below bottom edge */
     left: 0;
     right: 0;
     width: 100%;
@@ -2816,7 +2612,7 @@ body.light-mode .option-btn .option-holder {
     border-radius: 32px 32px 0 0;
     transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
     box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
-    padding: 2.5rem 1.5rem 1.5rem;
+    padding: 3.5rem 1.5rem 1.5rem; /* Increased top padding to fix hidden lines */
   }
 
   /* Handle for the bottom sheet */
@@ -2833,8 +2629,7 @@ body.light-mode .option-btn .option-holder {
   }
 
   .exam-sidebar.drawer-open {
-    transform: translateY(-100%);
-    bottom: 0;
+    transform: translateY(0); /* Slide up to be visible */
   }
 
   .drawer-overlay {

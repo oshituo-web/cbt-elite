@@ -191,6 +191,58 @@ export const AiService = {
   },
 
   /**
+   * Projects a JAMB score (0-400) based on weighted subject mastery.
+   */
+  getPredictedJAMBScore(analytics) {
+    if (!analytics || !analytics.mastery || analytics.mastery.length === 0) return 0;
+    
+    // JAMB consists of 4 subjects. We calculate the average of all subjects or the top 4.
+    const scores = analytics.mastery.map(m => m.average);
+    const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+    
+    // Normalize 0-100% to 0-400 score
+    // We add a slight "exam pressure" penalty of 5% for realism
+    const prediction = (average * 4) * 0.95;
+    return Math.round(prediction);
+  },
+
+  /**
+   * Generates a "Focus for Today" study plan using Gemini.
+   */
+  async generateTodayFocus(analytics) {
+    if (!GEMINI_API_KEY) return "No AI access.";
+    
+    const weakSubjects = (analytics.mastery || [])
+      .filter(m => m.average < 60)
+      .sort((a, b) => a.average - b.average)
+      .slice(0, 2);
+
+    if (weakSubjects.length === 0) return "You're performing well across the board! Focus on maintaining consistency.";
+
+    const prompt = `
+      You are "Elite AI Strategist". 
+      Based on this student's weakness in ${weakSubjects.map(s => s.subject).join(', ')}, 
+      give a ONE-SENTENCE, high-energy recommendation for what they should study today.
+      Keep it under 30 words. No markdown.
+    `;
+
+    try {
+      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 100 }
+        })
+      });
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Focus on your weakest areas today.";
+    } catch (err) {
+      return "Double down on your weakest subjects today.";
+    }
+  },
+
+  /**
    * AI-powered question repair for administrators.
    */
   async repairQuestion(questionText, reason, details) {

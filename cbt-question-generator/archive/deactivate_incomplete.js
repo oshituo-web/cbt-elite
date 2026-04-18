@@ -17,17 +17,25 @@ async function deactivateIncomplete() {
     
     const ids = incomplete.map(q => q.id);
     
-    // Batch update is_active = false
-    const { error } = await supabase
-        .from('questions')
-        .update({ is_active: false })
-        .in('id', ids);
-    
-    if (error) {
-        console.error("Error deactivating questions:", error.message);
-    } else {
-        console.log(`✅ Successfully deactivated ${ids.length} questions.`);
+    const batchUpdateSize = 100;
+    let deactivated = 0;
+
+    for (let i = 0; i < ids.length; i += batchUpdateSize) {
+        const chunk = ids.slice(i, i + batchUpdateSize);
+        const { error } = await supabase
+            .from('questions')
+            .update({ is_active: false })
+            .in('id', chunk);
+        
+        if (error) {
+            console.error(`Error deactivating chunk ${i}:`, error.message);
+        } else {
+            deactivated += chunk.length;
+        }
+        process.stdout.write(`\rDeactivated ${deactivated}/${ids.length}...`);
     }
+    
+    console.log(`\n✅ Successfully deactivated ${deactivated} questions.`);
 }
 
 deactivateIncomplete();

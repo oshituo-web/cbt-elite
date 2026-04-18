@@ -1,16 +1,17 @@
 require('dotenv').config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const fs = require('fs');
 const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 15; 
+const TOTAL_QUESTIONS_TO_GENERATE = 300; 
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
 
 // TARGET FOCUS (Set to null for full run)
-const TARGET_EXAM = 'JAMB';
-const TARGET_SUBJECTS = ['Physics']; 
+const TARGET_EXAM = null;
+const TARGET_SUBJECTS = []; 
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -404,12 +405,18 @@ async function turboCharge() {
         });
     });
 
-    // Strategy: Prioritize "New Topics" (count: 0) first
-    combinations.sort((a, b) => {
-        if (a.currentCount === 0 && b.currentCount > 0) return -1;
-        if (a.currentCount > 0 && b.currentCount === 0) return 1;
-        return Math.random() - 0.5; // Shuffle within same priority
-    });
+    // Strategy: Strictly focus on "New Topics" (count: 0)
+    const zeroCountCombinations = combinations.filter(c => c.currentCount === 0);
+    
+    if (zeroCountCombinations.length === 0) {
+        console.log("🎉 ALL SYLLABUS TOPICS HAVE AT LEAST ONE QUESTION! Switching back to random shuffle.");
+    } else {
+        console.log(`🎯 Targeting ${zeroCountCombinations.length} missing topics...`);
+    }
+
+    const targetList = zeroCountCombinations.length > 0 ? zeroCountCombinations : combinations;
+
+    targetList.sort(() => Math.random() - 0.5); // Shuffle
 
     let generatedSessionCount = 0;
     let comboIndex = 0;
@@ -417,7 +424,7 @@ async function turboCharge() {
     // Concurrency Worker Function
     async function worker(workerId) {
         while (generatedSessionCount < TOTAL_QUESTIONS_TO_GENERATE) {
-            const combo = combinations[comboIndex % combinations.length];
+            const combo = targetList[comboIndex % targetList.length];
             comboIndex++;
             
             let subtopic = "General";
@@ -462,8 +469,8 @@ async function turboCharge() {
                 console.log(`[Worker ${workerId}] ⚠️ Ignored batch (Total Duplicates).`);
             }
 
-            // 10s delay + ~10s AI processing time = ~20s per request. Very Safe.
-            await delay(10000); 
+            // 20s delay + ~10s AI processing time = ~30s per request.
+            await delay(20000); 
         }
     }
 

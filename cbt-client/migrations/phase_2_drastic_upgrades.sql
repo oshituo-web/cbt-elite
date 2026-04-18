@@ -9,6 +9,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_daily_usage INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_ai_reset_date DATE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_session_date DATE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_sessions INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_questions_count INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_daily_reset_date DATE;
+
 
 -- 1. Explanatory Content Partitioning (Server-Side Gating)
 CREATE TABLE IF NOT EXISTS question_explanations (
@@ -76,19 +79,31 @@ BEGIN
     SELECT last_session_date, COALESCE(streak_count, 0) INTO v_last_session, v_streak
     FROM users WHERE id = p_user_id;
 
+    -- STREAK LOGIC:
+    -- 1. If never played before, start at 1
+    -- 2. If played yesterday, increment
+    -- 3. If played today, keep current streak
+    -- 4. If skipped a day or more, reset to 1
     IF v_last_session IS NULL THEN
         v_streak := 1;
     ELSIF v_last_session = (CURRENT_DATE - INTERVAL '1 day')::DATE THEN
         v_streak := v_streak + 1;
-    ELSIF v_last_session < (CURRENT_DATE - INTERVAL '1 day')::DATE THEN
+    ELSIF v_last_session = CURRENT_DATE THEN
+        -- Streak already counted for today, keep v_streak
+    ELSE
         v_streak := 1;
-    -- IF v_last_session = CURRENT_DATE, keep v_streak as is
     END IF;
 
+    -- DAILY QUESTIONS RESET LOGIC:
     UPDATE users SET
         streak_count = v_streak,
         last_session_date = CURRENT_DATE,
-        total_questions_answered = COALESCE(total_questions_answered, 0) + p_total_questions
+        total_questions_answered = COALESCE(total_questions_answered, 0) + p_total_questions,
+        daily_questions_count = CASE 
+            WHEN last_daily_reset_date = CURRENT_DATE THEN COALESCE(daily_questions_count, 0) + p_total_questions
+            ELSE p_total_questions
+        END,
+        last_daily_reset_date = CURRENT_DATE
     WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

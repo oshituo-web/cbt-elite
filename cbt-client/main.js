@@ -10,6 +10,8 @@ import { ResultsComponent } from './src/components/Results'
 import { AdminComponent } from './src/components/Admin'
 import { NewsArticleComponent } from './src/components/NewsArticle'
 import { AnalyticsComponent } from './src/components/Analytics'
+import { WeeklyRecapComponent } from './src/components/WeeklyRecap'
+import { TopicDeepDiveComponent } from './src/components/TopicDeepDive'
 import { IndexedDbService } from './src/services/indexedDbService'
 import { DataService } from './src/services/data'
 import { TourGuide } from './src/utils/TourGuide'
@@ -86,6 +88,10 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
       
     case 'analytics':
       showAnalytics(profile);
+      break;
+      
+    case 'recap':
+      showWeeklyRecap(profile);
       break;
       
     case 'more':
@@ -195,9 +201,12 @@ async function initApp() {
     syncOfflineData(); 
 
     // 🔐 2. START AUTH FLOW (Progressive)
+    console.log("main.js: Checking current user...")
     const user = await AuthService.getCurrentUser();
+    console.log("main.js: Current user result:", user ? user.id : "No user")
     
     if (!user) {
+      console.log("main.js: Showing Auth")
       showAuth();
       return;
     }
@@ -209,14 +218,18 @@ async function initApp() {
     }
 
     try {
+        console.log("main.js: Fetching profile for", user.id)
         const { data: profile } = await AuthService.getProfile(user.id);
+        console.log("main.js: Profile found:", profile ? profile.username : "No profile data")
         
         // Re-setup actions with real data
         setupGlobalActions(profile || { id: user.id, username: 'Student' });
 
         if (!profile || !profile.username) {
+            console.log("main.js: Profile incomplete, showing setup")
             showProfileSetup(user);
         } else {
+            console.log("main.js: Profile ready, updating UI and routing")
             updateHeaderProfile(profile);
             handleInitialRoute(profile);
         }
@@ -520,11 +533,12 @@ function showProfileSetup(user) {
 }
 
 function showDashboard(profile) {
-  currentProfile = profile
-  const dashContainer = document.getElementById('dashboard-container')
-  
-  hideAll()
-  dashContainer.style.display = 'block'
+   console.log("main.js: showDashboard called for", profile?.username)
+   currentProfile = profile
+   const dashContainer = document.getElementById('dashboard-container')
+   
+   hideAll()
+   dashContainer.style.display = 'block'
   
   // Initialize Notifications
   initNotifications(profile)
@@ -546,7 +560,17 @@ function showDashboard(profile) {
 function showAnalytics(profile) {
   currentProfile = profile;
   hideAll();
-  AnalyticsComponent.render(profile, () => window.navigateTo('dashboard', profile));
+  AnalyticsComponent.render(profile, 
+    () => window.navigateTo('dashboard', profile),
+    (questions, mode, subject, examType) => showExam(questions, profile, false, {}, mode, subject, examType)
+  );
+}
+
+async function showWeeklyRecap(profile) {
+  currentProfile = profile;
+  // Fetch real data for the recap
+  const { mastery, stats } = await DataService.getUserAnalytics(profile.id);
+  WeeklyRecapComponent.render(null, stats, mastery);
 }
 
 function showNewsArticle(article, profile) {

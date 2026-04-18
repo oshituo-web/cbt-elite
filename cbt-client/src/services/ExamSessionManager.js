@@ -131,10 +131,12 @@ export class ExamSessionManager {
         }
       }
     })
+    const answered_questions = Object.keys(this.userAnswers).length
     return {
       userAnswers: { ...this.userAnswers },
       total,
       correct,
+      answered_questions,
       timeTaken,
       score_percentage: total > 0 ? Math.round((correct / total) * 100) : 0
     }

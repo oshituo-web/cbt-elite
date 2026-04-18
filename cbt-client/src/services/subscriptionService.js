@@ -18,11 +18,30 @@ export const SubscriptionService = {
       // For now, we'll let the frontend resolve it dynamically.
     }
 
-    // 2. Check Daily Reset (Sessions)
+    // 2. Check Daily Reset (Sessions, Questions, Streaks)
     const todayStr = now.toISOString().split('T')[0]
+    
+    // Reset daily sessions if date changed
     if (user.last_session_date !== todayStr) {
       updates.daily_sessions = 0
       updates.last_session_date = todayStr
+    }
+
+    // Reset daily questions if date changed
+    if (user.last_daily_reset_date !== todayStr) {
+      updates.daily_questions_count = 0
+      updates.last_daily_reset_date = todayStr
+    }
+
+    // Passive Streak Reset: If they haven't played since yesterday, the streak is DEAD
+    if (user.last_session_date && user.last_session_date !== todayStr) {
+      const lastSession = new Date(user.last_session_date)
+      const diffTime = Math.abs(now - lastSession)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays > 1 && (user.streak_count || 0) > 0) {
+        updates.streak_count = 0
+      }
     }
 
     if (Object.keys(updates).length > 0) {

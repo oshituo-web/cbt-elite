@@ -1,6 +1,7 @@
 import { supabase } from '../utils/supabase'
 import { IndexedDbService } from './indexedDbService'
 import { AiService } from './aiService'
+import { RepetitionManager } from '../utils/repetitionManager'
 
 export const DataService = {
   supabase,
@@ -32,16 +33,27 @@ export const DataService = {
 
   // --- QUESTIONS ---
   async getQuestions(filters = {}) {
-    let query = supabase
-      .from('questions')
-      .select(`
+    let selectFields = `
         *,
         subjects (subject_name),
-        question_groups (*),
-        question_answers (*),
-        question_explanations (explanation),
-        theory_details (*)
-      `, { count: 'exact' })
+        question_answers (*)
+    `;
+    
+    // Only fetch explanations if it's a review or specific request (optimization)
+    if (filters.include_explanations !== false) {
+        selectFields += `, question_explanations (explanation)`;
+    }
+    
+    if (filters.question_type === 'theory') {
+        selectFields += `, theory_details (*)`;
+    } else {
+        // Only fetch groups if they exist (minimal overhead but cleaner)
+        selectFields += `, question_groups (*)`;
+    }
+
+    let query = supabase
+      .from('questions')
+      .select(selectFields, { count: 'exact' })
       .eq('is_active', true)
 
     if (filters.question_type === 'theory') {
@@ -59,22 +71,32 @@ export const DataService = {
 
     if (filters.randomize) {
       try {
+        const seenIds = RepetitionManager.getSeenIds();
+        
         const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
           p_subject_id: filters.subject_id || null,
           p_exam_id: filters.exam_id || null,
           p_exam_type: filters.exam_type || null,
           p_topic: filters.topic || null,
           p_question_type: filters.question_type || 'objective',
-          p_limit: filters.limit || 20
+          p_limit: (filters.limit || 20) + (seenIds.length > 500 ? 50 : 20) // Fetch extra to allow for local filtering
         })
         
         if (idError) throw idError
         
         if (randomIds && Array.isArray(randomIds) && randomIds.length > 0) {
-          // 🔥 ROBUST MAP: Handle both [{id: '...'}, ...] and ['...', ...] formats
-          const ids = randomIds.map(r => (typeof r === 'object' && r !== null) ? r.id : r).filter(Boolean);
-          if (ids.length > 0) {
-            query = query.in('id', ids)
+          let ids = randomIds.map(r => (typeof r === 'object' && r !== null) ? r.id : r).filter(Boolean);
+          
+          // --- ANTI-REPETITION FILTER ---
+          const filteredIds = ids.filter(id => !seenIds.includes(id));
+          
+          // Fallback if we filtered too many (rare)
+          const finalIds = filteredIds.length >= (filters.limit || 20) 
+            ? filteredIds.slice(0, filters.limit || 20) 
+            : ids.slice(0, filters.limit || 20);
+
+          if (finalIds.length > 0) {
+            query = query.in('id', finalIds)
           } else {
             query = query.limit(filters.limit || 20)
           }
@@ -99,7 +121,14 @@ export const DataService = {
         throw error // Throw to be caught by component level try-catch
     }
 
-    return { data: this._formatQuestions(data || []), error, count }
+    const formattedData = this._formatQuestions(data || []);
+    
+    // Mark questions as seen so they don't appear in the next fetch
+    if (formattedData.length > 0 && filters.randomize) {
+        RepetitionManager.markAsSeen(formattedData.map(q => q.id));
+    }
+
+    return { data: formattedData, error, count }
   },
 
   _formatQuestions(questions) {
@@ -149,10 +178,78 @@ export const DataService = {
     })
   },
 
+  async getQuestionsByIds(ids) {
+    if (!ids || ids.length === 0) return { data: [], error: null };
+    const { data, error } = await supabase
+      .from('questions')
+      .select(`
+        *,
+        subjects (subject_name),
+        question_groups (*),
+        question_answers (*),
+        question_explanations (explanation),
+        theory_details (*)
+      `)
+      .in('id', ids)
+      .eq('is_active', true);
+    
+    return { data: data || [], error };
+  },
+
+  async getUnresolvedMistakeIds(userId, limit = 50) {
+    // 💡 Logic: Find questions where the user's LATEST attempt was incorrect.
+    const { data, error } = await supabase
+      .from('user_responses')
+      .select('question_id, is_correct, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(200); 
+
+    if (error) return { data: [], error };
+
+    const latestAttempts = new Map();
+    data.forEach(resp => {
+      if (!latestAttempts.has(resp.question_id)) {
+        latestAttempts.set(resp.question_id, resp.is_correct);
+      }
+    });
+
+    const unresolvedIds = [];
+    for (const [qid, isCorrect] of latestAttempts.entries()) {
+      if (!isCorrect) {
+        unresolvedIds.push(qid);
+      }
+    }
+
+    return { data: unresolvedIds.slice(0, limit), error: null };
+  },
+
   // --- USER & SESSIONS ---
   async getProfile(userId) {
     const { data, error } = await supabase.from('users').select('*').eq('id', userId).single()
     return { data, error }
+  },
+
+  async buyStreakFreeze(userId) {
+    const cost = 100;
+    // 1. Check current coins
+    const { data: profile } = await this.getProfile(userId);
+    if (!profile || (profile.elite_coins || 0) < cost) {
+      return { error: "Insufficient Elite Coins." };
+    }
+
+    // 2. Atomic Update
+    const { data, error } = await supabase
+      .from('users')
+      .update({ 
+        elite_coins: profile.elite_coins - cost,
+        streak_freeze_count: (profile.streak_freeze_count || 0) + 1
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    return { data, error };
   },
 
   async updateUser(userId, updates) {
@@ -210,8 +307,19 @@ export const DataService = {
     })
   },
 
+  // --- LEAGUES ---
+  async syncLeagueStatus(userId) {
+    return await supabase.rpc('join_league_group', { p_user_id: userId })
+  },
+
+  async getLeagueTable(userId) {
+    return await supabase.rpc('get_league_table', { p_user_id: userId })
+  },
+
   // --- ANALYTICS ---
   async getUserAnalytics(userId) {
+    const { data: userProfile } = await supabase.from('users').select('daily_questions_count, streak_count, last_daily_reset_date').eq('id', userId).single()
+    
     const { data: sessions, error: hError } = await supabase
       .from('exam_sessions')
       .select('total_questions, correct_answers, completed_at')
@@ -221,6 +329,7 @@ export const DataService = {
 
     const history = sessions ? sessions.map(s => ({
       total_questions: s.total_questions || 0,
+      answered_questions: s.answered_questions ?? s.total_questions ?? 0, // Fallback to total for legacy data
       correct_answers: s.correct_answers || 0,
       score_percentage: s.total_questions > 0 ? Math.round(((s.correct_answers || 0) / (s.total_questions || 1)) * 100) : 0,
       created_at: s.completed_at
@@ -269,8 +378,14 @@ export const DataService = {
       average: Math.round(subjectMap[sub].sum / subjectMap[sub].count),
       total_attempted: subjectMap[sub].total_attempted
     }))
-
-    return { history, mastery: processedMastery, stats, error: hError || mError }
+    
+    return { 
+      history, 
+      mastery: processedMastery, 
+      stats, 
+      profile: userProfile,
+      error: hError || mError 
+    }
   },
 
   async getReadinessScore(userId, subjectName) {
@@ -282,7 +397,27 @@ export const DataService = {
       const masteredTopics = (mastery || []).length
       return { data: totalTopics > 0 ? Math.round((masteredTopics / totalTopics) * 100) : 0, error: null }
     } catch (err) {
-      return { data: 0, error: err.message }
+      return { error: err.message }
+    }
+  },
+
+  async aiRegenerateQuestion(questionId, reason, details) {
+    try {
+      const { data: q, error: qErr } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('id', questionId)
+        .single();
+      
+      if (qErr) throw qErr;
+
+      // Import AiService dynamically to avoid circular dependencies
+      const { AiService } = await import('./aiService');
+      const repaired = await AiService.repairQuestion(q.question_text, reason, details);
+      
+      return { data: repaired, error: null };
+    } catch (err) {
+      return { data: null, error: err.message };
     }
   },
 
@@ -304,31 +439,44 @@ export const DataService = {
     let examId = undefined;
 
     try {
-        if (subjectName) {
-            let { data: subs, error: sErr } = await supabase.from('subjects').select('id').eq('subject_name', subjectName);
-            if (sErr) console.error("DataService.getPracticeQuestions Subject Select Error:", sErr);
-
+        const fetchSubject = async () => {
+            if (!subjectName) return null;
+            let { data: subs } = await supabase.from('subjects').select('id').eq('subject_name', subjectName);
             if (!subs || subs.length === 0) {
                 let fuzzySearch = subjectName.toLowerCase().includes('english') ? '%English%' : `%${subjectName}%`;
                 const res = await supabase.from('subjects').select('id').ilike('subject_name', fuzzySearch);
                 subs = res.data;
             }
+            return subs?.[0]?.id;
+        };
 
-            if (subs && subs.length > 0) {
-                subjectId = subs[0].id;
-            } else {
-                console.error(`ERROR: Subject mapping failed for "${subjectName}". Refusing to fetch random subjects.`);
-                return { data: [], error: 'Subject mapping failed in DB', count: 0 };
-            }
+        const fetchExam = async () => {
+            if (!examType) return null;
+            let { data: exams } = await supabase.from('exams').select('id').ilike('exam_name', `%${examType}%`);
+            return exams?.[0]?.id;
+        };
+
+        const [sId, eId] = await Promise.all([fetchSubject(), fetchExam()]);
+        subjectId = sId;
+        examId = eId;
+
+        if (subjectName && !subjectId) {
+            console.error(`ERROR: Subject mapping failed for "${subjectName}".`);
+            return { data: [], error: 'Subject mapping failed in DB', count: 0 };
         }
 
-        if (examType) {
-            // Also securely map the examType string (JAMB, WAEC, NECO) to its true exam_id
-            let { data: exams, error: eErr } = await supabase.from('exams').select('id').ilike('exam_name', `%${examType}%`);
-            if (eErr) console.error("DataService.getPracticeQuestions Exam Select Error:", eErr);
-            
-            if (exams && exams.length > 0) {
-                examId = exams[0].id;
+        // --- VARIETY SAFEGUARD ---
+        if (topic) {
+            const seenIds = RepetitionManager.getSeenIds();
+            const { count: totalInTopic } = await supabase
+                .from('questions')
+                .select('*', { count: 'exact', head: true })
+                .eq('subject_id', subjectId)
+                .eq('topic', topic)
+                .eq('is_active', true);
+
+            if (totalInTopic > 0 && seenIds.length > (totalInTopic * 0.8)) {
+                topic = undefined; 
             }
         }
 
@@ -459,12 +607,62 @@ export const DataService = {
   },
 
   async getLeaderboard() {
-    return await supabase.from('weekly_summaries').select('total_questions_answered, users!inner(username)').order('total_questions_answered', { ascending: false }).limit(10)
+    return await supabase.from('weekly_summaries').select('total_questions_answered, users!inner(username, daily_questions_count)').order('total_questions_answered', { ascending: false }).limit(10)
+  },
+
+  async getAuditQuestions(limit = 50) {
+    // 1. Fetch questions with null/empty explanations or missing answers
+    const { data: missingExplanation, error: e1 } = await supabase
+      .from('questions')
+      .select('*, question_answers(*)')
+      .or('explanation.eq.,explanation.is.null')
+      .limit(limit);
+
+    // 2. Fetch questions with high report counts
+    const { data: reported, error: e2 } = await supabase
+      .from('question_reports')
+      .select('question_id, questions(*, question_answers(*))')
+      .eq('status', 'pending');
+
+    // Merge and deduplicate
+    const combined = [...(missingExplanation || [])];
+    if (reported) {
+      reported.forEach(r => {
+        if (r.questions && !combined.find(q => q.id === r.questions.id)) {
+          combined.push(r.questions);
+        }
+      });
+    }
+    
+    return { data: this._formatQuestions(combined.slice(0, limit)), error: e1 || e2 };
+  },
+
+  async getMockHistory(userId, examType = 'JAMB') {
+    const { data, error } = await supabase
+      .from('exam_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('exam_type', examType)
+      .gte('total_questions', 100) // Filter for full simulations
+      .order('completed_at', { ascending: false });
+    
+    return { data: data || [], error };
   },
 
   async syncOfflinePool() {
-    const { data } = await supabase.from('questions').select('*, question_answers(*)').eq('is_active', true).limit(100)
-    if (data) await IndexedDbService.saveQuestions(this._formatQuestions(data))
+    // Fetch a larger, randomized sample for offline variety (up to 500 questions)
+    const { data } = await supabase
+      .from('questions')
+      .select('*, question_answers(*)')
+      .eq('is_active', true)
+      .limit(500)
+      .order('id'); // Note: True random sampling in a single query is hard, so we'll pick 500 and shuffle client-side
+    
+    if (data) {
+      const shuffled = [...data].sort(() => Math.random() - 0.5);
+      await IndexedDbService.saveQuestions(this._formatQuestions(shuffled));
+      console.log(`✅ Synced ${data.length} questions to offline storage.`);
+    }
   },
 
   // --- ADMIN: USER MANAGEMENT ---
@@ -664,10 +862,20 @@ export const DataService = {
       const { data: q } = await supabase.from('questions').select('question_text').eq('id', qid).single()
       if (!q) throw new Error("Question not found")
 
+      // Use dynamic import to avoid circular dependency
+      const { AiService } = await import('./aiService')
       const data = await AiService.repairQuestion(q.question_text, reason, details)
       return { data, error: null }
     } catch (err) {
       return { data: null, error: err.message }
     }
+  },
+
+  async syncLeagueStatus(userId) {
+    return await supabase.rpc('join_league_group', { p_user_id: userId })
+  },
+
+  async getLeagueTable(userId) {
+    return await supabase.rpc('get_league_table', { p_user_id: userId })
   }
 }

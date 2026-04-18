@@ -30,7 +30,7 @@ export const AdminComponent = {
           </div>
         </header>
 
-        <div id="admin-grid" class="admin-layout-grid" style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;">
+        <div id="admin-grid" class="admin-layout-grid" style="display: grid; gap: 2rem; align-items: start;">
           <nav id="admin-nav" class="glass" style="padding: 1.5rem; border-radius: 24px; display: flex; flex-direction: column; gap: 0.5rem; sticky; top: 2rem;">
             <button class="nav-tab active" data-tab="questions" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="database" style="width: 18px;"></i> Questions</button>
             <button class="nav-tab" data-tab="syllabus" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="book-open" style="width: 18px;"></i> Syllabus</button>
@@ -39,6 +39,7 @@ export const AdminComponent = {
             <button class="nav-tab" data-tab="marketing" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="zap" style="width: 18px;"></i> Marketing</button>
             <button class="nav-tab" data-tab="news" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="newspaper" style="width: 18px;"></i> News</button>
             <button class="nav-tab" data-tab="analytics" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-primary);"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</button>
+            <button class="nav-tab" data-tab="quality-audit" style="display: flex; align-items: center; gap: 0.75rem; color: var(--success);"><i data-lucide="list-checks" style="width: 18px;"></i> Quality Audit</button>
             <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
             ${(profile.role === 'admin' || profile.role === 'super-admin') ? `
               <button class="nav-tab" data-tab="audit" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="scroll-text" style="width: 18px;"></i> Audit Logs</button>
@@ -73,6 +74,33 @@ export const AdminComponent = {
                   </h3>
                   <canvas id="revenue-growth-chart" height="280"></canvas>
                </div>
+            </div>
+          </div>
+          <!-- Quality Audit Tab -->
+          <div id="admin-quality-audit-tab" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Quality Audit</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">Proactively identifying and repairing content gaps</p>
+              </div>
+              <button id="audit-refresh" class="btn-secondary" style="height: 36px; padding: 0 1rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">
+                 <i data-lucide="refresh-cw" style="width: 14px; margin-right: 0.4rem;"></i> RE-SCAN DATABASE
+              </button>
+            </div>
+
+            <div class="glass card" style="padding: 2rem; border-radius: 24px; border-left: 4px solid var(--success);">
+              <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                 <div style="background: rgba(34, 197, 94, 0.1); width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--success);">
+                    <i data-lucide="search-code"></i>
+                 </div>
+                 <div>
+                    <h3 style="font-family: 'Outfit'; margin: 0; font-size: 1.1rem; color: var(--text-primary);">Flagged for Review</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Items with missing explanations or poor formatting</p>
+                 </div>
+              </div>
+              <div id="quality-audit-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Audit items injected here -->
+              </div>
             </div>
           </div>
 
@@ -391,20 +419,25 @@ export const AdminComponent = {
   async setupEvents(onBack) {
     document.getElementById('admin-back-home').onclick = onBack
 
-    // Tab Logic
-    const tabs = document.querySelectorAll('.nav-tab')
-    tabs.forEach(tab => {
+    // Tab Navigation Logic
+    document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.onclick = () => {
-        tabs.forEach(t => t.classList.remove('active'))
-        tab.classList.add('active')
-        const target = tab.dataset.tab
+        const target = tab.dataset.tab;
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Toggle Tab Visibility
+        if(document.getElementById('admin-news-tab')) document.getElementById('admin-news-tab').style.display = target === 'news' ? 'block' : 'none'
+        document.getElementById('admin-analytics-tab').style.display = target === 'analytics' ? 'block' : 'none'
+        document.getElementById('admin-quality-audit-tab').style.display = target === 'quality-audit' ? 'block' : 'none'
         document.getElementById('admin-questions-tab').style.display = target === 'questions' ? 'block' : 'none'
         document.getElementById('admin-syllabus-tab').style.display = target === 'syllabus' ? 'block' : 'none'
         document.getElementById('admin-users-tab').style.display = target === 'users' ? 'block' : 'none'
         document.getElementById('admin-reports-tab').style.display = target === 'reports' ? 'block' : 'none'
         document.getElementById('admin-marketing-tab').style.display = target === 'marketing' ? 'block' : 'none'
-        if(document.getElementById('admin-news-tab')) document.getElementById('admin-news-tab').style.display = target === 'news' ? 'block' : 'none'
-        document.getElementById('admin-analytics-tab').style.display = target === 'analytics' ? 'block' : 'none'
+
         if (document.getElementById('admin-audit-tab')) {
             document.getElementById('admin-audit-tab').style.display = target === 'audit' ? 'block' : 'none'
         }
@@ -412,6 +445,7 @@ export const AdminComponent = {
           document.getElementById('admin-staff-tab').style.display = target === 'staff' ? 'block' : 'none'
         }
 
+        // Trigger Data Loads
         if (target === 'questions') this.loadQuestions()
         else if (target === 'syllabus') this.loadSyllabus()
         else if (target === 'users') this.loadUsers()
@@ -419,12 +453,15 @@ export const AdminComponent = {
         else if (target === 'marketing') this.loadMarketing()
         else if (target === 'news') this.loadNews()
         else if (target === 'analytics') this.loadGlobalAnalytics()
+        else if (target === 'quality-audit') this.loadQualityAudit()
         else if (target === 'audit') this.loadAuditLogs()
         else if (target === 'staff') this.loadStaff()
 
         if (window.lucide) window.lucide.createIcons()
       }
     })
+
+    document.getElementById('audit-refresh').onclick = () => this.loadQualityAudit()
 
     document.getElementById('analytics-refresh').onclick = () => this.loadGlobalAnalytics()
 
@@ -1811,84 +1848,106 @@ export const AdminComponent = {
     if (window.lucide) window.lucide.createIcons({ root: list })
   },
 
-  async loadNews() {
-    const list = document.getElementById('admin-news-list')
+  async loadQualityAudit() {
+    const list = document.getElementById('quality-audit-list')
     if (!list) return
-    list.innerHTML = 'Loading news...'
+    list.innerHTML = '<div class="loader-spinner" style="margin: 2rem auto;"></div>'
     
-    // Add new article button listener
-    document.getElementById('add-news-btn').onclick = () => {
-      this.openNewsEditModal()
-    }
-
-    const { data: news, error } = await DataService.getNewsUpdates(50) // load up to 50 for admin
-    
+    const { data: questions, error } = await DataService.getAuditQuestions()
     if (error) {
-       list.innerHTML = `<div style="color: var(--error);">Error: ${error.message}</div>`
-       return
-    }
-
-    if (!news || news.length === 0) {
-      list.innerHTML = '<div style="color: var(--text-primary);">No news items found.</div>'
+      list.innerHTML = `<div style="color: var(--error);">Scan failed: ${error.message}</div>`
       return
     }
 
-    list.innerHTML = news.map(n => `
-      <div class="glass card news-item-card" style="padding: 1.5rem; border-radius: 16px; border-left: 4px solid var(--accent-primary); margin-bottom: 1.25rem; transition: transform 0.2s;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 250px;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-               <span style="font-size: 0.65rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">${n.category}</span>
-               <span style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
-                 <i data-lucide="calendar" style="width: 12px;"></i>
-                 ${new Date(n.created_at).toLocaleDateString()}
-               </span>
-               ${n.attachment_url ? `
-                 <span style="font-size: 0.75rem; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.25rem; font-weight: 600;">
-                   <i data-lucide="paperclip" style="width: 12px;"></i> PDF
-                 </span>
-               ` : ''}
-            </div>
-            <h4 style="font-family: 'Outfit'; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0;">${n.title}</h4>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">${n.summary}</div>
-          </div>
-          <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
-            <button class="btn-secondary edit-news-btn" data-id="${n.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Edit Article">
-              <i data-lucide="edit-3" style="width: 14px;"></i> Edit
-            </button>
-            <button class="btn-secondary delete-news-btn" data-id="${n.id}" style="height: 38px; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--error); border-color: rgba(239, 68, 68, 0.2); font-size: 0.75rem; font-weight: 700; gap: 0.5rem;" title="Delete Article">
-              <i data-lucide="trash-2" style="width: 14px;"></i> Delete
-            </button>
-          </div>
+    if (!questions || questions.length === 0) {
+      list.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: var(--success); opacity: 0.8;">
+          <i data-lucide="check-circle" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+          <h3 style="font-family: 'Outfit'; margin: 0;">System Quality Optimal</h3>
+          <p style="font-size: 0.85rem; opacity: 0.7;">No critical content gaps detected in the current scan.</p>
         </div>
+      `
+      return
+    }
+
+    list.innerHTML = `
+      <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
+        <button id="repair-all-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-size: 0.8rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
+            <i data-lucide="sparkles" style="width: 14px; margin-right: 6px;"></i> BULK REPAIR ALL
+        </button>
       </div>
-    `).join('')
+      ${questions.map(q => `
+        <div class="glass audit-item" style="padding: 1.25rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${q.question_text.replace(/<[^>]*>?/gm, '')}
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.2);">
+                MISSING EXPLANATION
+              </span>
+              <span style="font-size: 0.7rem; color: var(--text-secondary);">${q.subject} • ${q.topic || 'General'}</span>
+            </div>
+          </div>
+          <button class="btn-secondary ai-repair-single" data-id="${q.id}" data-text="${q.question_text.replace(/"/g, '&quot;')}" style="height: 36px; padding: 0 1rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">
+            FIX NOW
+          </button>
+        </div>
+      `).join('')}
+    `
 
-    // Attach Listeners
-    document.querySelectorAll('.edit-news-btn').forEach(btn => {
+    if (window.lucide) window.lucide.createIcons({ root: list })
+
+    document.getElementById('repair-all-btn').onclick = () => this.handleBulkAiRepair(questions)
+    
+    document.querySelectorAll('.ai-repair-single').forEach(btn => {
       btn.onclick = () => {
-        const id = btn.getAttribute('data-id')
-        const item = news.find(n => n.id === id)
-        if (item) this.openNewsEditModal(item)
+        const qid = btn.dataset.id
+        const text = btn.dataset.text
+        this.handleAiFix({ 
+          dataset: { qid, rid: 'direct-audit', reason: 'Missing explanation', details: 'Auto-detected during quality audit.' },
+          closest: () => ({ querySelector: () => ({ textContent: text }) }),
+          disabled: false,
+          textContent: 'FIX NOW'
+        })
       }
     })
+  },
 
-    document.querySelectorAll('.delete-news-btn').forEach(btn => {
-      btn.onclick = async () => {
-        if (!confirm('Are you sure you want to permanently delete this news update?')) return
-        const id = btn.getAttribute('data-id')
-        btn.textContent = '...'
-        btn.disabled = true
-        const { error } = await DataService.adminDeleteNews(id)
-        if (error) {
-          alert('Failed to delete: ' + error.message)
-          btn.textContent = 'Delete'
-          btn.disabled = false
-        } else {
-          this.loadNews()
-        }
+  async handleBulkAiRepair(questions) {
+    if (!confirm(`This will attempt to auto-repair ${questions.length} questions using AI. Gemini credits will be consumed per question. Proceed?`)) return
+    
+    const repairBtn = document.getElementById('repair-all-btn')
+    repairBtn.disabled = true
+    repairBtn.textContent = 'Repairing...'
+
+    let success = 0
+    let failed = 0
+
+    for (const q of questions) {
+      try {
+        const { data: fix, error } = await DataService.aiRegenerateQuestion(q.id, 'Missing explanation', 'Auto-repair initiated by quality audit.')
+        if (error) throw error
+        
+        await DataService.updateQuestion(q.id, { question_text: fix.question_text })
+        await DataService.updateQuestionAnswers(q.id, {
+          option_a: fix.option_a,
+          option_b: fix.option_b,
+          option_c: fix.option_c,
+          option_d: fix.option_d,
+          correct_option: fix.correct_option,
+          explanation: fix.explanation
+        })
+        success++
+      } catch (err) {
+        console.error(`Repair failed for ${q.id}:`, err)
+        failed++
       }
-    })
+      repairBtn.textContent = `Repairing (${success + failed}/${questions.length})...`
+    }
+
+    alert(`Bulk Repair Complete!\nSuccess: ${success}\nFailed: ${failed}`)
+    this.loadQualityAudit()
   },
 
   openNewsEditModal(news = null) {
