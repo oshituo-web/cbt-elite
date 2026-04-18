@@ -44,10 +44,12 @@ export const DashboardComponent = {
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     
-    // 🔥 FIX: Reset scroll position to top immediately
+    // 🔥 FIX: Reset scroll position to top immediately - target the actual scroll container
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     container.scrollTop = 0;
+    const mainContentArea = document.querySelector('.main-content-area');
+    if (mainContentArea) mainContentArea.scrollTop = 0;
 
     // Handle Tier Transitions & Daily Resets
     const updatedUser = profile ? await SubscriptionService.handleTierTransition(profile) : null
@@ -182,7 +184,10 @@ export const DashboardComponent = {
         console.error("Dashboard: Confetti failed", e)
     }
     
-    const currentDailyCount = this.profile.daily_questions_count || 0;
+    // 🚀 HARDENING: Synchronize profile count with freshly calculated session data
+    this.profile.daily_questions_count = v2_todayQuestions;
+    const currentDailyCount = v2_todayQuestions;
+
     const currentMilestone = this.MILESTONES.slice().reverse().find(m => currentDailyCount >= m.target);
     const nextMilestone = this.MILESTONES.find(m => currentDailyCount < m.target);
 
@@ -213,12 +218,12 @@ export const DashboardComponent = {
       <div id="dashboard-content" class="dashboard-scroll-area">
         
         <!-- DASHBOARD WELCOME -->
-        <div class="mb-sm" style="padding-top: 0;">
-          <h1 class="responsive-h1" style="font-family: 'Outfit'; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="margin-bottom: 1.5rem; padding-top: 0.5rem;">
+          <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.2;">
             Welcome, ${this.profile.username || 'Student'} 
             <i data-lucide="sun" style="width: 28px; height: 28px; color: var(--warning);"></i>
           </h1>
-          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.3rem; font-weight: 500;">Let's make today count.</p>
+          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 500;">Let's make today count.</p>
         </div>
 
         <!-- ELITE ECONOMY WIDGET -->
@@ -520,11 +525,11 @@ export const DashboardComponent = {
                 </div>
                 <div style="font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 6px; font-weight: 800; color: var(--text-secondary);">SPACED REPETITION</div>
               </div>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.5rem; font-weight: 500;">
-                These are questions you missed recently. Fixing them is the fastest way to increase your JAMB score.
+              <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
+                These are questions you missed recently. Fixing them is the fastest way to master your JAMB, WAEC, and NECO exams.
               </p>
               <button id="repair-mistakes-btn" class="btn-dominant" style="width: 100%; height: 48px; background: linear-gradient(90deg, #ef4444 0%, #b91c1c 100%); border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
-                <i data-lucide="zap" style="width: 18px;"></i> REPAIR NOW
+                <i data-lucide="zap" style="width: 18px;"></i> MASTER MISTAKES
               </button>
             </div>
             ` : ''}
@@ -892,7 +897,7 @@ export const DashboardComponent = {
                 const { data: questions, error } = await DataService.getQuestionsByIds(this.unresolvedMistakeIds)
                 if (error) throw error
                 if (questions && questions.length > 0) {
-                    this.onStartExam(questions, 'practice', 'Elite Repair', 'Focused Improvement')
+                    this.onStartExam(questions, 'practice', 'Mistake Mastery', 'Focused Improvement')
                 } else {
                     alert("Mistakes resolved! Try some new questions.")
                     this.render(profile)
@@ -902,7 +907,7 @@ export const DashboardComponent = {
                 alert("Failed to load mistakes. Please try again.")
             } finally {
                 repairBtn.disabled = false
-                repairBtn.innerHTML = '<i data-lucide="zap" style="width: 18px;"></i> REPAIR NOW'
+                repairBtn.innerHTML = '<i data-lucide="zap" style="width: 18px;"></i> MASTER MISTAKES'
             }
         }
     }
