@@ -299,6 +299,17 @@ export const AdminComponent = {
 
                 <div class="glass card" style="padding: 2rem; border-radius: 20px; border-left: 4px solid var(--accent-primary);">
                    <div style="display: grid; gap: 2rem;">
+                      <!-- Global Gamification -->
+                      <div>
+                        <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--success); text-transform: uppercase; margin-bottom: 1rem;">Platform Gamification</h4>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                           <div>
+                             <label style="font-size: 0.65rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">DAILY GOAL TARGET (QUESTIONS)</label>
+                             <input type="number" id="cfg-daily-goal" class="glass-input" style="width: 100%;">
+                           </div>
+                        </div>
+                      </div>
+
                       <!-- Freemium Limits -->
                       <div>
                         <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 1rem;">Freemium (Free Tier)</h4>
@@ -762,7 +773,7 @@ export const AdminComponent = {
           
           <div style="flex: 1; min-width: 0;">
             <div style="font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${q.question_text.replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+              ${window.DOMPurify.sanitize(q.question_text).replace(/<[^>]*>?/gm, '').substring(0, 100)}...
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <span style="font-size: 0.65rem; background: var(--accent-gradient); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${q.exam_type}</span>
@@ -786,18 +797,52 @@ export const AdminComponent = {
     // Attach Listeners
     document.querySelectorAll('.delete-q-btn').forEach(btn => {
       btn.onclick = async () => {
-        if (!confirm('Warning: Are you sure you want to permanently delete this question from the database?')) return
         const id = btn.getAttribute('data-id')
-        btn.textContent = '...'
-        btn.disabled = true
-        const { error } = await DataService.deleteQuestion(id)
-        if (error) {
-          alert('Failed to delete: ' + error.message)
-          btn.textContent = 'Delete'
-          btn.disabled = false
-        } else {
-          await DataService.logAdminAction(this._adminProfile.email, 'Delete Question', id, 'Manual deletion')
-          this.loadQuestions()
+        const row = btn.closest('.q-item')
+        
+        row.style.opacity = '0.3'
+        row.style.pointerEvents = 'none'
+        
+        // Create floating undo toast
+        const toast = document.createElement('div')
+        toast.className = 'glass card scale-in'
+        toast.style.position = 'fixed'
+        toast.style.bottom = '80px'
+        toast.style.right = '2rem'
+        toast.style.zIndex = '99999'
+        toast.style.padding = '1rem 1.5rem'
+        toast.style.display = 'flex'
+        toast.style.alignItems = 'center'
+        toast.style.gap = '1rem'
+        toast.style.backgroundColor = 'var(--surface-color)'
+        toast.style.border = '1px solid var(--warning)'
+        toast.innerHTML = `
+           <div>
+             <div style="font-weight: 800; color: var(--text-primary); font-size: 0.9rem;">Question Queued</div>
+             <div style="font-size: 0.75rem; color: var(--text-secondary);">Deactivating in 30 seconds...</div>
+           </div>
+           <button class="btn-primary" style="background: var(--warning); border: none; padding: 0.5rem 1rem;">UNDO</button>
+        `
+        document.body.appendChild(toast)
+        
+        const timeoutId = setTimeout(async () => {
+            if(document.body.contains(toast)) document.body.removeChild(toast)
+            const { error } = await DataService.deactivateQuestion(id)
+            if (error) {
+                row.style.opacity = '1'
+                row.style.pointerEvents = 'auto'
+                alert('Failed to delete: ' + error.message)
+            } else {
+                if(row) row.remove()
+                await DataService.logAdminAction(this._adminProfile.email, 'Delete Question', id, 'Soft deletion via UI')
+            }
+        }, 30000)
+
+        toast.querySelector('button').onclick = () => {
+             clearTimeout(timeoutId)
+             row.style.opacity = '1'
+             row.style.pointerEvents = 'auto'
+             document.body.removeChild(toast)
         }
       }
     })

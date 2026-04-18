@@ -2766,3 +2766,28 @@ body.light-mode .option-btn .option-holder {
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+
+/* =========================================
+   BATCH 3 - PRICING & STORE UTILITIES
+   ========================================= */
+.pricing-card-lifetime {
+  padding: 1.25rem;
+  border: 2px solid var(--accent-primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.pricing-card-monthly {
+  padding: 1.25rem;
+  border: 2px solid var(--accent-secondary); 
+  background: rgba(147, 51, 234, 0.05);
+}
+
+.store-item-card {
+  padding: 1.25rem;
+  border: 1.5px solid var(--accent-secondary);
+  background: rgba(139, 92, 246, 0.05); 
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}

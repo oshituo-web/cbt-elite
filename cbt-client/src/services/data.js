@@ -232,24 +232,12 @@ export const DataService = {
 
   async buyStreakFreeze(userId) {
     const cost = 100;
-    // 1. Check current coins
-    const { data: profile } = await this.getProfile(userId);
-    if (!profile || (profile.elite_coins || 0) < cost) {
-      return { error: "Insufficient Elite Coins." };
-    }
-
-    // 2. Atomic Update
-    const { data, error } = await supabase
-      .from('users')
-      .update({ 
-        elite_coins: profile.elite_coins - cost,
-        streak_freeze_count: (profile.streak_freeze_count || 0) + 1
-      })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    return { data, error };
+    const { data, error } = await supabase.rpc('purchase_streak_freeze', { p_user_id: userId, p_cost: cost });
+    
+    if (error) return { error: error.message };
+    if (!data) return { error: "Insufficient Elite Coins." };
+    
+    return { data: true, error: null };
   },
 
   async updateUser(userId, updates) {
@@ -259,11 +247,28 @@ export const DataService = {
 
   async saveExamSession(userId, sessionData, questions, userAnswers, isSyncing = false) {
     try {
-      const { data: session, error: sError } = await supabase
+      let payload = { user_id: userId, ...sessionData, completed_at: new Date().toISOString() }
+      let { data: session, error: sError } = await supabase
         .from('exam_sessions')
-        .insert({ user_id: userId, ...sessionData, completed_at: new Date().toISOString() })
+        .insert(payload)
         .select()
         .single()
+
+      // Fallback for unapplied DB migrations (rescues stuck offline syncs)
+      if (sError && sError.code === 'PGRST204') {
+         console.warn("Supabase schema cache missing new columns. Retrying with legacy shape...")
+         delete payload.answered_questions
+         delete payload.time_taken_seconds
+         
+         const fallback = await supabase
+            .from('exam_sessions')
+            .insert(payload)
+            .select()
+            .single()
+            
+         session = fallback.data
+         sError = fallback.error
+      }
 
       if (sError) throw sError
 
@@ -272,8 +277,7 @@ export const DataService = {
         user_id: userId,
         question_id: q.id,
         user_answer_text: userAnswers[i]?.toString() || (q.question_type === 'theory' ? "No answer provided." : null),
-        is_correct: q.question_type !== 'theory' && (userAnswers[i] === q.answers.find(a => a.is_correct)?.id),
-        time_spent_seconds: 0
+        is_correct: q.question_type !== 'theory' && (userAnswers[i] === q.answers.find(a => a.is_correct)?.id)
       }))
 
       await supabase.from('user_responses').insert(responses)
@@ -303,7 +307,8 @@ export const DataService = {
         p_total_questions: sessionData.total_questions,
         p_score_percentage: sessionData.score_percentage,
         p_time_taken: sessionData.time_taken_seconds || 0,
-        p_topics: topicsPayload
+        p_topics: topicsPayload,
+        p_answered_questions: sessionData.answered_questions // Link accurate count
     })
   },
 
@@ -642,11 +647,17 @@ export const DataService = {
       .from('exam_sessions')
       .select('*')
       .eq('user_id', userId)
-      .eq('exam_type', examType)
-      .gte('total_questions', 100) // Filter for full simulations
-      .order('completed_at', { ascending: false });
+      .eq('session_type', 'exam')  // 'exam' is the session_type for mock exams
+      .order('completed_at', { ascending: false })
+      .limit(20);
     
-    return { data: data || [], error };
+    // Filter client-side for JAMB mock sessions (100+ questions) since DB schema
+    // doesn't have exam_type or total_questions columns yet
+    const filtered = (data || []).filter(s => 
+      (s.total_questions >= 100) || (s.subject && s.subject.toLowerCase().includes('jamb'))
+    );
+    
+    return { data: filtered, error };
   },
 
   async syncOfflinePool() {
@@ -682,9 +693,6 @@ export const DataService = {
     }).eq('id', userId)
   },
 
-  async updateUser(userId, updates) {
-    return await supabase.from('users').update(updates).eq('id', userId).select()
-  },
 
   // --- ADMIN: SYLLABUS ---
   async getFullSyllabus() {

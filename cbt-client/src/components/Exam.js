@@ -466,8 +466,6 @@ export class Exam {
 
     if (window.lucide) {
       window.lucide.createIcons();
-      // Also target the root explicitly just in case
-      window.lucide.createIcons({ root: container });
     }
   }
 

@@ -19,7 +19,7 @@ export const QuestionRenderer = {
     const value = userAnswers[currentIndex] || '';
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label style="font-size: 0.875rem; color: var(--accent-primary); font-weight: 600;">Your Answer:</label>
+        <p style="font-size: 0.875rem; color: var(--accent-primary); font-weight: 600; margin: 0 0 0.5rem 0;">Your Answer:</p>
         <textarea id="theory-input" class="glass" 
           placeholder="Type your detailed answer here..." 
           style="width: 100%; min-height: 200px; padding: 1rem; color: inherit; line-height: 1.6; resize: vertical;"

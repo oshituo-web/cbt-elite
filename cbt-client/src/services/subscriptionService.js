@@ -33,16 +33,7 @@ export const SubscriptionService = {
       updates.last_daily_reset_date = todayStr
     }
 
-    // Passive Streak Reset: If they haven't played since yesterday, the streak is DEAD
-    if (user.last_session_date && user.last_session_date !== todayStr) {
-      const lastSession = new Date(user.last_session_date)
-      const diffTime = Math.abs(now - lastSession)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      
-      if (diffDays > 1 && (user.streak_count || 0) > 0) {
-        updates.streak_count = 0
-      }
-    }
+
 
     if (Object.keys(updates).length > 0) {
       const { data, error } = await DataService.updateUser(user.id, updates)

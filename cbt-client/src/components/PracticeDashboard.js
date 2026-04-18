@@ -75,12 +75,12 @@ export const PracticeDashboardComponent = {
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
             <div>
-              <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Select Subject</label>
+              <label for="p-subject" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Select Subject</label>
               <select id="p-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;"></select>
             </div>
             
             <div>
-              <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Filter by Topic (Optional)</label>
+              <label for="p-topic" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Filter by Topic (Optional)</label>
               <select id="p-topic" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
                 <option value="">All Topics</option>
               </select>

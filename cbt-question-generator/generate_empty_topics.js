@@ -4,7 +4,7 @@ const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 1000; // Large unattended run
+const TOTAL_QUESTIONS_TO_GENERATE = 100; // Large unattended run
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1; // Strict 1 to respect 15 Requests-Per-Minute Free Tier
 

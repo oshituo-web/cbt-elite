@@ -3,3 +3,8 @@ dist/
 .env
 .DS_Store
 *.log
+*.txt
+questions.json
+theory_questions.json
+bad_questions.json
+incomplete.json

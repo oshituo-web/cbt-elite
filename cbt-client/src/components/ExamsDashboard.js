@@ -92,11 +92,11 @@ export const ExamsDashboardComponent = {
           <div id="waec-neco-exam-config" style="display: none;">
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                   <div>
-                      <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Subject</label>
+                      <label for="e-subject" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Subject</label>
                       <select id="e-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;"></select>
                   </div>
                   <div>
-                      <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Format</label>
+                      <label for="e-type" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Format</label>
                       <select id="e-type" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
                           <option value="objective">Objective</option>
                           <option value="theory">Theory (AI Graded)</option>

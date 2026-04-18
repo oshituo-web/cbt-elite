@@ -148,7 +148,7 @@ export const DashboardComponent = {
                     const sDate = new Date(s.created_at)
                     const sessionCount = s.answered_questions ?? s.total_questions ?? 0
                     if (sDate.toDateString() === today) v2_todayQuestions += sessionCount
-                    v2_totalQuestions += (s.total_questions || 0)
+                    v2_totalQuestions += sessionCount
                     v2_totalCorrect += (s.correct_answers || 0)
                     v2_overallTime += (s.time_taken_seconds || 0)
                 }
@@ -610,88 +610,6 @@ export const DashboardComponent = {
         </footer>
       </div>
 
-      <!-- Leaderboard Modal -->
-      <div id="leaderboard-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass" style="max-width: 500px; width: 92%; position: relative; padding: 1.5rem 1rem; border-radius: 20px;">
-          <button id="close-leaderboard" class="btn-secondary" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 32px; height: 32px; padding: 0; min-width: auto; border-radius: 50%;">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 1.5rem; font-weight: 900; text-align: center; color: var(--accent-primary); font-size: 1.35rem;">Global Rankings</h2>
-          <div id="leaderboard-list"></div>
-        </div>
-      </div>
-
-      <!-- Upgrade Modal -->
-      <div id="upgrade-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass" style="max-width: 480px; width: 92%; position: relative; padding: 2rem 1rem; text-align: center; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
-          <button id="close-upgrade" class="btn-secondary" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 32px; height: 32px; padding: 0; min-width: auto; border-radius: 50%;">&times;</button>
-          <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; font-weight: 900; color: var(--text-primary); font-size: 1.5rem;">CBT Elite Pro</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Unlock AI-powered learning.</p>
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="glass card" style="padding: 1.25rem; border: 2px solid var(--accent-primary); background: rgba(37, 99, 235, 0.05);">
-              <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">LIFETIME ACCESS</h4>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-primary); margin: 0.4rem 0;">${systemConfig.pricing_lifetime}</div>
-              <button id="pay-lifetime-btn" class="btn-dominant" style="width: 100%; height: 48px;">ACTIVATE NOW</button>
-            </div>
-            <div class="glass card" style="padding: 1.25rem; border: 2px solid var(--accent-secondary); background: rgba(147, 51, 234, 0.05);">
-              <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">MONTHLY RENEWAL</h4>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--accent-secondary); margin: 0.4rem 0;">${typeof systemConfig.pricing_monthly === 'number' ? '₦' + systemConfig.pricing_monthly : systemConfig.pricing_monthly}</div>
-              <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Unlimited AI & Unlimited Sessions</p>
-              <button id="pay-monthly-btn" class="btn-dominant" style="width: 100%; height: 48px; background: var(--accent-secondary);">RENEW NOW</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Celebration Modal (Option 2) -->
-      <div id="celebration-modal" class="modal-overlay" style="display: none; z-index: 9999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);">
-        <div class="modal-content" style="max-width: 400px; width: 90%; background: transparent; padding: 0; box-shadow: none;">
-          <div class="glass card scale-in" style="padding: 2.5rem 2rem; text-align: center; border: 2px solid var(--accent-primary); background: linear-gradient(135deg, rgba(88, 28, 135, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);">
-            <div id="celebration-icon-container" style="width: 100px; height: 100px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 50%; border: 2px solid var(--accent-primary); position: relative;">
-                <i id="celebration-icon" data-lucide="star" style="width: 50px; height: 50px; color: var(--warning);"></i>
-                <div style="position: absolute; top: -10px; right: -10px; width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem;" id="celebration-stars">1★</div>
-            </div>
-            <h2 id="celebration-title" style="font-family: 'Outfit'; font-weight: 900; font-size: 2rem; color: #fff; margin-bottom: 0.5rem; letter-spacing: -0.02em;">New Achievement!</h2>
-            <p id="celebration-name" style="font-size: 1.25rem; font-weight: 800; color: var(--warning); margin-bottom: 1rem; text-transform: uppercase;"></p>
-            <p id="celebration-text" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;"></p>
-            <button id="close-celebration-btn" class="btn-dominant" style="width: 100%; height: 54px; font-size: 1.1rem; border-radius: 16px;">CONTINUE SUCCESS</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ELITE STORE MODAL -->
-      <div id="elite-store-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass" style="max-width: 450px; width: 92%; position: relative; padding: 2rem 1.5rem; border-radius: 24px; text-align: center;">
-          <button id="close-store" class="btn-secondary" style="position: absolute; top: 1rem; right: 1rem; width: 36px; height: 36px; padding: 0; min-width: auto; border-radius: 50%;">&times;</button>
-          
-          <div style="margin-bottom: 2rem;">
-            <div style="background: rgba(245, 158, 11, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 2px solid #f59e0b;">
-              <i data-lucide="shopping-bag" style="color: #f59e0b; width: 32px; height: 32px;"></i>
-            </div>
-            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.75rem; color: var(--text-primary); margin: 0;">Elite Store</h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Spend your hard-earned coins on power-ups.</p>
-          </div>
-
-          <div style="display: grid; gap: 1rem;">
-            <!-- STREAK FREEZE ITEM -->
-            <div class="glass card" style="padding: 1.25rem; border: 1.5px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.05); display: flex; align-items: center; gap: 1rem; text-align: left;">
-              <div style="width: 50px; height: 50px; background: rgba(139, 92, 246, 0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-secondary);">
-                <i data-lucide="snowflake" style="width: 28px; height: 28px;"></i>
-              </div>
-              <div style="flex: 1;">
-                <h4 style="font-family: 'Outfit'; font-weight: 800; font-size: 1rem; margin: 0;">Streak Freeze</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.15rem 0 0.5rem 0;">Protects your daily streak for 24 hours if you miss a day.</p>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 0.9rem; font-weight: 900; color: #f59e0b; display: flex; align-items: center; gap: 0.25rem;">
-                    <i data-lucide="coins" style="width: 14px;"></i> 100
-                  </span>
-                  <button id="buy-freeze-btn" class="btn-primary" style="height: 32px; padding: 0 1rem; font-size: 0.75rem; border-radius: 8px;">PURCHASE</button>
-                </div>
-              </div>
-            </div>
-            
-            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">More items (Elite Shields, Profile Badges) coming soon!</p>
-          </div>
-        </div>
-      </div>
     `
 
     let lucideRetries = 0;
@@ -743,40 +661,109 @@ export const DashboardComponent = {
 
     if (closeUpgrade) closeUpgrade.onclick = () => upgradeModal.style.display = 'none'
 
-    const triggerPayment = (amount, planName) => {
-        const handler = PaystackPop.setup({
-            key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder', 
-            email: profile.email,
-            amount: amount,
-            currency: 'NGN',
-            callback: async (response) => {
-                const isFirstTime = !profile.activation_status
-                let rpcError;
-                if (isFirstTime) {
-                   const { error } = await DataService.activateUserLifetime(this.profile.id)
-                   rpcError = error
-                } else {
-                   const { error } = await DataService.subscribeUser(this.profile.id, 'monthly')
-                   rpcError = error
-                }
-                 if (!rpcError) {
-                     // If first time activation, also grant initial credits if configured
-                     if (isFirstTime && systemConfig.ai_credits_initial_medium > 0) {
-                        await DataService.updateUser(this.profile.id, { 
-                          ai_credits: systemConfig.ai_credits_initial_medium 
-                        })
-                     }
-                     alert(`Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`)
-                     location.reload()
-                 } else { alert("Upgrade failed. Contact support.") }
-            },
-            onClose: () => alert('Transaction cancelled.')
-        })
-        handler.openIframe()
+    let activeDiscount = 0;
+    
+    // Update Upgrade Modal Dynamic Prices
+    const lifetimeDisplay = document.getElementById('lifetime-price-display');
+    const monthlyDisplay = document.getElementById('monthly-price-display');
+    const formatNaira = (n) => typeof n === 'number' ? '₦' + n.toLocaleString() : n;
+    
+    if (lifetimeDisplay) lifetimeDisplay.innerText = formatNaira(systemConfig.pricing_lifetime);
+    if (monthlyDisplay) monthlyDisplay.innerText = formatNaira(systemConfig.pricing_monthly);
+
+    const applyPromoBtn = document.getElementById('apply-promo-btn')
+    if (applyPromoBtn) {
+        applyPromoBtn.onclick = async () => {
+            const code = document.getElementById('promo-code-input').value.trim()
+            if (!code) return
+            applyPromoBtn.disabled = true
+            applyPromoBtn.textContent = "..."
+            
+            // Check promo code via RPC
+            const { data, error } = await window.supabase.rpc('validate_promo_code', { p_code: code })
+            const msgEl = document.getElementById('promo-msg')
+            msgEl.style.display = 'block'
+            
+            if (error || !data || data.discount_percent === undefined) {
+                 msgEl.style.color = 'var(--error)'
+                 msgEl.textContent = "Invalid or expired promo code."
+                 activeDiscount = 0
+            } else {
+                 msgEl.style.color = 'var(--success)'
+                 msgEl.textContent = `Promo Applied: ${data.discount_percent}% off!`
+                 activeDiscount = data.discount_percent
+
+                 // Update UI pricing
+                 const newLife = systemConfig.pricing_lifetime * (1 - (activeDiscount/100))
+                 const newMonth = systemConfig.pricing_monthly * (1 - (activeDiscount/100))
+                 if (lifetimeDisplay) lifetimeDisplay.innerHTML = `${formatNaira(newLife)} <span style="text-decoration: line-through; font-size:1rem; opacity:0.5;">${formatNaira(systemConfig.pricing_lifetime)}</span>`
+                 if (monthlyDisplay) monthlyDisplay.innerHTML = `${formatNaira(newMonth)} <span style="text-decoration: line-through; font-size:1rem; opacity:0.5;">${formatNaira(systemConfig.pricing_monthly)}</span>`
+            }
+            applyPromoBtn.disabled = false
+            applyPromoBtn.textContent = "Apply"
+        }
     }
 
-    if (payLifetime) payLifetime.onclick = () => triggerPayment(150000, 'activation')
-    if (payMonthly) payMonthly.onclick = () => triggerPayment(100000, 'monthly')
+    const loadPaystackScript = () => {
+        return new Promise((resolve, reject) => {
+            if (window.PaystackPop) return resolve();
+            const script = document.createElement('script');
+            script.src = 'https://js.paystack.co/v1/inline.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Paystack script'));
+            document.head.appendChild(script);
+        });
+    };
+
+    const triggerPayment = async (baseAmountPlan, planName) => {
+        try {
+            await loadPaystackScript();
+            
+            // Multiply by 100 since Paystack expects Kobo
+            // Apply activeDiscount
+            const finalAmountKobo = (baseAmountPlan * (1 - (activeDiscount / 100))) * 100
+
+            const handler = window.PaystackPop.setup({
+                key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder', 
+                email: profile.email,
+                amount: finalAmountKobo,
+                currency: 'NGN',
+                callback: async (response) => {
+                    const isFirstTime = !profile.activation_status
+                    let rpcError;
+                    if (isFirstTime) {
+                       const { error } = await DataService.activateUserLifetime(this.profile.id)
+                       rpcError = error
+                    } else {
+                       const { error } = await DataService.subscribeUser(this.profile.id, 'monthly')
+                       rpcError = error
+                    }
+                     if (!rpcError) {
+                         // If first time activation, also grant initial credits if configured
+                         if (isFirstTime && systemConfig.ai_credits_initial_medium > 0) {
+                            await DataService.updateUser(this.profile.id, { 
+                              ai_credits: systemConfig.ai_credits_initial_medium 
+                            })
+                         }
+                         alert(`Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`)
+                         location.reload()
+                     } else { alert("Upgrade failed. Contact support.") }
+                },
+                onClose: () => alert('Transaction cancelled.')
+            })
+            handler.openIframe()
+        } catch (err) {
+            console.error(err);
+            alert("Could not load payment processor. Please check your internet connection.");
+        }
+    }
+
+    // Convert string prices to numbers if needed
+    const priceLifetimeNum = parseInt(String(systemConfig.pricing_lifetime).replace(/[^0-9]/g, ''), 10) || 1500;
+    const priceMonthlyNum = parseInt(String(systemConfig.pricing_monthly).replace(/[^0-9]/g, ''), 10) || 1000;
+
+    if (payLifetime) payLifetime.onclick = () => triggerPayment(priceLifetimeNum, 'activation')
+    if (payMonthly) payMonthly.onclick = () => triggerPayment(priceMonthlyNum, 'monthly')
 
     console.log("DASH_TRACE_2: Attaching quick action listeners")
     const DASH_quickPracticeGrid = document.getElementById('quick-practice-btn-grid')
@@ -835,7 +822,7 @@ export const DashboardComponent = {
                 }
             }
         }
-        this.renderCharts(this.profile.id)
+        this.renderCharts(this.profile.id, analytics)
       } catch (err) { console.error(err) }
     }
 
@@ -951,8 +938,8 @@ export const DashboardComponent = {
     }
   },
 
-  async renderCharts(userId) {
-    const { history, mastery, error } = await DataService.getUserAnalytics(userId)
+  async renderCharts(userId, providedAnalytics = null) {
+    const { history, mastery, error } = providedAnalytics || await DataService.getUserAnalytics(userId)
     const historyCtx = document.getElementById('score-history-chart')?.getContext('2d')
     if (historyCtx && history.length > 0) {
         if (this._historyChart) this._historyChart.destroy()
@@ -1061,14 +1048,16 @@ export const DashboardComponent = {
     const modal = document.getElementById('celebration-modal');
     if (!modal) return;
 
-    document.getElementById('celebration-name').textContent = milestone.title;
-    document.getElementById('celebration-name').style.color = milestone.color;
-    document.getElementById('celebration-stars').textContent = `${milestone.starCount}★`;
-    document.getElementById('celebration-text').textContent = `Incredible! You've solved ${milestone.target} questions today. You are officially a Daily ${milestone.title}!`;
-    
+    const nameEl = document.getElementById('celebration-name');
+    const starsEl = document.getElementById('celebration-stars');
+    const textEl = document.getElementById('celebration-text');
     const icon = document.getElementById('celebration-icon');
-    icon.setAttribute('data-lucide', milestone.badge);
-    icon.style.color = milestone.color;
+    const closeBtn = document.getElementById('close-celebration-btn');
+
+    if (nameEl) { nameEl.textContent = milestone.title; nameEl.style.color = milestone.color; }
+    if (starsEl) starsEl.textContent = `${milestone.starCount}★`;
+    if (textEl) textEl.textContent = `Incredible! You've solved ${milestone.target} questions today. You are officially a Daily ${milestone.title}!`;
+    if (icon) { icon.setAttribute('data-lucide', milestone.badge); icon.style.color = milestone.color; }
     
     modal.style.display = 'flex';
     if (window.lucide) window.lucide.createIcons({ root: modal });
@@ -1082,11 +1071,12 @@ export const DashboardComponent = {
         });
     }
 
-    const closeBtn = document.getElementById('close-celebration-btn');
-    closeBtn.onclick = () => {
-        modal.style.display = 'none';
-        this.checkForCelebration(); // Check for cumulative levels
-    };
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+          modal.style.display = 'none';
+          this.checkForCelebration();
+      };
+    }
   },
 
   checkForCelebration() {
@@ -1137,8 +1127,10 @@ export const DashboardComponent = {
     
     const progressEl = document.getElementById('league-week-progress')
     if (progressEl) {
-        const weekProgress = ((now.getDay() || 7) * 24 + now.getHours()) / (7 * 24) * 100
-        progressEl.style.width = `${100 - weekProgress}%`
+        // Monday = 1, Sunday = 7. Subtract 1 so Monday starts at 0 hours.
+        const currentDayOfWeek = now.getDay() || 7
+        const weekProgress = ((currentDayOfWeek - 1) * 24 + now.getHours() + (now.getMinutes()/60)) / (7 * 24) * 100
+        progressEl.style.width = `${Math.min(100, Math.max(0, weekProgress))}%`
     }
   },
 

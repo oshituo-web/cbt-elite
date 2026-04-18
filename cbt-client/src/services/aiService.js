@@ -3,9 +3,7 @@
  * Handles core AI interactions for Elite Learning Platform using Google Gemini.
  */
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const GEMINI_MODEL = "gemini-1.5-flash-latest"
-const BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`
+import { supabase } from '../utils/supabase'
 
 export const AiService = {
   /**
@@ -17,9 +15,7 @@ export const AiService = {
    * @returns {Promise<string>} - The AI generated explanation.
    */
   async getDeepExplanation(question, userChoiceId, correctChoiceId, userAnalytics = null) {
-    if (!GEMINI_API_KEY) {
-      throw new Error("Elite AI is currently unavailable (M-API-KEY missing).")
-    }
+
 
     const userChoice = question.answers.find(a => a.id === userChoiceId)?.answer_text || (userChoiceId && typeof userChoiceId === 'string' ? userChoiceId : "None");
     const correctChoice = question.answers.find(a => a.id === correctChoiceId)?.answer_text || (correctChoiceId && typeof correctChoiceId === 'string' ? correctChoiceId : "Unknown");
@@ -61,19 +57,13 @@ export const AiService = {
     `
 
     try {
-      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1000 }
-        })
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: { prompt, temperature: 0.7, maxOutputTokens: 1000 }
       })
 
-      if (!response.ok) throw new Error("Elite AI is currently resting. Please try again later.")
+      if (error || !data) throw error || new Error("Elite AI is currently resting. Please try again later.")
 
-      const data = await response.json()
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Elite AI couldn't generate an explanation. Please check the standard explanation."
+      return data.text || "Elite AI couldn't generate an explanation. Please check the standard explanation."
     } catch (err) {
       console.error("AiService Error:", err)
       throw err
@@ -84,9 +74,7 @@ export const AiService = {
    * Generates a dynamic HTML study guide for a specific topic, tailored by historical weak/strong points.
    */
   async getTopicDeepDive(topic, subject, userAnalytics = null) {
-    if (!GEMINI_API_KEY) {
-      throw new Error("Elite AI is currently unavailable (M-API-KEY missing).")
-    }
+
 
     let memoryContext = "The student is exploring this topic.";
     if (userAnalytics && userAnalytics.mastery) {
@@ -110,19 +98,13 @@ export const AiService = {
     `;
 
     try {
-      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
-        })
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: { prompt, temperature: 0.7, maxOutputTokens: 600 }
       });
 
-      if (!response.ok) throw new Error("Elite AI is currently resting. Please try again later.");
+      if (error || !data) throw error || new Error("Elite AI is currently resting. Please try again later.");
 
-      const data = await response.json();
-      let htmlText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No summary available.";
+      let htmlText = data.text || "No summary available.";
       return htmlText.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
     } catch (err) {
       console.error("AiService Deep Dive Error:", err);
@@ -137,9 +119,7 @@ export const AiService = {
    * @returns {Promise<string>}
    */
   async getAIPerformanceSummary(analytics, shortVersion = false) {
-     if (!GEMINI_API_KEY) {
-       throw new Error(shortVersion ? "AI Insights unavailable." : "Elite AI Strategy engine offline. Add your API key.");
-     }
+
 
      if (!analytics || !analytics.mastery || analytics.mastery.length === 0) {
         return shortVersion 
@@ -171,18 +151,12 @@ export const AiService = {
      `;
 
      try {
-       const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({
-           contents: [{ parts: [{ text: shortVersion ? promptShort : promptLong }] }],
-           generationConfig: { temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
-         })
+       const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+         body: { prompt: shortVersion ? promptShort : promptLong, temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
        });
 
-       if (!response.ok) throw new Error("API call failed.");
-       const data = await response.json();
-       let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Strategy synthesis unavailable.";
+       if (error || !data) throw error || new Error("API call failed.");
+       let text = data.text || "Strategy synthesis unavailable.";
        return text.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
      } catch (err) {
        console.error("AI Performance Error:", err);
@@ -210,7 +184,7 @@ export const AiService = {
    * Generates a "Focus for Today" study plan using Gemini.
    */
   async generateTodayFocus(analytics) {
-    if (!GEMINI_API_KEY) return "No AI access.";
+
     
     const weakSubjects = (analytics.mastery || [])
       .filter(m => m.average < 60)
@@ -227,16 +201,11 @@ export const AiService = {
     `;
 
     try {
-      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 100 }
-        })
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: { prompt, temperature: 0.7, maxOutputTokens: 100 }
       });
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Focus on your weakest areas today.";
+      if (error || !data) throw error;
+      return data.text || "Focus on your weakest areas today.";
     } catch (err) {
       return "Double down on your weakest subjects today.";
     }
@@ -246,9 +215,7 @@ export const AiService = {
    * AI-powered question repair for administrators.
    */
   async repairQuestion(questionText, reason, details) {
-    if (!GEMINI_API_KEY) {
-      throw new Error("Elite AI Repair engine offline.");
-    }
+
 
     const prompt = `
       You are "Elite AI", a content auditor.
@@ -277,21 +244,14 @@ export const AiService = {
     `;
 
     try {
-      const response = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1200 }
-        })
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: { prompt, temperature: 0.2, maxOutputTokens: 1200 }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`AI Repair service unavailable (HTTP ${response.status}: ${errorData.error?.message || 'Unknown Error'})`);
+      if (error || !data) {
+        throw error || new Error("AI Repair service unavailable");
       }
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const text = data.text || "{}";
       return JSON.parse(text);
     } catch (err) {
       console.error("AI Repair Error:", err);

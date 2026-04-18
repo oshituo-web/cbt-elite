@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4db6ac">
-    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <!-- Paystack loaded lazily on demand via Dashboard.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <!-- Phase 2: KaTeX for Math Formulas -->
@@ -173,10 +173,11 @@
                 <i id="celebration-icon" data-lucide="award" style="width: 40px; height: 40px; color: var(--accent-primary);"></i>
               </div>
             </div>
-            <h1 id="celebration-title" style="font-family: 'Outfit'; font-weight: 900; font-size: 2.2rem; color: var(--text-primary); margin: 0;">PROMOTE! 🎉</h1>
-            <h3 id="celebration-name" style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 700; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 2px;">GOLD LEAGUE</h3>
-            <p id="celebration-text" style="color: var(--text-secondary); margin-top: 1rem; line-height: 1.6;">Incredible work! You've climbed to a new league. Keep the momentum going!</p>
-            <button onclick="document.getElementById('celebration-modal').style.display = 'none'" class="btn-primary" style="margin-top: 2rem; width: 100%; height: 50px; font-size: 1rem; border-radius: 12px; font-weight: 800;">CONTINUE JOURNEY</button>
+            <h1 id="celebration-title" style="font-family: 'Outfit'; font-weight: 900; font-size: 2.2rem; color: var(--text-primary); margin: 0;">MILESTONE! 🎉</h1>
+            <h3 id="celebration-name" style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 700; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 2px;"></h3>
+            <div id="celebration-stars" style="font-size: 1.8rem; margin: 0.5rem 0; color: #f59e0b; letter-spacing: 4px;"></div>
+            <p id="celebration-text" style="color: var(--text-secondary); margin-top: 1rem; line-height: 1.6;"></p>
+            <button id="close-celebration-btn" class="btn-primary" style="margin-top: 2rem; width: 100%; height: 50px; font-size: 1rem; border-radius: 12px; font-weight: 800;">CONTINUE JOURNEY</button>
           </div>
         </div>
 
@@ -212,7 +213,7 @@
               <p style="color: var(--text-secondary); font-size: 0.9rem;">Spend coins to maintain your edge.</p>
             </div>
             
-            <div class="glass card" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: rgba(139, 92, 246, 0.05); border: 1.5px solid var(--accent-secondary); text-align: left;">
+            <div class="glass card store-item-card">
               <div style="width: 48px; height: 48px; color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                 <i data-lucide="snowflake" style="width: 24px;"></i>
               </div>
@@ -227,6 +228,37 @@
             </div>
             
             <button id="close-store" class="btn-secondary" style="margin-top: 2rem; width: 100%;">BACK TO DASHBOARD</button>
+          </div>
+        </div>
+
+        <!-- 🚀 Upgrade Modal -->
+        <div id="upgrade-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100000; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
+          <div class="glass card" style="max-width: 480px; width: 92%; position: relative; padding: 2rem 1rem; text-align: center; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
+            <button id="close-upgrade" class="btn-secondary" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 32px; height: 32px; padding: 0; min-width: auto; border-radius: 50%;"><i data-lucide="x" style="width: 16px;"></i></button>
+            <h2 style="font-family: 'Outfit'; margin-bottom: 0.5rem; font-weight: 900; color: var(--text-primary); font-size: 1.5rem;">CBT Elite Pro</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Unlock AI-powered learning.</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; gap: 0.5rem;">
+                 <input type="text" id="promo-code-input" class="glass-input" placeholder="Promo Code" style="flex: 1; text-transform: uppercase;">
+                 <button id="apply-promo-btn" class="btn-secondary">Apply</button>
+              </div>
+              <p id="promo-msg" style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--success); display: none;"></p>
+            </div>
+  
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="glass card pricing-card-lifetime">
+                <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">LIFETIME ACCESS</h4>
+                <div id="lifetime-price-display" style="font-size: 2rem; font-weight: 900; color: var(--accent-primary); margin: 0.4rem 0;">...</div>
+                <button id="pay-lifetime-btn" class="btn-dominant" style="width: 100%; height: 48px;">ACTIVATE NOW</button>
+              </div>
+              <div class="glass card pricing-card-monthly">
+                <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">MONTHLY RENEWAL</h4>
+                <div id="monthly-price-display" style="font-size: 2rem; font-weight: 900; color: var(--accent-secondary); margin: 0.4rem 0;">...</div>
+                <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Unlimited AI & Unlimited Sessions</p>
+                <button id="pay-monthly-btn" class="btn-dominant" style="width: 100%; height: 48px; background: var(--accent-secondary);">RENEW NOW</button>
+              </div>
+            </div>
           </div>
         </div>
 
