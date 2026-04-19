@@ -60,8 +60,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['@supabase/supabase-js', 'lucide-static'],
-          charts: ['chart.js']
+          vendor: ['@supabase/supabase-js', 'lucide-static']
         }
       }
     }
