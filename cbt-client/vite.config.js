@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     VitePWA({
+      // ... (existing PWA config)
       registerType: 'autoUpdate',
       injectRegister: 'script',
       devOptions: {
@@ -54,5 +55,15 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['@supabase/supabase-js', 'lucide-static'],
+          charts: ['chart.js']
+        }
+      }
+    }
+  }
 })

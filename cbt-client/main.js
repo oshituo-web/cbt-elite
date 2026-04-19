@@ -544,9 +544,12 @@ function showDashboard(profile) {
   initNotifications(profile)
   
   // Finalize Dashboard rendering
-  DashboardComponent.render(profile, (questions, mode, subject, examType, resumeState = null) => {
+  DashboardComponent.render(profile, (questions, mode, subject, examType, extraConfig = null) => {
     DashboardComponent.hide()
-    showExam(questions, profile, false, {}, mode, subject, examType, resumeState)
+    const resumeState = extraConfig?.resumeState || null;
+    const intendedSubjects = extraConfig?.intendedSubjects || [];
+    const clashId = extraConfig?.clashId || null;
+    showExam(questions, profile, false, {}, mode, subject, examType, resumeState, intendedSubjects, clashId)
   }, () => {
     DashboardComponent.hide()
     showAdmin(profile)
@@ -587,14 +590,14 @@ function showAdmin(profile) {
   document.querySelectorAll('[data-view="admin"]').forEach(v => v.classList.add('active'))
 }
 
-function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = []) {
+function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = [], clashId = null) {
   hideAll(true) // Pass true to hide layout for focus
-  ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions) => {
-    showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken)
-  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects)
+  ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions, cid) => {
+    showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken, cid)
+  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects, clashId)
 }
 
-function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0) {
+function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0, clashId = null) {
   hideAll()
   ResultsComponent.render(questions, userAnswers, (newQs, newMode, newSubj, newExam) => {
     showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType) // Retake same questions or load custom focus questions

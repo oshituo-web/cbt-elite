@@ -40,6 +40,7 @@ export const DashboardComponent = {
     this.onStartExam = onStartExam
     this.onOpenAdmin = onOpenAdmin
     this.onReadNews = onReadNews
+    this.unresolvedMistakeIds = [] 
     
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
@@ -107,6 +108,9 @@ export const DashboardComponent = {
         const lastTier = localStorage.getItem('elite_last_league_tier')
         const { data: leagueSync } = await DataService.syncLeagueStatus(this.profile.id)
         this.leagueData = leagueSync || { tier: 'Bronze', group_id: null }
+        
+        // Ensure tier is NEVER undefined
+        if (!this.leagueData.tier) this.leagueData.tier = 'Bronze'
         
         if (lastTier && lastTier !== this.leagueData.tier) {
             const isPromotion = this._isPromotion(lastTier, this.leagueData.tier)
@@ -328,53 +332,85 @@ export const DashboardComponent = {
               </button>
             </div>
 
-            <!-- League / Tier Card (Duolingo Style) -->
+            <!-- Elite Clan Hub (Department-Based) -->
             ${(() => {
-                const tierStyles = {
-                    'Bronze': { color: '#cd7f32', icon: 'shield', bg: 'rgba(205, 127, 50, 0.05)' },
-                    'Silver': { color: '#c0c0c0', icon: 'shield-check', bg: 'rgba(192, 192, 192, 0.05)' },
-                    'Gold': { color: '#ffd700', icon: 'award', bg: 'rgba(255, 215, 0, 0.05)' },
-                    'Diamond': { color: '#00f2ff', icon: 'gem', bg: 'rgba(0, 242, 255, 0.05)' },
-                    'Elite': { color: '#8b5cf6', icon: 'crown', bg: 'rgba(139, 92, 246, 0.05)' }
+                const now = DataService.getWATDate();
+                const day = now.getDay();
+                const hour = now.getHours();
+                const min = now.getMinutes();
+                
+                // SAT/SUN 7:00 PM - 7:30 PM is Clash Time
+                const isClashWindow = (day === 6 || day === 0) && hour === 19 && min < 30;
+                // After 7:30 PM is Results Time
+                const isResultsWindow = (day === 6 || day === 0) && (hour > 19 || (hour === 19 && min >= 30));
+                
+                const dept = this.profile?.department || 'General';
+                const tier = this.profile?.league_tier || 'Bronze';
+                const isSuperElite = tier === 'Elite';
+                
+                const deptStyles = {
+                    'Science': { color: '#00f2ff', name: 'Science Clan', icon: 'flask-conical', sub: 'Maths, Phys, Chem' },
+                    'Arts': { color: '#f471ff', name: 'Arts Clan', icon: 'palette', sub: 'Lit, Gov, CRS' },
+                    'Commercial': { color: '#ffd700', name: 'Commercial Clan', icon: 'trending-up', sub: 'Econ, Accnt, Comm' },
+                    'General': { color: '#8b5cf6', name: 'Elite Clan', icon: 'graduation-cap', sub: 'All Subjects' }
                 };
-                const tier = this.leagueData?.tier || 'Bronze';
-                const style = tierStyles[tier] || tierStyles['Bronze'];
+                const style = deptStyles[dept] || deptStyles['General'];
+                const clanName = this.leagueData?.clan_name || (dept + ' Elites');
 
                 return `
-                <div id="open-league-btn" class="glass card scale-in" style="padding: 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; border-top: 4px solid ${style.color}; background: linear-gradient(180deg, ${style.bg} 0%, var(--surface-color) 100%); cursor: pointer;">
+                <div id="open-league-btn" class="glass card scale-in" style="padding: 1.25rem; display: flex; flex-direction: column; min-height: 280px; justify-content: space-between; border-top: 4px solid ${style.color}; background: linear-gradient(180deg, ${style.color}05 0%, var(--surface-color) 100%); cursor: pointer; position: relative; overflow: hidden;">
+                  ${isSuperElite ? `<div style="position: absolute; top: 0; right: 0; background: var(--accent-primary); color: white; padding: 2px 10px; font-size: 0.6rem; font-weight: 900; border-bottom-left-radius: 8px;">SUPER LEAGUE</div>` : ''}
+                  
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Weekly League</h3>
+                    <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">${isSuperElite ? 'Super Elite Hub' : 'Elite Clan Hub'}</h3>
                     <div style="font-size: 0.7rem; font-weight: 800; color: ${style.color}; display: flex; align-items: center; gap: 0.25rem;">
-                        <i data-lucide="users" style="width: 12px;"></i> GROUP OF 50
+                        <i data-lucide="users" style="width: 12px;"></i> <span id="clan-size-indicator">GROUP OF 20</span>
                     </div>
                   </div>
                   
-                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;">
-                    <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color}; position: relative;">
-                        <i data-lucide="${style.icon}" style="width: 36px; height: 36px; color: ${style.color}; filter: drop-shadow(0 0 8px ${style.color}44);"></i>
-                        <div style="position: absolute; bottom: -5px; right: -5px; background: ${style.color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface-color); display: flex; align-items: center; justify-content: center;">
-                             <i data-lucide="trending-up" style="width: 12px; color: #fff;"></i>
-                        </div>
+                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0;">
+                    <div style="width: 64px; height: 64px; background: ${style.color}15; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color};">
+                        <i data-lucide="${style.icon}" style="width: 32px; height: 32px; color: ${style.color};"></i>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.1rem;">${tier} League</div>
-                        <div id="league-rank-indicator" style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 700;">Loading rank...</div>
+                        <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary);">${clanName}</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">${dept} HUB • ${tier}</div>
                     </div>
                   </div>
 
-                  <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 0.75rem; border: 1px solid var(--glass-border);">
-                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                        <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Time Left</span>
-                        <span id="league-timer" style="font-size: 0.7rem; font-weight: 900; color: var(--text-primary);">04d 12h 05m</span>
-                     </div>
-                     <div class="progress-v2-container" style="height: 4px; background: rgba(255,255,255,0.05);">
-                        <div id="league-week-progress" class="progress-v2-fill" style="width: 60%; background: ${style.color};"></div>
-                     </div>
-                  </div>
+                  ${isClashWindow ? `
+                    <button id="start-clash-btn" class="btn-dominant scale-in" style="width: 100%; height: 50px; font-weight: 900; background: linear-gradient(90deg, ${style.color}, var(--accent-primary)); border: none; box-shadow: 0 0 20px ${style.color}44;">
+                        START THE CLASH NOW!
+                    </button>
+                  ` : isResultsWindow ? `
+                    <button id="view-clash-results-btn" class="btn-dominant scale-in" style="width: 100%; height: 50px; font-weight: 900; background: linear-gradient(90deg, var(--success), var(--accent-primary)); border: none; box-shadow: 0 0 20px rgba(16, 185, 129, 0.44);">
+                        VIEW CLASH RESULTS
+                    </button>
+                  ` : `
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 0.75rem; border: 1px solid var(--glass-border);">
+                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                          <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 0.6rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Next Clash</span>
+                            <span style="font-size: 0.75rem; font-weight: 900; color: var(--text-primary);">${isSuperElite ? 'SUNDAY 7PM' : 'SATURDAY 7PM'}</span>
+                          </div>
+                          <div style="text-align: right;">
+                            <span id="league-timer" style="font-size: 0.7rem; font-weight: 900; color: ${style.color};">--d --h --m</span>
+                          </div>
+                       </div>
+                       <div class="progress-v2-container" style="height: 4px; background: rgba(255,255,255,0.05);">
+                          <div id="league-week-progress" class="progress-v2-fill" style="width: 0%; background: ${style.color};"></div>
+                       </div>
+                    </div>
+                  `}
                   
-                  <button class="glass-btn" style="margin-top: 1rem; font-size: 0.7rem; padding: 0.4rem; border: 1px solid var(--glass-border); color: var(--text-secondary); width: 100%; border-radius: 8px;">
-                    <i data-lucide="list" style="width:14px; margin-right: 4px;"></i> VIEW FULL LEAGUE TABLE
-                  </button>
+                  <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+                    <button class="glass-btn" id="view-league-table" style="flex: 2; font-size: 0.65rem; padding: 0.4rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px;">
+                        RANKINGS
+                    </button>
+                    <button class="glass-btn" id="change-clan-btn" style="flex: 1; font-size: 0.65rem; padding: 0.4rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px;" title="Update Department">
+                        <i data-lucide="settings-2" style="width:12px;"></i>
+                    </button>
+                  </div>
                 </div>
                 `;
             })()}
@@ -525,6 +561,17 @@ export const DashboardComponent = {
                 </div>
                 <div style="font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 6px; font-weight: 800; color: var(--text-secondary);">SPACED REPETITION</div>
               </div>
+              
+              <div style="margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Fixing Accuracy</span>
+                    <span style="font-size: 0.7rem; font-weight: 900; color: #ef4444;">MASTER LEVEL</span>
+                </div>
+                <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; border: 1px solid var(--glass-border);">
+                    <div style="width: ${Math.max(15, 100 - (this.unresolvedMistakeIds.length * 2)) }%; height: 100%; background: linear-gradient(90deg, #ef4444, #f59e0b); transition: width 1s ease;"></div>
+                </div>
+              </div>
+
               <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
                 These are questions you missed recently. Fixing them is the fastest way to master your JAMB, WAEC, and NECO exams.
               </p>
@@ -789,10 +836,39 @@ export const DashboardComponent = {
     }
     if (closeLeaderboard) closeLeaderboard.onclick = () => leaderboardModal.style.display = 'none'
 
-    // Weekly League Logic
+    // Elite Clan Hub Logic
     const openLeague = document.getElementById('open-league-btn')
     const leagueModal = document.getElementById('league-table-modal')
     const closeLeague = document.getElementById('close-league')
+    const startClashBtn = document.getElementById('start-clash-btn')
+    const viewLeagueBtn = document.getElementById('view-league-table')
+    const changeClanBtn = document.getElementById('change-clan-btn')
+    
+    if (startClashBtn) {
+        startClashBtn.onclick = (e) => {
+            e.stopPropagation()
+            this.handleClashStart()
+        }
+    }
+
+    if (viewLeagueBtn) {
+        viewLeagueBtn.onclick = (e) => {
+            e.stopPropagation()
+            leagueModal.style.display = 'flex'
+            this.loadLeagueModalTable(profile)
+        }
+    }
+
+    if (changeClanBtn) {
+        changeClanBtn.onclick = (e) => {
+            e.stopPropagation()
+            // Re-trigger Profile Setup for department change
+            ProfileSetupComponent.render(profile, (newProfile) => {
+                this.profile = newProfile
+                this.render(newProfile)
+            })
+        }
+    }
     
     if (openLeague && leagueModal) {
         openLeague.onclick = () => {
@@ -800,6 +876,15 @@ export const DashboardComponent = {
             this.loadLeagueModalTable(profile)
         }
     }
+    const viewClashResultsBtn = document.getElementById('view-clash-results-btn')
+    if (viewClashResultsBtn) {
+        viewClashResultsBtn.onclick = (e) => {
+            e.stopPropagation()
+            leagueModal.style.display = 'flex'
+            this.loadClashLeaderboard()
+        }
+    }
+
     if (closeLeague) closeLeague.onclick = () => leagueModal.style.display = 'none'
 
     // Update League Timer & Mini Rank
@@ -1112,26 +1197,101 @@ export const DashboardComponent = {
   },
 
   updateLeagueTimer() {
-    const now = new Date()
-    const sun = new Date()
-    sun.setDate(now.getDate() + (7 - now.getDay()) % 7)
-    sun.setHours(23, 59, 59, 999)
+    const now = DataService.getWATDate();
+    const day = now.getDay();
+    const hour = now.getHours();
     
-    const diff = sun - now
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24)
-    const mins = Math.floor((diff / (1000 * 60)) % 60)
+    // Target next competition:
+    // If it's Saturday before 7pm, target Saturday 7pm
+    // If it's Saturday after 7pm but before Sunday 7pm, target Sunday 7pm
+    // Otherwise, target next Saturday 7pm
+    
+    let target = new Date(now);
+    if (day === 6 && hour < 19) {
+        target.setHours(19, 0, 0, 0);
+    } else if (day === 0 && hour < 19) {
+        target.setHours(19, 0, 0, 0);
+    } else {
+        // Target next competition day
+        const daysToSat = (6 - day + 7) % 7 || 7;
+        target.setDate(now.getDate() + daysToSat);
+        target.setHours(19, 0, 0, 0);
+    }
+    
+    const diff = target - now;
+    if (diff <= 0) {
+        const timerEl = document.getElementById('league-timer');
+        if (timerEl) timerEl.textContent = `LIVE NOW!`;
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
     
     const timerEl = document.getElementById('league-timer')
-    if (timerEl) timerEl.textContent = `${days}d ${hours}h ${mins}m left`
+    if (timerEl) {
+        if (days > 0) timerEl.textContent = `${days}d ${hours}h left`;
+        else timerEl.textContent = `${hours}h ${mins}m left`;
+    }
     
     const progressEl = document.getElementById('league-week-progress')
     if (progressEl) {
-        // Monday = 1, Sunday = 7. Subtract 1 so Monday starts at 0 hours.
+        // Monday = 1, Sunday = 7.
         const currentDayOfWeek = now.getDay() || 7
         const weekProgress = ((currentDayOfWeek - 1) * 24 + now.getHours() + (now.getMinutes()/60)) / (7 * 24) * 100
         progressEl.style.width = `${Math.min(100, Math.max(0, weekProgress))}%`
     }
+  },
+
+  async loadClashLeaderboard() {
+    const list = document.getElementById('league-modal-list')
+    if (!list) return
+    list.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loader-spinner"></div></div>'
+    
+    document.getElementById('league-modal-title').textContent = `Clan Clash Results`
+    const icon = document.getElementById('league-modal-icon')
+    if (icon) icon.setAttribute('data-lucide', 'trophy')
+    
+    try {
+        const { clashId } = await DataService.getWeeklyClash(this.profile.id)
+        if (!clashId) throw new Error("No recent clash found");
+        
+        const { data } = await DataService.getClashLeaderboard(clashId)
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:2rem;">No results recorded for this clash yet.</div>'
+            return
+        }
+
+        list.innerHTML = data.map((entry, i) => {
+            const isUser = entry.is_me
+            const isTop3 = entry.rank <= 3
+            
+            return `
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); ${isUser ? 'background: rgba(16, 185, 129, 0.08);' : ''}">
+                    <div style="width: 24px; font-weight: 900; color: ${isTop3 ? '#ffd700' : 'var(--text-secondary)'}; font-size: 0.9rem;">${entry.rank}</div>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); border: 1px solid var(--glass-border);">
+                            ${entry.username ? entry.username.substring(0,1).toUpperCase() : '?'}
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; color: ${isUser ? 'var(--success)' : 'var(--text-primary)'}; font-size: 0.9rem;">
+                                ${entry.username || 'Student'} ${isUser ? '<span style="font-size: 0.65rem; opacity: 0.6; margin-left: 4px;">(YOU)</span>' : ''}
+                            </div>
+                            <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700;">${Math.floor(entry.time_taken / 60)}m ${entry.time_taken % 60}s taken</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); font-size: 1rem;">${entry.score}</div>
+                        <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">SCORE</div>
+                    </div>
+                </div>
+            `
+        }).join('')
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--error);">${err.message}</div>`
+    }
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('league-modal-header') })
   },
 
   async loadLeagueModalTable(profile) {
@@ -1193,24 +1353,59 @@ export const DashboardComponent = {
     }).join('')
   },
 
+  async handleClashStart() {
+    try {
+        const { data, duration, clashId, error } = await DataService.getWeeklyClash(this.profile.id)
+        if (error || !data || data.length === 0) {
+            alert(error || "Wait for it! The Elite Clash questions are still being finalized. Check back in a few moments.")
+            return
+        }
+
+        const confirmClash = confirm(`🚀 ELITE CLASH READY!\n\nFormat: ${data.length} Questions\nTime: ${duration} Minutes\n\nYour performance will decide your rank for the week. Ready to dominate?`)
+        
+        if (confirmClash) {
+            this.onStartExam(data, 'clash', 'Elite Clash', 'Weekly Competition', {
+                durationMinutes: duration,
+                clashId: clashId
+            })
+        }
+    } catch (err) {
+        console.error("Clash Start Failed:", err)
+        alert("System error. Please refresh and try again.")
+    }
+  },
+
   _isPromotion(oldTier, newTier) {
     const tiers = ['Bronze', 'Silver', 'Gold', 'Diamond', 'Elite']
     return tiers.indexOf(newTier) > tiers.indexOf(oldTier)
   },
 
   showTierChangeModal(oldTier, newTier, isPromotion) {
-    const title = isPromotion ? 'PROMOTE! 🎉' : 'DEMOTED 📉'
+    const title = isPromotion ? 'PROMOTED! 🎉' : 'DEMOTED 📉'
+    const tierName = newTier || 'Bronze'
     const text = isPromotion 
-        ? `Incredible work! You've climbed from ${oldTier} to the ${newTier} League.`
-        : `Tough week! You've dropped to the ${oldTier} League. Time to fight back!`
+        ? `Incredible work! You've climbed from ${oldTier} to the ${tierName} League.`
+        : `Tough week! You've dropped to the ${tierName} League. Time to fight back!`
     
     // Reuse the celebration modal structure
     const modal = document.getElementById('celebration-modal')
     if (!modal) return
     
-    document.getElementById('celebration-title').textContent = title
-    document.getElementById('celebration-name').textContent = `${newTier} League`
-    document.getElementById('celebration-text').textContent = text
+    const titleEl = document.getElementById('celebration-title')
+    const nameEl = document.getElementById('celebration-name')
+    const textEl = document.getElementById('celebration-text')
+    const closeBtn = document.getElementById('close-celebration-btn')
+
+    if (titleEl) titleEl.textContent = title
+    if (nameEl) nameEl.textContent = `${tierName} League`
+    if (textEl) textEl.textContent = text
+    
+    // 🔥 FIX: Modal was freezing because no close handler was attached
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.style.display = 'none'
+        }
+    }
     
     const icon = document.getElementById('celebration-icon')
     if (icon) {

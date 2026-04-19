@@ -38,6 +38,7 @@ export const AdminComponent = {
             <button class="nav-tab" data-tab="reports" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="flag" style="width: 18px;"></i> Reports</button>
             <button class="nav-tab" data-tab="marketing" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="zap" style="width: 18px;"></i> Marketing</button>
             <button class="nav-tab" data-tab="news" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="newspaper" style="width: 18px;"></i> News</button>
+            <button class="nav-tab" data-tab="leagues" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary);"><i data-lucide="shield-check" style="width: 18px;"></i> Leagues & Clans</button>
             <button class="nav-tab" data-tab="analytics" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-primary);"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</button>
             <button class="nav-tab" data-tab="quality-audit" style="display: flex; align-items: center; gap: 0.75rem; color: var(--success);"><i data-lucide="list-checks" style="width: 18px;"></i> Quality Audit</button>
             <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
@@ -48,7 +49,43 @@ export const AdminComponent = {
           </nav>
           
           <main id="admin-main">
-          <!-- Analytics Tab (Phase 3) -->
+          <!-- Leagues & Clans Tab -->
+          <div id="admin-leagues-tab" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Leagues & Elite Clans</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">Managing departmental competitions and promotions</p>
+              </div>
+              <button id="generate-clash-seeds-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
+                <i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS
+              </button>
+            </div>
+
+            <div class="glass card" style="padding: 1.5rem; border-radius: 20px; border-left: 4px solid var(--accent-secondary); margin-bottom: 2rem;">
+              <h3 style="font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem;">Active Schedule</h3>
+              <div id="clash-schedule-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Schedule items will be injected here -->
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading schedule...</div>
+              </div>
+            </div>
+
+            <div class="glass card" style="padding: 1.5rem; border-radius: 20px;">
+              <h3 style="font-family: 'Outfit'; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1.5rem;">League Management Info</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div class="glass" style="padding: 1.25rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                   <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Promotions</div>
+                   <div style="font-size: 1.25rem; font-weight: 900; color: var(--success); margin: 0.25rem 0;">Every Sunday</div>
+                   <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Top 3 of every Clan join Super Elite.</p>
+                </div>
+                <div class="glass" style="padding: 1.25rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                   <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Clan Capacity</div>
+                   <div style="font-size: 1.25rem; font-weight: 900; color: var(--accent-primary); margin: 0.25rem 0;">20 Students</div>
+                   <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Automatic group overflow handling.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="admin-analytics-tab" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
               <h2 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Platform Analytics</h2>
@@ -870,6 +907,71 @@ export const AdminComponent = {
   },
 
   openEditModal(question) {
+    this._openEditModalLogic(question)
+  },
+
+  _initLeaguesTab() {
+    const generateBtn = document.getElementById('generate-clash-seeds-btn')
+    if (generateBtn) {
+        generateBtn.onclick = async () => {
+            if (!confirm("This will overwrite/generate questions for the coming Saturday and Sunday competitions. Proceed?")) return
+            
+            generateBtn.disabled = true
+            generateBtn.innerHTML = `<span class="loader-spinner" style="width:14px; height:14px; display:inline-block; margin-right: 8px;"></span> GENERATING...`
+            
+            try {
+                await DataService.generateWeeklyClashSeeds()
+                alert("✨ Weekly Clash seeds generated successfully!")
+                this._fetchClashSchedule()
+            } catch (err) {
+                console.error("Seed Generation Failed:", err)
+                alert("Error generating seeds. Check console.")
+            } finally {
+                generateBtn.disabled = false
+                generateBtn.innerHTML = `<i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS`
+                if (window.lucide) lucide.createIcons()
+            }
+        }
+    }
+    this._fetchClashSchedule()
+  },
+
+  async _fetchClashSchedule() {
+    const list = document.getElementById('clash-schedule-list')
+    if (!list) return
+
+    const { data: clashes, error } = await supabase
+        .from('scheduled_clashes')
+        .select('*')
+        .order('week_date', { ascending: false })
+        .limit(10)
+
+    if (error || !clashes || clashes.length === 0) {
+        list.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">No active schedule found. Generate seeds to start.</div>`
+        return
+    }
+
+    list.innerHTML = clashes.map(clash => `
+        <div class="glass" style="padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border);">
+           <div style="display: flex; gap: 1rem; align-items: center;">
+              <div style="background: var(--surface-color); padding: 0.5rem; border-radius: 8px; text-align: center; min-width: 60px; border: 1px solid var(--glass-border);">
+                 <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800;">WEEK</div>
+                 <div style="font-size: 0.9rem; font-weight: 900; color: var(--text-primary);">${new Date(clash.week_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}</div>
+              </div>
+              <div>
+                 <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">${clash.type === 'Super' ? '🚀 Super Elite League' : `${clash.department} Clan Clash`}</div>
+                 <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 700;">${clash.questions_json?.length || 0} Questions • ${clash.duration_minutes} Mins</div>
+              </div>
+           </div>
+           <div style="text-align: right;">
+              <div style="font-size: 0.65rem; font-weight: 800; color: var(--success); text-transform: uppercase;">Synced & Ready</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Automated Live Date</div>
+           </div>
+        </div>
+    `).join('')
+  },
+
+  _openEditModalLogic(question) {
     // Determine options based on how data is laid out (from AI report fetch or getQuestions fetch)
     const qa = (question.question_answers && Array.isArray(question.question_answers)) 
                 ? question.question_answers[0] 

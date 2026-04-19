@@ -25,6 +25,18 @@ export const ProfileSetupComponent = {
             <input type="text" id="full_name" placeholder="John Doe" value="${user.user_metadata?.full_name || ''}" class="glass-input" style="height: 56px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%;">
           </div>
 
+          <div>
+            <label for="department" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit'; display: block; margin-bottom: 0.75rem;">Core Department</label>
+            <select id="department" required class="glass-input" style="height: 56px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%; background: var(--glass-bg);">
+                <option value="" disabled selected>Select Department</option>
+                <option value="Science">Science (Maths, Phys, Chem)</option>
+                <option value="Arts">Arts (Lit, Gov, CRS)</option>
+                <option value="Commercial">Commercial (Econ, Accnt, Comm)</option>
+                <option value="General">General (All Subjects)</option>
+            </select>
+            <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 600;">This determines your Elite Clan & Saturday competition subjects.</p>
+          </div>
+
           <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
             <button type="submit" class="btn-primary" id="save-profile" disabled style="height: 60px; font-size: 1.1rem; font-weight: 900; font-family: 'Outfit';">Complete Setup</button>
             <button type="button" class="btn-secondary" id="back-to-login" style="height: 52px; font-size: 0.95rem; font-weight: 800; font-family: 'Outfit'; border-style: dashed; border-width: 2px;">Back to Login</button>
@@ -68,11 +80,13 @@ export const ProfileSetupComponent = {
       e.preventDefault()
       const username = usernameInput.value.trim().toLowerCase()
       const full_name = document.getElementById('full_name').value.trim()
+      const department = document.getElementById('department').value
 
       const { data, error } = await AuthService.updateProfile({
         id: user.id,
         username,
         full_name,
+        department,
         email: user.email,
         role: 'student'
       })

@@ -150,18 +150,31 @@ export const AiService = {
         Do not use markdown backticks. Do not include raw JSON. Maintain an elite, encouraging, and authoritative tone.
      `;
 
-     try {
-       const { data, error } = await supabase.functions.invoke('gemini-proxy', {
-         body: { prompt: shortVersion ? promptShort : promptLong, temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
-       });
+      try {
+        const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+          body: { prompt: shortVersion ? promptShort : promptLong, temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
+        });
 
-       if (error || !data) throw error || new Error("API call failed.");
-       let text = data.text || "Strategy synthesis unavailable.";
-       return text.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
-     } catch (err) {
-       console.error("AI Performance Error:", err);
-       return shortVersion ? "AI Synthesis unavailable right now." : "<p style='color:var(--error);'>Could not load AI synthesis at this time.</p>";
-     }
+        if (error || !data) {
+            console.error("AI Function Invoke Error:", error);
+            throw error || new Error("API call failed.");
+        }
+        let text = data.text || "Strategy synthesis unavailable.";
+        return text.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
+      } catch (err) {
+        console.error("AI Performance Error Detail:", err);
+        
+        // Attempt to extract the specific error message from the response body
+        if (err.context && typeof err.context.json === 'function') {
+            try {
+                const body = await err.context.json();
+                console.error("AI Function Error Body:", body);
+            } catch (e) { /* ignore */ }
+        }
+
+        const fallbackMsg = "Elite AI strategist is currently offline for maintenance.";
+        return shortVersion ? fallbackMsg : `<p style='color:var(--text-secondary); opacity: 0.7;'><em>${fallbackMsg}</em></p>`;
+      }
   },
 
   /**

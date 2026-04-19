@@ -10,8 +10,9 @@ import { AiService } from '../services/aiService'
 import { CalculatorComponent } from './Calculator'
 
 export class Exam {
-  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = []) {
+  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = [], clashId = null) {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview, examType === 'JAMB')
+    this.clashId = clashId // Phase 2: Competition sync
     
     // Phase 4: Keyboard Shortcuts
     this._handleKeyDown = (e) => {
@@ -615,6 +616,16 @@ export class Exam {
           btn.onclick = () => {
             this.session.setAnswer(this.session.currentIndex, btn.dataset.id)
             this.saveState()
+            
+            // 🔥 CLASH HARDENING: Instant Sync for competitions
+            if (this.clashId && this.profile?.id) {
+                const ans = this.session.userAnswers;
+                const answered = Object.keys(ans).length;
+                const total = this.session.questions.length;
+                DataService.syncClashProgress(this.clashId, this.profile.id, ans, answered, total)
+                    .catch(e => console.error("Clash Sync Failed:", e));
+            }
+
             this.updateUI()
             this.renderSidebar()
           }
@@ -982,9 +993,18 @@ export class Exam {
       const userAnswers = this.session ? { ...this.session.userAnswers } : {}
       const timeTaken = this.session ? this.session.getTimeTaken() : 0
       const actualQuestions = this.session ? [...this.session.questions] : []
+      
+      // 🔥 CLASH HARDENING: Submit final results to the competition table
+      if (this.clashId && this.profile?.id) {
+          const stats = this.session.getSummary();
+          const score = stats.correctAnswers;
+          DataService.submitClashResults(this.clashId, this.profile.id, score, timeTaken)
+              .catch(e => console.error("Final Clash Submission Failed:", e));
+      }
+
       this.session = null
       document.getElementById('exam-container').style.display = 'none'
-      if (callback) callback(userAnswers, timeTaken, actualQuestions)
+      if (callback) callback(userAnswers, timeTaken, actualQuestions, this.clashId)
     }
   }
 
@@ -1000,10 +1020,10 @@ export class Exam {
 export const ExamComponent = {
   _instance: null,
 
-  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null, intendedSubjects = []) {
-    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers, intendedSubjects)
-    this._instance.render((userAnswers, timeTaken, actualQuestions) => {
-        if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions)
+  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null, intendedSubjects = [], clashId = null) {
+    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers, intendedSubjects, clashId)
+    this._instance.render((userAnswers, timeTaken, actualQuestions, cid) => {
+        if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions, cid)
     }, onBack, resumeState)
   },
 

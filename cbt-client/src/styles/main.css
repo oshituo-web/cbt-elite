@@ -2656,6 +2656,63 @@ body.light-mode .option-btn .option-holder {
   }
 }
 
+/* --- Small Mobile Exam Topbar Refinement (< 480px) --- */
+@media (max-width: 480px) {
+  .exam-header-wrapper {
+      min-height: 70px !important; 
+  }
+  
+  .exam-header-primary {
+      height: 52px !important; 
+      padding: 0 0.75rem !important;
+      gap: 0.35rem !important;
+  }
+  
+  .exam-header-primary .header-left, 
+  .exam-header-primary .header-right {
+      gap: 0.4rem !important; 
+      flex: 1 1 auto !important;
+  }
+
+  .exam-header-primary .header-icon-btn {
+      padding: 0.35rem !important;
+  }
+  
+  .exam-header-primary .header-icon-btn .lucide {
+      width: 1.2rem !important; 
+      height: 1.2rem !important;
+  }
+  
+  .badge-exam {
+      font-size: 0.6rem !important;
+      padding: 0.15rem 0.35rem !important;
+      white-space: nowrap;
+  }
+  
+  .q-counter-mini, .timer-mini {
+      font-size: 0.75rem !important;
+      font-weight: 800 !important;
+      white-space: nowrap;
+  }
+
+  .exam-header-meta {
+      padding: 0.25rem 0.75rem !important;
+      font-size: 0.65rem !important;
+  }
+  
+  .exam-header-meta div {
+      gap: 0.35rem !important;
+  }
+  
+  .exam-content-wrapper {
+      height: calc(100vh - 74px) !important; 
+  }
+
+  .exam-main {
+      padding: 1.25rem !important;
+  }
+}
+
 /* Question Grid Styling */
 #question-grid {
   display: grid;

@@ -321,16 +321,110 @@ export const DataService = {
     return await supabase.rpc('get_league_table', { p_user_id: userId })
   },
 
+  async getWeeklyClash(userId) {
+    // 💡 Fetch synced questions for the Sat/Sun competition
+    const { data: profile } = await this.getProfile(userId)
+    const now = new Date()
+    const isSunday = now.getDay() === 0
+    const type = isSunday ? 'Super' : 'Normal'
+    const department = isSunday ? 'General' : (profile?.department || 'General')
+    
+    const weekDate = new Date()
+    weekDate.setDate(now.getDate() - (now.getDay() === 0 ? 1 : now.getDay()) + 6) // Current Week's Saturday
+    const dateStr = weekDate.toISOString().split('T')[0]
+
+    const { data, error } = await supabase
+        .from('scheduled_clashes')
+        .select('*')
+        .eq('week_date', dateStr)
+        .eq('type', type)
+        .eq('department', department)
+        .maybeSingle()
+
+    if (error || !data) return { data: null, error: error || "No clash found for your department yet." }
+    
+    const { data: questions } = await this.getQuestionsByIds(data.questions_json)
+    return { 
+        data: this._formatQuestions(questions || []), 
+        duration: data.duration_minutes,
+        clashId: data.id 
+    }
+  },
+
+  async generateWeeklyClashSeeds() {
+    return await supabase.rpc('generate_weekly_clash_seeds')
+  },
+
+  // --- CLASH HARDENING & RANKINGS ---
+  getWATDate() {
+    // 💡 Strict West Africa Time (GMT+1)
+    const now = new Date();
+    const watTime = new Date(now.toLocaleString("en-US", {timeZone: "Africa/Lagos"}));
+    return watTime;
+  },
+
+  async syncClashProgress(clashId, userId, answers, answeredCount, totalCount) {
+    return await supabase.rpc('sync_clash_progress', {
+        p_clash_id: clashId,
+        p_user_id: userId,
+        p_answers: answers,
+        p_answered_count: answeredCount,
+        p_total_count: totalCount
+    })
+  },
+
+  async submitClashResults(clashId, userId, score, timeTaken) {
+    return await supabase.rpc('submit_clash_results', {
+        p_clash_id: clashId,
+        p_user_id: userId,
+        p_score: score,
+        p_time_taken: timeTaken
+    })
+  },
+
+  async getClashLeaderboard(clashId) {
+    return await supabase.rpc('get_clash_leaderboard', { p_clash_id: clashId })
+  },
+
   // --- ANALYTICS ---
   async getUserAnalytics(userId) {
-    const { data: userProfile } = await supabase.from('users').select('daily_questions_count, streak_count, last_daily_reset_date').eq('id', userId).single()
+    let userProfile = {
+        daily_questions_count: 0,
+        streak_count: 0,
+        last_daily_reset_date: null
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('daily_questions_count, streak_count, last_daily_reset_date')
+            .eq('id', userId)
+            .single()
+        
+        if (data && !error) {
+            userProfile = data
+        } else if (error) {
+            console.warn("DataService: Profile column fetch failed (might be missing columns). Using safe defaults.", error.message)
+        }
+    } catch (err) {
+        console.error("DataService: Critical error in getUserAnalytics profile fetch:", err)
+    }
     
-    const { data: sessions, error: hError } = await supabase
-      .from('exam_sessions')
-      .select('total_questions, correct_answers, completed_at')
-      .eq('user_id', userId)
-      .order('completed_at', { ascending: false })
-      .limit(50)
+    let sessions = []
+    let hError = null
+    try {
+        const { data, error } = await supabase
+          .from('exam_sessions')
+          .select('total_questions, correct_answers, completed_at, answered_questions')
+          .eq('user_id', userId)
+          .order('completed_at', { ascending: false })
+          .limit(50)
+        
+        if (data) sessions = data
+        hError = error
+    } catch (err) {
+        console.error("DataService: Exam sessions fetch failed:", err)
+    }
 
     const history = sessions ? sessions.map(s => ({
       total_questions: s.total_questions || 0,
