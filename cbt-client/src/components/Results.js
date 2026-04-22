@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { TopicDeepDiveComponent } from './TopicDeepDive'
+import { ModalService } from '../services/ModalService'
 
 export const ResultsComponent = {
   async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
@@ -225,7 +226,7 @@ export const ResultsComponent = {
          if (questions && questions.length > 0) {
             onRestart(questions, 'practice', subject, examType); 
          } else {
-            alert("No questions found.");
+             await ModalService.alert("No Questions", "We couldn't find enough questions for this topic yet. Try another one!", 'info');
             autoFocusBtn.disabled = false;
             autoFocusBtn.innerHTML = 'Challenge';
          }

@@ -1,4 +1,5 @@
 import { AuthService } from '../services/auth'
+import { ModalService } from '../services/ModalService'
 
 export const SettingsComponent = {
   profile: null,
@@ -33,13 +34,13 @@ export const SettingsComponent = {
                <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.15rem; margin: 0;">Appearance</h3>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px solid var(--glass-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid var(--glass-border);">
                <div>
-                  <p style="margin: 0; font-weight: 700; font-size: 0.95rem;">Light Mode</p>
+                  <p style="margin: 0; font-weight: 700; font-size: 0.95rem;">Dark Mode</p>
                   <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">Toggle platform brightness</p>
                </div>
                <button id="theme-toggle-settings" class="btn-secondary" style="height: 38px; min-width: 80px;">
-                 ${isLight ? '<i data-lucide="sun"></i> ON' : '<i data-lucide="moon"></i> OFF'}
+                 ${document.body.classList.contains('dark-mode') ? '<i data-lucide="moon"></i> ON' : '<i data-lucide="sun"></i> OFF'}
                </button>
             </div>
           </div>
@@ -99,10 +100,10 @@ export const SettingsComponent = {
     const themeBtn = document.getElementById('theme-toggle-settings')
     if (themeBtn) {
       themeBtn.onclick = () => {
-        document.body.classList.toggle('light-mode')
-        const isL = document.body.classList.contains('light-mode')
-        localStorage.setItem('theme', isL ? 'light' : 'dark')
-        themeBtn.innerHTML = isL ? '<i data-lucide="sun"></i> ON' : '<i data-lucide="moon"></i> OFF'
+        document.body.classList.toggle('dark-mode')
+        const isDark = document.body.classList.contains('dark-mode')
+        localStorage.setItem('theme', isDark ? 'dark' : 'light')
+        themeBtn.innerHTML = isDark ? '<i data-lucide="moon"></i> ON' : '<i data-lucide="sun"></i> OFF'
         if (window.lucide) window.lucide.createIcons({ root: themeBtn })
       }
     }
@@ -114,9 +115,10 @@ export const SettingsComponent = {
 
     const deleteBtn = document.getElementById('delete-data-btn')
     if (deleteBtn) {
-      deleteBtn.onclick = () => {
-        if (confirm('Are you absolutely sure? This will wipe your performance history offline as well.')) {
-           alert('Feature disabled in demo mode.')
+      deleteBtn.onclick = async () => {
+        const confirmed = await ModalService.confirm("Wipe Data?", "Are you absolutely sure? This will erase your performance history and analytics permanently.");
+        if (confirmed) {
+           ModalService.alert("Account Security", "Deletion for your specific student tier must be requested via Support to prevent accidental data loss.", 'info')
         }
       }
     }

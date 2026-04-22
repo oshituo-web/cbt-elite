@@ -10,8 +10,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/outfit": "^5.2.8",
     "@supabase/supabase-js": "^2.99.1",
-    "lucide-static": "^0.577.0"
+    "canvas-confetti": "^1.9.4",
+    "chart.js": "^4.5.1",
+    "dompurify": "^3.4.0",
+    "katex": "^0.16.45",
+    "lucide": "^1.8.0",
+    "lucide-static": "^0.577.0",
+    "papaparse": "^5.5.3"
   },
   "devDependencies": {
     "vite": "^5.0.0",

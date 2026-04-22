@@ -1,5 +1,6 @@
 import { DataService } from '../services/data'
 import { SubscriptionService } from '../services/subscriptionService'
+import { Chart } from 'chart.js/auto'
 
 export const AnalyticsComponent = {
   async render(profile, onBack, onStartPractice) {

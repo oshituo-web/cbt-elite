@@ -180,17 +180,28 @@ async function saveToDatabase(items) {
                        // Successfully inserted unique question
                        try {
                            const orig = originals[i];
-                           await supabase.from('question_answers').upsert({
-                               question_id: singleQ[0].id,
-                               option_a: orig.option_a,
-                               option_b: orig.option_b,
-                               option_c: orig.option_c,
-                               option_d: orig.option_d,
-                               correct_option: orig.correct_option,
-                               explanation: orig.explanation
-                           }, { onConflict: 'question_id' });
+                           const qId = singleQ[0].id;
+                           
+                           // Insert into answers table
+                           const ansRows = ['A', 'B', 'C', 'D'].map(letter => ({
+                               question_id: qId,
+                               option_letter: letter,
+                               option_text: orig[`option_${letter.toLowerCase()}`],
+                               is_correct: orig.correct_option === letter
+                           }));
+                           await supabase.from('answers').insert(ansRows);
+
+                           // Insert into gated explanations table
+                           if (orig.explanation) {
+                               await supabase.from('question_explanations').upsert({
+                                   question_id: qId,
+                                   explanation: orig.explanation
+                               }, { onConflict: 'question_id' });
+                           }
                            successCount++;
-                       } catch (e) { /* ignore single error */ }
+                       } catch (e) { 
+                           console.error(`[DB Error] Single row recovery failed:`, e.message);
+                       }
                    }
                 }
             } else {
@@ -201,22 +212,37 @@ async function saveToDatabase(items) {
 
         if (!insertedQs) continue;
 
-        const ansInserts = insertedQs.map((insQ, idx) => {
+        const ansInserts = [];
+        const expInserts = [];
+
+        insertedQs.forEach((insQ, idx) => {
             const orig = originals[idx];
-            return {
-                question_id: insQ.id,
-                option_a: orig.option_a,
-                option_b: orig.option_b,
-                option_c: orig.option_c,
-                option_d: orig.option_d,
-                correct_option: orig.correct_option,
-                explanation: orig.explanation
-            };
+            ['A', 'B', 'C', 'D'].forEach(letter => {
+                ansInserts.push({
+                    question_id: insQ.id,
+                    option_letter: letter,
+                    option_text: orig[`option_${letter.toLowerCase()}`],
+                    is_correct: orig.correct_option === letter
+                });
+            });
+
+            if (orig.explanation) {
+                expInserts.push({
+                    question_id: insQ.id,
+                    explanation: orig.explanation
+                });
+            }
         });
 
         const { error: aErr } = await withDBRetry(() => 
-            supabase.from('question_answers').upsert(ansInserts, { onConflict: 'question_id' })
+            supabase.from('answers').insert(ansInserts)
         );
+
+        if (expInserts.length > 0) {
+            await withDBRetry(() => 
+                supabase.from('question_explanations').upsert(expInserts, { onConflict: 'question_id' })
+            );
+        }
 
         // Also ensure this topic exists in syllabus_topics for the frontend selector
         const uniqueTopicsInBatch = [...new Set(qsToInsert.map(q => q.topic))];

@@ -6,6 +6,9 @@ import { TourGuide } from '../utils/TourGuide'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { ExamCard } from './ExamCard'
+import { AnimationUtils } from '../utils/animations'
+import { ModalService } from '../services/ModalService'
+import Chart from 'chart.js/auto'
 
 export const DashboardComponent = {
   profile: null,
@@ -26,7 +29,7 @@ export const DashboardComponent = {
           container.style.display = 'block'
           container.innerHTML = `
             <div style="padding: 2rem; background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 20px; color: #ef4444; margin: 2rem;">
-                <h2 style="font-family: 'Outfit'; margin-top: 0;">⚠️ Dashbaord Render Error</h2>
+                <h2 style="font-family: 'Outfit'; margin-top: 0;">⚠️ Dashboard Render Error</h2>
                 <p style="font-weight: 800;">${err.message}</p>
                 <pre style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 10px; font-size: 0.7rem; overflow: auto; max-height: 200px;">${err.stack}</pre>
                 <button onclick="location.reload()" class="btn-primary" style="margin-top: 1rem;">RELOAD APP</button>
@@ -107,10 +110,11 @@ export const DashboardComponent = {
         // Sync League Status & Check for Tier Changes
         const lastTier = localStorage.getItem('elite_last_league_tier')
         const { data: leagueSync } = await DataService.syncLeagueStatus(this.profile.id)
-        this.leagueData = leagueSync || { tier: 'Bronze', group_id: null }
-        
-        // Ensure tier is NEVER undefined
+        this.leagueData = leagueSync || { tier: 'Bronze' }
         if (!this.leagueData.tier) this.leagueData.tier = 'Bronze'
+        
+        // Update profile tier to ensure UI reflects the latest sync result
+        if (this.profile) this.profile.league_tier = this.leagueData.tier;
         
         if (lastTier && lastTier !== this.leagueData.tier) {
             const isPromotion = this._isPromotion(lastTier, this.leagueData.tier)
@@ -124,7 +128,7 @@ export const DashboardComponent = {
 
     // Initialize Tour Guide
     TourGuide.init([
-      { title: "Welcome to CBT Elite", text: "Your all-in-one platform to prepare for JAMB, WAEC, and NECO." },
+      { title: "Get Started with CBT Elite", text: "Your all-in-one platform to prepare for JAMB, WAEC, and NECO." },
       { element: "#quick-practice-btn", title: "Practice Mode", text: "Start here. Practice Mode helps you improve topic by topic." },
       { element: "#quick-exam-btn", title: "Exam Mode", text: "Simulate real exams with timers and scoring." },
       { element: "#analytics-section", title: "Performance Insights", text: "Track your scores and identify weak subjects." },
@@ -154,7 +158,7 @@ export const DashboardComponent = {
                     if (sDate.toDateString() === today) v2_todayQuestions += sessionCount
                     v2_totalQuestions += sessionCount
                     v2_totalCorrect += (s.correct_answers || 0)
-                    v2_overallTime += (s.time_taken_seconds || 0)
+                    v2_overallTime += (s.time_taken || s.time_taken_seconds || 0)
                 }
             })
         }
@@ -219,48 +223,45 @@ export const DashboardComponent = {
 
     console.log("Dashboard: Preparing to inject HTML")
     container.innerHTML = `
-      <div id="dashboard-content" class="dashboard-scroll-area">
+      <div id="dashboard-content" class="dashboard-scroll-area" style="padding-top: calc(var(--header-height) + 1.25rem);">
         
-        <!-- DASHBOARD WELCOME -->
-        <div style="margin-bottom: 1.5rem; padding-top: 0.5rem;">
-          <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.2;">
-            Welcome, ${this.profile.username || 'Student'} 
-            <i data-lucide="sun" style="width: 28px; height: 28px; color: var(--warning);"></i>
+        <!-- DASHBOARD HEADER -->
+        <div style="margin-bottom: 0.75rem;">
+          <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
+            Hello, ${this.profile.username || 'Student'} 
+            <i data-lucide="sun" style="width: 20px; height: 20px; color: var(--warning);"></i>
           </h1>
-          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.4rem; font-weight: 500;">Let's make today count.</p>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; font-weight: 800; letter-spacing: 0.02em;">Let's make today count.</p>
         </div>
 
-        <!-- ELITE ECONOMY WIDGET -->
-        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-          <div class="glass card" style="padding: 0.6rem 1rem; flex: 1; min-width: 140px; display: flex; align-items: center; gap: 0.75rem; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
-            <div style="width: 32px; height: 32px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b;">
-              <i data-lucide="coins" style="width: 18px;"></i>
+        <!-- ELITE ECONOMY WIDGET (Enhanced Labels) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <div class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
+            <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
+              <i data-lucide="coins" style="width: 12px;"></i>
             </div>
-            <div>
-              <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Elite Coins</div>
-              <div style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; color: var(--text-primary);">${this.profile.elite_coins || 0}</div>
+            <div style="overflow: hidden;">
+              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Elite Coins</div>
+              <div id="economy-coins-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.elite_coins || 0}</div>
             </div>
           </div>
           
-          <div id="open-store-btn" class="glass card scale-in" style="padding: 0.6rem 1rem; flex: 1; min-width: 140px; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; border-left: 3px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.05); transition: transform 0.2s;">
-            <div style="width: 32px; height: 32px; background: rgba(139, 92, 246, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary);">
-              <i data-lucide="snowflake" style="width: 18px;"></i>
+          <div id="open-store-btn" class="glass card scale-in" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.08); min-height: 44px; border-radius: 12px;">
+            <div style="width: 20px; height: 20px; background: rgba(139, 92, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
+              <i data-lucide="snowflake" style="width: 12px;"></i>
             </div>
-            <div>
-              <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Streak Freezes</div>
-              <div style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; color: var(--text-primary);">${this.profile.streak_freeze_count || 0} Active</div>
+            <div style="overflow: hidden;">
+              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Streak Freeze</div>
+              <div id="economy-freeze-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_freeze_count || 0}</div>
             </div>
           </div>
         </div>
 
-        <!-- QUICK ACTION SECTION -->
-        <div class="glass card scale-in mb-md" style="text-align: center; padding: 1.25rem 1rem; border: 2px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, var(--surface-color) 100%);">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 0.15rem; color: var(--text-primary); font-weight: 800;">Elite Mastery</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.85rem; line-height: 1.4;">Select your mode to begin.</p>
-          <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; width: 100%;">
-             <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1.25rem; flex: 1; min-width: 140px; font-size: 0.95rem;"><i data-lucide="target" style="width:18px;"></i> Practice</button>
-             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1.25rem; flex: 1; min-width: 140px; font-weight: 800;"><i data-lucide="trophy" style="width:18px;"></i> Mock Exam</button>
-             <button id="start-saved" class="glass-btn" style="padding: 0 1.25rem; border-color: var(--accent-primary); display: none; flex: 1; min-width: 140px;"><i data-lucide="bookmark" style="width:18px;"></i> Saved (<span id="bookmark-count">0</span>)</button>
+        <!-- QUICK ACTION SECTION (Compact) -->
+        <div class="glass card scale-in mb-md" style="text-align: center; padding: 0.85rem 0.75rem; border: 1.5px solid rgba(14, 165, 233, 0.3); background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, var(--surface-color) 100%);">
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%;">
+             <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-size: 0.85rem;"><i data-lucide="target" style="width:16px;"></i> Practice</button>
+             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-weight: 800; font-size: 0.85rem;"><i data-lucide="trophy" style="width:16px;"></i> Mock Exam</button>
           </div>
         </div>
 
@@ -309,20 +310,20 @@ export const DashboardComponent = {
         })()}
 
          <!-- PROGRESS & ANALYTICS (Standardized Grid) -->
-          <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+          <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
             
-            <!-- Daily Streak Card -->
-            <div class="glass card scale-in" style="padding: 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%);">
+            <!-- Daily Streak Card (Compact) -->
+            <div class="glass card scale-in" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Learning Streak</h3>
-                <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.7rem;">Active</span>
+                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Learning Streak</h3>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.65rem; font-weight: 800;">ACTIVE</span>
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;">
                 <div class="streak-flame-container ${this.profile.streak_count > 0 ? 'active' : ''}">
-                  <i data-lucide="flame" style="width: 64px; height: 64px; color: ${this.profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
+                  <i data-lucide="flame" style="width: 40px; height: 40px; color: ${this.profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
                 </div>
-                <div style="font-family: 'Outfit'; font-size: 3.5rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_count || 0}</div>
-                <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Day Streak</div>
+                <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 2.4rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_count || 0}</div>
+                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Day Streak</div>
               </div>
               <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin: 0; font-weight: 500;">
                 ${this.profile.streak_count > 0 ? "You're on fire! Keep it up." : "Start a session to begin your streak."}
@@ -358,93 +359,86 @@ export const DashboardComponent = {
                 const clanName = this.leagueData?.clan_name || (dept + ' Elites');
 
                 return `
-                <div id="open-league-btn" class="glass card scale-in" style="padding: 1.25rem; display: flex; flex-direction: column; min-height: 280px; justify-content: space-between; border-top: 4px solid ${style.color}; background: linear-gradient(180deg, ${style.color}05 0%, var(--surface-color) 100%); cursor: pointer; position: relative; overflow: hidden;">
-                  ${isSuperElite ? `<div style="position: absolute; top: 0; right: 0; background: var(--accent-primary); color: white; padding: 2px 10px; font-size: 0.6rem; font-weight: 900; border-bottom-left-radius: 8px;">SUPER LEAGUE</div>` : ''}
+                <div id="open-league-btn" class="glass card scale-in" style="padding: 1rem; display: flex; flex-direction: column; min-height: 240px; justify-content: space-between; border-top: 3px solid ${style.color}; background: linear-gradient(180deg, ${style.color}05 0%, var(--surface-color) 100%); cursor: pointer; position: relative; overflow: hidden;">
+                  ${isSuperElite ? `<div style="position: absolute; top: 0; right: 0; background: var(--accent-primary); color: white; padding: 2px 8px; font-size: 0.55rem; font-weight: 900; border-bottom-left-radius: 8px;">SUPER ELITE</div>` : ''}
                   
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">${isSuperElite ? 'Super Elite Hub' : 'Elite Clan Hub'}</h3>
-                    <div style="font-size: 0.7rem; font-weight: 800; color: ${style.color}; display: flex; align-items: center; gap: 0.25rem;">
-                        <i data-lucide="users" style="width: 12px;"></i> <span id="clan-size-indicator">GROUP OF 20</span>
+                    <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">League Hub</h3>
+                    <div style="font-size: 0.65rem; font-weight: 800; color: ${style.color}; display: flex; align-items: center; gap: 0.2rem;">
+                        <i data-lucide="users" style="width: 10px;"></i> <span id="clan-size-indicator">GRP-20</span>
                     </div>
                   </div>
                   
-                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0;">
-                    <div style="width: 64px; height: 64px; background: ${style.color}15; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color};">
-                        <i data-lucide="${style.icon}" style="width: 32px; height: 32px; color: ${style.color};"></i>
+                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; margin: 0.75rem 0;">
+                    <div style="width: 52px; height: 52px; background: ${style.color}15; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color}40;">
+                        <i data-lucide="${style.icon}" style="width: 24px; height: 24px; color: ${style.color};"></i>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary);">${clanName}</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">${dept} HUB • ${tier}</div>
+                        <div style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${clanName}</div>
+                        <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">${dept} • ${tier}</div>
                     </div>
                   </div>
 
                   ${isClashWindow ? `
-                    <button id="start-clash-btn" class="btn-dominant scale-in" style="width: 100%; height: 50px; font-weight: 900; background: linear-gradient(90deg, ${style.color}, var(--accent-primary)); border: none; box-shadow: 0 0 20px ${style.color}44;">
-                        START THE CLASH NOW!
+                    <button id="start-clash-btn" class="btn-dominant scale-in" style="width: 100%; height: 40px; font-size: 0.8rem; font-weight: 900; background: linear-gradient(90deg, ${style.color}, var(--accent-primary)); border: none;">
+                        START CLASH
                     </button>
                   ` : isResultsWindow ? `
-                    <button id="view-clash-results-btn" class="btn-dominant scale-in" style="width: 100%; height: 50px; font-weight: 900; background: linear-gradient(90deg, var(--success), var(--accent-primary)); border: none; box-shadow: 0 0 20px rgba(16, 185, 129, 0.44);">
-                        VIEW CLASH RESULTS
+                    <button id="view-clash-results-btn" class="btn-dominant scale-in" style="width: 100%; height: 40px; font-size: 0.8rem; font-weight: 900; background: linear-gradient(90deg, var(--success), var(--accent-primary));">
+                        LEADERBOARD
                     </button>
                   ` : `
-                    <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 0.75rem; border: 1px solid var(--glass-border);">
-                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 0.6rem; border: 1px solid var(--glass-border);">
+                       <div style="display: flex; justify-content: space-between; align-items: center;">
                           <div style="display: flex; flex-direction: column;">
-                            <span style="font-size: 0.6rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Next Clash</span>
-                            <span style="font-size: 0.75rem; font-weight: 900; color: var(--text-primary);">${isSuperElite ? 'SUNDAY 7PM' : 'SATURDAY 7PM'}</span>
+                            <span style="font-size: 0.55rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Next Clash</span>
+                            <span style="font-size: 0.7rem; font-weight: 900; color: var(--text-primary);">${isSuperElite ? 'SUN 7PM' : 'SAT 7PM'}</span>
                           </div>
                           <div style="text-align: right;">
-                            <span id="league-timer" style="font-size: 0.7rem; font-weight: 900; color: ${style.color};">--d --h --m</span>
+                            <span id="league-timer" style="font-size: 0.65rem; font-weight: 900; color: ${style.color};">--:--:--</span>
                           </div>
-                       </div>
-                       <div class="progress-v2-container" style="height: 4px; background: rgba(255,255,255,0.05);">
-                          <div id="league-week-progress" class="progress-v2-fill" style="width: 0%; background: ${style.color};"></div>
                        </div>
                     </div>
                   `}
-                  
+
+                  <!-- RANKING BUTTON INTEGRATED -->
                   <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                    <button class="glass-btn" id="view-league-table" style="flex: 2; font-size: 0.65rem; padding: 0.4rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px;">
-                        RANKINGS
+                    <button id="open-league-btn" class="glass-btn btn-secondary" style="flex: 1.1; font-size: 0.7rem; padding: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                        <i data-lucide="bar-chart-2" style="width:14px;"></i> RANKINGS
                     </button>
-                    <button class="glass-btn" id="change-clan-btn" style="flex: 1; font-size: 0.65rem; padding: 0.4rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px;" title="Update Department">
-                        <i data-lucide="settings-2" style="width:12px;"></i>
+                    <button class="glass-btn btn-primary" id="change-clan-btn" style="flex: 0.9; font-size: 0.7rem; padding: 0.5rem; border: none; color: white !important; border-radius: 8px; font-weight: 900; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+                        <i data-lucide="graduation-cap" style="width:14px;"></i> SELECT DEPARTMENT
                     </button>
                   </div>
                 </div>
                 `;
             })()}
 
-            <!-- Daily Goal Card -->
-            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; position: relative; overflow: hidden; border-top: 4px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Daily Star Target</h3>
+            <!-- Daily Goal Card (Compacted) -->
+            <div class="glass card" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 240px; justify-content: space-between; border-top: 3px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Star Target</h3>
                 <div style="display: flex; gap: 4px;">
                     ${this.MILESTONES.map(m => `
                         <div title="${m.title}" style="color: ${currentDailyCount >= m.target ? m.color : 'rgba(255,255,255,0.1)'};">
-                             <i data-lucide="${m.badge}" style="width: 16px; height: 16px; ${currentDailyCount >= m.target ? `filter: drop-shadow(0 0 4px ${m.color});` : ''}"></i>
+                             <i data-lucide="${m.badge}" style="width: 14px; height: 14px; ${currentDailyCount >= m.target ? `filter: drop-shadow(0 0 4px ${m.color});` : ''}"></i>
                         </div>
                     `).join('')}
                 </div>
               </div>
               
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
                 <!-- Multi-Level Circular Progress -->
-                <div style="position: relative; width: 110px; height: 110px;">
+                <div style="position: relative; width: 90px; height: 90px;">
                   <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                     <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2.5" />
-                    <!-- Progress towards next milestone -->
                     ${(() => {
-                        const prevTarget = this.MILESTONES.slice().reverse().find(m => currentDailyCount >= m.target)?.target || 0;
-                        const targetForSegment = nextMilestone ? nextMilestone.target : this.MILESTONES[this.MILESTONES.length-1].target;
-                        
                         return this.MILESTONES.map((m, idx) => {
                             const milestoneStart = idx === 0 ? 0 : this.MILESTONES[idx-1].target;
                             const milestoneRange = m.target - milestoneStart;
                             const progressInMilestone = Math.max(0, Math.min(milestoneRange, currentDailyCount - milestoneStart));
                             const pct = (progressInMilestone / milestoneRange) * (100 / this.MILESTONES.length);
                             const offset = (idx * (100 / this.MILESTONES.length));
-                            
                             return `
                                 <circle cx="18" cy="18" r="16" fill="none" 
                                         stroke="${currentDailyCount >= m.target ? m.color : 'rgba(255,255,255,0.05)'}" 
@@ -458,47 +452,43 @@ export const DashboardComponent = {
                     })()}
                   </svg>
                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                    <div style="font-family: 'Outfit'; font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${currentDailyCount}</div>
-                    <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
+                    <div id="daily-solved-val" style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${currentDailyCount}</div>
+                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
                   </div>
                 </div>
                 
                 <div style="text-align: center;">
-                  <p style="font-size: 0.95rem; font-weight: 800; color: ${currentMilestone ? currentMilestone.color : 'var(--text-primary)'}; margin-bottom: 0.1rem;">
-                    ${currentMilestone ? `🎉 ${currentMilestone.title} Status!` : 'Begin your climb!'}
-                  </p>
-                  <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">
-                    ${nextMilestone ? `${nextMilestone.target - currentDailyCount} more for ${nextMilestone.title}` : 'Legendary status achieved!'}
+                  <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 600;">
+                    ${nextMilestone ? `${nextMilestone.target - currentDailyCount} more for ${nextMilestone.title}` : 'Legendary status attained!'}
                   </div>
                 </div>
               </div>
 
-              <div style="margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.75rem; border-radius: 12px; border: 1px solid var(--glass-border);">
-                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <button class="goal-toggle badge glass" data-target="50" style="padding: 0.2rem 0.5rem; border: ${dailyGoalLimit === 50 ? '1px solid var(--accent-primary)' : '1px solid transparent'}; opacity: ${dailyGoalLimit === 50 ? '1' : '0.5'}; cursor: pointer;">50</button>
-                    <button class="goal-toggle badge glass" data-target="100" style="padding: 0.2rem 0.5rem; border: ${dailyGoalLimit === 100 ? '1px solid var(--accent-primary)' : '1px solid transparent'}; opacity: ${dailyGoalLimit === 100 ? '1' : '0.5'}; cursor: pointer;">100</button>
-                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">SET GOAL</span>
+              <div style="margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+                 <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <button class="goal-toggle badge glass" data-target="50" style="font-size: 0.6rem; padding: 0.1rem 0.4rem; border: ${dailyGoalLimit === 50 ? '1px solid var(--accent-primary)' : '0'};">50</button>
+                    <button class="goal-toggle badge glass" data-target="100" style="font-size: 0.6rem; padding: 0.1rem 0.4rem; border: ${dailyGoalLimit === 100 ? '1px solid var(--accent-primary)' : '0'};">100</button>
                  </div>
-                 <div style="font-size: 0.85rem; font-weight: 900; color: ${currentMilestone ? currentMilestone.color : 'var(--text-primary)'};">${currentMilestone ? currentMilestone.title : 'Novice'}</div>
+                 <div style="font-size: 0.75rem; font-weight: 900; color: ${currentMilestone ? currentMilestone.color : 'var(--text-primary)'};">${currentMilestone ? currentMilestone.title : 'Novice'}</div>
               </div>
             </div>
 
-            <!-- Readiness Progress Card -->
-            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between;">
-              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Study Stats</h3>
+            <!-- Readiness Progress Card (Compact) -->
+            <div class="glass card" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-radius: 16px;">
+              <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Study Stats</h3>
               
-              <div style="display: flex; gap: 1.5rem; align-items: center; justify-content: center; flex: 1;">
-                 <div id="readiness-gauge-container" style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+              <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex: 1;">
+                 <div id="readiness-gauge-container" style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
                     <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="3" />
                       <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" />
                     </svg>
-                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 1rem; color: var(--primary);">0%</div>
+                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 0.9rem; color: var(--primary);">0%</div>
                  </div>
-                 <div style="text-align: left;">
-                      <div id="readiness-label" style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Primary Track</div>
-                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.95rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;">...</div>
-                    <div id="readiness-status" style="font-size: 0.75rem; font-weight: 700; color: var(--success);">Elite Readiness</div>
+                 <div style="text-align: left; min-width: 0;">
+                      <div id="readiness-label" style="font-size: 0.55rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Primary Track</div>
+                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.85rem; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px;">...</div>
+                    <div id="readiness-status" style="font-size: 0.7rem; font-weight: 800; color: var(--success); letter-spacing: 0.02em;">Elite Level</div>
                  </div>
               </div>
 
@@ -607,7 +597,7 @@ export const DashboardComponent = {
                         <i id="league-modal-icon" data-lucide="shield" style="width: 24px; color: var(--accent-primary);"></i>
                     </div>
                     <h2 id="league-modal-title" style="font-family: 'Outfit'; font-weight: 900; margin: 0; color: var(--text-primary); font-size: 1.5rem;">Bronze League</h2>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 700; margin-top: 0.25rem;">WEEKLY COMPETITION · GROUP OF 50</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 700; margin-top: 0.25rem;">WEEKLY COMPETITION · GROUP OF 20</p>
                 </div>
                 <!-- Rankings List -->
                 <div id="league-modal-list" style="max-height: 60vh; overflow-y: auto; padding: 0;">
@@ -792,16 +782,16 @@ export const DashboardComponent = {
                               ai_credits: systemConfig.ai_credits_initial_medium 
                             })
                          }
-                         alert(`Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`)
+                         await ModalService.alert("Success!", `Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`, 'success');
                          location.reload()
-                     } else { alert("Upgrade failed. Contact support.") }
+                     } else { await ModalService.alert("Upgrade Failed", "Transaction failed. Contact support.", 'error') }
                 },
-                onClose: () => alert('Transaction cancelled.')
+                onClose: () => ModalService.showToast('Transaction cancelled.', 'info')
             })
             handler.openIframe()
         } catch (err) {
             console.error(err);
-            alert("Could not load payment processor. Please check your internet connection.");
+            await ModalService.alert("Connection Error", "Could not load payment processor. Please check your internet connection.", 'error');
         }
     }
 
@@ -854,7 +844,7 @@ export const DashboardComponent = {
     if (viewLeagueBtn) {
         viewLeagueBtn.onclick = (e) => {
             e.stopPropagation()
-            leagueModal.style.display = 'flex'
+            document.getElementById('league-table-modal').style.display = 'flex'
             this.loadLeagueModalTable(profile)
         }
     }
@@ -862,10 +852,54 @@ export const DashboardComponent = {
     if (changeClanBtn) {
         changeClanBtn.onclick = (e) => {
             e.stopPropagation()
-            // Re-trigger Profile Setup for department change
-            ProfileSetupComponent.render(profile, (newProfile) => {
-                this.profile = newProfile
-                this.render(newProfile)
+            const departments = ['Science', 'Arts', 'Commercial', 'General']
+            const currentDept = profile?.department || 'General'
+            
+            // Create a custom Elite Picker Modal
+            const pickerOverlay = document.createElement('div')
+            pickerOverlay.id = 'dept-picker-overlay'
+            pickerOverlay.style = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(8px);"
+            
+            pickerOverlay.innerHTML = `
+                <div class="glass card scale-in" style="width:90%; max-width:400px; padding:2rem; border-radius:24px; border: 2px solid var(--accent-primary); text-align:center;">
+                    <h3 style="font-family:'Outfit'; font-weight:900; margin-bottom:0.5rem; font-size:1.4rem;">Select Department</h3>
+                    <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1.5rem;">Choose your academic path to join the right Clan.</p>
+                    <div style="display:grid; gap:0.75rem;">
+                        ${departments.map(d => `
+                            <button class="dept-opt-btn glass-btn" data-dept="${d}" style="width:100%; padding:1rem; border-radius:12px; font-weight:800; border:1px solid ${d === currentDept ? 'var(--accent-primary)' : 'var(--glass-border)'}; background: ${d === currentDept ? 'rgba(37, 99, 235, 0.1)' : 'transparent'}; color: ${d === currentDept ? 'var(--accent-primary)' : 'var(--text-primary)'};">
+                                ${d.toUpperCase()} ${d === currentDept ? ' (CURRENT)' : ''}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button id="close-dept-picker" class="btn-secondary" style="margin-top:1.5rem; width:100%; height:48px; font-weight:800; border-radius:12px;">CANCEL</button>
+                </div>
+            `
+            document.body.appendChild(pickerOverlay)
+            
+            document.getElementById('close-dept-picker').onclick = () => pickerOverlay.remove()
+            
+            pickerOverlay.querySelectorAll('.dept-opt-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const selected = btn.dataset.dept
+                    if (selected === currentDept) {
+                        pickerOverlay.remove()
+                        return
+                    }
+                    
+                    btn.textContent = 'UPDATING...'
+                    AuthService.updateProfile({ ...profile, department: selected }).then(({ error }) => {
+                        if (error) {
+                            btn.textContent = selected.toUpperCase()
+                            ModalService.alert("Update Failed", error.message, 'error');
+                            return;
+                        }
+                        pickerOverlay.remove()
+                        location.reload()
+                    }).catch(err => {
+                        btn.textContent = selected.toUpperCase()
+                        ModalService.alert("Update Failed", err.message, 'error');
+                    })
+                }
             })
         }
     }
@@ -923,11 +957,11 @@ export const DashboardComponent = {
             buyFreezeBtn.textContent = 'Processing...'
             const { data, error } = await DataService.buyStreakFreeze(this.profile.id)
             if (error) {
-                alert(error)
+                ModalService.alert("Purchase Failed", error, 'error')
                 buyFreezeBtn.disabled = false
                 buyFreezeBtn.textContent = 'PURCHASE'
             } else {
-                alert("Streak Freeze Activated! Your progress is now protected.")
+                await ModalService.alert("Streak Protected", "Streak Freeze Activated! Your progress is now protected.", 'success')
                 location.reload()
             }
         }
@@ -971,12 +1005,12 @@ export const DashboardComponent = {
                 if (questions && questions.length > 0) {
                     this.onStartExam(questions, 'practice', 'Mistake Mastery', 'Focused Improvement')
                 } else {
-                    alert("Mistakes resolved! Try some new questions.")
+                    ModalService.showToast("Mistakes resolved! Try some new questions.", 'success')
                     this.render(profile)
                 }
             } catch (err) {
                 console.error("Repair session failed:", err)
-                alert("Failed to load mistakes. Please try again.")
+                ModalService.alert("Operation Failed", "Failed to load mistakes. Please try again.", 'error')
             } finally {
                 repairBtn.disabled = false
                 repairBtn.innerHTML = '<i data-lucide="zap" style="width: 18px;"></i> MASTER MISTAKES'
@@ -986,6 +1020,15 @@ export const DashboardComponent = {
 
     await initData()
     renderLucide()
+    
+    // 🚀 ELITE ANIMATIONS: Trigger smooth counter roll-ups
+    setTimeout(() => {
+        AnimationUtils.animateValue(document.getElementById('economy-coins-val'), 0, this.profile.elite_coins || 0, 1500);
+        AnimationUtils.animateValue(document.getElementById('economy-freeze-val'), 0, this.profile.streak_freeze_count || 0, 1500);
+        AnimationUtils.animateValue(document.getElementById('streak-count-val'), 0, this.profile.streak_count || 0, 1500);
+        AnimationUtils.animateValue(document.getElementById('daily-solved-val'), 0, currentDailyCount || 0, 1500);
+    }, 100);
+
     this.checkForCelebration()
 
     const aiWorkoutBtn = document.getElementById('start-ai-workout')
@@ -997,7 +1040,7 @@ export const DashboardComponent = {
             if (questions && questions.length > 0) {
                 this.onStartExam(questions, 'practice', 'AI Workout', 'Personalized')
             } else {
-                alert("Need more data! Try some regular practices first.")
+                ModalService.alert("Analytics Gap", "Need more data! Try some regular practices first.", 'info')
                 aiWorkoutBtn.disabled = false
                 aiWorkoutBtn.innerHTML = 'AI Workout'
             }
@@ -1110,7 +1153,7 @@ export const DashboardComponent = {
                   <td style="padding:1rem; font-weight:700; color: ${isUser ? 'var(--accent-primary)' : 'var(--text-primary)'};">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         ${u.username || 'Anon'} 
-                        ${userMilestone ? `<i data-lucide="${userMilestone.badge}" title="${userMilestone.title}" style="width: 14px; height: 14px; color: ${userMilestone.color};"></i>` : ''}
+                        ${userMilestone ? `<i data-lucide="${userMilestone.icon}" title="${userMilestone.title}" style="width: 14px; height: 14px; color: ${userMilestone.color};"></i>` : ''}
                         ${isUser ? '<span style="font-size:0.6rem; opacity:0.6;">(YOU)</span>' : ''}
                     </div>
                   </td>
@@ -1120,9 +1163,12 @@ export const DashboardComponent = {
             }).join('')}
           </tbody>
         </table>
-        <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600;">Rankings are updated weekly.</p>
+        <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600;">Rankings are aggregated all-time.</p>
       </div>
     `
+    if (window.lucide) {
+      window.lucide.createIcons()
+    }
   },
 
   hide() {
@@ -1143,17 +1189,63 @@ export const DashboardComponent = {
     if (starsEl) starsEl.textContent = `${milestone.starCount}★`;
     if (textEl) textEl.textContent = `Incredible! You've solved ${milestone.target} questions today. You are officially a Daily ${milestone.title}!`;
     if (icon) { icon.setAttribute('data-lucide', milestone.badge); icon.style.color = milestone.color; }
-    
+
     modal.style.display = 'flex';
     if (window.lucide) window.lucide.createIcons({ root: modal });
 
+    // ── CELEBRATION 2.0: Escalating FX per milestone tier ──────────────────
     if (typeof confetti === 'function') {
-        confetti({
-            particleCount: 200,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: [milestone.color, '#ffffff', '#2563eb']
+        if (milestone.id === 'enthusiast') {
+            // Tier 1: Single premium burst (50 questions)
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: [milestone.color, '#ffffff', '#BAE6FD'] });
+
+        } else if (milestone.id === 'master') {
+            // Tier 2: Side cannons + centre burst (100 questions)
+            const fire = (opts) => confetti({ ...opts, colors: [milestone.color, '#ffffff', '#ffd700', '#BAE6FD'] });
+            // Centre burst
+            fire({ particleCount: 120, spread: 90, origin: { x: 0.5, y: 0.6 } });
+            // Left cannon
+            setTimeout(() => fire({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.6 } }), 300);
+            // Right cannon
+            setTimeout(() => fire({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.6 } }), 300);
+            // Second wave
+            setTimeout(() => fire({ particleCount: 80, spread: 80, origin: { x: 0.5, y: 0.5 } }), 700);
+
+        } else if (milestone.id === 'legend') {
+            // Tier 3: Full fireworks (150 questions)
+            const colors = [milestone.color, '#ffd700', '#ff6b6b', '#ffffff', '#BAE6FD'];
+            const fire = (opts) => confetti({ ...opts, colors });
+            // Carpet bomb sequence
+            const origins = [
+                { x: 0.2, y: 0.7 }, { x: 0.5, y: 0.6 }, { x: 0.8, y: 0.7 },
+                { x: 0.35, y: 0.5 }, { x: 0.65, y: 0.5 },
+            ];
+            origins.forEach((origin, i) => {
+                setTimeout(() => fire({ particleCount: 100, spread: 100, origin }), i * 200);
+            });
+            // Final mega burst
+            setTimeout(() => fire({ particleCount: 200, spread: 120, origin: { x: 0.5, y: 0.5 }, startVelocity: 45 }), 1200);
+        }
+
+        // ── Screen flash pulse ────────────────────────────────────────────────
+        const flashEl = document.createElement('div');
+        flashEl.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999998;pointer-events:none;background:${milestone.color};opacity:0;transition:opacity 0.15s ease;`;
+        document.body.appendChild(flashEl);
+        requestAnimationFrame(() => {
+            flashEl.style.opacity = '0.15';
+            setTimeout(() => { flashEl.style.opacity = '0'; setTimeout(() => flashEl.remove(), 200); }, 150);
         });
+
+        // ── Goal card glow pulse ──────────────────────────────────────────────
+        const goalCard = document.querySelector('[style*="Star Target"]')?.closest('.glass.card');
+        if (goalCard) {
+            goalCard.style.transition = 'box-shadow 0.3s ease';
+            goalCard.style.boxShadow = `0 0 30px ${milestone.color}60, 0 0 60px ${milestone.color}30`;
+            setTimeout(() => { goalCard.style.boxShadow = ''; }, 2500);
+        }
+
+        // 🔊 CHIME!
+        AnimationUtils.playLevelUpSound();
     }
 
     if (closeBtn) {
@@ -1357,12 +1449,23 @@ export const DashboardComponent = {
     try {
         const { data, duration, clashId, error } = await DataService.getWeeklyClash(this.profile.id)
         if (error || !data || data.length === 0) {
-            alert(error || "Wait for it! The Elite Clash questions are still being finalized. Check back in a few moments.")
+            ModalService.alert("Elite Clash", error || "Wait for it! The Elite Clash questions are still being finalized. Check back in a few moments.", 'info');
             return
         }
 
-        const confirmClash = confirm(`🚀 ELITE CLASH READY!\n\nFormat: ${data.length} Questions\nTime: ${duration} Minutes\n\nYour performance will decide your rank for the week. Ready to dominate?`)
-        
+        const confirmClash = await ModalService.confirm(
+            "🚀 Elite Clash Ready!",
+            `<div style="text-align:center;">
+                <div style="display:grid; gap:0.5rem; background:rgba(255,255,255,0.04); border-radius:12px; padding:1rem; margin:0.75rem 0; border:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-secondary); font-weight:700;">FORMAT</span><span style="font-weight:900;">${data.length} Questions</span></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-secondary); font-weight:700;">TIME LIMIT</span><span style="font-weight:900;">${duration} Minutes</span></div>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Your performance decides your rank for the week. Ready to dominate?</p>
+            </div>`,
+            "LET'S GO! 🔥",
+            "Not Yet"
+        )
+
         if (confirmClash) {
             this.onStartExam(data, 'clash', 'Elite Clash', 'Weekly Competition', {
                 durationMinutes: duration,
@@ -1371,7 +1474,7 @@ export const DashboardComponent = {
         }
     } catch (err) {
         console.error("Clash Start Failed:", err)
-        alert("System error. Please refresh and try again.")
+        ModalService.alert("System Error", "System error. Please refresh and try again.", 'error');
     }
   },
 
@@ -1386,6 +1489,12 @@ export const DashboardComponent = {
     const text = isPromotion 
         ? `Incredible work! You've climbed from ${oldTier} to the ${tierName} League.`
         : `Tough week! You've dropped to the ${tierName} League. Time to fight back!`
+
+    const tierColors = {
+        'Bronze': '#cd7f32', 'Silver': '#c0c0c0', 'Gold': '#ffd700',
+        'Diamond': '#00f2ff', 'Elite': '#8b5cf6'
+    }
+    const tierColor = tierColors[tierName] || 'var(--accent-primary)'
     
     // Reuse the celebration modal structure
     const modal = document.getElementById('celebration-modal')
@@ -1397,10 +1506,13 @@ export const DashboardComponent = {
     const closeBtn = document.getElementById('close-celebration-btn')
 
     if (titleEl) titleEl.textContent = title
-    if (nameEl) nameEl.textContent = `${tierName} League`
+    if (nameEl) { nameEl.textContent = `${tierName} League`; nameEl.style.color = tierColor; }
     if (textEl) textEl.textContent = text
     
-    // 🔥 FIX: Modal was freezing because no close handler was attached
+    // Update modal border color to match tier
+    const modalCard = modal.querySelector('.glass.card') || modal.querySelector('[style]')
+    if (modalCard) modalCard.style.borderColor = isPromotion ? tierColor : 'var(--error)'
+    
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.style.display = 'none'
@@ -1410,10 +1522,29 @@ export const DashboardComponent = {
     const icon = document.getElementById('celebration-icon')
     if (icon) {
         icon.setAttribute('data-lucide', isPromotion ? 'trending-up' : 'trending-down')
-        icon.style.color = isPromotion ? 'var(--success)' : 'var(--error)'
+        icon.style.color = isPromotion ? tierColor : 'var(--error)'
     }
     
     modal.style.display = 'flex'
     if (window.lucide) window.lucide.createIcons({ root: modal })
+
+    // ── CELEBRATION 2.0: Promotion confetti ───────────────────────────────────
+    if (isPromotion && typeof confetti === 'function') {
+        const fire = (opts) => confetti({ ...opts, colors: [tierColor, '#ffffff', '#ffd700', '#BAE6FD'] })
+        // Dual side cannons
+        fire({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: 0.7 } })
+        fire({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: 0.7 } })
+        // Centre burst after 300ms
+        setTimeout(() => fire({ particleCount: 120, spread: 90, origin: { x: 0.5, y: 0.6 } }), 300)
+        // Screen flash in tier color
+        const flashEl = document.createElement('div')
+        flashEl.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999998;pointer-events:none;background:${tierColor};opacity:0;transition:opacity 0.15s ease;`
+        document.body.appendChild(flashEl)
+        requestAnimationFrame(() => {
+            flashEl.style.opacity = '0.12'
+            setTimeout(() => { flashEl.style.opacity = '0'; setTimeout(() => flashEl.remove(), 200) }, 150)
+        })
+        AnimationUtils.playLevelUpSound()
+    }
   }
 }

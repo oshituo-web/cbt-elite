@@ -39,7 +39,6 @@ export const DataService = {
         question_answers (*)
     `;
     
-    // Only fetch explanations if it's a review or specific request (optimization)
     if (filters.include_explanations !== false) {
         selectFields += `, question_explanations (explanation)`;
     }
@@ -47,8 +46,25 @@ export const DataService = {
     if (filters.question_type === 'theory') {
         selectFields += `, theory_details (*)`;
     } else {
-        // Only fetch groups if they exist (minimal overhead but cleaner)
         selectFields += `, question_groups (*)`;
+    }
+
+    // --- TIERED ACCESS & REPETITION LOGIC ---
+    const user = (await supabase.auth.getUser()).data.user;
+    const userId = user?.id;
+    
+    let isPremium = false;
+    if (userId) {
+        const [{ data: profile }, { data: globalPremium }] = await Promise.all([
+            this.getProfile(userId),
+            this.getPremiumGlobalStatus()
+        ]);
+        isPremium = profile?.tier === 'premium' || profile?.tier === 'medium' || globalPremium === true;
+    }
+
+    // Enforce limits for free users
+    if (!isPremium && filters.randomize) {
+        filters.limit = Math.min(filters.limit || 10, 10);
     }
 
     let query = supabase
@@ -71,7 +87,20 @@ export const DataService = {
 
     if (filters.randomize) {
       try {
+        let excludeIds = [];
+        
+        // Premium users: Get seen IDs from database for true non-repetition
+        if (isPremium && userId) {
+            const { data: seenData } = await supabase
+                .from('user_seen_questions')
+                .select('question_id')
+                .eq('user_id', userId);
+            
+            if (seenData) excludeIds = seenData.map(s => s.question_id);
+        }
+
         const seenIds = RepetitionManager.getSeenIds();
+        const combinedExclude = [...new Set([...excludeIds, ...seenIds])];
         
         const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
           p_subject_id: filters.subject_id || null,
@@ -79,29 +108,16 @@ export const DataService = {
           p_exam_type: filters.exam_type || null,
           p_topic: filters.topic || null,
           p_question_type: filters.question_type || 'objective',
-          p_limit: (filters.limit || 20) + (seenIds.length > 500 ? 50 : 20) // Fetch extra to allow for local filtering
+          p_limit: filters.limit || 20,
+          p_exclude_ids: combinedExclude // Pass excluded IDs to RPC
         })
         
         if (idError) throw idError
         
         if (randomIds && Array.isArray(randomIds) && randomIds.length > 0) {
           let ids = randomIds.map(r => (typeof r === 'object' && r !== null) ? r.id : r).filter(Boolean);
-          
-          // --- ANTI-REPETITION FILTER ---
-          const filteredIds = ids.filter(id => !seenIds.includes(id));
-          
-          // Fallback if we filtered too many (rare)
-          const finalIds = filteredIds.length >= (filters.limit || 20) 
-            ? filteredIds.slice(0, filters.limit || 20) 
-            : ids.slice(0, filters.limit || 20);
-
-          if (finalIds.length > 0) {
-            query = query.in('id', finalIds)
-          } else {
-            query = query.limit(filters.limit || 20)
-          }
+          query = query.in('id', ids)
         } else {
-          console.warn("RPC returned no random questions or invalid format. Falling back to sequential.")
           query = query.limit(filters.limit || 20)
         }
       } catch (err) {
@@ -118,14 +134,27 @@ export const DataService = {
     
     if (error) {
         console.error("DataService.getQuestions Query Error:", error)
-        throw error // Throw to be caught by component level try-catch
+        throw error
     }
 
     const formattedData = this._formatQuestions(data || []);
     
-    // Mark questions as seen so they don't appear in the next fetch
+    // Mark questions as seen
     if (formattedData.length > 0 && filters.randomize) {
-        RepetitionManager.markAsSeen(formattedData.map(q => q.id));
+        const questionIds = formattedData.map(q => q.id);
+        
+        // Always track in session for immediate repetition avoidance
+        RepetitionManager.markAsSeen(questionIds);
+        
+        // Premium users: Persist to database for long-term tracking
+        if (isPremium && userId) {
+            const seenPayload = questionIds.map(qid => ({ user_id: userId, question_id: qid }));
+            supabase.from('user_seen_questions').insert(seenPayload).then(({ error }) => {
+                if (error && error.code !== '23505') { // Ignore duplicate key errors
+                    console.error("Error recording seen questions:", error);
+                }
+            });
+        }
     }
 
     return { data: formattedData, error, count }
@@ -230,6 +259,11 @@ export const DataService = {
     return { data, error }
   },
 
+  async getPremiumGlobalStatus() {
+    const { data, error } = await supabase.from('system_config').select('value').eq('key', 'exams_free_access').maybeSingle()
+    return { data: data?.value === true || data?.value === 'true', error }
+  },
+
   async buyStreakFreeze(userId) {
     const cost = 100;
     const { data, error } = await supabase.rpc('purchase_streak_freeze', { p_user_id: userId, p_cost: cost });
@@ -302,13 +336,16 @@ export const DataService = {
         is_correct: q.question_type !== 'theory' && (userAnswers[i] === q.answers.find(a => a.is_correct)?.id)
     }))
 
+    const localDate = this.getWATDate().toISOString().split('T')[0];
+
     return await supabase.rpc('sync_user_performance', {
         p_user_id: userId,
         p_total_questions: sessionData.total_questions,
         p_score_percentage: sessionData.score_percentage,
         p_time_taken: sessionData.time_taken_seconds || 0,
         p_topics: topicsPayload,
-        p_answered_questions: sessionData.answered_questions // Link accurate count
+        p_answered_questions: sessionData.answered_questions,
+        p_client_date: localDate
     })
   },
 
@@ -415,7 +452,7 @@ export const DataService = {
     try {
         const { data, error } = await supabase
           .from('exam_sessions')
-          .select('total_questions, correct_answers, completed_at, answered_questions')
+          .select('total_questions, correct_answers, completed_at, answered_questions, time_taken')
           .eq('user_id', userId)
           .order('completed_at', { ascending: false })
           .limit(50)
@@ -706,34 +743,66 @@ export const DataService = {
   },
 
   async getLeaderboard() {
-    return await supabase.from('weekly_summaries').select('total_questions_answered, users!inner(username, daily_questions_count)').order('total_questions_answered', { ascending: false }).limit(10)
+    const { data, error } = await supabase.rpc('get_global_leaderboard');
+    if (error || !data) return { data, error };
+    
+    // Map the flat RPC output back into the nested shape the UI expects
+    const mappedData = data.map(d => ({
+        total_questions_answered: d.total_questions,
+        users: { 
+            username: d.username, 
+            daily_questions_count: d.daily_questions_count 
+        }
+    }));
+    
+    return { data: mappedData, error: null };
   },
 
-  async getAuditQuestions(limit = 50) {
-    // 1. Fetch questions with null/empty explanations or missing answers
-    const { data: missingExplanation, error: e1 } = await supabase
+  async getAuditQuestions(filters = {}) {
+    const limit = filters.limit || 50;
+    
+    // 1. Fetch questions with high report counts (priority)
+    const { data: reported } = await supabase
+      .from('question_reports')
+      .select('question_id, questions(*, question_answers(*))')
+      .eq('status', 'pending')
+      .limit(limit);
+
+    // 2. Fetch questions with structural gaps (missing explanation or null options)
+    const { data: gaps } = await supabase
       .from('questions')
       .select('*, question_answers(*)')
       .or('explanation.eq.,explanation.is.null')
       .limit(limit);
 
-    // 2. Fetch questions with high report counts
-    const { data: reported, error: e2 } = await supabase
-      .from('question_reports')
-      .select('question_id, questions(*, question_answers(*))')
-      .eq('status', 'pending');
-
     // Merge and deduplicate
-    const combined = [...(missingExplanation || [])];
+    const combined = [];
+    const seenIds = new Set();
+
     if (reported) {
       reported.forEach(r => {
-        if (r.questions && !combined.find(q => q.id === r.questions.id)) {
-          combined.push(r.questions);
+        if (r.questions && !seenIds.has(r.questions.id)) {
+          combined.push({ ...r.questions, audit_reason: 'User Reported' });
+          seenIds.add(r.questions.id);
         }
       });
     }
-    
-    return { data: this._formatQuestions(combined.slice(0, limit)), error: e1 || e2 };
+
+    if (gaps) {
+      gaps.forEach(g => {
+        if (!seenIds.has(g.id)) {
+          combined.push({ ...g, audit_reason: 'Structural Gap' });
+          seenIds.add(g.id);
+        }
+      });
+    }
+
+    // Filter by subject if specified
+    const filtered = filters.subject 
+      ? combined.filter(q => q.subject === filters.subject)
+      : combined;
+
+    return { data: filtered.slice(0, limit), error: null };
   },
 
   async getMockHistory(userId, examType = 'JAMB') {
@@ -937,7 +1006,7 @@ export const DataService = {
   },
 
   async getRevenueStats() {
-    return await supabase.from('users').select('tier, email')
+    return await supabase.from('users').select('tier, email, created_at')
   },
 
   async getAuditLogs() {
@@ -975,6 +1044,34 @@ export const DataService = {
 
   async syncLeagueStatus(userId) {
     return await supabase.rpc('join_league_group', { p_user_id: userId })
+  },
+
+  async commitRepair(qid, cleanData) {
+    // 1. Update Question Text and Basic Metadata
+    const { error: qErr } = await this.updateQuestion(qid, {
+        question_text: cleanData.question_text,
+        explanation: cleanData.explanation
+    })
+    if (qErr) return { error: qErr }
+
+    // 2. Update Answers and Explanation in linked table
+    const { error: aErr } = await this.updateQuestionAnswers(qid, {
+        option_a: cleanData.option_a,
+        option_b: cleanData.option_b,
+        option_c: cleanData.option_c,
+        option_d: cleanData.option_d,
+        correct_option: cleanData.correct_option,
+        explanation: cleanData.explanation
+    })
+    
+    // 3. Mark reports as resolved for this question
+    await supabase.from('question_reports').update({ status: 'resolved' }).eq('question_id', qid)
+
+    return { error: aErr }
+  },
+
+  async runWeeklyLeagueReset() {
+    return await supabase.rpc('run_weekly_league_reset')
   },
 
   async getLeagueTable(userId) {

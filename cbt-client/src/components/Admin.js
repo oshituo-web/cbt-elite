@@ -1,6 +1,8 @@
 import { DataService } from '../services/data'
 import { SubscriptionService } from '../services/subscriptionService'
 import { supabase } from '../utils/supabase'
+import Papa from 'papaparse'
+import { ModalService } from '../services/ModalService'
 
 export const AdminComponent = {
   render(profile, onBack) {
@@ -56,9 +58,14 @@ export const AdminComponent = {
                 <h2 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Leagues & Elite Clans</h2>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">Managing departmental competitions and promotions</p>
               </div>
-              <button id="generate-clash-seeds-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
-                <i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS
-              </button>
+              <div style="display: flex; gap: 0.75rem;">
+                <button id="run-weekly-reset-btn" class="btn-secondary" style="height: 40px; padding: 0 1.25rem; font-weight: 800; border-radius: 10px; border-color: var(--success); color: var(--success);">
+                  <i data-lucide="refresh-ccw" style="width: 16px; margin-right: 0.5rem;"></i> RUN WEEKLY RESET
+                </button>
+                <button id="generate-clash-seeds-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
+                  <i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS
+                </button>
+              </div>
             </div>
 
             <div class="glass card" style="padding: 1.5rem; border-radius: 20px; border-left: 4px solid var(--accent-secondary); margin-bottom: 2rem;">
@@ -485,7 +492,9 @@ export const AdminComponent = {
         document.getElementById('admin-users-tab').style.display = target === 'users' ? 'block' : 'none'
         document.getElementById('admin-reports-tab').style.display = target === 'reports' ? 'block' : 'none'
         document.getElementById('admin-marketing-tab').style.display = target === 'marketing' ? 'block' : 'none'
-
+        if (document.getElementById('admin-leagues-tab')) {
+          document.getElementById('admin-leagues-tab').style.display = target === 'leagues' ? 'block' : 'none'
+        }
         if (document.getElementById('admin-audit-tab')) {
             document.getElementById('admin-audit-tab').style.display = target === 'audit' ? 'block' : 'none'
         }
@@ -504,6 +513,7 @@ export const AdminComponent = {
         else if (target === 'quality-audit') this.loadQualityAudit()
         else if (target === 'audit') this.loadAuditLogs()
         else if (target === 'staff') this.loadStaff()
+        else if (target === 'leagues') this.loadLeagues()
 
         if (window.lucide) window.lucide.createIcons()
       }
@@ -580,16 +590,16 @@ export const AdminComponent = {
       assignBtn.onclick = async () => {
         const email = document.getElementById('staff-email-input').value.trim()
         const role = document.getElementById('staff-role-select').value
-        if (!email) return alert('Enter an email address.')
+        if (!email) return ModalService.alert('Missing Field', 'Enter an email address.', 'warning')
         
         assignBtn.disabled = true
         assignBtn.textContent = 'Updating...'
         const { error } = await DataService.updateUserRole(email, role)
         if (error) {
-            alert('Error: ' + error.message)
+            ModalService.alert('Assignment Failed', error.message, 'error')
         } else {
             await DataService.logAdminAction(this._adminProfile.email, 'Assign Role', email, role)
-            alert(`Successfully assigned ${role} role to ${email}`)
+            ModalService.showToast(`✅ ${role} role assigned to ${email}`, 'success')
             document.getElementById('staff-email-input').value = ''
             this.loadStaff()
         }
@@ -606,10 +616,10 @@ export const AdminComponent = {
             saveBroadcastBtn.textContent = 'Pushing...'
             saveBroadcastBtn.disabled = true
             const { error } = await DataService.updateSystemConfig('broadcast_message', msg)
-            if (error) alert('Error: ' + error.message)
+            if (error) ModalService.alert('Broadcast Failed', error.message, 'error')
             else {
                 await DataService.logAdminAction(this._adminProfile.email, 'Update Broadcast', 'global', msg.substring(0, 50))
-                alert('Broadcast updated successfully!')
+                ModalService.showToast('📡 Broadcast pushed to all dashboards!', 'success')
             }
             saveBroadcastBtn.textContent = 'Push Broadcast'
             saveBroadcastBtn.disabled = false
@@ -638,7 +648,7 @@ export const AdminComponent = {
                 if (val) {
                     const { error } = await DataService.updateSystemConfig(key, val)
                     if (error) {
-                        alert(`Error updating ${key}: ${error.message}`)
+                        ModalService.alert('Config Error', `Error updating ${key}: ${error.message}`, 'error')
                         hasError = true
                         break
                     }
@@ -647,16 +657,16 @@ export const AdminComponent = {
 
             if (!hasError) {
                 await DataService.logAdminAction(this._adminProfile.email, 'Update Limits/Pricing', 'global', 'Multiple keys updated')
-                alert('Limits and pricing updated successfully!')
+                ModalService.showToast('✅ Tier configuration saved successfully!', 'success')
                 this.loadMarketing()
             }
-            saveLimitsBtn.textContent = 'Persist Limits & Pricing'
+            saveLimitsBtn.textContent = 'Persist Tier Configuration'
             saveLimitsBtn.disabled = false
         }
     }
 
     // Premium Feature Toggles
-    const setupToggle = (btnId, configKey) => {
+    const setupToggle = (btnId, configKey, label) => {
         const btn = document.getElementById(btnId)
         if (!btn) return
         btn.onclick = async () => {
@@ -666,18 +676,20 @@ export const AdminComponent = {
             btn.textContent = 'Updating...'
             
             const { error } = await DataService.updateSystemConfig(configKey, newState)
-            if (error) alert('Error: ' + error.message)
-            else {
+            if (error) {
+                ModalService.alert('Toggle Failed', error.message, 'error')
+            } else {
                 await DataService.logAdminAction(this._adminProfile.email, `Toggle ${configKey}`, 'global', `New State: ${newState}`)
+                ModalService.showToast(`${label} ${newState ? '✅ ENABLED' : '🔒 DISABLED'} for all users`, newState ? 'success' : 'info')
                 this.loadMarketing()
             }
             btn.disabled = false
         }
     }
 
-    setupToggle('toggle-explanations-btn', 'explanations_free_access')
-    setupToggle('toggle-exams-btn', 'exams_free_access')
-    setupToggle('toggle-ai-tutor-btn', 'ai_tutor_free_access')
+    setupToggle('toggle-explanations-btn', 'explanations_free_access', 'Explanations')
+    setupToggle('toggle-exams-btn', 'exams_free_access', 'Mock Exams')
+    setupToggle('toggle-ai-tutor-btn', 'ai_tutor_free_access', 'AI Tutor')
 
     const addPromoBtn = document.getElementById('add-promo-btn')
     if (addPromoBtn) {
@@ -686,20 +698,20 @@ export const AdminComponent = {
             const percent = parseInt(document.getElementById('promo-percent-input').value)
             const expiry = document.getElementById('promo-expiry-input').value
             
-            if (!code || isNaN(percent)) return alert('Enter code and valid percentage.')
+            if (!code || isNaN(percent)) return ModalService.alert('Missing Fields', 'Enter a code string and a valid percentage.', 'warning')
             
             addPromoBtn.textContent = 'Creating...'
             addPromoBtn.disabled = true
             const { error } = await DataService.addPromoCode(code, percent, expiry)
-            if (error) alert('Error: ' + error.message)
+            if (error) ModalService.alert('Promo Error', error.message, 'error')
             else {
                 await DataService.logAdminAction(this._adminProfile.email, 'Create Promo', code, `${percent}% off`)
-                alert('Promo code created!')
+                ModalService.showToast(`🎟️ Promo code ${code} created!`, 'success')
                 document.getElementById('promo-code-input').value = ''
                 document.getElementById('promo-percent-input').value = ''
                 this.loadMarketing()
             }
-            addPromoBtn.textContent = 'Create Code'
+            addPromoBtn.textContent = 'Create Promo Code'
             addPromoBtn.disabled = false
         }
     }
@@ -728,7 +740,7 @@ export const AdminComponent = {
         if (rows.length === 0) {
             btn.textContent = '📦 Bulk Import (.csv)'
             btn.disabled = false
-            return alert('CSV is empty or invalid.')
+            return ModalService.alert('Import Error', 'CSV is empty or has no valid rows.', 'warning')
         }
 
         const questions = rows.map(row => ({
@@ -749,14 +761,14 @@ export const AdminComponent = {
         if (questions.length === 0) {
             btn.textContent = '📦 Bulk Import (.csv)'
             btn.disabled = false
-            return alert('No valid questions found in CSV.')
+            return ModalService.alert('Import Error', 'No valid questions found in CSV. Check column names.', 'warning')
         }
 
         const { error, count } = await DataService.bulkAddQuestions(questions)
-        if (error) alert('Import Error: ' + error)
+        if (error) ModalService.alert('Import Error', String(error), 'error')
         else {
             await DataService.logAdminAction(this._adminProfile.email, 'Bulk Import', 'questions', `Imported ${count} questions`)
-            alert(`Success! Imported ${count} questions.`)
+            ModalService.showToast(`✅ Successfully imported ${count} questions!`, 'success')
         }
         
         btn.textContent = '📦 Bulk Import (.csv)'
@@ -810,7 +822,7 @@ export const AdminComponent = {
           
           <div style="flex: 1; min-width: 0;">
             <div style="font-family: 'Outfit'; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${window.DOMPurify.sanitize(q.question_text).replace(/<[^>]*>?/gm, '').substring(0, 100)}...
+              ${(q.question_text || '').replace(/<[^>]*>?/gm, '').substring(0, 100)}...
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <span style="font-size: 0.65rem; background: var(--accent-gradient); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${q.exam_type}</span>
@@ -868,7 +880,7 @@ export const AdminComponent = {
             if (error) {
                 row.style.opacity = '1'
                 row.style.pointerEvents = 'auto'
-                alert('Failed to delete: ' + error.message)
+                ModalService.alert("Deployment Failed", error.message, 'error');
             } else {
                 if(row) row.remove()
                 await DataService.logAdminAction(this._adminProfile.email, 'Delete Question', id, 'Soft deletion via UI')
@@ -910,66 +922,8 @@ export const AdminComponent = {
     this._openEditModalLogic(question)
   },
 
-  _initLeaguesTab() {
-    const generateBtn = document.getElementById('generate-clash-seeds-btn')
-    if (generateBtn) {
-        generateBtn.onclick = async () => {
-            if (!confirm("This will overwrite/generate questions for the coming Saturday and Sunday competitions. Proceed?")) return
-            
-            generateBtn.disabled = true
-            generateBtn.innerHTML = `<span class="loader-spinner" style="width:14px; height:14px; display:inline-block; margin-right: 8px;"></span> GENERATING...`
-            
-            try {
-                await DataService.generateWeeklyClashSeeds()
-                alert("✨ Weekly Clash seeds generated successfully!")
-                this._fetchClashSchedule()
-            } catch (err) {
-                console.error("Seed Generation Failed:", err)
-                alert("Error generating seeds. Check console.")
-            } finally {
-                generateBtn.disabled = false
-                generateBtn.innerHTML = `<i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS`
-                if (window.lucide) lucide.createIcons()
-            }
-        }
-    }
-    this._fetchClashSchedule()
-  },
 
-  async _fetchClashSchedule() {
-    const list = document.getElementById('clash-schedule-list')
-    if (!list) return
 
-    const { data: clashes, error } = await supabase
-        .from('scheduled_clashes')
-        .select('*')
-        .order('week_date', { ascending: false })
-        .limit(10)
-
-    if (error || !clashes || clashes.length === 0) {
-        list.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">No active schedule found. Generate seeds to start.</div>`
-        return
-    }
-
-    list.innerHTML = clashes.map(clash => `
-        <div class="glass" style="padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border);">
-           <div style="display: flex; gap: 1rem; align-items: center;">
-              <div style="background: var(--surface-color); padding: 0.5rem; border-radius: 8px; text-align: center; min-width: 60px; border: 1px solid var(--glass-border);">
-                 <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800;">WEEK</div>
-                 <div style="font-size: 0.9rem; font-weight: 900; color: var(--text-primary);">${new Date(clash.week_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}</div>
-              </div>
-              <div>
-                 <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">${clash.type === 'Super' ? '🚀 Super Elite League' : `${clash.department} Clan Clash`}</div>
-                 <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 700;">${clash.questions_json?.length || 0} Questions • ${clash.duration_minutes} Mins</div>
-              </div>
-           </div>
-           <div style="text-align: right;">
-              <div style="font-size: 0.65rem; font-weight: 800; color: var(--success); text-transform: uppercase;">Synced & Ready</div>
-              <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Automated Live Date</div>
-           </div>
-        </div>
-    `).join('')
-  },
 
   _openEditModalLogic(question) {
     // Determine options based on how data is laid out (from AI report fetch or getQuestions fetch)
@@ -1079,7 +1033,7 @@ export const AdminComponent = {
     
     document.getElementById('save-q-edit').onclick = async () => {
       const newText = document.getElementById('edit-q-text').value;
-      if (!newText.trim()) return alert('Question text cannot be empty.');
+      if (!newText.trim()) return ModalService.alert('Validation Error', 'Question text cannot be empty.', 'warning');
       
       const updatedOpts = {
           option_a: document.getElementById('edit-opt-a').value,
@@ -1098,7 +1052,7 @@ export const AdminComponent = {
       const { error: baseError } = await DataService.updateQuestion(question.id, { question_text: newText });
       
       if (baseError) {
-        alert('Error updating question text: ' + baseError.message);
+        ModalService.alert('Save Error', 'Error updating question text: ' + baseError.message, 'error');
         saveBtn.textContent = '✅ Save All Changes';
         saveBtn.disabled = false;
         return;
@@ -1321,7 +1275,7 @@ export const AdminComponent = {
       
       const { error } = await DataService.updateUser(user.id, updates)
       if (error) {
-        alert('Error: ' + error.message)
+        ModalService.alert('Save Error', error.message, 'error')
         saveBtn.textContent = 'Commit Updates'
         saveBtn.disabled = false
       } else {
@@ -1333,16 +1287,16 @@ export const AdminComponent = {
     }
 
     document.getElementById('flag-user-btn').onclick = async () => {
-        const reason = prompt('Reason for flagging (e.g. "Cheating - high scores"):')
+        const reason = window.prompt('Reason for flagging (e.g. "Cheating - high scores"):')
         if (!reason) return
         const btn = document.getElementById('flag-user-btn')
         btn.disabled = true
         btn.textContent = 'Flagging...'
         const { error } = await DataService.flagUser(user.id, reason)
-        if (error) alert('Error: ' + error.message)
+        if (error) ModalService.alert('Flag Error', error.message, 'error')
         else {
             await DataService.logAdminAction(this._adminProfile.email, 'Flag User', user.id, reason)
-            alert('User has been flagged.')
+            ModalService.showToast('⚠️ User has been flagged for review.', 'info')
             document.getElementById('user-edit-overlay').remove()
             this.loadUsers()
         }
@@ -1461,11 +1415,12 @@ export const AdminComponent = {
     // Delete topic
     document.querySelectorAll('.delete-topic-btn').forEach(btn => {
       btn.onclick = async () => {
-        if (!confirm('Permanently delete this syllabus topic?')) return
+        const confirmed = await ModalService.confirm('Delete Topic', 'Permanently delete this syllabus topic?')
+        if (!confirmed) return
         const id = btn.getAttribute('data-id')
         btn.disabled = true
         const { error } = await DataService.deleteSyllabusTopic(id)
-        if (error) alert('Error: ' + error.message)
+        if (error) ModalService.alert('Delete Error', error.message, 'error')
         else this.loadSyllabus()
       }
     })
@@ -1478,7 +1433,7 @@ export const AdminComponent = {
             sel.disabled = true
             const { error } = await DataService.updateSyllabusTopic(id, { importance: weight })
             if (error) {
-                alert('Error updating weight: ' + error.message)
+                ModalService.alert('Weight Error', 'Error updating weight: ' + error.message, 'error')
                 sel.disabled = false
             } else {
                 sel.disabled = false
@@ -1505,12 +1460,12 @@ export const AdminComponent = {
         const subjectId = subjects.find(s => s.subject_name === subjectName)?.id
         
         if (!examId || !subjectId) {
-          alert('Error: Exam or Subject ID not found.')
+          ModalService.alert('Lookup Error', 'Exam or Subject ID not found.', 'error')
           return
         }
 
         const { error } = await DataService.addSyllabusTopic(examId, subjectId, topicName)
-        if (error) alert('Error adding topic: ' + error.message)
+        if (error) ModalService.alert('Topic Error', 'Error adding topic: ' + error.message, 'error')
         else this.loadSyllabus()
       }
     })
@@ -1604,7 +1559,7 @@ export const AdminComponent = {
         `).eq('id', qid).single()
         
         if (q) this.openEditModal(q)
-        else alert('Error: Could not load question details.')
+        else ModalService.alert('Load Error', 'Could not load question details.', 'error')
       }
     })
 
@@ -1632,7 +1587,8 @@ export const AdminComponent = {
 
     document.querySelectorAll('.deactivate-question-btn').forEach(btn => {
       btn.onclick = async () => {
-        if (!confirm('Are you sure you want to deactivate this question? It will no longer appear in exams.')) return
+        const confirmed = await ModalService.confirm('Deactivate Question', 'Are you sure? This question will no longer appear in exams.')
+        if (!confirmed) return
         const qid = btn.getAttribute('data-qid')
         const rid = btn.getAttribute('data-rid')
         btn.textContent = '...'
@@ -1655,7 +1611,7 @@ export const AdminComponent = {
     const { data: fix, error } = await DataService.aiRegenerateQuestion(qid, reason, details)
 
     if (error) {
-      alert("AI Fix failed: " + error)
+      ModalService.alert('AI Repair Failed', String(error), 'error')
       btn.disabled = false
       btn.textContent = "🪄 AI Fix"
       return
@@ -1755,7 +1711,7 @@ export const AdminComponent = {
       
       document.getElementById('ai-fix-overlay').remove()
       this.loadReports()
-      alert("Question successfully repaired across all platform clusters.")
+      ModalService.showToast('🚀 Question repaired and synced across platform!', 'success')
     }
   },
 
@@ -1848,42 +1804,70 @@ export const AdminComponent = {
       }
     })
 
-    // Phase 5: Revenue Chart
+    // Phase 5: Daily Signups Time-Series Chart
     const revenueContainer = document.getElementById('revenue-growth-chart')
     if (revenueContainer) {
         const { data: users } = await DataService.getRevenueStats()
-        const tierCounts = { free: 0, premium: 0 }
+        
+        // Group users by creation date (YYYY-MM-DD)
+        const signupsByDate = {}
         users.forEach(u => {
-            if (u.tier === 'premium') tierCounts.premium++
-            else tierCounts.free++
+            if (u.created_at) {
+               const dateStr = new Date(u.created_at).toISOString().split('T')[0]
+               signupsByDate[dateStr] = (signupsByDate[dateStr] || 0) + 1
+            }
+        })
+        
+        // Sort dates chronologically
+        const sortedDates = Object.keys(signupsByDate).sort()
+        const signupCounts = sortedDates.map(date => signupsByDate[date])
+        
+        // Format dates for display (e.g., 'Apr 15')
+        const displayLabels = sortedDates.map(d => {
+            const dt = new Date(d);
+            return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
         })
 
         if (this._revenueChart) this._revenueChart.destroy()
         this._revenueChart = new Chart(revenueContainer.getContext('2d'), {
-            type: 'doughnut',
+            type: 'line',
             data: {
-                labels: ['Free Tier (0 NGN)', 'Premium Tier (1500 NGN)'],
+                labels: displayLabels,
                 datasets: [{
-                    data: [tierCounts.free, tierCounts.premium],
-                    backgroundColor: ['rgba(255, 255, 255, 0.05)', 'rgba(77, 182, 172, 0.6)'],
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 1
+                    label: 'Daily Signups',
+                    data: signupCounts,
+                    borderColor: 'rgba(124, 58, 237, 0.8)',
+                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: 'rgba(124, 58, 237, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 plugins: { 
-                  legend: { 
-                    position: 'bottom', 
-                    labels: { 
-                      color: 'rgba(255,255,255,0.7)',
-                      font: { family: 'Outfit', size: 11, weight: 'bold' },
-                      padding: 20,
-                      usePointStyle: true
-                    } 
-                  } 
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { family: 'Outfit', weight: 'bold' },
+                    bodyFont: { family: 'Inter' }
+                  }
                 },
-                cutout: '70%'
+                scales: {
+                  y: { 
+                    beginAtZero: true, 
+                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+                    ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 } }
+                  },
+                  x: { 
+                    grid: { display: false },
+                    ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 } }
+                  }
+                }
             }
         })
     }
@@ -1995,74 +1979,308 @@ export const AdminComponent = {
     if (window.lucide) window.lucide.createIcons({ root: list })
   },
 
+  async loadLeagues() {
+    const scheduleList = document.getElementById('clash-schedule-list')
+    if (!scheduleList) return
+
+    scheduleList.innerHTML = '<div class="loader-spinner" style="margin: 2rem auto;"></div>'
+
+    try {
+      const { data: clashes, error } = await supabase
+        .from('scheduled_clashes')
+        .select('*')
+        .order('week_date', { ascending: false })
+        .limit(20)
+
+      if (error) throw error
+
+      if (!clashes || clashes.length === 0) {
+        scheduleList.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary); opacity: 0.6;">
+            <i data-lucide="calendar-off" style="width: 40px; height: 40px; margin-bottom: 1rem; display: block; margin-left: auto; margin-right: auto;"></i>
+            <p style="font-size: 0.95rem; margin: 0;">No clash schedules found. Use "Generate Weekly Seeds" to create this week's competitions.</p>
+          </div>
+        `
+      } else {
+        scheduleList.innerHTML = clashes.map(clash => {
+          const typeColor = clash.type === 'Super' ? 'var(--accent-secondary)' : 'var(--accent-primary)'
+          const qCount = Array.isArray(clash.questions_json) ? clash.questions_json.length : 0
+          return `
+            <div class="glass" style="padding: 1rem 1.25rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); border-left: 4px solid ${typeColor};">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: ${typeColor}20; color: ${typeColor}; display: flex; align-items: center; justify-content: center;">
+                  <i data-lucide="${clash.type === 'Super' ? 'crown' : 'swords'}" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <div style="font-family: 'Outfit'; font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${clash.department || 'General'}</div>
+                  <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">Week: ${clash.week_date} · ${qCount} questions · ${clash.duration_minutes || 20}min</div>
+                </div>
+              </div>
+              <span style="font-size: 0.65rem; background: ${typeColor}; color: white; padding: 3px 10px; border-radius: 6px; font-weight: 900; text-transform: uppercase;">${clash.type || 'Normal'}</span>
+            </div>
+          `
+        }).join('')
+      }
+
+      if (window.lucide) window.lucide.createIcons({ root: scheduleList })
+    } catch (err) {
+      scheduleList.innerHTML = `<div style="color: var(--error); text-align: center; padding: 2rem;">Error loading schedule: ${err.message}</div>`
+    }
+
+    // Wire up action buttons
+    const resetBtn = document.getElementById('run-weekly-reset-btn')
+    if (resetBtn) {
+      resetBtn.onclick = async () => {
+        const confirmed = await ModalService.confirm('Weekly Reset', 'This will process league promotions/demotions and reset weekly XP. Proceed?')
+        if (!confirmed) return
+        resetBtn.disabled = true
+        resetBtn.innerHTML = '<span class="pulse">Processing...</span>'
+        try {
+          const { error } = await DataService.runWeeklyLeagueReset()
+          if (error) throw error
+          ModalService.showToast('✅ Weekly league reset completed!', 'success')
+          this.loadLeagues()
+        } catch (err) {
+          ModalService.alert('Reset Failed', err.message || 'Unknown error', 'error')
+        }
+        resetBtn.disabled = false
+        resetBtn.innerHTML = '<i data-lucide="refresh-ccw" style="width: 16px; margin-right: 0.5rem;"></i> RUN WEEKLY RESET'
+        if (window.lucide) window.lucide.createIcons({ root: resetBtn })
+      }
+    }
+
+    const seedBtn = document.getElementById('generate-clash-seeds-btn')
+    if (seedBtn) {
+      seedBtn.onclick = async () => {
+        const confirmed = await ModalService.confirm('Generate Seeds', 'This will create clash competition entries for all departments this week. Proceed?')
+        if (!confirmed) return
+        seedBtn.disabled = true
+        seedBtn.innerHTML = '<span class="pulse">Generating...</span>'
+        try {
+          const { error } = await DataService.generateWeeklyClashSeeds()
+          if (error) throw error
+          await DataService.logAdminAction(this._adminProfile.email, 'Generate Clash Seeds', 'global', 'Weekly seeds generated')
+          ModalService.showToast('🎯 Weekly clash seeds generated for all departments!', 'success')
+          this.loadLeagues()
+        } catch (err) {
+          ModalService.alert('Seed Generation Failed', err.message || 'Unknown error', 'error')
+        }
+        seedBtn.disabled = false
+        seedBtn.innerHTML = '<i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS'
+        if (window.lucide) window.lucide.createIcons({ root: seedBtn })
+      }
+    }
+  },
+
   async loadQualityAudit() {
     const list = document.getElementById('quality-audit-list')
     if (!list) return
-    list.innerHTML = '<div class="loader-spinner" style="margin: 2rem auto;"></div>'
+    list.innerHTML = `
+      <div style="text-align: center; padding: 4rem;">
+        <div class="loader-spinner" style="margin-bottom: 2rem;"></div>
+        <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1.2rem;">Elite AI is Scanning...</div>
+        <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.85rem;">Deep Fact-Checking & Syllabus Alignment Check (Batch Size: 50)</div>
+      </div>
+    `
     
-    const { data: questions, error } = await DataService.getAuditQuestions()
-    if (error) {
-      list.innerHTML = `<div style="color: var(--error);">Scan failed: ${error.message}</div>`
-      return
-    }
+    try {
+      const { data: rawQuestions, error } = await DataService.getAuditQuestions({ limit: 50 })
+      if (error) throw error
 
-    if (!questions || questions.length === 0) {
+      if (!rawQuestions || rawQuestions.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; padding: 4rem; color: var(--success); opacity: 0.8;">
+            <i data-lucide="check-circle" style="width: 64px; height: 64px; margin-bottom: 1.5rem;"></i>
+            <h3 style="font-family: 'Outfit'; margin: 0; font-size: 1.5rem; font-weight: 900;">CONTENT OPTIMAL</h3>
+            <p style="font-size: 0.95rem; opacity: 0.7;">Your current database meets all Elite Quality Standards.</p>
+          </div>
+        `
+        return
+      }
+
+      // Step 2: Batch Audit via AI
+      const { AiService } = await import('../services/aiService')
+      const auditedBatch = await AiService.auditQuestionBatch(rawQuestions)
+
+      // Render Dashboard & List
+      const healthyRange = auditedBatch.filter(q => q.audit.score >= 90).length;
+      const criticalRange = auditedBatch.filter(q => q.audit.score < 60).length;
+
       list.innerHTML = `
-        <div style="text-align: center; padding: 3rem; color: var(--success); opacity: 0.8;">
-          <i data-lucide="check-circle" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i>
-          <h3 style="font-family: 'Outfit'; margin: 0;">System Quality Optimal</h3>
-          <p style="font-size: 0.85rem; opacity: 0.7;">No critical content gaps detected in the current scan.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+           <div class="glass" style="padding: 1.5rem; border-radius: 20px; border-bottom: 4px solid var(--success);">
+              <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Optimal Health</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--success);">${healthyRange}</div>
+              <div style="font-size: 0.7rem; color: var(--text-secondary);">Ready for Production</div>
+           </div>
+           <div class="glass" style="padding: 1.5rem; border-radius: 20px; border-bottom: 4px solid var(--warning);">
+              <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Needs Review</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--warning);">${auditedBatch.length - healthyRange - criticalRange}</div>
+              <div style="font-size: 0.7rem; color: var(--text-secondary);">Minor issues detected</div>
+           </div>
+           <div class="glass" style="padding: 1.5rem; border-radius: 20px; border-bottom: 4px solid var(--error);">
+              <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Critical Gaps</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--error);">${criticalRange}</div>
+              <div style="font-size: 0.7rem; color: var(--text-secondary);">Fact errors or broken data</div>
+           </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${auditedBatch.map(q => `
+            <div class="glass audit-item scale-in" style="padding: 1.5rem; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1.5px solid ${q.audit.score < 70 ? 'rgba(239, 68, 68, 0.2)' : 'var(--glass-border)'}; background: rgba(255,255,255,0.01);">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
+                   <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: ${q.audit.score < 70 ? 'var(--error)' : 'var(--success)'};">${q.audit.score}%</div>
+                   <div style="height: 14px; width: 1px; background: var(--glass-border);"></div>
+                   <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">${q.audit.status}</span>
+                </div>
+                <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  ${q.question_text.replace(/<[^>]*>?/gm, '')}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">
+                  Detection: <span style="color: var(--accent-secondary); font-weight: 700;">${q.audit.reason}</span>
+                </div>
+              </div>
+              <button class="btn-primary open-repair-lab" data-id="${q.id}" style="height: 48px; min-width: 140px; font-weight: 800; border-radius: 12px; background: ${q.audit.score < 70 ? 'var(--accent-gradient)' : 'var(--surface-color)'};">
+                ${q.audit.score < 100 ? 'REPAIR LAB' : 'PREVIEW'}
+              </button>
+            </div>
+          `).join('')}
         </div>
       `
-      return
+
+      if (window.lucide) window.lucide.createIcons({ root: list })
+
+      document.querySelectorAll('.open-repair-lab').forEach(btn => {
+        btn.onclick = () => {
+          const q = auditedBatch.find(item => item.id === btn.dataset.id);
+          this.openRepairLab(q);
+        }
+      })
+
+    } catch (err) {
+      console.error("Audit Scan Error:", err)
+      list.innerHTML = `<div class="glass" style="padding: 2rem; color: var(--error); border: 1px solid var(--error); border-radius: 12px;">Scan Interrupted: ${err.message}</div>`
     }
+  },
 
-    list.innerHTML = `
-      <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
-        <button id="repair-all-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-size: 0.8rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
-            <i data-lucide="sparkles" style="width: 14px; margin-right: 6px;"></i> BULK REPAIR ALL
-        </button>
-      </div>
-      ${questions.map(q => `
-        <div class="glass audit-item" style="padding: 1.25rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${q.question_text.replace(/<[^>]*>?/gm, '')}
-            </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <span style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.2);">
-                MISSING EXPLANATION
-              </span>
-              <span style="font-size: 0.7rem; color: var(--text-secondary);">${q.subject} • ${q.topic || 'General'}</span>
-            </div>
-          </div>
-          <button class="btn-secondary ai-repair-single" data-id="${q.id}" data-text="${q.question_text.replace(/"/g, '&quot;')}" style="height: 36px; padding: 0 1rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">
-            FIX NOW
-          </button>
-        </div>
-      `).join('')}
-    `
-
-    if (window.lucide) window.lucide.createIcons({ root: list })
-
-    document.getElementById('repair-all-btn').onclick = () => this.handleBulkAiRepair(questions)
+  async openRepairLab(question) {
+    const overlay = document.createElement('div')
+    overlay.style = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:999999; display:flex; padding:2rem; backdrop-filter:blur(10px);"
     
-    document.querySelectorAll('.ai-repair-single').forEach(btn => {
-      btn.onclick = () => {
-        const qid = btn.dataset.id
-        const text = btn.dataset.text
-        this.handleAiFix({ 
-          dataset: { qid, rid: 'direct-audit', reason: 'Missing explanation', details: 'Auto-detected during quality audit.' },
-          closest: () => ({ querySelector: () => ({ textContent: text }) }),
-          disabled: false,
-          textContent: 'FIX NOW'
-        })
+    overlay.innerHTML = `
+      <div class="glass card scale-in" style="width:100%; max-width:1300px; margin:auto; height: 90vh; display:flex; flex-direction:column; overflow:hidden; border-radius: 30px; border: 2px solid var(--accent-primary);">
+        <header style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center; background: rgba(124, 58, 237, 0.05);">
+           <div style="display:flex; align-items:center; gap: 1rem;">
+              <div style="background: var(--accent-gradient); width: 44px; height: 44px; border-radius: 12px; display:flex; align-items:center; justify-content:center; color:white;">
+                 <i data-lucide="flask-conical"></i>
+              </div>
+              <div>
+                <h3 style="margin:0; font-family:'Outfit'; font-weight:900; font-size:1.3rem;">Elite AI Repair Lab</h3>
+                <p style="margin:0; font-size:0.75rem; color:var(--text-secondary);">Syallabus Compliance & Fact-Check Protocol active.</p>
+              </div>
+           </div>
+           <button id="close-lab" class="btn-secondary" style="width: 40px; height:40px; border-radius: 50%; display:flex; align-items:center; justify-content:center; color:var(--error);">
+              <i data-lucide="x"></i>
+           </button>
+        </header>
+
+        <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--glass-border); overflow:hidden;">
+           <!-- LEFT: Original -->
+           <div style="background: var(--surface-color); padding: 2.5rem; overflow-y:auto;">
+              <div style="font-size:0.7rem; font-weight:900; color:var(--text-secondary); text-transform:uppercase; margin-bottom: 1.5rem; letter-spacing:0.1em;">Current Production State</div>
+              <div style="background:rgba(255,255,255,0.02); padding: 1.5rem; border-radius:16px; border: 1px solid var(--glass-border); margin-bottom: 2rem;">
+                 <p style="font-size: 1.1rem; line-height:1.6; font-weight:600; color:var(--text-primary);">${question.question_text}</p>
+                 <div style="margin-top: 1.5rem; display:grid; gap: 0.75rem;">
+                    <div style="padding:0.75rem; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.9rem;">A: ${question.question_answers?.option_a || question.option_a}</div>
+                    <div style="padding:0.75rem; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.9rem;">B: ${question.question_answers?.option_b || question.option_b}</div>
+                    <div style="padding:0.75rem; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.9rem;">C: ${question.question_answers?.option_c || question.option_c}</div>
+                    <div style="padding:0.75rem; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.9rem;">D: ${question.question_answers?.option_d || question.option_d}</div>
+                 </div>
+                 <div style="margin-top: 1rem; color:var(--success); font-weight:900;">Correct: ${question.question_answers?.correct_option || question.correct_option}</div>
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.5;">
+                 <strong>Explanation:</strong><br>${question.question_answers?.explanation || question.explanation || 'None provided.'}
+              </div>
+           </div>
+
+           <!-- RIGHT: AI Proposed -->
+           <div id="lab-proposed-pane" style="background: var(--surface-color); padding: 2.5rem; overflow-y:auto; position:relative;">
+              <div style="text-align:center; padding-top: 10rem;" id="lab-loading">
+                 <div class="loader-spinner" style="margin-bottom: 1rem;"></div>
+                 <div style="font-weight:700; color:var(--accent-primary);">AI is Drafting Repair...</div>
+              </div>
+           </div>
+        </div>
+
+        <footer style="padding: 1.5rem 2rem; border-top:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+           <div style="color:var(--text-secondary); font-size:0.85rem;">Status: <span id="lab-status-text">Drafting Proposed Fix...</span></div>
+           <div style="display:flex; gap:1rem;">
+              <button id="lab-skip" class="btn-secondary" style="height:48px; padding:0 1.5rem; font-weight:700;">SKIP</button>
+              <button id="lab-approve" disabled class="btn-primary" style="height:48px; padding:0 2rem; font-weight:900; background:var(--success-gradient);">APPROVE & DEPLOY</button>
+           </div>
+        </footer>
+      </div>
+    `
+    document.body.appendChild(overlay)
+    if (window.lucide) window.lucide.createIcons({ root: overlay })
+
+    document.getElementById('close-lab').onclick = () => overlay.remove()
+    document.getElementById('lab-skip').onclick = () => overlay.remove()
+
+    // Step 2: Generate Repair via AI
+    try {
+      const { AiService } = await import('../services/aiService')
+      const fix = await AiService.repairQuestion(question.question_text, question.audit?.reason || 'Structural Audit', 'Elite AI detected quality gaps.')
+      
+      const pane = document.getElementById('lab-proposed-pane')
+      pane.innerHTML = `
+        <div style="font-size:0.7rem; font-weight:900; color:var(--success); text-transform:uppercase; margin-bottom: 1.5rem; letter-spacing:0.1em;">AI Proposed Standard</div>
+        <div class="scale-in" style="background:rgba(34, 197, 94, 0.05); padding: 1.5rem; border-radius:16px; border: 1.5px dashed var(--success); margin-bottom: 2rem;">
+           <p style="font-size: 1.1rem; line-height:1.6; font-weight:700; color:var(--text-primary);">${fix.question_text}</p>
+           <div style="margin-top: 1.5rem; display:grid; gap: 0.75rem;">
+              <div style="padding:0.75rem; background:rgba(34,197,94,0.1); border-radius:8px; font-size:0.9rem; font-weight:700;">A: ${fix.option_a}</div>
+              <div style="padding:0.75rem; background:rgba(34,197,94,0.1); border-radius:8px; font-size:0.9rem; font-weight:700;">B: ${fix.option_b}</div>
+              <div style="padding:0.75rem; background:rgba(34,197,94,0.1); border-radius:8px; font-size:0.9rem; font-weight:700;">C: ${fix.option_c}</div>
+              <div style="padding:0.75rem; background:rgba(34,197,94,0.1); border-radius:8px; font-size:0.9rem; font-weight:700;">D: ${fix.option_d}</div>
+           </div>
+           <div style="margin-top: 1rem; color:var(--success); font-weight:900; font-size:1.1rem;">Verified Correct: ${fix.correct_option}</div>
+        </div>
+        <div style="background: rgba(124, 58, 237, 0.05); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2);">
+           <div style="font-size:0.7rem; font-weight:900; color:var(--accent-primary); margin-bottom:0.5rem;">PEDAGOGICAL EXPLANATION</div>
+           <div style="font-size:0.85rem; color:var(--text-primary); line-height:1.6;">${fix.explanation}</div>
+        </div>
+      `
+      
+      const approveBtn = document.getElementById('lab-approve')
+      approveBtn.disabled = false
+      document.getElementById('lab-status-text').textContent = 'Repair Proposed - Review & Approve.'
+      
+      approveBtn.onclick = async () => {
+         approveBtn.disabled = true;
+         approveBtn.textContent = 'DEPLOYING...';
+         try {
+            const { error } = await DataService.commitRepair(question.id, fix);
+            if (error) throw error;
+            overlay.remove();
+            ModalService.alert("Repair Deployed", "🚀 REPAIR DEPLOYED SUCCESSFULLY!", 'success');
+            this.loadQualityAudit();
+         } catch (err) {
+            ModalService.alert("Deployment Failed", err.message, 'error');
+            approveBtn.disabled = false;
+            approveBtn.textContent = 'APPROVE & DEPLOY';
+         }
       }
-    })
+
+    } catch (err) {
+      document.getElementById('lab-proposed-pane').innerHTML = `<div style="color:var(--error); padding:4rem; text-align:center;">AI Repair Failed: ${err.message}</div>`
+      document.getElementById('lab-status-text').textContent = 'Autonomous Repair Failed.'
+    }
   },
 
   async handleBulkAiRepair(questions) {
-    if (!confirm(`This will attempt to auto-repair ${questions.length} questions using AI. Gemini credits will be consumed per question. Proceed?`)) return
+    const confirmed = await ModalService.confirm("Bulk AI Repair", `This will attempt to auto-repair ${questions.length} questions using AI. Gemini credits will be consumed per question. Proceed?`);
+    if (!confirmed) return;
     
     const repairBtn = document.getElementById('repair-all-btn')
     repairBtn.disabled = true
@@ -2093,7 +2311,7 @@ export const AdminComponent = {
       repairBtn.textContent = `Repairing (${success + failed}/${questions.length})...`
     }
 
-    alert(`Bulk Repair Complete!\nSuccess: ${success}\nFailed: ${failed}`)
+    ModalService.alert("Bulk Repair Complete", `Success: ${success}\nFailed: ${failed}`, success > 0 ? 'success' : 'info');
     this.loadQualityAudit()
   },
 
@@ -2175,7 +2393,10 @@ export const AdminComponent = {
       const summary = document.getElementById('edit-news-summary').value.trim()
       const content = document.getElementById('edit-news-content').value.trim()
       
-      if (!title || !summary || !content) return alert('All required fields (Title, Summary, Content) must be filled.')
+      if (!title || !summary || !content) {
+        ModalService.alert("Required Fields", "All fields (Title, Summary, Content) must be filled.", 'warning');
+        return;
+      }
       
       const fileInput = document.getElementById('edit-news-attachment')
       const file = fileInput.files[0]
@@ -2191,14 +2412,14 @@ export const AdminComponent = {
 
       if (file) {
         if (file.type !== 'application/pdf') {
-            alert('Only PDF files are allowed.')
+            await ModalService.alert("Invalid File", "Only PDF files are allowed for attachments.", 'error');
             saveBtn.textContent = originalText
             saveBtn.disabled = false
             return
         }
         const { url, error } = await DataService.adminUploadNewsAttachment(file)
         if (error) {
-            alert('File Upload failed: ' + error.message)
+            await ModalService.alert("Upload Failed", 'File Upload failed: ' + error.message, 'error')
             saveBtn.textContent = originalText
             saveBtn.disabled = false
             return
@@ -2217,7 +2438,7 @@ export const AdminComponent = {
       }
 
       if (res.error) {
-        alert('Error saving news: ' + res.error.message)
+        await ModalService.alert("Save Error", 'Error saving news: ' + res.error.message, 'error')
         saveBtn.textContent = isEditing ? 'Save Changes' : 'Publish Article'
         saveBtn.disabled = false
       } else {
@@ -2254,7 +2475,10 @@ export const AdminComponent = {
             
             document.querySelectorAll('.delete-promo-btn').forEach(btn => {
                 btn.onclick = async () => {
-                    if (!confirm(`Revoke promo code ${btn.closest('.promo-item').querySelector('[style*="transparent"]').textContent}?`)) return
+                    const codeLabel = btn.closest('.promo-item').querySelector('[style*="transparent"]').textContent;
+                    const confirmed = await ModalService.confirm("Revoke Promo?", `This will deactivate the promo code ${codeLabel}. Continue?`);
+                    if (!confirmed) return;
+                    
                     btn.disabled = true
                     btn.innerHTML = '...'
                     await DataService.deletePromoCode(btn.dataset.id)

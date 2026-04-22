@@ -8,6 +8,8 @@ import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { AiService } from '../services/aiService'
 import { CalculatorComponent } from './Calculator'
+import { ModalService } from '../services/ModalService'
+import renderMathInElement from 'katex/dist/contrib/auto-render.mjs'
 
 export class Exam {
   constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = [], clashId = null) {
@@ -87,15 +89,10 @@ export class Exam {
       exams_free_access: false,
       ai_tutor_free_access: false
     }
-    supabase.from('system_config').select('key, value').then(({ data }) => {
-      if (data) {
-        data.forEach(c => {
-          if (this.systemConfig.hasOwnProperty(c.key)) {
-            this.systemConfig[c.key] = c.value === true || c.value === 'true'
-          }
-        })
-      }
-    })
+    // 🔑 Initialise _explanationsFreeAccess to false; will be updated once config loads
+    this._explanationsFreeAccess = false
+
+    // Configuration fetch moved to async render() to prevent race conditions
   }
 
   saveState() {
@@ -138,7 +135,8 @@ export class Exam {
     
     this.systemConfig = {
       explanations_free_access: false,
-      exams_free_access: false
+      exams_free_access: false,
+      ai_tutor_free_access: false
     };
 
     try {
@@ -150,6 +148,7 @@ export class Exam {
                 }
             });
         }
+        this._explanationsFreeAccess = this.systemConfig.explanations_free_access || this.systemConfig.ai_tutor_free_access;
     } catch (err) {
         console.warn("Failed to fetch global config:", err);
     }
@@ -172,7 +171,7 @@ export class Exam {
       try {
         if (!SubscriptionService.canStartSession(this.profile, this.mode, this.systemConfig)) {
           const limitStr = (this.profile.tier === 'medium' ? '5 (Activated)' : '3 (Free)')
-          alert(`\u26A0 Limit reached! You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimted access.`)
+          ModalService.alert("Limit Reached", `\u26A0 You've used your daily limit of ${limitStr} ${this.mode} sessions. Upgrade to Premium for unlimited access.`, 'error');
           onBack()
           return
         }
@@ -286,6 +285,11 @@ export class Exam {
             <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Image missing / broken</button>
             <button class="reason-btn glass" style="text-align: left; padding: 1.25rem; border-radius: 12px; font-weight: 700; color: var(--text-primary); transition: all 0.2s;">Other</button>
           </div>
+          <div id="report-details-section" style="display: none; margin-top: 1.25rem; animation: fadeIn 0.3s ease;">
+            <div style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Selected: <span id="report-reason-label" style="color: var(--text-primary);"></span></div>
+            <textarea id="report-details-input" class="glass-input" placeholder="Any additional details? (Optional)" style="width: 100%; min-height: 80px; padding: 1rem; font-size: 0.9rem; border-radius: 12px; resize: vertical; margin-bottom: 1rem;"></textarea>
+            <button id="submit-report-btn" class="btn-primary" style="width: 100%; height: 48px; font-weight: 900; border-radius: 12px;">SUBMIT REPORT</button>
+          </div>
           <button id="close-report" class="btn-secondary" style="margin-top: 2rem; width: 100%; height: 52px; font-weight: 800;">CLOSE</button>
         </div>
       </div>
@@ -316,11 +320,13 @@ export class Exam {
           timerDiv.textContent = TimerService.formatTime(time)
           
           if (time === 300) {
-              alert("Wait! You have exactly 5 minutes remaining!");
+              ModalService.showToast("Wait! You have exactly 5 minutes remaining!", 'warning');
+              timerDiv.classList.add('pulse-timer');
           }
           
           if (time <= 120) {
               timerDiv.style.color = 'var(--error)'
+              timerDiv.classList.add('pulse-timer-fast');
           } else if (time <= 300) {
               timerDiv.style.color = '#F59E0B' // Amber
           } else {
@@ -349,10 +355,11 @@ export class Exam {
   attachListeners(onFinish, onBack) {
     const backBtn = document.getElementById('exam-back-btn')
     if (backBtn) {
-      backBtn.onclick = (e) => {
+      backBtn.onclick = async (e) => {
         e.preventDefault()
         if (!this.isReviewMode) {
-          if (!confirm("Are you sure you want to exit? Any unsaved progress for this session will be lost.")) return;
+          const confirmed = await ModalService.confirm("Exit Session?", "Are you sure you want to exit? Any unsaved progress will be lost.");
+          if (!confirmed) return;
         }
         
         // Stop timer and clean up
@@ -372,22 +379,24 @@ export class Exam {
       }
     }
 
-    document.getElementById('next-btn').onclick = () => {
+    document.getElementById('next-btn').onclick = async () => {
       if (this.examType === 'JAMB' && !this.isReviewMode) {
         const currentQ = this.session.getCurrentQuestion();
         const nextQ = this.session.questions[this.session.currentIndex + 1];
         if (nextQ && nextQ.subject !== (currentQ.subject || this.activeJambSubject)) {
-          if (!confirm(`End of ${currentQ.subject || 'current subject'}. Switch to ${nextQ.subject}?`)) return;
+          const confirmed = await ModalService.confirm("Switch Subject?", `End of ${currentQ.subject || 'current subject'}. Switch to ${nextQ.subject}?`);
+          if (!confirmed) return;
         }
       }
       if (this.session.next()) this.updateUI()
     }
-    document.getElementById('prev-btn').onclick = () => {
+    document.getElementById('prev-btn').onclick = async () => {
       if (this.examType === 'JAMB' && !this.isReviewMode) {
         const currentQ = this.session.getCurrentQuestion();
         const prevQ = this.session.questions[this.session.currentIndex - 1];
         if (prevQ && prevQ.subject !== (currentQ.subject || this.activeJambSubject)) {
-          if (!confirm(`Go back to ${prevQ.subject}?`)) return;
+          const confirmed = await ModalService.confirm("Go Back?", `Return to ${prevQ.subject}?`);
+          if (!confirmed) return;
         }
       }
       if (this.session.prev()) this.updateUI()
@@ -637,10 +646,13 @@ export class Exam {
     const expDiv = document.getElementById('explanation-container')
     if (this.isReviewMode) {
       expDiv.style.display = 'block'
-      
-      const subState = SubscriptionManager.getUserSubscriptionState(this.profile, this._explanationsFreeAccess)
-      const aiStatus = SubscriptionService.canUseAI(this.profile, this._explanationsFreeAccess)
-      const isFreeAccess = this._explanationsFreeAccess
+
+      // Always re-read from live systemConfig so admin toggles take effect immediately
+      const isFreeAccess = this.systemConfig.explanations_free_access === true ||
+                           this.systemConfig.ai_tutor_free_access === true
+
+      const subState = SubscriptionManager.getUserSubscriptionState(this.profile, isFreeAccess)
+      const aiStatus = SubscriptionService.canUseAI(this.profile, this.systemConfig)
 
       if (subState.shouldShowActivateCTA && !isFreeAccess) {
         expDiv.innerHTML = `
@@ -746,7 +758,7 @@ export class Exam {
                 const correctChoiceId = qType === 'theory' ? q.model_answer : q.answers?.find(a => a.is_correct)?.id;
 
                 if (!subState.canUseAI && !this.systemConfig.ai_tutor_free_access) {
-                    alert("Elite AI is a Premium feature. Upgrade to unlock deep dives and infinite learning!");
+                    ModalService.alert("Premium Feature", "Elite AI is a Premium feature. Upgrade to unlock deep dives and infinite learning!", 'info');
                     document.getElementById('upgrade-modal').style.display = 'flex';
                     return;
                 }
@@ -805,10 +817,10 @@ export class Exam {
 
     // Phase 2: Render LaTeX Math (KaTeX)
     try {
-        if (window.renderMathInElement) {
+        if (typeof renderMathInElement === 'function') {
             const mathContainer = document.querySelector('.exam-main') || document.getElementById('exam-container');
             if (mathContainer) {
-                window.renderMathInElement(mathContainer, {
+                renderMathInElement(mathContainer, {
                     delimiters: [
                         {left: "$$", right: "$$", display: true},
                         {left: "$", right: "$", display: false},
@@ -960,28 +972,56 @@ export class Exam {
   showReportModal() {
     const modal = document.getElementById('report-modal')
     modal.style.display = 'flex'
-    
+    let selectedReason = null;
+
+    const resetModal = () => {
+      document.getElementById('report-details-section').style.display = 'none';
+      document.getElementById('report-details-input').value = '';
+      selectedReason = null;
+    };
+
+    const closeModal = () => {
+      modal.style.display = 'none';
+      resetModal();
+    };
+
     const closeBtn = document.getElementById('close-report')
-    closeBtn.onclick = () => modal.style.display = 'none'
+    closeBtn.onclick = closeModal
 
     const closeX = document.getElementById('close-report-x')
-    if (closeX) closeX.onclick = () => modal.style.display = 'none'
+    if (closeX) closeX.onclick = closeModal
 
     modal.querySelectorAll('.reason-btn').forEach(btn => {
-      btn.onclick = async () => {
-        const reason = btn.textContent
-        const details = prompt("Any additional details? (Optional)")
-        if (this.profile && this.profile.id) {
-          try {
-            await DataService.reportQuestion(this.profile.id, this.session.getCurrentQuestion().id, reason, details)
-            alert("Report submitted. Thank you!")
-          } catch (err) {
-            console.error("Report failed:", err)
-          }
-        }
-        modal.style.display = 'none'
+      btn.onclick = () => {
+        selectedReason = btn.textContent;
+        document.getElementById('report-reason-label').textContent = selectedReason;
+        document.getElementById('report-details-section').style.display = 'block';
+        
+        // Hide the reason buttons for a cleaner UI
+        modal.querySelectorAll('.reason-btn').forEach(b => b.style.display = 'none');
       }
     })
+    
+    document.getElementById('submit-report-btn').onclick = async () => {
+        const details = document.getElementById('report-details-input').value.trim();
+        const submitBtn = document.getElementById('submit-report-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'SUBMITTING...';
+        if (this.profile && this.profile.id) {
+          try {
+            await DataService.reportQuestion(this.profile.id, this.session.getCurrentQuestion().id, selectedReason, details)
+            ModalService.showToast("Report submitted. Thank you!", 'success')
+          } catch (err) {
+            console.error("Report failed:", err)
+            ModalService.showToast("Failed to submit report.", 'error')
+          }
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'SUBMIT REPORT';
+        
+        modal.querySelectorAll('.reason-btn').forEach(b => b.style.display = 'block');
+        closeModal();
+    };
   }
 
   finish(callback, force = false) {

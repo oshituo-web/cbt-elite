@@ -2,39 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CBT Practice - Elite Learning Platform</title>
     <meta name="description" content="The ultimate CBT practice platform for JAMB, WAEC, and NECO. Thousands of AI-generated questions, instant results, and detailed performance analytics." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4db6ac">
+    
+    <meta name="theme-color" content="#0F172A">
     <!-- Paystack loaded lazily on demand via Dashboard.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <!-- Phase 2: KaTeX for Math Formulas -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
-
-    <!-- Phase 3: PapaParse for CSV Import -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-    <!-- Phase 13: Lucide Icons CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-
-    <!-- Celebration effects -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js');
-        });
-      }
-    </script>
+    <!-- Celebration effects handled via modular imports in main.js -->
   </head>
   <body>
     <div id="app" class="elite-layout">
@@ -264,11 +239,11 @@
 
         <!-- 🏆 Weekly Leaderboard Modal (Fallback) -->
         <div id="leaderboard-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-            <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center;">
-                <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.8rem; margin: 0;">Weekly Top 10</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Top performers this week.</p>
-                <div id="leaderboard-list"></div>
-                <button id="close-leaderboard" class="btn-secondary" style="margin-top: 2rem; width: 100%;">CLOSE</button>
+            <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; max-height: 90vh; display: flex; flex-direction: column;">
+                <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.8rem; margin: 0;">Global Top 50</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Elite performers across the platform.</p>
+                <div id="leaderboard-list" style="overflow-y: auto; max-height: 60vh; padding-right: 0.5rem; flex: 1;"></div>
+                <button id="close-leaderboard" class="btn-secondary" style="margin-top: 2rem; width: 100%; flex-shrink: 0;">CLOSE</button>
             </div>
         </div>
 

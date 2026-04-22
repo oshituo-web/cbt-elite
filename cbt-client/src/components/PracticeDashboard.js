@@ -2,6 +2,7 @@ import { DataService } from '../services/data'
 import { supabase } from '../utils/supabase'
 import { SubscriptionService } from '../services/subscriptionService'
 import { ExamCard } from './ExamCard'
+import { ModalService } from '../services/ModalService'
 
 export const PracticeDashboardComponent = {
   profile: null,
@@ -164,7 +165,7 @@ export const PracticeDashboardComponent = {
 
         if (!SubscriptionService.canStartSession(this.profile, 'practice', systemConfig)) {
           startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
-          return alert("Daily practice limit reached. Upgrade to Premium for unlimited access!")
+          return ModalService.alert("Limit Reached", "Daily practice limit reached. Upgrade to Premium for unlimited access!", 'error')
         }
 
         startBtn.innerHTML = 'Finding Questions...'; 
@@ -174,12 +175,12 @@ export const PracticeDashboardComponent = {
           // Pass the selected practice type backwards to be accessible in session metadata
           this.onStartPractice(questions, 'practice', subject, selectedPracticeType)
         } else {
-          alert(`No questions found for ${selectedPracticeType} ${subject}.`);
+          ModalService.alert("No Questions", `No questions found for ${selectedPracticeType} ${subject}.`, 'info');
           startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
         }
       } catch (err) {
         console.error("Practice Load Failed:", err);
-        alert(`Error loading questions: ${err.message || 'Connection timeout'}. Please check your internet and try again.`);
+        ModalService.alert("Load Failed", `Error loading questions: ${err.message || 'Connection timeout'}. Please check your internet and try again.`, 'error');
         startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
       }
     }

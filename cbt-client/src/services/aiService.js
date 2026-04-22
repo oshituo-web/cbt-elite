@@ -5,6 +5,40 @@
 
 import { supabase } from '../utils/supabase'
 
+/**
+ * Executes a Supabase function with automatic exponential backoff for 429 Rate Limits.
+ */
+async function invokeWithRetry(functionName, options, maxRetries = 3) {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    const { data, error } = await supabase.functions.invoke(functionName, options);
+    
+    // Check if error exists and is potentially a 429 or 500 rate limit proxy error
+    if (error && error.context) {
+      let isRateLimit = false;
+      try {
+        const body = typeof error.context.json === 'function' ? await error.context.json() : error.context;
+        if (body?.error?.code === 429 || JSON.stringify(body).includes('429')) {
+          isRateLimit = true;
+        }
+      } catch (e) {
+         // Silently fail parsing
+         if (JSON.stringify(error).includes('429')) isRateLimit = true;
+      }
+
+      if (isRateLimit && attempt < maxRetries - 1) {
+        attempt++;
+        const backoffMs = attempt * 2000; // wait 2s, 4s, 6s...
+        console.warn(`[AI Service] Rate limited (429). Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxRetries-1})`);
+        await new Promise(r => setTimeout(r, backoffMs));
+        continue;
+      }
+    }
+    
+    return { data, error };
+  }
+}
+
 export const AiService = {
   /**
    * Generates a deep, pedagogical explanation for a question.
@@ -57,7 +91,7 @@ export const AiService = {
     `
 
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
         body: { prompt, temperature: 0.7, maxOutputTokens: 1000 }
       })
 
@@ -98,7 +132,7 @@ export const AiService = {
     `;
 
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
         body: { prompt, temperature: 0.7, maxOutputTokens: 600 }
       });
 
@@ -151,7 +185,7 @@ export const AiService = {
      `;
 
       try {
-        const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        const { data, error } = await invokeWithRetry('gemini-proxy', {
           body: { prompt: shortVersion ? promptShort : promptLong, temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
         });
 
@@ -214,7 +248,7 @@ export const AiService = {
     `;
 
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
         body: { prompt, temperature: 0.7, maxOutputTokens: 100 }
       });
       if (error || !data) throw error;
@@ -228,20 +262,19 @@ export const AiService = {
    * AI-powered question repair for administrators.
    */
   async repairQuestion(questionText, reason, details) {
-
-
     const prompt = `
-      You are "Elite AI", a content auditor.
+      You are "Elite AI Content Auditor". 
       An academic question has been reported for: "${reason}".
       Student Feedback: "${details}"
       
       ORIGINAL QUESTION: ${questionText}
       
       TASK: 
-      1. Correct any errors (factual, grammatical, or formatting).
-      2. Ensure exactly 4 clear options (A, B, C, D).
-      3. Identify the correct option.
-      4. Provide a robust pedagogical explanation.
+      1. CRITICAL: Perform a Deep Fact-Check against latest national secondary school syllabus standards (JAMB/WAEC/NECO).
+      2. Correct any factual errors, grammatical issues, or formatting spikes (e.g., broken LaTeX).
+      3. Ensure exactly 4 clear options (A, B, C, D).
+      4. Identify the correct option.
+      5. Provide a robust pedagogical explanation that aligns with the current syllabus.
       
       RETURN ONLY A JSON OBJECT with these keys:
       {
@@ -257,18 +290,73 @@ export const AiService = {
     `;
 
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
         body: { prompt, temperature: 0.2, maxOutputTokens: 1200 }
       });
 
-      if (error || !data) {
-        throw error || new Error("AI Repair service unavailable");
-      }
+      if (error || !data) throw error || new Error("AI Repair service unavailable");
       const text = data.text || "{}";
       return JSON.parse(text);
     } catch (err) {
       console.error("AI Repair Error:", err);
       throw err;
     }
+  },
+
+  /**
+   * Performs a diagnostic scan of a single question.
+   */
+  async auditQuestionDetailed(question) {
+    const prompt = `
+      You are "Elite AI Content Validator". 
+      Analyze the following academic question for accuracy, syllabus alignment, and technical health.
+      
+      QUESTION: ${question.question_text}
+      OPTIONS: A: ${question.option_a}, B: ${question.option_b}, C: ${question.option_c}, D: ${question.option_d}
+      CORRECT: ${question.correct_option}
+      EXPLANATION: ${question.explanation || 'None'}
+      
+      TASK:
+      1. Grade this question on a health scale:
+         - FACTUAL_ERROR: Factually wrong.
+         - OUTDATED: No longer in the current syllabus.
+         - FORMATTING: Broken LaTeX or text.
+         - POOR_EXPLANATION: Explanation is missing or confusing.
+         - HEALTHY: No issues found.
+      2. Provide a 0-100 Health Score.
+      3. Briefly state the issue if not Healthy.
+
+      RETURN JSON ONLY:
+      { "status": "...", "score": 85, "reason": "..." }
+    `;
+
+    try {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
+        body: { prompt, temperature: 0.1, maxOutputTokens: 300 }
+      });
+      if (error || !data) return { status: 'ERROR', score: 0, reason: 'AI Unreachable' };
+      return JSON.parse(data.text);
+    } catch (err) {
+      return { status: 'ERROR', score: 0, reason: err.message };
+    }
+  },
+
+  /**
+   * Scans a batch of questions (max 50) in parallel.
+   */
+  async auditQuestionBatch(questions) {
+    const results = [];
+    const batchSize = 5; // Process in chunks to avoid overwhelming the proxy
+    
+    for (let i = 0; i < questions.length; i += batchSize) {
+      const chunk = questions.slice(i, i + batchSize);
+      const chunkResults = await Promise.all(chunk.map(async (q) => {
+        const audit = await this.auditQuestionDetailed(q);
+        return { ...q, audit };
+      }));
+      results.push(...chunkResults);
+    }
+    
+    return results;
   }
 }

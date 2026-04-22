@@ -1,21 +1,26 @@
 import { AuthService } from './src/services/auth'
-import { AuthComponent } from './src/components/Auth'
-import { ProfileSetupComponent } from './src/components/ProfileSetup'
-import { DashboardComponent } from './src/components/Dashboard'
-import { PracticeDashboardComponent } from './src/components/PracticeDashboard'
-import { ExamsDashboardComponent } from './src/components/ExamsDashboard'
-import { SettingsComponent } from './src/components/Settings'
-import { ExamComponent } from './src/components/Exam'
-import { ResultsComponent } from './src/components/Results'
-import { AdminComponent } from './src/components/Admin'
-import { NewsArticleComponent } from './src/components/NewsArticle'
-import { AnalyticsComponent } from './src/components/Analytics'
-import { WeeklyRecapComponent } from './src/components/WeeklyRecap'
-import { TopicDeepDiveComponent } from './src/components/TopicDeepDive'
 import { IndexedDbService } from './src/services/indexedDbService'
 import { DataService } from './src/services/data'
-import { TourGuide } from './src/utils/TourGuide'
 import './src/styles/main.css'
+
+// Local Font Imports (Bundled for performance)
+import "@fontsource/inter/index.css"
+import "@fontsource/outfit/index.css"
+
+// Modular Library Imports (Bundled)
+import * as lucide from 'lucide'
+import confetti from 'canvas-confetti'
+import 'katex/dist/katex.min.css'
+
+// Global confetti access for legacy component compatibility
+window.confetti = confetti;
+
+// Wrap Lucide to automatically include icons object (ESM requirement)
+const originalCreateIcons = lucide.createIcons;
+window.lucide = {
+    ...lucide,
+    createIcons: (options = {}) => originalCreateIcons({ icons: lucide.icons, ...options })
+};
 
 let dashboardLoaded = false;
 let currentProfile = null;
@@ -122,25 +127,28 @@ window.onpopstate = (event) => {
   }
 };
 
-function showExamsDashboard(profile) {
+async function showExamsDashboard(profile) {
    currentProfile = profile;
    hideAll();
+   const { ExamsDashboardComponent } = await import('./src/components/ExamsDashboard');
    ExamsDashboardComponent.render(profile, (questions, mode, subject, examType, intendedSubjects = []) => {
      showExam(questions, profile, false, {}, mode, subject, examType, null, intendedSubjects);
    });
 }
 
-function showPracticeDashboard(profile) {
+async function showPracticeDashboard(profile) {
   currentProfile = profile;
   hideAll();
+  const { PracticeDashboardComponent } = await import('./src/components/PracticeDashboard');
   PracticeDashboardComponent.render(profile, (questions, mode, subject, examType) => {
     showExam(questions, profile, false, {}, mode, subject, examType);
   });
 }
 
-function showSettings(profile) {
+async function showSettings(profile) {
    currentProfile = profile;
    hideAll();
+   const { SettingsComponent } = await import('./src/components/Settings');
    SettingsComponent.render(profile, () => window.navigateTo('dashboard', profile));
 }
 
@@ -170,17 +178,12 @@ async function initApp() {
   };
 
   try {
-    // 1. RENDER ICONS AND SETUP GLOBAL ACTIONS (with retry for async CDN)
-    const initIcons = () => {
-      if (window.lucide) {
-        window.lucide.createIcons();
-      } else {
-        setTimeout(initIcons, 100);
-      }
-    };
-    initIcons();
+    // 1. RENDER ICONS IMMEDIATELY (using bundled library)
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
 
-    // This prevents WSOD if Supabase hangs or a cross-origin error occurs
+    // Initialize layout visibility
     const header = document.getElementById('app-header');
     const sidebar = document.getElementById('app-sidebar');
     const bottomNav = document.getElementById('bottom-nav');
@@ -189,61 +192,72 @@ async function initApp() {
     if (sidebar) sidebar.style.display = 'flex';
     if (bottomNav) bottomNav.style.display = 'flex';
 
-    // Global Theme Initialization
+    // Global Theme Initialization (Corrected for .dark-mode architecture)
     const savedTheme = localStorage.getItem('theme') || 'light';
-    document.body.classList.toggle('light-mode', savedTheme === 'light');
+    document.body.classList.toggle('dark-mode', savedTheme === 'dark');
     
     // Register event listeners immediately
     setupGlobalActions({ username: 'Student' });
 
-    // Setup Offline Listeners
-    window.addEventListener('online', () => syncOfflineData());
-    syncOfflineData(); 
-
-    // 🔐 2. START AUTH FLOW (Progressive)
-    console.log("main.js: Checking current user...")
+    // 🔐 2. START AUTH & DATA FLOW (Parallelized)
+    console.log("main.js: Initializing Parallel Boot...")
     const user = await AuthService.getCurrentUser();
-    console.log("main.js: Current user result:", user ? user.id : "No user")
     
-    if (!user) {
-      console.log("main.js: Showing Auth")
+    if (!user || !user.id) {
+      console.log("main.js: No user found, showing Auth")
       showAuth();
       return;
     }
 
-    if (!user?.id) {
-      console.error("User identified but ID missing. Re-authenticating.");
-      showAuth();
-      return;
-    }
+    // ⚡ Parallel Fetch: Profile, Offline Sync, and Initial Route
+    const [profileResult] = await Promise.all([
+      AuthService.getProfile(user.id),
+      syncOfflineData(),
+      checkBroadcast()
+    ]);
 
-    try {
-        console.log("main.js: Fetching profile for", user.id)
-        const { data: profile } = await AuthService.getProfile(user.id);
-        console.log("main.js: Profile found:", profile ? profile.username : "No profile data")
-        
-        // Re-setup actions with real data
-        setupGlobalActions(profile || { id: user.id, username: 'Student' });
+    const profile = profileResult?.data;
+    console.log("main.js: Profile retrieved:", profile ? profile.username : "Incomplete")
 
-        if (!profile || !profile.username) {
-            console.log("main.js: Profile incomplete, showing setup")
-            showProfileSetup(user);
-        } else {
-            console.log("main.js: Profile ready, updating UI and routing")
-            updateHeaderProfile(profile);
-            handleInitialRoute(profile);
+    // 🔐 SINGLE DEVICE ENFORCEMENT CHECK
+    if (profile && profile.current_session_token) {
+      const localToken = localStorage.getItem('cbt_elite_device_token')
+      if (profile.current_session_token !== localToken) {
+        console.warn('Session override detected. Logging out local device.')
+        await AuthService.signOut()
+        window.location.hash = 'session-overlap'
+        showAuth()
+        return
+      }
+      
+      // Start Session Heartbeat to enforce single-device rules continuously
+      setInterval(async () => {
+        try {
+          const { data: latestProfile } = await AuthService.getProfile(user.id);
+          if (latestProfile && latestProfile.current_session_token !== localToken) {
+            console.warn('Session override detected via heartbeat. Logging out local device.')
+            await AuthService.signOut()
+            window.location.hash = 'session-overlap'
+            window.location.reload()
+          }
+        } catch (e) {
+          console.warn("Heartbeat check failed:", e)
         }
-        
-        // Broadcast check can happen in background
-        checkBroadcast();
-    } catch (profileError) {
-        console.error("Profile fetch crashed:", profileError);
-        showDashboard({ id: user.id, username: 'Student' });
+      }, 60000); // Check every 60 seconds
+    }
+
+    // Update UI with real data
+    setupGlobalActions(profile || { id: user.id, username: 'Student' });
+
+    if (!profile || !profile.username) {
+        showProfileSetup(user);
+    } else {
+        updateHeaderProfile(profile);
+        handleInitialRoute(profile);
     }
 
   } catch (globalError) {
     console.error("GLOBAL INIT CRASH:", globalError);
-    // If we crash at the very top, at least show the auth if not logged in
     showAuth();
   }
 }
@@ -463,13 +477,17 @@ function setupGlobalActions(profile) {
     }
   }
 
-  // 2. Global Theme Toggle
+  // 2. Global Theme Toggle (Corrected for .dark-mode architecture)
   const themeToggle = document.getElementById('global-theme-toggle')
   if (themeToggle && !themeToggle.dataset.init) {
     themeToggle.dataset.init = "true"
     themeToggle.onclick = () => {
-      document.body.classList.toggle('light-mode')
-      localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark')
+      document.body.classList.toggle('dark-mode')
+      const isDark = document.body.classList.contains('dark-mode')
+      localStorage.setItem('theme', isDark ? 'dark' : 'light')
+      // Update icon for instant feedback
+      themeToggle.innerHTML = isDark ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>'
+      if (window.lucide) window.lucide.createIcons({ root: themeToggle })
     }
   }
 
@@ -516,23 +534,25 @@ function setupNavigation(profile) {
   });
 }
 
-function showAuth() {
-  hideAll()
+async function showAuth() {
+  hideAll(false, true)
+  const { AuthComponent } = await import('./src/components/Auth');
   AuthComponent.render((user) => {
     AuthComponent.hide()
     initApp()
   })
 }
 
-function showProfileSetup(user) {
+async function showProfileSetup(user) {
   hideAll()
+  const { ProfileSetupComponent } = await import('./src/components/ProfileSetup');
   ProfileSetupComponent.render(user, (profile) => {
-    AuthComponent.hide()
+    // Note: ProfileSetup doesn't have a hide(), it just renders over
     showDashboard(profile)
   })
 }
 
-function showDashboard(profile) {
+async function showDashboard(profile) {
    console.log("main.js: showDashboard called for", profile?.username)
    currentProfile = profile
    const dashContainer = document.getElementById('dashboard-container')
@@ -544,6 +564,7 @@ function showDashboard(profile) {
   initNotifications(profile)
   
   // Finalize Dashboard rendering
+  const { DashboardComponent } = await import('./src/components/Dashboard');
   DashboardComponent.render(profile, (questions, mode, subject, examType, extraConfig = null) => {
     DashboardComponent.hide()
     const resumeState = extraConfig?.resumeState || null;
@@ -560,9 +581,10 @@ function showDashboard(profile) {
   dashboardLoaded = true
 }
 
-function showAnalytics(profile) {
+async function showAnalytics(profile) {
   currentProfile = profile;
   hideAll();
+  const { AnalyticsComponent } = await import('./src/components/Analytics');
   AnalyticsComponent.render(profile, 
     () => window.navigateTo('dashboard', profile),
     (questions, mode, subject, examType) => showExam(questions, profile, false, {}, mode, subject, examType)
@@ -571,18 +593,21 @@ function showAnalytics(profile) {
 
 async function showWeeklyRecap(profile) {
   currentProfile = profile;
-  // Fetch real data for the recap
+  const { DataService } = await import('./src/services/data');
+  const { WeeklyRecapComponent } = await import('./src/components/WeeklyRecap');
   const { mastery, stats } = await DataService.getUserAnalytics(profile.id);
   WeeklyRecapComponent.render(null, stats, mastery);
 }
 
-function showNewsArticle(article, profile) {
+async function showNewsArticle(article, profile) {
   hideAll()
+  const { NewsArticleComponent } = await import('./src/components/NewsArticle');
   NewsArticleComponent.render(article, () => showDashboard(profile))
 }
 
-function showAdmin(profile) {
+async function showAdmin(profile) {
   hideAll()
+  const { AdminComponent } = await import('./src/components/Admin');
   AdminComponent.render(profile, () => showDashboard(profile))
   
   // Mark sidebar active
@@ -590,23 +615,25 @@ function showAdmin(profile) {
   document.querySelectorAll('[data-view="admin"]').forEach(v => v.classList.add('active'))
 }
 
-function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = [], clashId = null) {
+async function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = [], clashId = null) {
   hideAll(true) // Pass true to hide layout for focus
+  const { ExamComponent } = await import('./src/components/Exam');
   ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions, cid) => {
     showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken, cid)
   }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects, clashId)
 }
 
-function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0, clashId = null) {
+async function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0, clashId = null) {
   hideAll()
+  const { ResultsComponent } = await import('./src/components/Results');
   ResultsComponent.render(questions, userAnswers, (newQs, newMode, newSubj, newExam) => {
-    showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType) // Retake same questions or load custom focus questions
+    showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType) 
   }, () => {
-    showExam(questions, profile, true, userAnswers, mode, subject, examType) // Review mode
+    showExam(questions, profile, true, userAnswers, mode, subject, examType)
   }, profile, mode, subject, examType, timeTaken, () => showDashboard(profile))
 }
 
-function hideAll(isExam = false) {
+function hideAll(isExam = false, forceHideLayout = false) {
   const containers = [
     'auth-container', 'dashboard-container', 'exam-container', 
     'admin-container', 'settings-container', 'news-article-container',
@@ -629,7 +656,7 @@ function hideAll(isExam = false) {
   const header = document.getElementById('app-header')
   const sidebar = document.getElementById('app-sidebar')
   const bottomNav = document.getElementById('bottom-nav')
-  const isAuth = document.getElementById('auth-container').style.display !== 'none'
+  const isAuth = forceHideLayout || document.getElementById('auth-container').style.display !== 'none'
   
   if (isExam || isAuth) {
     if (header) header.style.display = 'none'
