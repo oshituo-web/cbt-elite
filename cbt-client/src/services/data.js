@@ -345,7 +345,8 @@ export const DataService = {
         p_time_taken: sessionData.time_taken_seconds || 0,
         p_topics: topicsPayload,
         p_answered_questions: sessionData.answered_questions,
-        p_client_date: localDate
+        p_client_date: localDate,
+        p_session_type: sessionData.session_type || 'practice'
     })
   },
 
@@ -434,7 +435,7 @@ export const DataService = {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('daily_questions_count, streak_count, last_daily_reset_date')
+            .select('daily_questions_count, streak_count, last_daily_reset_date, elite_coins, streak_freeze_count, league_tier, has_seen_tour, username, has_league_insurance, last_ai_score_prediction')
             .eq('id', userId)
             .single()
         
@@ -452,7 +453,7 @@ export const DataService = {
     try {
         const { data, error } = await supabase
           .from('exam_sessions')
-          .select('total_questions, correct_answers, completed_at, answered_questions, time_taken')
+          .select('total_questions, correct_answers, completed_at, answered_questions, time_taken_seconds')
           .eq('user_id', userId)
           .order('completed_at', { ascending: false })
           .limit(50)
@@ -468,6 +469,7 @@ export const DataService = {
       answered_questions: s.answered_questions ?? s.total_questions ?? 0, // Fallback to total for legacy data
       correct_answers: s.correct_answers || 0,
       score_percentage: s.total_questions > 0 ? Math.round(((s.correct_answers || 0) / (s.total_questions || 1)) * 100) : 0,
+      time_taken_seconds: s.time_taken_seconds || 0,
       created_at: s.completed_at
     })) : []
 
@@ -477,7 +479,7 @@ export const DataService = {
       .eq('user_id', userId)
 
     const stats = {
-      overall: { total: 0, correct: 0, time: 0 },
+      overall: { total: 0, correct: 0, time: sessions.reduce((acc, s) => acc + (s.time_taken_seconds || 0), 0) },
       bySubject: {}
     }
 
@@ -633,6 +635,14 @@ export const DataService = {
   async getGlobalStats(userId) {
     const { data, error } = await supabase.from('users').select('streak_count, total_questions_answered, last_session_date').eq('id', userId).single()
     return { data, error }
+  },
+
+  async purchaseEliteItem(userId, itemId, price) {
+    return await supabase.rpc('atomic_store_purchase', {
+        p_user_id: userId,
+        p_item_id: itemId,
+        p_cost: price
+    })
   },
 
   async markTourAsSeen(userId) {
@@ -1072,9 +1082,5 @@ export const DataService = {
 
   async runWeeklyLeagueReset() {
     return await supabase.rpc('run_weekly_league_reset')
-  },
-
-  async getLeagueTable(userId) {
-    return await supabase.rpc('get_league_table', { p_user_id: userId })
   }
 }

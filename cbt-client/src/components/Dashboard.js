@@ -2,6 +2,7 @@ import { DataService } from '../services/data'
 import { supabase } from '../utils/supabase'
 import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
+import { EliteStoreComponent } from './EliteStore'
 import { TourGuide } from '../utils/TourGuide'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
@@ -21,6 +22,7 @@ export const DashboardComponent = {
 
   async render(profile, onStartExam, onOpenAdmin, onReadNews) {
     try {
+      this.renderSkeletons()
       await this._render(profile, onStartExam, onOpenAdmin, onReadNews)
     } catch (err) {
       console.error("CRITICAL DASHBOARD ERROR:", err)
@@ -37,6 +39,44 @@ export const DashboardComponent = {
           `
       }
     }
+  },
+
+  renderSkeletons() {
+    const container = document.getElementById('dashboard-container')
+    if (!container) return
+    container.style.display = 'block'
+    container.innerHTML = `
+      <div class="dashboard-scroll-area" style="padding-top: calc(var(--header-height) + 1.25rem);">
+        <div style="margin-bottom: 2rem;">
+            <div class="skeleton-box" style="width: 200px; height: 1.8rem; margin-bottom: 0.5rem;"></div>
+            <div class="skeleton-box" style="width: 150px; height: 0.8rem;"></div>
+        </div>
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+            <div class="glass card skeleton-card" style="padding: 1.5rem;">
+                <div class="skeleton-box" style="width: 100px; height: 0.7rem; margin-bottom: 1rem;"></div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <div class="skeleton-box" style="width: 100px; height: 100px; border-radius: 50%;"></div>
+                    <div class="skeleton-box" style="width: 150px; height: 1.2rem;"></div>
+                </div>
+            </div>
+            <div class="glass card skeleton-card" style="padding: 1.5rem;">
+                <div class="skeleton-box" style="width: 100px; height: 0.7rem; margin-bottom: 1rem;"></div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <div class="skeleton-box" style="width: 100px; height: 100px; border-radius: 50%;"></div>
+                    <div class="skeleton-box" style="width: 150px; height: 1.2rem;"></div>
+                </div>
+            </div>
+            <div class="glass card skeleton-card" style="padding: 1.5rem;">
+                <div class="skeleton-box" style="width: 100px; height: 0.7rem; margin-bottom: 1rem;"></div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem; justify-content: center;">
+                    <div class="skeleton-box" style="width: 100%; height: 1rem;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 1rem;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 1rem;"></div>
+                </div>
+            </div>
+        </div>
+      </div>
+    `
   },
 
   async _render(profile, onStartExam, onOpenAdmin, onReadNews) {
@@ -57,7 +97,10 @@ export const DashboardComponent = {
 
     // Handle Tier Transitions & Daily Resets
     const updatedUser = profile ? await SubscriptionService.handleTierTransition(profile) : null
-    this.profile = updatedUser || profile || { username: 'Student', id: 'anon' }
+    // --- 🚀 HARDENING: Merge objects to prevent dropping fields like elite_coins ---
+    this.profile = { ...(profile || {}), ...(updatedUser || {}) }
+    if (!this.profile.username) this.profile.username = 'Student'
+    if (!this.profile.id) this.profile.id = 'anon'
     
     let history = []
     let mastery = []
@@ -90,6 +133,12 @@ export const DashboardComponent = {
         this.unresolvedMistakeIds = unresolvedIds || []
         
         console.log("Dashboard: Analytics loaded")
+        // 🔥 FIX: Sync the profile fields fetched during analytics back into this.profile
+        if (analytics.profile) {
+            this.profile = { ...this.profile, ...analytics.profile }
+            console.log("Dashboard: Profile synced from DB", this.profile)
+        }
+        
         // Fetch all toggles
         const { data: configs } = await supabase.from('system_config').select('key, value')
         if (configs) {
@@ -110,17 +159,25 @@ export const DashboardComponent = {
         // Sync League Status & Check for Tier Changes
         const lastTier = localStorage.getItem('elite_last_league_tier')
         const { data: leagueSync } = await DataService.syncLeagueStatus(this.profile.id)
-        this.leagueData = leagueSync || { tier: 'Bronze' }
-        if (!this.leagueData.tier) this.leagueData.tier = 'Bronze'
         
-        // Update profile tier to ensure UI reflects the latest sync result
-        if (this.profile) this.profile.league_tier = this.leagueData.tier;
+        // --- 🔥 FIX: Sanitize Tiers to prevent Subscription levels leaking into Leagues ---
+        const VALID_LEAGUE_TIERS = ['Bronze', 'Silver', 'Gold', 'Diamond', 'Elite'];
+        let currentTier = (leagueSync && leagueSync.tier) ? leagueSync.tier : 'Bronze';
         
-        if (lastTier && lastTier !== this.leagueData.tier) {
-            const isPromotion = this._isPromotion(lastTier, this.leagueData.tier)
-            this.showTierChangeModal(lastTier, this.leagueData.tier, isPromotion)
+        // If the server returns a subscription tier (free/medium/premium), map to Bronze
+        const subsTiers = ['free', 'freemium', 'medium', 'premium'];
+        if (subsTiers.includes(currentTier.toLowerCase()) || !VALID_LEAGUE_TIERS.includes(currentTier)) {
+            currentTier = 'Bronze';
         }
-        localStorage.setItem('elite_last_league_tier', this.leagueData.tier)
+
+        this.leagueData = { ...(leagueSync || {}), tier: currentTier };
+        if (this.profile) this.profile.league_tier = currentTier;
+        
+        if (lastTier && lastTier !== currentTier && VALID_LEAGUE_TIERS.includes(lastTier)) {
+            const isPromotion = this._isPromotion(lastTier, currentTier);
+            this.showTierChangeModal(lastTier, currentTier, isPromotion);
+        }
+        localStorage.setItem('elite_last_league_tier', currentTier);
         console.log("Dashboard: League synced", this.leagueData)
     } catch (err) {
         console.error("Dashboard data fetch failed:", err)
@@ -132,6 +189,7 @@ export const DashboardComponent = {
       { element: "#quick-practice-btn", title: "Practice Mode", text: "Start here. Practice Mode helps you improve topic by topic." },
       { element: "#quick-exam-btn", title: "Exam Mode", text: "Simulate real exams with timers and scoring." },
       { element: "#analytics-section", title: "Performance Insights", text: "Track your scores and identify weak subjects." },
+      { element: "#economy-coins-val", title: "Elite Economy", text: "Earn coins by practicing. Spend them in the Store on Power-ups and Streaks!" },
       { element: "#upgrade-hero-btn", title: "Upgrade Section", text: "Unlock AI explanations and unlimited access with Premium." },
       { title: "You're all set", text: "You're ready to start your journey. Good luck!" }
     ], {
@@ -143,7 +201,8 @@ export const DashboardComponent = {
     
     console.log("DASH_TRACE_1: Starting XP calculation")
     // Calculate Progress and Daily Goal
-    const today = new Date().toDateString()
+    const watNow = DataService.getWATDate()
+    const today = watNow.toDateString() // "Wed Apr 22 2026" in WAT
     let v2_todayQuestions = 0
     let v2_totalQuestions = 0
     let v2_totalCorrect = 0
@@ -152,22 +211,25 @@ export const DashboardComponent = {
     try {
         if (history && history.length > 0) {
             history.forEach(s => {
-                if (s && s.created_at) {
-                    const sDate = new Date(s.created_at)
+                    const sUTC = new Date(s.created_at)
+                    // Convert session UTC time to WAT for comparison
+                    const sDate = new Date(sUTC.toLocaleString("en-US", {timeZone: "Africa/Lagos"}))
                     const sessionCount = s.answered_questions ?? s.total_questions ?? 0
                     if (sDate.toDateString() === today) v2_todayQuestions += sessionCount
                     v2_totalQuestions += sessionCount
                     v2_totalCorrect += (s.correct_answers || 0)
                     v2_overallTime += (s.time_taken || s.time_taken_seconds || 0)
-                }
             })
         }
     } catch (e) {
         console.error("Dashboard: Error calculating XP history", e)
     }
 
+    // 🚀 FIX: Fallback to aggregated stats if history total is 0 (prevents "0m" bug)
+    const finalOverallTime = Math.max(v2_overallTime, (analytics.stats?.overall?.time || 0));
+
     const accuracy = v2_totalQuestions > 0 ? Math.round((v2_totalCorrect / v2_totalQuestions) * 100) : 0
-    const studyTimeMinutes = Math.floor(v2_overallTime / 60)
+    const studyTimeMinutes = Math.floor(finalOverallTime / 60)
     const examsCompleted = history.length
 
     // Fetch Target from storage (50 or 100)
@@ -220,6 +282,23 @@ export const DashboardComponent = {
         ${badges.map(b => `<span class="badge glass" title="${b.title}" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.65rem; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03);">${b.emoji} ${b.title}</span>`).join('')}
       </div>
     ` : '';
+
+    console.log("Dashboard: Preparing time-based states")
+    // --- Time-Based Windows (Clash Hub) ---
+    let now;
+    try {
+        now = (DataService && typeof DataService.getWATDate === 'function') ? DataService.getWATDate() : new Date();
+    } catch (e) {
+        now = new Date();
+    }
+    const day = now.getDay();
+    const hour = now.getHours();
+    const min = now.getMinutes();
+
+    // SAT/SUN 7:00 PM - 7:30 PM is Clash Time
+    const isClashWindow = (day === 6 || day === 0) && hour === 19 && min < 30;
+    // After 7:30 PM is Results Time
+    const isResultsWindow = (day === 6 || day === 0) && (hour > 19 || (hour === 19 && min >= 30));
 
     console.log("Dashboard: Preparing to inject HTML")
     container.innerHTML = `
@@ -313,16 +392,16 @@ export const DashboardComponent = {
           <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
             
             <!-- Daily Streak Card (Compact) -->
-            <div class="glass card scale-in" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px;">
+            <div class="glass card scale-in" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Learning Streak</h3>
                 <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.65rem; font-weight: 800;">ACTIVE</span>
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;">
                 <div class="streak-flame-container ${this.profile.streak_count > 0 ? 'active' : ''}">
-                  <i data-lucide="flame" style="width: 40px; height: 40px; color: ${this.profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
+                  <i data-lucide="flame" style="width: 32px; height: 32px; color: ${this.profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
                 </div>
-                <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 2.4rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_count || 0}</div>
+                <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.profile.streak_count || 0}</div>
                 <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Day Streak</div>
               </div>
               <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin: 0; font-weight: 500;">
@@ -335,16 +414,6 @@ export const DashboardComponent = {
 
             <!-- Elite Clan Hub (Department-Based) -->
             ${(() => {
-                const now = DataService.getWATDate();
-                const day = now.getDay();
-                const hour = now.getHours();
-                const min = now.getMinutes();
-                
-                // SAT/SUN 7:00 PM - 7:30 PM is Clash Time
-                const isClashWindow = (day === 6 || day === 0) && hour === 19 && min < 30;
-                // After 7:30 PM is Results Time
-                const isResultsWindow = (day === 6 || day === 0) && (hour > 19 || (hour === 19 && min >= 30));
-                
                 const dept = this.profile?.department || 'General';
                 const tier = this.profile?.league_tier || 'Bronze';
                 const isSuperElite = tier === 'Elite';
@@ -359,7 +428,7 @@ export const DashboardComponent = {
                 const clanName = this.leagueData?.clan_name || (dept + ' Elites');
 
                 return `
-                <div id="open-league-btn" class="glass card scale-in" style="padding: 1rem; display: flex; flex-direction: column; min-height: 240px; justify-content: space-between; border-top: 3px solid ${style.color}; background: linear-gradient(180deg, ${style.color}05 0%, var(--surface-color) 100%); cursor: pointer; position: relative; overflow: hidden;">
+                <div id="open-league-btn" class="glass card scale-in" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 3px solid ${style.color}; background: linear-gradient(180deg, ${style.color}05 0%, var(--surface-color) 100%); cursor: pointer; position: relative; overflow: hidden;">
                   ${isSuperElite ? `<div style="position: absolute; top: 0; right: 0; background: var(--accent-primary); color: white; padding: 2px 8px; font-size: 0.55rem; font-weight: 900; border-bottom-left-radius: 8px;">SUPER ELITE</div>` : ''}
                   
                   <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -369,13 +438,13 @@ export const DashboardComponent = {
                     </div>
                   </div>
                   
-                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; margin: 0.75rem 0;">
-                    <div style="width: 52px; height: 52px; background: ${style.color}15; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color}40;">
-                        <i data-lucide="${style.icon}" style="width: 24px; height: 24px; color: ${style.color};"></i>
+                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; margin: 0.5rem 0;">
+                    <div style="width: 44px; height: 44px; background: ${style.color}15; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color}40;">
+                        <i data-lucide="${style.icon}" style="width: 20px; height: 20px; color: ${style.color};"></i>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${clanName}</div>
-                        <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">${dept} • ${tier}</div>
+                        <div style="font-family: 'Outfit'; font-size: 1rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${clanName}</div>
+                        <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">${dept} • ${tier}</div>
                     </div>
                   </div>
 
@@ -403,10 +472,10 @@ export const DashboardComponent = {
 
                   <!-- RANKING BUTTON INTEGRATED -->
                   <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                    <button id="open-league-btn" class="glass-btn btn-secondary" style="flex: 1.1; font-size: 0.7rem; padding: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                    <button id="open-league-btn" class="glass-btn btn-secondary" style="flex: 0.7; font-size: 0.65rem; padding: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
                         <i data-lucide="bar-chart-2" style="width:14px;"></i> RANKINGS
                     </button>
-                    <button class="glass-btn btn-primary" id="change-clan-btn" style="flex: 0.9; font-size: 0.7rem; padding: 0.5rem; border: none; color: white !important; border-radius: 8px; font-weight: 900; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+                    <button class="glass-btn btn-primary" id="change-clan-btn" style="flex: 1.3; font-size: 0.7rem; padding: 0.5rem; border: none; color: white !important; border-radius: 8px; font-weight: 900; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; gap: 0.3rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
                         <i data-lucide="graduation-cap" style="width:14px;"></i> SELECT DEPARTMENT
                     </button>
                   </div>
@@ -415,7 +484,7 @@ export const DashboardComponent = {
             })()}
 
             <!-- Daily Goal Card (Compacted) -->
-            <div class="glass card" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 240px; justify-content: space-between; border-top: 3px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
+            <div class="glass card" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 3px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Star Target</h3>
                 <div style="display: flex; gap: 4px;">
@@ -429,7 +498,7 @@ export const DashboardComponent = {
               
               <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
                 <!-- Multi-Level Circular Progress -->
-                <div style="position: relative; width: 90px; height: 90px;">
+                <div style="position: relative; width: 80px; height: 80px;">
                   <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                     <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2.5" />
                     ${(() => {
@@ -511,29 +580,7 @@ export const DashboardComponent = {
                 </div>
               </div>
               ${badgesHTML}
-            </div>
-
-            <!-- AI Insight Card -->
-            <div class="glass card" style="padding: 1rem 1.25rem; display: flex; flex-direction: column; min-height: 260px; justify-content: space-between; border-left: 4px solid var(--accent-secondary);">
-              <h3 style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">AI Performance Analysis</h3>
-              
-              <div style="flex: 1; display: flex; align-items: center;">
-                <p id="dashboard-ai-summary" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; font-weight: 500; margin: 0;">
-                  <span class="loader-spinner" style="width:14px; height:14px; display:inline-block; margin-right: 8px;"></span>
-                  Elite AI is calculating your mastery profile...
-                </p>
-              </div>
-
-              <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                ${(weakSubject) ? `
-                  <button id="practice-weak-btn" class="btn-primary" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1;"><i data-lucide="target" style="width: 14px;"></i> Target ${weakSubject.subject}</button>
-                  <button id="ai-insight-btn" class="btn-dominant" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1; background: var(--accent-secondary); border: none;"><i data-lucide="sparkles" style="width: 14px;"></i> AI INSIGHTS</button>
-                ` : `
-                  <button id="start-ai-workout" class="btn-dominant" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1;"><i data-lucide="sparkles" style="width: 14px;"></i> AI Workout</button>
-                  <button id="ai-insight-btn" class="btn-dominant" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1; background: var(--accent-secondary); border: none;"><i data-lucide="sparkles" style="width: 14px;"></i> AI INSIGHTS</button>
-                `}
-                <button id="full-analysis-btn" class="btn-secondary" style="padding: 0 1rem; height: 40px; font-size: 0.75rem; flex: 1; border-color: var(--accent-primary); color: var(--accent-primary);"><i data-lucide="bar-chart-2" style="width: 14px;"></i> ANALYSIS</button>
-              </div>
+              <!-- AI Insight Card Removed as per feedback -->
             </div>
 
             <!-- ELITE REPAIR CENTER CARD -->
@@ -615,20 +662,17 @@ export const DashboardComponent = {
             </div>
         </div>
 
-        <!-- ANALYTICS CHARTS -->
+        <!-- SCORE TREND CHART -->
         <div id="analytics-section" style="margin-top: 1.5rem;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="bar-chart-2" style="color: var(--success); width: 24px;"></i> Analytics
+            <i data-lucide="line-chart" style="color: var(--primary); width: 24px;"></i> Performance Trend
           </h2>
-          <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
-            <div class="glass card" style="padding: 1rem; min-height: 250px; width: 100%; overflow: hidden;">
-              <h4 style="margin-bottom: 1rem; color: var(--accent-primary); font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Score Trend</h4>
-              <div style="flex: 1; width: 100%; height: 180px;"><canvas id="score-history-chart"></canvas></div>
+          <div class="glass card" style="padding: 1rem; min-height: 260px; width: 100%; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin: 0;">Accuracy Trend</h4>
+                <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700;">HISTORY OF RECENT SESSIONS</div>
             </div>
-            <div class="glass card" style="padding: 1rem; min-height: 250px; width: 100%; overflow: hidden;">
-              <h4 style="margin-bottom: 1rem; color: var(--success); font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Subject Mastery</h4>
-              <div style="flex: 1; width: 100%; height: 180px;"><canvas id="subject-mastery-chart"></canvas></div>
-            </div>
+            <div style="flex: 1; width: 100%; height: 170px;"><canvas id="score-history-chart"></canvas></div>
           </div>
         </div>
 
@@ -813,6 +857,27 @@ export const DashboardComponent = {
     if (DASH_quickPracticeBtn) DASH_quickPracticeBtn.onclick = () => window.navigateTo('practice', profile)
     if (DASH_quickExamBtn) DASH_quickExamBtn.onclick = () => window.navigateTo('exams', profile)
 
+    // Elite Store Listeners
+    const openStoreBtns = [
+        document.getElementById('open-store-btn'),
+        document.getElementById('economy-coins-val')?.parentElement?.parentElement
+    ];
+    openStoreBtns.forEach(btn => {
+        if (btn) {
+            btn.style.cursor = 'pointer';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                EliteStoreComponent.render(this.profile, (updatedProfile) => {
+                    // Update coins in UI
+                    const coinVal = document.getElementById('economy-coins-val');
+                    if (coinVal) coinVal.innerText = updatedProfile.elite_coins;
+                    const freezeVal = document.getElementById('economy-freeze-val');
+                    if (freezeVal) freezeVal.innerText = updatedProfile.streak_freeze_count || 0;
+                });
+            };
+        }
+    });
+
     console.log("DASH_TRACE_3: Attaching leaderboard listeners")
     const openLeaderboard = document.getElementById('open-leaderboard-btn')
     const leaderboardModal = document.getElementById('leaderboard-modal')
@@ -975,17 +1040,7 @@ export const DashboardComponent = {
     }
     if (closeStore) closeStore.onclick = () => storeModal.style.display = 'none'
 
-    // Lazy load the Dashboard AI Strategy Summary
-    import('../services/aiService').then(async ({ AiService }) => {
-        try {
-            const shortSummary = await AiService.getAIPerformanceSummary(analytics, true);
-            const el = document.getElementById('dashboard-ai-summary');
-            if (el) el.innerHTML = shortSummary;
-        } catch (e) {
-            const el = document.getElementById('dashboard-ai-summary');
-            if (el) el.innerHTML = "Keep practicing to build your performance profile!";
-        }
-    }).catch(e => console.error("AiService lazy load failed", e));
+    // AI Summary removed as per feedback
 
     console.log("DASH_TRACE_4: Final checks before AI Service load")
     const fullAnalysisBtn = document.getElementById('full-analysis-btn')
@@ -1069,53 +1124,106 @@ export const DashboardComponent = {
   async renderCharts(userId, providedAnalytics = null) {
     const { history, mastery, error } = providedAnalytics || await DataService.getUserAnalytics(userId)
     const historyCtx = document.getElementById('score-history-chart')?.getContext('2d')
-    if (historyCtx && history.length > 0) {
+    if (historyCtx) {
+        // Hide chart if no history
+        if (!history || history.length === 0) {
+            console.warn("Dashboard: Empty history for chart")
+            if (historyCtx.canvas) {
+                const parent = historyCtx.canvas.parentElement;
+                if (parent) parent.innerHTML = `
+                  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-align: center; padding: 1rem;">
+                    <i data-lucide="line-chart" style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                    <p style="font-size: 0.8rem; font-weight: 500;">No history data yet.<br>Complete a session to see your trend!</p>
+                  </div>
+                `;
+            }
+            if (window.lucide) window.lucide.createIcons();
+            return;
+        }
+
         if (this._historyChart) this._historyChart.destroy()
+        
+        // Define Gradient
+        const gradient = historyCtx.createLinearGradient(0, 0, 0, 200)
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)')
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0)')
+
         this._historyChart = new Chart(historyCtx, {
             type: 'line',
             data: {
-                labels: history.map((_, i) => i + 1),
+                labels: history.map((h, i) => {
+                    const date = h.created_at ? new Date(h.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : `S-${i+1}`
+                    return date
+                }),
                 datasets: [{
-                    label: 'Score %',
+                    label: 'Session Accuracy',
                     data: history.map(h => h.score_percentage),
                     borderColor: '#2563EB',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    backgroundColor: gradient,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.45,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2563EB',
+                    borderWidth: 3
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: 'var(--text-secondary)', font: { family: 'Outfit', size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'var(--text-secondary)', font: { family: 'Outfit', size: 10 } }
+                    }
+                } 
+            }
         })
     }
 
-    const masteryCanvas = document.getElementById('subject-mastery-chart')
-    if (masteryCanvas && mastery.length > 0) {
-        const masteryCtx = masteryCanvas.getContext('2d')
-        if (this._masteryChart) this._masteryChart.destroy()
-        this._masteryChart = new Chart(masteryCtx, {
-            type: 'radar',
-            data: {
-                labels: mastery.map(m => m.subject),
-                datasets: [{
-                    label: 'Mastery %',
-                    data: mastery.map(m => m.average),
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    borderColor: '#10B981'
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } } }
-        })
-    }
+    // Subject Mastery logic removed as per feedback
 
     const gaugePath = document.getElementById('readiness-progress-path')
     const gaugeText = document.getElementById('readiness-percentage')
     const gaugeSub = document.getElementById('readiness-subject')
+    const gaugeStatus = document.getElementById('readiness-status')
+
     if (gaugePath && mastery.length > 0) {
         const topSub = mastery.reduce((prev, curr) => (prev.total_attempted > curr.total_attempted) ? prev : curr)
         if (gaugeSub) gaugeSub.textContent = topSub.subject
         const { data: score } = await DataService.getReadinessScore(userId, topSub.subject)
+        
+        // Update Gauge
         gaugePath.style.strokeDasharray = `${score || 0}, 100`
         if (gaugeText) gaugeText.textContent = `${score || 0}%`
+
+        // 🚀 DYNAMIC ELITE LEVEL: Map readiness score to premium labels
+        if (gaugeStatus) {
+            let statusText = "Novice";
+            let statusColor = "var(--text-secondary)";
+            
+            if (score >= 75) {
+                statusText = "Elite Level";
+                statusColor = "var(--success)";
+            } else if (score >= 60) {
+                statusText = "Expert";
+                statusColor = "var(--primary)";
+            } else if (score >= 40) {
+                statusText = "Competent";
+                statusColor = "var(--warning)";
+            }
+            
+            gaugeStatus.textContent = statusText;
+            gaugeStatus.style.color = statusColor;
+        }
     }
   },
 
@@ -1289,7 +1397,12 @@ export const DashboardComponent = {
   },
 
   updateLeagueTimer() {
-    const now = DataService.getWATDate();
+    let now;
+    try {
+        now = (typeof DataService.getWATDate === 'function') ? DataService.getWATDate() : new Date();
+    } catch (e) {
+        now = new Date();
+    }
     const day = now.getDay();
     const hour = now.getHours();
     

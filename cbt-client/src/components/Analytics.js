@@ -27,19 +27,21 @@ export const AnalyticsComponent = {
       const accuracy = stats.overall.total > 0 ? Math.round((stats.overall.correct / stats.overall.total) * 100) : 0
       const hours = (stats.overall.time / 3600).toFixed(1)
 
-      // 2. Premium Gating check (Includes system-wide free mode)
+      // 2. Premium Gating check (Includes system-wide free mode and Store-bought tokens)
       const state = SubscriptionService.resolveUserTier(profile, isSystemFree)
+      const hasPredictionToken = !!profile.last_ai_score_prediction;
       const isPremium = state === 'premium' || profile.is_activated || isSystemFree
+      const canSeeAnalytics = isPremium || hasPredictionToken;
 
       container.innerHTML = `
         <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative;">
-          ${!isPremium ? `
+          ${!canSeeAnalytics ? `
             <div id="analytics-premium-gate" style="position: absolute; top: 120px; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); border-radius: 24px; padding: 2rem; text-align: center;">
                <div style="background: var(--accent-gradient); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);">
                   <i data-lucide="lock" style="color: white; width: 32px; height: 32px;"></i>
                </div>
                <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 2rem; color: white; margin-bottom: 1rem;">Premium Insights Locked</h2>
-               <p style="color: rgba(255,255,255,0.8); max-width: 400px; line-height: 1.6; margin-bottom: 2.5rem; font-weight: 500;">Upgrade to **Elite Premium** to unlock detailed subject mastery trends, topic-level gap analysis, and global benchmarking.</p>
+               <p style="color: rgba(255,255,255,0.8); max-width: 400px; line-height: 1.6; margin-bottom: 2.5rem; font-weight: 500;">Upgrade to **Elite Premium** or use **Elite Coins** in the Store to unlock detailed subject mastery trends and AI projections.</p>
                <button id="insights-upgrade-btn" class="btn-dominant" style="padding: 0 3rem; height: 56px; font-weight: 800;">UPGRADE TO ELITE PREMIUM</button>
             </div>
           ` : ''}
@@ -236,7 +238,7 @@ export const AnalyticsComponent = {
       if (window.lucide) window.lucide.createIcons({ root: container })
 
       // 4. Lazy Load Full AI Synthesis & Predictive Metrics
-      if (isPremium) {
+      if (canSeeAnalytics) {
         import('../services/aiService').then(async ({ AiService }) => {
             const analytics = { history, mastery, stats };
             

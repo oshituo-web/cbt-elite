@@ -602,6 +602,54 @@ export class Exam {
     // Question Rendering
     QuestionRenderer.render('options-container', q, this.session.userAnswers, this.session.currentIndex, this.isReviewMode)
     
+    // 🔥 ELITE POWER-UPS: Eliminate 2 (Only in Practice Mode)
+    const optionsContainer = document.getElementById('options-container');
+    if (!this.isReviewMode && this.session.mode === 'practice' && optionsContainer) {
+        const powerUpsDiv = document.createElement('div');
+        powerUpsDiv.style = "margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; gap: 0.75rem;";
+        powerUpsDiv.innerHTML = `
+            <button id="eliminate-2-btn" class="glass-btn" style="padding: 0.6rem 1rem; font-size: 0.7rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary);">
+                <i data-lucide="zap" style="width: 14px; fill: var(--accent-primary);"></i> ELIMINATE 2 (-50 <i data-lucide="coins" style="width: 10px;"></i>)
+            </button>
+        `;
+        optionsContainer.appendChild(powerUpsDiv);
+        if (window.lucide) window.lucide.createIcons({ root: powerUpsDiv });
+
+        const eliminateBtn = document.getElementById('eliminate-2-btn');
+        eliminateBtn.onclick = async () => {
+            if ((this.session.profile.elite_coins || 0) < 50) {
+                ModalService.showToast("Not enough Elite Coins!", "error");
+                return;
+            }
+
+            // Deduct coins locally and on server
+            this.session.profile.elite_coins -= 50;
+            await DataService.purchaseEliteItem(this.session.profile.id, 'eliminate_2_use', 50);
+
+            // Find incorrect options that are NOT current choice
+            const optionBtns = Array.from(optionsContainer.querySelectorAll('button.option-btn'));
+            const incorrectBtns = optionBtns.filter(btn => {
+                const ans = q.answers.find(a => a.id === btn.dataset.id);
+                return ans && !ans.is_correct;
+            });
+
+            // Randomly hide 2 incorrect ones
+            const toHide = incorrectBtns.sort(() => 0.5 - Math.random()).slice(0, 2);
+            toHide.forEach(btn => {
+                 btn.style.opacity = '0.3';
+                 btn.style.pointerEvents = 'none';
+                 btn.style.transform = 'scale(0.95)';
+                 btn.querySelector('.option-holder').style.background = 'rgba(255,255,255,0.05)';
+                 btn.querySelector('.option-holder').innerHTML = '✕';
+            });
+
+            eliminateBtn.disabled = true;
+            eliminateBtn.style.opacity = '0.5';
+            eliminateBtn.innerHTML = 'Power-up Used!';
+            ModalService.showToast("Two wrong answers eliminated!", "success");
+        };
+    }
+
     // Attach input listeners for the rendered content
     if (!this.isReviewMode) {
       const theoryInput = document.getElementById('theory-input')

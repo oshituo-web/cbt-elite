@@ -64,6 +64,9 @@ html {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-top: 0.75rem;
+  /* 🔥 PERFORMANCE: Use content-visibility for heavy grids */
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 5000px;
 }
 
 .details-premium {
@@ -208,25 +211,26 @@ body {
 body::before {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -100px;
+  left: -100px;
+  right: -100px;
+  bottom: -100px;
   background-image: 
     radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 1%),
     radial-gradient(circle at 80% 70%, rgba(255,255,255,0.4) 0%, transparent 1%),
     radial-gradient(circle at 40% 80%, rgba(255,255,255,0.3) 0%, transparent 1%),
     radial-gradient(circle at 70% 20%, rgba(255,255,255,0.3) 0%, transparent 1%);
   background-size: 100px 100px;
-  animation: sparkle-drift 20s linear infinite;
+  animation: sparkle-drift 30s linear infinite;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.3;
   z-index: -1;
+  will-change: transform;
 }
 
 @keyframes sparkle-drift {
-  from { background-position: 0 0; }
-  to { background-position: 100px 100px; }
+  from { transform: translate(0, 0); }
+  to { transform: translate(100px, 100px); }
 }
 
 @keyframes scale-in {
@@ -239,13 +243,30 @@ body::before {
 }
 
 .glass.card {
-  padding: 1rem; /* Compact padding */
+  padding: 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* 🔥 PERFORMANCE OPTIMIZATION: Reduced blur intensity and used composite properties */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   background: var(--surface-color);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform, box-shadow;
+  /* Ensure the background doesn't bleed */
+  background-clip: padding-box;
+}
+
+/* Optimization for mobile: disable blur to maintain high FPS during scroll */
+@media (max-width: 768px) {
+  .glass.card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.98);
+  }
+  
+  body.dark-mode .glass.card {
+    background: rgba(30, 41, 59, 0.95);
+  }
 }
 
 .glass.card:hover {
@@ -623,13 +644,14 @@ body::before {
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  /* ðŸ”¥ FIX: Remove width: 100% which causes overflow when combined with margin-left */
   width: auto; 
   min-width: 0;
   height: 100vh;
   transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  /* 🔥 ADVANCED OPTIMIZATION: Isolate the main content for rendering */
+  contain: paint;
 }
 
 /* Desk Nav Visibility Control (Desktop Priority) */
@@ -3081,4 +3103,43 @@ body.light-mode .option-btn .option-holder {
     padding: 1rem;
     max-width: 100vw;
   }
+}
+
+/* --- SKELETON UI & SHIMMER --- */
+.skeleton-box {
+    display: inline-block;
+    height: 1em;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.skeleton-box::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.05) 20%,
+        rgba(255, 255, 255, 0.1) 60%,
+        rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 2s infinite;
+    content: '';
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-card {
+    height: 240px;
+    width: 100%;
 }

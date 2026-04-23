@@ -61,7 +61,8 @@ export const ResultsComponent = {
     const answeredCount = Object.values(userAnswers || {}).filter(a => a !== null && a !== "").length;
     
     if (profile && profile.id) {
-        DataService.saveExamSession(profile.id, {
+        // 🔥 FIX: Await the save session to ensure it completes before UI navigation
+        await DataService.saveExamSession(profile.id, {
             session_type: mode,
             subject: subject || 'Various',
             total_questions: questions.length,
@@ -153,11 +154,24 @@ export const ResultsComponent = {
             </div>
             ${(() => {
                 const currentDaily = profile?.daily_questions_count || 0;
-                if (currentDaily < 50 && currentDaily + answeredCount >= 50) {
+                const dailyGoalHit = currentDaily < 50 && currentDaily + answeredCount >= 50;
+                const isClash = mode === 'clash';
+                const day = new Date().getDay();
+                const isSunday = day === 0;
+                
+                let bonusLines = [];
+                if (dailyGoalHit) {
+                    bonusLines.push(`<span style="color: #f59e0b;"><i data-lucide="star" style="width: 14px; fill: #f59e0b;"></i> DAILY GOAL HIT! +50</span>`);
+                }
+                if (isClash && scorePercent >= 80) {
+                    const clashAmt = isSunday ? 200 : 100;
+                    bonusLines.push(`<span style="color: var(--accent-primary);"><i data-lucide="award" style="width: 14px; fill: var(--accent-primary);"></i> ${isSunday ? 'SUPER ELITE' : 'CLASH'} BONUS! +${clashAmt}</span>`);
+                }
+
+                if (bonusLines.length > 0) {
                     return `
-                    <div style="flex-basis: 100%; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(245, 158, 11, 0.2); text-align: left; display: flex; align-items: center; gap: 0.5rem;">
-                        <i data-lucide="star" style="width: 14px; color: var(--warning); fill: var(--warning);"></i>
-                        <span style="font-size: 0.75rem; font-weight: 800; color: #f59e0b;">DAILY GOAL HIT! +50 BONUS COINS</span>
+                    <div style="flex-basis: 100%; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: left; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.75rem; font-weight: 800;">
+                        ${bonusLines.join('')}
                     </div>
                     `;
                 }
