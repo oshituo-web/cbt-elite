@@ -315,7 +315,12 @@ export const DataService = {
       }))
 
       await supabase.from('user_responses').insert(responses)
-      await this.syncPerformanceData(userId, sessionData, questions, userAnswers)
+      const { error: syncError } = await this.syncPerformanceData(userId, sessionData, questions, userAnswers)
+      
+      if (syncError) {
+          console.error("Critical Sync Error:", syncError)
+          throw syncError
+      }
       
       return { session, error: null }
     } catch (err) {
@@ -338,16 +343,21 @@ export const DataService = {
 
     const localDate = this.getWATDate().toISOString().split('T')[0];
 
-    return await supabase.rpc('sync_user_performance', {
+    // 🛡️ HARDENING: Ensure all types are strictly correct to prevent 400 Bad Request
+    const payload = {
         p_user_id: userId,
-        p_total_questions: sessionData.total_questions,
-        p_score_percentage: sessionData.score_percentage,
-        p_time_taken: sessionData.time_taken_seconds || 0,
+        p_total_questions: parseInt(sessionData.total_questions) || 0,
+        p_score_percentage: parseInt(sessionData.score_percentage) || 0,
+        p_time_taken: parseInt(sessionData.time_taken_seconds) || 0,
         p_topics: topicsPayload,
-        p_answered_questions: sessionData.answered_questions,
+        p_answered_questions: parseInt(sessionData.answered_questions || sessionData.total_questions) || 0,
         p_client_date: localDate,
-        p_session_type: sessionData.session_type || 'practice'
-    })
+        p_session_type: (sessionData.session_type || 'practice').toString()
+    };
+
+    console.log("DataService: Syncing performance with payload:", payload);
+
+    return await supabase.rpc('sync_user_performance', payload);
   },
 
   // --- LEAGUES ---

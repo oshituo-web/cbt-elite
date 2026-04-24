@@ -139,7 +139,10 @@
         <div id="settings-container" style="display: none;"></div>
         <div id="analytics-container" style="display: none;"></div>
         <div id="news-article-container" style="display: none;"></div>
+      </main>
 
+      <!-- ✨ Elite Global Modals (Moved outside main-content-area to prevent fixed-position scrolling bugs caused by contain: paint) ✨ -->
+      <div id="elite-modals-container">
         <!-- 🎉 Phase 13: Elite Celebration Modals -->
         <div id="celebration-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100000; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
           <div class="glass card" style="width: 100%; max-width: 450px; text-align: center; padding: 3rem 2rem; border: 2px solid var(--accent-primary); box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);">
@@ -178,8 +181,9 @@
         </div>
 
         <!-- 🛒 Elite Store Modal -->
-        <div id="elite-store-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-          <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center;">
+        <div id="elite-store-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: flex-start; justify-content: center; backdrop-filter: blur(8px); padding: max(2rem, env(safe-area-inset-top, 2rem)) 1rem 2rem; overflow-y: auto;">
+          <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; position: relative; margin: auto;">
+            <button id="close-store-top" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem;"><i data-lucide="x"></i></button>
             <div style="margin-bottom: 2rem;">
               <div style="width: 80px; height: 80px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #f59e0b;">
                 <i data-lucide="shopping-bag" style="width: 40px; color: #f59e0b;"></i>
@@ -238,16 +242,16 @@
         </div>
 
         <!-- 🏆 Weekly Leaderboard Modal (Fallback) -->
-        <div id="leaderboard-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-            <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; max-height: 90vh; display: flex; flex-direction: column;">
+        <div id="leaderboard-modal" class="glass-modal scale-in" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: flex-start; justify-content: center; backdrop-filter: blur(8px); padding: max(2rem, env(safe-area-inset-top, 2rem)) 1rem 2rem; overflow-y: auto;">
+            <div class="glass card" style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; max-height: none; display: flex; flex-direction: column; position: relative; margin: auto;">
+                <button id="close-leaderboard-top" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem;"><i data-lucide="x"></i></button>
                 <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.8rem; margin: 0;">Global Top 50</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 2rem;">Elite performers across the platform.</p>
                 <div id="leaderboard-list" style="overflow-y: auto; max-height: 60vh; padding-right: 0.5rem; flex: 1;"></div>
                 <button id="close-leaderboard" class="btn-secondary" style="margin-top: 2rem; width: 100%; flex-shrink: 0;">CLOSE</button>
             </div>
         </div>
-
-      </main>
+      </div> <!-- End of elite-modals-container -->
 
       <!-- More Options Drawer (Bottom sheet on mobile / Fly-out on desktop) -->
       <div id="more-drawer" class="more-drawer">

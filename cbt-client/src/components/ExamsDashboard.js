@@ -80,8 +80,9 @@ export const ExamsDashboardComponent = {
                 <span style="font-size: 0.7rem; color: var(--text-secondary); width: 100%; font-weight: 800; text-transform: uppercase;">Quick Select Combo</span>
                 <button class="combo-btn glass" data-combo="Physics,Chemistry,Biology" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Medicine/Science</button>
                 <button class="combo-btn glass" data-combo="Mathematics,Physics,Chemistry" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Engineering</button>
-                <button class="combo-btn glass" data-combo="Literature in English,Government,Christian Religious Studies" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Law/Arts</button>
+                <button class="combo-btn glass" data-combo="Literature,Government,CRS" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Law/Arts</button>
                 <button class="combo-btn glass" data-combo="Economics,Government,Mathematics" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Social Sciences</button>
+                <button class="combo-btn glass" data-combo="Mathematics,Economics,Financial Accounting" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; font-weight: 700; border-radius: 8px;">Commercial</button>
               </div>
 
               <div id="jamb-sub-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; max-height: 250px; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border); width: 100%; box-sizing: border-box;">
@@ -105,7 +106,9 @@ export const ExamsDashboardComponent = {
               </div>
           </div>
 
-          <button id="e-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 50px; background: var(--accent-gradient);">Begin Mock Exam</button>
+          <button id="e-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--accent-gradient); font-weight: 900; letter-spacing: 0.05em;">BLAST!</button>
+          
+          <div class="mobile-only" style="height: 80px; display: none;"></div>
         </div>
 
         <!-- Mock History Section -->

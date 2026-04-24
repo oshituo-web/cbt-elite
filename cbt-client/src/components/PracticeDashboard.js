@@ -88,7 +88,9 @@ export const PracticeDashboardComponent = {
             </div>
           </div>
 
-          <button id="p-start-btn" class="btn-dominant" style="margin-top: 2rem; width: 100%; height: 50px; background: var(--primary);">Start Session</button>
+          <button id="p-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--primary); font-weight: 900; letter-spacing: 0.05em;">BLAST!</button>
+          
+          <div class="mobile-only" style="height: 80px; display: none;"></div>
         </div>
       </div>
     `

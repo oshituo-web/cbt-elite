@@ -130,10 +130,11 @@ export const ResultsComponent = {
           </div>
           
           <div style="margin-bottom: 2.5rem; width: 100%;">
-            <div class="glass card" style="text-align: center; padding: 2rem 1rem; border: 2px solid var(--primary); background: rgba(37, 99, 235, 0.05); width: 100%; box-sizing: border-box;">
-              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 800; text-transform: uppercase;">Final Score</div>
-              <div style="font-size: clamp(2.5rem, 12vw, 4rem); font-weight: 900; color: var(--primary); line-height: 1; font-family: 'Outfit';">${correct} / ${objQuestions.length}</div>
-              <div style="font-size: 1.2rem; color: var(--text-primary); margin-top: 0.75rem; font-weight: 800;">${scorePercent}% Accuracy</div>
+            <div class="glass card" style="text-align: center; padding: 1.5rem 1rem; border: 2px solid var(--primary); background: rgba(37, 99, 235, 0.05); width: 100%; box-sizing: border-box;">
+              <div style="font-family: 'Outfit'; font-size: clamp(2rem, 10vw, 3.5rem); font-weight: 900; color: var(--primary); line-height: 1;">
+                ${correct} / ${objQuestions.length} • ${scorePercent}%
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Final Score & Accuracy</div>
             </div>
           </div>
 
@@ -149,7 +150,7 @@ export const ResultsComponent = {
                </div>
             </div>
             <div style="text-align: right;">
-               <div style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: #f59e0b; line-height: 1;">+${Math.floor((objQuestions.length * (scorePercent / 100)) / 2)}</div>
+               <div style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: #f59e0b; line-height: 1;">+${Math.ceil((objQuestions.length * (scorePercent / 100)) / 2)}</div>
                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary);">ELITE COINS</div>
             </div>
             ${(() => {

@@ -41,10 +41,13 @@ export const EliteStoreComponent = {
         const modal = document.createElement('div');
         modal.id = 'elite-store-modal';
         modal.className = 'modal-overlay';
-        modal.style = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(10px); padding: 1rem;";
+        modal.style = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; justify-content:center; align-items:flex-start; backdrop-filter:blur(10px); padding: max(2rem, env(safe-area-inset-top, 2rem)) 1rem 2rem; overflow-y: auto;";
         
         modal.innerHTML = `
-            <div class="glass card scale-in" style="width:100%; max-width:500px; padding:2rem; border-radius:24px; border:1px solid var(--accent-primary); max-height: 90vh; overflow-y: auto;">
+            <div class="glass card scale-in" style="width:100%; max-width:500px; padding:2.5rem 2rem; border-radius:24px; border:1px solid var(--accent-primary); max-height: none; position: relative; margin: auto;">
+                <button id="close-store-btn" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; z-index: 10;">
+                    <i data-lucide="x"></i>
+                </button>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                     <div>
                         <h2 style="font-family:'Outfit'; font-weight:900; margin:0; font-size:1.6rem; color:var(--text-primary);">Elite Store</h2>
@@ -53,9 +56,6 @@ export const EliteStoreComponent = {
                             <span id="store-balance" style="font-weight:900; color:#f59e0b; font-size:0.9rem;">${profile.elite_coins || 0}</span>
                         </div>
                     </div>
-                    <button id="close-store-btn" class="glass-btn" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                        <i data-lucide="x" style="width:20px;"></i>
-                    </button>
                 </div>
 
                 <div style="display:grid; gap:1rem;">
@@ -85,6 +85,10 @@ export const EliteStoreComponent = {
 
         document.body.appendChild(modal);
         if (window.lucide) window.lucide.createIcons({ root: modal });
+        
+        // Reset viewport scroll to prevent any background offset issues
+        window.scrollTo(0, 0);
+        if (document.body) document.body.scrollTop = 0;
 
         // Event Listeners
         document.getElementById('close-store-btn').onclick = () => modal.remove();

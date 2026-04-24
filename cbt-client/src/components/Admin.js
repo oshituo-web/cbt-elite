@@ -6,6 +6,14 @@ import { ModalService } from '../services/ModalService'
 
 export const AdminComponent = {
   render(profile, onBack) {
+    // 🔐 Exclusive Authorization (Strict: oshituo@gmail.com only)
+    const isAdmin = profile.email === 'oshituo@gmail.com';
+    if (!isAdmin) {
+        console.error(`CRITICAL: Unauthorized Admin Access Attempt by ${profile.email || 'unknown'} blocked.`);
+        if (onBack) onBack();
+        return;
+    }
+    
     const container = document.getElementById('admin-container')
     container.style.display = 'block'
     this._adminProfile = profile // Store for auditing

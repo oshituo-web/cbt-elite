@@ -47,8 +47,8 @@ BEGIN
             mastery_percentage = ROUND(((topic_mastery.total_correct + (CASE WHEN v_topic.is_correct THEN 1 ELSE 0 END))::FLOAT / (topic_mastery.total_attempted + 1)::FLOAT) * 100);
     END LOOP;
 
-    -- 3. Calculate Earned Coins (Standard: 1 coin per 2 correct answers)
-    v_earned_coins := FLOOR((p_total_questions * (p_score_percentage::FLOAT / 100.0)) / 2.0);
+    -- 3. Calculate Earned Coins (Standard: 1 coin per 2 correct answers, rounded up)
+    v_earned_coins := CEIL((p_total_questions * (p_score_percentage::FLOAT / 100.0)) / 2.0);
 
     -- 4. APPLY CLASH BONUSES (If score >= 80% and mode is 'clash')
     IF p_session_type = 'clash' AND p_score_percentage >= 80 THEN
@@ -87,7 +87,7 @@ BEGIN
     UPDATE users SET
         streak_count = v_streak,
         streak_freeze_count = v_freeze_count,
-        elite_coins = elite_coins + v_earned_coins + v_clash_bonus + 
+        elite_coins = COALESCE(elite_coins, 0) + COALESCE(v_earned_coins, 0) + COALESCE(v_clash_bonus, 0) + 
             (CASE WHEN (COALESCE(daily_questions_count, 0) < 50 AND COALESCE(daily_questions_count, 0) + v_actual_answered >= 50) THEN 50 ELSE 0 END),
         last_session_date = p_client_date,
         total_questions_answered = COALESCE(total_questions_answered, 0) + v_actual_answered,

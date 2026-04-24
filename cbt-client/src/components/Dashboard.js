@@ -471,12 +471,12 @@ export const DashboardComponent = {
                   `}
 
                   <!-- RANKING BUTTON INTEGRATED -->
-                  <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                    <button id="open-league-btn" class="glass-btn btn-secondary" style="flex: 0.7; font-size: 0.65rem; padding: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                        <i data-lucide="bar-chart-2" style="width:14px;"></i> RANKINGS
+                  <div style="margin-top: 0.75rem; display: flex; gap: 0.35rem; width: 100%;">
+                    <button id="open-league-btn" class="glass-btn btn-secondary" style="flex: 0.45; font-size: 0.6rem; padding: 0.4rem 0.2rem; border: 1px solid var(--glass-border); color: var(--text-secondary); border-radius: 8px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                        <i data-lucide="bar-chart-2" style="width:12px;"></i> RANKINGS
                     </button>
-                    <button class="glass-btn btn-primary" id="change-clan-btn" style="flex: 1.3; font-size: 0.7rem; padding: 0.5rem; border: none; color: white !important; border-radius: 8px; font-weight: 900; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; gap: 0.3rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
-                        <i data-lucide="graduation-cap" style="width:14px;"></i> SELECT DEPARTMENT
+                    <button class="glass-btn btn-primary" id="change-clan-btn" style="flex: 0.55; font-size: 0.65rem; padding: 0.4rem 0.2rem; border: none; color: white !important; border-radius: 8px; font-weight: 900; background: var(--accent-primary); display: flex; align-items: center; justify-content: center; gap: 0.25rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+                        <i data-lucide="graduation-cap" style="width:14px; flex-shrink: 0;"></i> <span style="white-space: nowrap;">SELECT DEPT</span>
                     </button>
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export const DashboardComponent = {
                 <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Star Target</h3>
                 <div style="display: flex; gap: 4px;">
                     ${this.MILESTONES.map(m => `
-                        <div title="${m.title}" style="color: ${currentDailyCount >= m.target ? m.color : 'rgba(255,255,255,0.1)'};">
+                        <div title="${m.title}" style="color: ${currentDailyCount >= m.target ? m.color : 'var(--text-secondary)'} !important; opacity: ${currentDailyCount >= m.target ? '1' : '0.2'} !important; transition: all 0.3s ease;">
                              <i data-lucide="${m.badge}" style="width: 14px; height: 14px; ${currentDailyCount >= m.target ? `filter: drop-shadow(0 0 4px ${m.color});` : ''}"></i>
                         </div>
                     `).join('')}
@@ -561,22 +561,19 @@ export const DashboardComponent = {
                  </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 1rem; padding: 0.75rem;">
-                <div style="text-align: center; border-right: 1px solid var(--glass-border);">
-                  <div style="font-size: 1.1rem; font-family: 'Outfit'; font-weight: 900; color: var(--primary);">${v2_totalQuestions}</div>
-                  <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Solved</div>
+              <div style="background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 0.75rem; padding: 0.65rem; display: flex; justify-content: space-between; align-items: center; gap: 0.25rem; border: 1px solid var(--glass-border);">
+                <div style="flex: 1; text-align: center;">
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
+                      <span style="color: var(--primary);">${v2_totalQuestions}</span> • <span style="color: var(--success);">${accuracy}%</span>
+                  </div>
+                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Solved • Accuracy</div>
                 </div>
-                <div style="text-align: center;">
-                   <div style="font-size: 1.1rem; font-family: 'Outfit'; font-weight: 900; color: var(--success);">${accuracy}%</div>
-                   <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Avg Score</div>
-                </div>
-                <div style="text-align: center; border-right: 1px solid var(--glass-border); border-top: 1px solid var(--glass-border); padding-top: 0.5rem;">
-                  <div style="font-size: 1.1rem; font-family: 'Outfit'; font-weight: 900; color: var(--accent-secondary);">${examsCompleted}</div>
-                  <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Exams</div>
-                </div>
-                <div style="text-align: center; border-top: 1px solid var(--glass-border); padding-top: 0.5rem;">
-                   <div style="font-size: 1.1rem; font-family: 'Outfit'; font-weight: 900; color: var(--warning);">${studyTimeMinutes}m</div>
-                   <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">Study Time</div>
+                <div style="width: 1px; height: 16px; background: var(--glass-border);"></div>
+                <div style="flex: 1; text-align: center;">
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
+                      <span style="color: var(--accent-secondary);">${examsCompleted}</span> • <span style="color: var(--warning);">${studyTimeMinutes}m</span>
+                  </div>
+                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Exams • Time</div>
                 </div>
               </div>
               ${badgesHTML}
@@ -666,11 +663,14 @@ export const DashboardComponent = {
         <div id="analytics-section" style="margin-top: 1.5rem;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
             <i data-lucide="line-chart" style="color: var(--primary); width: 24px;"></i> Performance Trend
+            <button id="view-history-btn" class="btn-secondary" style="border-radius: 8px; font-size: 0.7rem; font-weight: 800; padding: 0.4rem 0.75rem;">VIEW FULL HISTORY</button>
           </h2>
-          <div class="glass card" style="padding: 1rem; min-height: 260px; width: 100%; overflow: hidden;">
+          <div class="glass card scale-in" id="accuracy-trend-card" style="padding: 1rem; min-height: 260px; width: 100%; overflow: hidden; cursor: pointer; transition: transform 0.2s; border-bottom: 3px solid var(--accent-primary);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h4 style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin: 0;">Accuracy Trend</h4>
-                <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700;">HISTORY OF RECENT SESSIONS</div>
+                <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700;">
+                    LAST 10 SESSIONS <i data-lucide="chevron-right" style="width: 12px;"></i>
+                </div>
             </div>
             <div style="flex: 1; width: 100%; height: 170px;"><canvas id="score-history-chart"></canvas></div>
           </div>
@@ -882,14 +882,32 @@ export const DashboardComponent = {
     const openLeaderboard = document.getElementById('open-leaderboard-btn')
     const leaderboardModal = document.getElementById('leaderboard-modal')
     const closeLeaderboard = document.getElementById('close-leaderboard')
+
+    // 🔧 Shared helper: show a modal overlay and always scroll it to the very top
+    //    so users never see blank space above the content on small screens.
+    const openModal = (el) => {
+        if (!el) return;
+        el.style.display = 'flex';
+        // Reset scroll to top after the browser has painted the flex layout
+        requestAnimationFrame(() => { 
+            el.scrollTop = 0; 
+            const content = el.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
+            // Also reset window and body scroll
+            window.scrollTo(0, 0);
+            if (document.body) document.body.scrollTop = 0;
+        });
+    }
     
     if (openLeaderboard && leaderboardModal) {
         openLeaderboard.onclick = () => {
-            leaderboardModal.style.display = 'flex'
+            openModal(leaderboardModal)
             this.loadLeaderboard(profile)
         }
     }
     if (closeLeaderboard) closeLeaderboard.onclick = () => leaderboardModal.style.display = 'none'
+    const closeLeaderboardTop = document.getElementById('close-leaderboard-top')
+    if (closeLeaderboardTop) closeLeaderboardTop.onclick = () => leaderboardModal.style.display = 'none'
 
     // Elite Clan Hub Logic
     const openLeague = document.getElementById('open-league-btn')
@@ -909,7 +927,8 @@ export const DashboardComponent = {
     if (viewLeagueBtn) {
         viewLeagueBtn.onclick = (e) => {
             e.stopPropagation()
-            document.getElementById('league-table-modal').style.display = 'flex'
+            const leagueModalEl = document.getElementById('league-table-modal');
+            openModal(leagueModalEl)
             this.loadLeagueModalTable(profile)
         }
     }
@@ -971,7 +990,7 @@ export const DashboardComponent = {
     
     if (openLeague && leagueModal) {
         openLeague.onclick = () => {
-            leagueModal.style.display = 'flex'
+            openModal(leagueModal)
             this.loadLeagueModalTable(profile)
         }
     }
@@ -979,7 +998,7 @@ export const DashboardComponent = {
     if (viewClashResultsBtn) {
         viewClashResultsBtn.onclick = (e) => {
             e.stopPropagation()
-            leagueModal.style.display = 'flex'
+            openModal(leagueModal)
             this.loadClashLeaderboard()
         }
     }
@@ -1035,10 +1054,12 @@ export const DashboardComponent = {
     const storeModal = document.getElementById('elite-store-modal')
     const openStore = document.getElementById('open-store-btn')
     const closeStore = document.getElementById('close-store')
+    const closeStoreTop = document.getElementById('close-store-top')
     if (openStore && storeModal) {
-        openStore.onclick = () => storeModal.style.display = 'flex'
+        openStore.onclick = () => openModal(storeModal)
     }
     if (closeStore) closeStore.onclick = () => storeModal.style.display = 'none'
+    if (closeStoreTop) closeStoreTop.onclick = () => storeModal.style.display = 'none'
 
     // AI Summary removed as per feedback
 
@@ -1102,6 +1123,20 @@ export const DashboardComponent = {
         }
     }
 
+    // Attach Click Handler to Trend Card
+    const trendCard = document.getElementById('accuracy-trend-card')
+    const viewHistoryBtn = document.getElementById('view-history-btn')
+    const openHistory = () => {
+        import('./SessionsHistory').then(({ SessionsHistoryComponent }) => {
+            SessionsHistoryComponent.render(profile, () => {
+                // Refresh dashboard to show the updated state if user returned
+                this.render(profile, onStartExam, onOpenAdmin, onReadNews)
+            })
+        })
+    }
+    if (trendCard) trendCard.onclick = openHistory
+    if (viewHistoryBtn) viewHistoryBtn.onclick = openHistory
+
     const weakPracticeBtn = document.getElementById('practice-weak-btn')
     if (weakPracticeBtn && weakSubject) {
         weakPracticeBtn.onclick = () => {
@@ -1125,8 +1160,11 @@ export const DashboardComponent = {
     const { history, mastery, error } = providedAnalytics || await DataService.getUserAnalytics(userId)
     const historyCtx = document.getElementById('score-history-chart')?.getContext('2d')
     if (historyCtx) {
+        // Limit to last 10 sessions for the dashboard chart as per requirement
+        const displayHistory = (history || []).slice(0, 10).reverse();
+
         // Hide chart if no history
-        if (!history || history.length === 0) {
+        if (displayHistory.length === 0) {
             console.warn("Dashboard: Empty history for chart")
             if (historyCtx.canvas) {
                 const parent = historyCtx.canvas.parentElement;
@@ -1151,13 +1189,13 @@ export const DashboardComponent = {
         this._historyChart = new Chart(historyCtx, {
             type: 'line',
             data: {
-                labels: history.map((h, i) => {
+                labels: displayHistory.map((h, i) => {
                     const date = h.created_at ? new Date(h.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : `S-${i+1}`
                     return date
                 }),
                 datasets: [{
                     label: 'Session Accuracy',
-                    data: history.map(h => h.score_percentage),
+                    data: displayHistory.map(h => h.score_percentage),
                     borderColor: '#2563EB',
                     backgroundColor: gradient,
                     fill: true,
@@ -1298,7 +1336,20 @@ export const DashboardComponent = {
     if (textEl) textEl.textContent = `Incredible! You've solved ${milestone.target} questions today. You are officially a Daily ${milestone.title}!`;
     if (icon) { icon.setAttribute('data-lucide', milestone.badge); icon.style.color = milestone.color; }
 
-    modal.style.display = 'flex';
+    // Use shared openModal helper
+    const openModal = typeof this.openModal === 'function' ? this.openModal : (el) => {
+        if (!el) return;
+        el.style.display = 'flex';
+        requestAnimationFrame(() => { 
+            el.scrollTop = 0; 
+            const content = el.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
+            window.scrollTo(0, 0);
+            if (document.body) document.body.scrollTop = 0;
+        });
+    };
+    openModal(modal);
+    
     if (window.lucide) window.lucide.createIcons({ root: modal });
 
     // ── CELEBRATION 2.0: Escalating FX per milestone tier ──────────────────
@@ -1638,7 +1689,20 @@ export const DashboardComponent = {
         icon.style.color = isPromotion ? tierColor : 'var(--error)'
     }
     
-    modal.style.display = 'flex'
+    // Use shared openModal helper
+    const openModal = typeof this.openModal === 'function' ? this.openModal : (el) => {
+        if (!el) return;
+        el.style.display = 'flex';
+        requestAnimationFrame(() => { 
+            el.scrollTop = 0; 
+            const content = el.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
+            window.scrollTo(0, 0);
+            if (document.body) document.body.scrollTop = 0;
+        });
+    };
+    openModal(modal);
+    
     if (window.lucide) window.lucide.createIcons({ root: modal })
 
     // ── CELEBRATION 2.0: Promotion confetti ───────────────────────────────────

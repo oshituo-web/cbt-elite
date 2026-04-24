@@ -16,14 +16,32 @@ FOR UPDATE USING (auth.uid() = id);
 
 CREATE OR REPLACE FUNCTION public.protect_user_fields()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_new JSONB := to_jsonb(NEW);
+    v_old JSONB := to_jsonb(OLD);
 BEGIN
-    -- If the user is NOT an admin AND they are trying to change tier/credits/activation
+    -- If the user is NOT an admin AND they are trying to change sensitive fields
     IF NOT public.is_admin() THEN
-        IF (NEW.tier <> OLD.tier OR 
-            NEW.ai_credits <> OLD.ai_credits OR 
-            NEW.activation_status <> OLD.activation_status OR
-            NEW.subscription_expiry <> OLD.subscription_expiry) THEN
-            RAISE EXCEPTION 'You are not authorized to modify sensitive fields (tier/credits/activation).';
+        -- Check 'tier'
+        IF v_new ? 'tier' AND (v_new->>'tier' IS DISTINCT FROM v_old->>'tier') THEN
+            RAISE EXCEPTION 'You are not authorized to modify your subscription tier.';
+        END IF;
+
+        -- Check 'ai_credits'
+        IF v_new ? 'ai_credits' AND (v_new->>'ai_credits' IS DISTINCT FROM v_old->>'ai_credits') THEN
+            RAISE EXCEPTION 'You are not authorized to modify your AI credits.';
+        END IF;
+
+        -- Check 'is_activated' or 'activation_status'
+        IF (v_new ? 'is_activated' AND (v_new->>'is_activated' IS DISTINCT FROM v_old->>'is_activated')) OR
+           (v_new ? 'activation_status' AND (v_new->>'activation_status' IS DISTINCT FROM v_old->>'activation_status')) THEN
+            RAISE EXCEPTION 'You are not authorized to modify your activation status.';
+        END IF;
+
+        -- Check 'premium_until' or 'subscription_expiry'
+        IF (v_new ? 'premium_until' AND (v_new->>'premium_until' IS DISTINCT FROM v_old->>'premium_until')) OR
+           (v_new ? 'subscription_expiry' AND (v_new->>'subscription_expiry' IS DISTINCT FROM v_old->>'subscription_expiry')) THEN
+            RAISE EXCEPTION 'You are not authorized to modify your subscription expiry.';
         END IF;
     END IF;
     RETURN NEW;

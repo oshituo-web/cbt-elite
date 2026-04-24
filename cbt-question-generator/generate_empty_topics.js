@@ -9,8 +9,8 @@ const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1;
 
 // TARGET FOCUS
-const TARGET_EXAM = null;
-const TARGET_SUBJECTS = []; 
+const TARGET_EXAM = 'WAEC';
+const TARGET_SUBJECTS = ['Mathematics']; 
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -123,14 +123,27 @@ async function saveToDatabase(items) {
         const { data: insertedQs, error: qErr } = await withDBRetry(() => supabase.from('questions').insert(qsToInsert).select());
         if (qErr) continue;
 
+        // Phase 2: Insert Answers (Normalized)
         const ansInserts = [];
         insertedQs.forEach((insQ, idx) => {
             const orig = originals[idx];
             ['A', 'B', 'C', 'D'].forEach(letter => {
-                ansInserts.push({ question_id: insQ.id, option_letter: letter, option_text: orig[`option_${letter.toLowerCase()}`], is_correct: orig.correct_option === letter });
+                ansInserts.push({ 
+                    question_id: insQ.id, 
+                    option_letter: letter, 
+                    option_text: orig[`option_${letter.toLowerCase()}`], 
+                    is_correct: orig.correct_option === letter 
+                });
             });
-            if (orig.explanation) supabase.from('question_explanations').upsert({ question_id: insQ.id, explanation: orig.explanation }).then();
+            
+            // Insert explanation into partitioned table
+            if (orig.explanation) {
+                supabase.from('question_explanations')
+                    .upsert({ question_id: insQ.id, explanation: orig.explanation })
+                    .then();
+            }
         });
+        
         await withDBRetry(() => supabase.from('answers').insert(ansInserts));
         successCount += insertedQs.length;
     }
@@ -154,8 +167,9 @@ async function turboCharge() {
     coverageReport.forEach(item => coverageMap[`${item.exam}|${item.subject}|${item.topic}`] = item.count);
 
     Object.keys(syllabus).forEach(exam => {
-        if (exam === 'NECO') return;
+        if (TARGET_EXAM && exam !== TARGET_EXAM) return;
         Object.keys(syllabus[exam]).forEach(subject => {
+            if (TARGET_SUBJECTS.length > 0 && !TARGET_SUBJECTS.includes(subject)) return;
             syllabus[exam][subject].forEach(topic => {
                 if ((coverageMap[`${exam}|${subject}|${topic}`] || 0) === 0) combinations.push({ exam, subject, topic });
             });

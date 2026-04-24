@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "node generate_questions.js",
+    "generate": "node generate_theory_questions.js",
     "import": "node import_questions.js"
   },
   "keywords": [],

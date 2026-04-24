@@ -31,6 +31,16 @@ let currentProfile = null;
 window.navigateTo = function(view, profile = currentProfile, pushState = true) {
   if (!view || !profile) return;
   
+  // 🔐 Global Admin Authorization Check (Strict: oshituo@gmail.com only)
+  if (view === 'admin') {
+    const isAdmin = profile.email === 'oshituo@gmail.com';
+    if (!isAdmin) {
+      console.warn(`Unauthorized access attempt to ${view} by ${profile.email || profile.username}`);
+      window.navigateTo('dashboard', profile);
+      return;
+    }
+  }
+  
   // 1. Update active states and handle routing metadata
   const pathMap = {
     'dashboard': '/dashboard',
@@ -156,7 +166,7 @@ function handleInitialRoute(profile) {
   const path = window.location.pathname;
   if (path === '/exams') window.navigateTo('exams', profile, false);
   else if (path === '/practice') window.navigateTo('practice', profile, false);
-  else if (path === '/admin' && (profile.role === 'admin' || profile.role === 'super-admin')) window.navigateTo('admin', profile, false);
+  else if (path === '/admin' && profile.email === 'oshituo@gmail.com') window.navigateTo('admin', profile, false);
   else if (path === '/settings') window.navigateTo('settings', profile, false);
   else window.navigateTo('dashboard', profile, false);
 }
@@ -217,6 +227,7 @@ async function initApp() {
     ]);
 
     const profile = profileResult?.data;
+    if (profile && user.email) profile.email = user.email;
     console.log("main.js: Profile retrieved:", profile ? profile.username : "Incomplete")
 
     // 🔐 SINGLE DEVICE ENFORCEMENT CHECK
@@ -247,7 +258,7 @@ async function initApp() {
     }
 
     // Update UI with real data
-    setupGlobalActions(profile || { id: user.id, username: 'Student' });
+    setupGlobalActions(profile || { id: user.id, username: 'Student', email: user.email });
 
     if (!profile || !profile.username) {
         showProfileSetup(user);
@@ -275,16 +286,19 @@ function updateHeaderProfile(profile) {
   if (avatar) avatar.textContent = profile.username.charAt(0).toUpperCase()
   if (username) username.textContent = profile.username
   
-  const isAdmin = profile.role === 'admin' || profile.role === 'super-admin';
-  if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none'
-  
-  const bottomAdminBtn = document.getElementById('bottom-admin-btn');
-  if (bottomAdminBtn) bottomAdminBtn.style.display = isAdmin ? 'flex' : 'none'
-  
   if (streakText) streakText.textContent = `${profile.streak_count || 0}`
   
   if (tierHeader) {
-    const tier = profile.activation_status ? 'PREMIUM' : (profile.tier || 'FREE').toUpperCase()
+    let tier = 'FREE';
+    if (profile.activation_status) {
+      tier = 'PREMIUM';
+    } else {
+      const rawTier = (profile.tier || 'FREE').toUpperCase();
+      if (rawTier === 'FREEMIUM') tier = 'FREE';
+      else if (rawTier === 'MEDIUM') tier = 'MEDIUM';
+      else tier = rawTier;
+    }
+    
     if (tierText) tierText.textContent = tier
     tierHeader.style.background = tier === 'PREMIUM' ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.05)'
   }
@@ -301,13 +315,14 @@ function setupGlobalActions(profile) {
   const sidebarToggle = document.getElementById('sidebar-toggle')
   const sidebar = document.getElementById('app-sidebar')
   const sidebarAdminBtn = document.getElementById('sidebar-admin-btn')
-  if (sidebarAdminBtn && profile.role !== 'admin' && profile.role !== 'super-admin') {
-    sidebarAdminBtn.style.display = 'none'
-  }
-  
   const bottomAdminBtn = document.getElementById('bottom-admin-btn');
-  if (bottomAdminBtn && profile.role !== 'admin' && profile.role !== 'super-admin') {
-    bottomAdminBtn.style.display = 'none'
+  const isAdmin = profile && profile.email === 'oshituo@gmail.com';
+  
+  if (sidebarAdminBtn) {
+    sidebarAdminBtn.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
+  }
+  if (bottomAdminBtn) {
+    bottomAdminBtn.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
   }
 
   // 9. Attach Global News Action
@@ -553,29 +568,41 @@ async function showProfileSetup(user) {
 }
 
 async function showDashboard(profile) {
-   console.log("main.js: showDashboard called for", profile?.username)
-   currentProfile = profile
-   const dashContainer = document.getElementById('dashboard-container')
+   if (!profile) return;
    
-   hideAll()
-   dashContainer.style.display = 'block'
+   // 🔄 REFRESH: Always fetch latest profile data before showing dashboard to ensure coins/streaks are accurate
+   const { data: latestProfile } = await DataService.getProfile(profile.id);
+   const activeProfile = latestProfile || profile;
+   // 📧 Preserve email from the original profile — it comes from auth.users, not public.users
+   if (!activeProfile.email && profile.email) activeProfile.email = profile.email;
+   
+   console.log("main.js: showDashboard called for", activeProfile.username);
+   currentProfile = activeProfile;
+   const dashContainer = document.getElementById('dashboard-container');
+   
+   hideAll();
+   dashContainer.style.display = 'block';
   
   // Initialize Notifications
-  initNotifications(profile)
+  initNotifications(activeProfile);
   
-  // Finalize Dashboard rendering
+  // Finalize Dashboard rendering with the freshest profile
   const { DashboardComponent } = await import('./src/components/Dashboard');
-  DashboardComponent.render(profile, (questions, mode, subject, examType, extraConfig = null) => {
+
+  // 🔄 Update header immediately so streak/coins in topbar are always in sync
+  updateHeaderProfile(activeProfile);
+
+  DashboardComponent.render(activeProfile, (questions, mode, subject, examType, extraConfig = null) => {
     DashboardComponent.hide()
     const resumeState = extraConfig?.resumeState || null;
     const intendedSubjects = extraConfig?.intendedSubjects || [];
     const clashId = extraConfig?.clashId || null;
-    showExam(questions, profile, false, {}, mode, subject, examType, resumeState, intendedSubjects, clashId)
+    showExam(questions, activeProfile, false, {}, mode, subject, examType, resumeState, intendedSubjects, clashId)
   }, () => {
     DashboardComponent.hide()
-    showAdmin(profile)
+    showAdmin(activeProfile)
   }, (article) => {
-    showNewsArticle(article, profile)
+    showNewsArticle(article, activeProfile)
   })
   
   dashboardLoaded = true
