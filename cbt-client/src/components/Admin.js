@@ -778,7 +778,6 @@ export const AdminComponent = {
             addPromoBtn.disabled = false
         }
       }
-    }
 
     // Question Management Buttons
     document.getElementById('add-question-btn').onclick = () => this.openEditModal({})
