@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/pwa-icon.svg" />
+    <link rel="apple-touch-icon" href="/pwa-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CBT Practice - Elite Learning Platform</title>
     <meta name="description" content="The ultimate CBT practice platform for JAMB, WAEC, and NECO. Thousands of AI-generated questions, instant results, and detailed performance analytics." />
@@ -13,15 +14,15 @@
   </head>
   <body>
     <div id="app" class="elite-layout">
-      <!-- \uD83D\uDED2 Phase 12: Consolidated Branding & System Top Bar -->
+      <!-- 🛒 Phase 12: Consolidated Branding & System Top Bar -->
       <header id="app-header" class="glass branding-header">
         <div class="header-content container-fluid">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <button id="sidebar-toggle" class="header-icon-btn" title="Toggle Sidebar">
               <i data-lucide="menu"></i>
             </button>
-            <div class="branding-logo" style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="logo-icon" style="display: flex; color: var(--accent-primary);"><i data-lucide="graduation-cap"></i></span> 
+            <div class="branding-logo" style="display: flex; align-items: center; gap: 0.65rem;">
+              <img src="/brand-icon.svg" alt="CBT Elite Logo" style="width: 32px; height: 32px; object-fit: contain;">
               <span class="logo-text" style="font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em;">CBT<span class="accent">Elite</span></span>
             </div>
           </div>
@@ -52,7 +53,7 @@
         </div>
       </header>
 
-      <!-- \uD83D\uDDFD Phase 12: Collapsible Side Navigation (Default: Collapsed) -->
+      <!-- 🗺️ Phase 12: Collapsible Side Navigation (Default: Collapsed) -->
       <aside id="app-sidebar" class="app-sidebar glass collapsed">
         <nav class="sidebar-nav">
           <button class="nav-item active" data-view="dashboard" title="Home">
@@ -91,7 +92,7 @@
       <div id="news-drawer" class="news-drawer glass">
 
         <div class="drawer-header">
-           <h3>\uD83D\uDCE2 Exam News & Updates</h3>
+           <h3>📢 Exam News & Updates</h3>
            <button id="close-news-drawer" class="close-btn">&times;</button>
         </div>
         <div id="news-drawer-content" class="drawer-body">
@@ -272,11 +273,11 @@
               </button>
               <button class="more-menu-item" id="more-news-btn">
                 <i data-lucide="bell"></i>
-                <span>News &amp; Updates</span>
+                <span>News & Updates</span>
               </button>
               <button class="more-menu-item" id="more-help-btn">
                 <i data-lucide="help-circle"></i>
-                <span>Help &amp; Guide</span>
+                <span>Help & Guide</span>
               </button>
               <button class="more-menu-item" id="more-contact-btn">
                 <i data-lucide="mail"></i>

@@ -272,9 +272,13 @@ export const AiService = {
       TASK: 
       1. CRITICAL: Perform a Deep Fact-Check against latest national secondary school syllabus standards (JAMB/WAEC/NECO).
       2. Correct any factual errors, grammatical issues, or formatting spikes (e.g., broken LaTeX).
-      3. Ensure exactly 4 clear options (A, B, C, D).
-      4. Identify the correct option.
-      5. Provide a robust pedagogical explanation that aligns with the current syllabus.
+      3. ENSURE LOGICAL CONSISTENCY: Solve the question step-by-step internally. If the correct answer was missing, add it as one of the options.
+      4. Ensure exactly 4 clear options (A, B, C, D).
+      5. Identify the correct option.
+      6. Provide a robust pedagogical explanation that aligns with the current syllabus.
+      
+      VERIFICATION STEP:
+      Before returning, re-read your generated question and options. Does the 'correct_option' you picked actually resolve the question accurately? If not, adjust until it is 100% correct.
       
       RETURN ONLY A JSON OBJECT with these keys:
       {
@@ -358,5 +362,52 @@ export const AiService = {
     }
     
     return results;
+  },
+
+  /**
+   * Generates multiple high-quality academic questions from scratch.
+   */
+  async generateQuestions(subject, topic, count = 5) {
+    const prompt = `
+      You are "Elite AI Question Architect". 
+      Your task is to generate ${count} high-quality, exam-standard objective questions for the subject "${subject}" and topic "${topic}".
+      
+      STANDARDS:
+      1. DIFFICULTY: Match JAMB/WAEC standard (balanced easy, medium, hard).
+      2. FORMAT: Exactly 4 options (A, B, C, D).
+      3. ACCURACY: Fact-check every question internally.
+      4. EXPLANATIONS: Provide deep pedagogical explanations for each.
+      5. LaTeX: Use $...$ for inline math and $$...$$ for block math.
+      
+      RETURN ONLY A JSON ARRAY of objects:
+      [
+        {
+          "question_text": "...",
+          "option_a": "...",
+          "option_b": "...",
+          "option_c": "...",
+          "option_d": "...",
+          "correct_option": "A" | "B" | "C" | "D",
+          "explanation": "...",
+          "subject": "${subject}",
+          "topic": "${topic}"
+        }
+      ]
+      No other text or markdown backticks.
+    `;
+
+    try {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
+        body: { prompt, temperature: 0.8, maxOutputTokens: 2500 }
+      });
+
+      if (error || !data) throw error || new Error("AI Generation service unavailable");
+      const text = data.text || "[]";
+      const cleanJson = text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      return JSON.parse(cleanJson);
+    } catch (err) {
+      console.error("AI Question Generation Error:", err);
+      throw err;
+    }
   }
 }

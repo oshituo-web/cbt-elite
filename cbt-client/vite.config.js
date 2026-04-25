@@ -43,7 +43,7 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            "src": "icon.svg",
+            "src": "pwa-icon.svg",
             "sizes": "192x192 512x512",
             "type": "image/svg+xml",
             "purpose": "any maskable"

@@ -51,6 +51,7 @@ export const AdminComponent = {
             <button class="nav-tab" data-tab="leagues" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary);"><i data-lucide="shield-check" style="width: 18px;"></i> Leagues & Clans</button>
             <button class="nav-tab" data-tab="analytics" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-primary);"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</button>
             <button class="nav-tab" data-tab="quality-audit" style="display: flex; align-items: center; gap: 0.75rem; color: var(--success);"><i data-lucide="list-checks" style="width: 18px;"></i> Quality Audit</button>
+            <button class="nav-tab" data-tab="lab" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary);"><i data-lucide="beaker" style="width: 18px;"></i> AI Question Lab</button>
             <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
             ${(profile.role === 'admin' || profile.role === 'super-admin') ? `
               <button class="nav-tab" data-tab="audit" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="scroll-text" style="width: 18px;"></i> Audit Logs</button>
@@ -153,6 +154,56 @@ export const AdminComponent = {
               <div id="quality-audit-list" style="display: flex; flex-direction: column; gap: 1rem;">
                 <!-- Audit items injected here -->
               </div>
+            </div>
+          </div>
+          <!-- AI Question Lab Tab -->
+          <div id="admin-lab-tab" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">Elite AI Question Lab</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Autonomous question generation and batch drafting</p>
+              </div>
+            </div>
+
+            <div class="glass card" style="padding: 2.5rem; border-radius: 24px; border-left: 4px solid var(--accent-secondary); margin-bottom: 2.5rem;">
+               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Subject</label>
+                    <select id="lab-subject" class="glass-select" style="width: 100%; height: 50px;"><option value="">Select Subject</option></select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Topic (optional)</label>
+                    <input type="text" id="lab-topic" placeholder="e.g. Thermodynamics" class="glass-input" style="width: 100%; height: 50px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Batch Size</label>
+                    <select id="lab-count" class="glass-select" style="width: 100%; height: 50px;">
+                      <option value="5">5 Questions</option>
+                      <option value="10">10 Questions</option>
+                      <option value="20">20 Questions</option>
+                    </select>
+                  </div>
+                  <button id="generate-lab-btn" class="btn-primary" style="height: 50px; background: var(--accent-gradient); font-weight: 900; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i data-lucide="sparkles" style="width: 18px;"></i> GENERATE BATCH
+                  </button>
+               </div>
+            </div>
+
+            <div id="lab-results-container" style="display: none;">
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                 <h3 style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); margin: 0;">Proposed Questions (<span id="lab-result-count">0</span>)</h3>
+                 <button id="save-all-lab-btn" class="btn-primary" style="background: var(--success-gradient); height: 44px; padding: 0 1.5rem; font-weight: 800; border-radius: 10px;">
+                    <i data-lucide="save" style="width: 16px; margin-right: 0.5rem;"></i> SAVE ALL TO DATABASE
+                 </button>
+               </div>
+               <div id="lab-questions-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                  <!-- AI Generated cards will appear here -->
+               </div>
+            </div>
+            
+            <div id="lab-empty-state" style="text-align: center; padding: 5rem 2rem; color: var(--text-secondary); background: rgba(255,255,255,0.01); border-radius: 24px; border: 1px dashed var(--glass-border);">
+               <i data-lucide="beaker" style="width: 48px; height: 48px; margin-bottom: 1.5rem; opacity: 0.3;"></i>
+               <p style="font-weight: 600;">The lab is empty. Select a subject and topic to begin autonomous generation.</p>
             </div>
           </div>
 
@@ -509,6 +560,9 @@ export const AdminComponent = {
         if (document.getElementById('admin-staff-tab')) {
           document.getElementById('admin-staff-tab').style.display = target === 'staff' ? 'block' : 'none'
         }
+        if (document.getElementById('admin-lab-tab')) {
+          document.getElementById('admin-lab-tab').style.display = target === 'lab' ? 'block' : 'none'
+        }
 
         // Trigger Data Loads
         if (target === 'questions') this.loadQuestions()
@@ -522,6 +576,7 @@ export const AdminComponent = {
         else if (target === 'audit') this.loadAuditLogs()
         else if (target === 'staff') this.loadStaff()
         else if (target === 'leagues') this.loadLeagues()
+        else if (target === 'lab') this.loadLab()
 
         if (window.lucide) window.lucide.createIcons()
       }
@@ -722,7 +777,23 @@ export const AdminComponent = {
             addPromoBtn.textContent = 'Create Promo Code'
             addPromoBtn.disabled = false
         }
+      }
     }
+
+    // Question Management Buttons
+    document.getElementById('add-question-btn').onclick = () => this.openEditModal({})
+
+    // Lab Logic
+    const genLabBtn = document.getElementById('generate-lab-btn')
+    if (genLabBtn) {
+      genLabBtn.onclick = () => this.handleAiGenerate()
+    }
+
+    const saveLabBtn = document.getElementById('save-all-lab-btn')
+    if (saveLabBtn) {
+      saveLabBtn.onclick = () => this.saveGeneratedQuestions()
+    }
+
     // Bulk Import Logic
     const bulkBtn = document.getElementById('bulk-import-btn')
     const bulkInput = document.getElementById('bulk-import-input')
@@ -732,6 +803,120 @@ export const AdminComponent = {
         const file = e.target.files[0]
         if (file) this.handleBulkUpload(file)
       }
+    }
+  },
+
+  // --- AI QUESTION LAB ---
+
+  async loadLab() {
+    const subSelect = document.getElementById('lab-subject');
+    if (subSelect.options.length <= 1) {
+      const { data: subjects } = await DataService.getSubjects();
+      if (subjects) subjects.forEach(s => subSelect.appendChild(new Option(s.subject_name, s.subject_name)));
+    }
+    
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('admin-lab-tab') });
+  },
+
+  async handleAiGenerate() {
+    const subject = document.getElementById('lab-subject').value;
+    const topic = document.getElementById('lab-topic').value.trim();
+    const count = parseInt(document.getElementById('lab-count').value);
+    
+    if (!subject) return ModalService.alert("Subject Required", "Please select a subject to guide the AI.", 'warning');
+
+    const btn = document.getElementById('generate-lab-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="pulse">⏳ AI Thinking...</span>';
+
+    const emptyState = document.getElementById('lab-empty-state');
+    const resultsContainer = document.getElementById('lab-results-container');
+    const list = document.getElementById('lab-questions-list');
+    const counter = document.getElementById('lab-result-count');
+
+    try {
+      const { AiService } = await import('../services/aiService');
+      const questions = await AiService.generateQuestions(subject, topic, count);
+      
+      this._labDrafts = questions; 
+      
+      emptyState.style.display = 'none';
+      resultsContainer.style.display = 'block';
+      counter.textContent = questions.length;
+      
+      list.innerHTML = questions.map((q, idx) => `
+        <div class="glass card scale-in" style="padding: 1.5rem; border-left: 4px solid var(--accent-secondary); background: rgba(255,255,255,0.01);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+             <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-secondary); text-transform: uppercase;">Draft #${idx + 1}</span>
+             <span style="font-size: 0.7rem; font-weight: 800; color: var(--success);">CORRECT: ${q.correct_option}</span>
+          </div>
+          <p style="font-size: 1rem; font-weight: 600; line-height: 1.6; margin-bottom: 1rem; color: var(--text-primary);">${q.question_text}</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; opacity: 0.8;">
+             <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px;">A: ${q.option_a}</div>
+             <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px;">B: ${q.option_b}</div>
+             <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px;">C: ${q.option_c}</div>
+             <div style="font-size: 0.85rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px;">D: ${q.option_d}</div>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); padding: 1rem; background: rgba(0,0,0,0.15); border-radius: 10px;">
+             <strong>Explanation:</strong> ${q.explanation}
+          </div>
+        </div>
+      `).join('');
+
+      if (window.renderMathInElement) {
+        window.renderMathInElement(list, {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false}
+          ],
+          throwOnError: false
+        });
+      }
+
+    } catch (err) {
+      ModalService.alert("Generation Failed", err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="sparkles" style="width: 18px;"></i> GENERATE BATCH';
+      if (window.lucide) window.lucide.createIcons({ root: btn });
+    }
+  },
+
+  async saveGeneratedQuestions() {
+    if (!this._labDrafts || this._labDrafts.length === 0) return;
+
+    const btn = document.getElementById('save-all-lab-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving Batch...';
+
+    try {
+      const formatted = this._labDrafts.map(q => ({
+        question_text: q.question_text,
+        exam_type: 'JAMB',
+        subject: q.subject,
+        topic: q.topic,
+        explanation: q.explanation,
+        answers: [
+          { text: q.option_a, is_correct: q.correct_option === 'A' },
+          { text: q.option_b, is_correct: q.correct_option === 'B' },
+          { text: q.option_c, is_correct: q.correct_option === 'C' },
+          { text: q.option_d, is_correct: q.correct_option === 'D' }
+        ]
+      }));
+
+      const { count, failed } = await DataService.bulkAddQuestions(formatted);
+      await DataService.logAdminAction(this._adminProfile.email, 'AI Lab Save', 'questions', `Generated and saved ${count} questions. Failed: ${failed}`);
+      ModalService.alert("Batch Saved", `🚀 ${count} questions have been deployed to production.`, 'success');
+      
+      document.getElementById('lab-results-container').style.display = 'none';
+      document.getElementById('lab-empty-state').style.display = 'block';
+      this._labDrafts = [];
+    } catch (err) {
+      ModalService.alert("Save Failed", err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="save" style="width: 16px; margin-right: 0.5rem;"></i> SAVE ALL TO DATABASE';
+      if (window.lucide) window.lucide.createIcons({ root: btn });
     }
   },
 
@@ -772,11 +957,15 @@ export const AdminComponent = {
             return ModalService.alert('Import Error', 'No valid questions found in CSV. Check column names.', 'warning')
         }
 
-        const { error, count } = await DataService.bulkAddQuestions(questions)
+        const { error, count, failed, errors: importErrors } = await DataService.bulkAddQuestions(questions)
         if (error) ModalService.alert('Import Error', String(error), 'error')
         else {
-            await DataService.logAdminAction(this._adminProfile.email, 'Bulk Import', 'questions', `Imported ${count} questions`)
-            ModalService.showToast(`✅ Successfully imported ${count} questions!`, 'success')
+            await DataService.logAdminAction(this._adminProfile.email, 'Bulk Import', 'questions', `Imported ${count} questions. Failed: ${failed}`)
+            if (failed > 0) {
+              ModalService.alert('Import Complete (with errors)', `Imported ${count} questions. ${failed} questions failed due to missing correct answers.`, 'warning')
+            } else {
+              ModalService.showToast(`✅ Successfully imported ${count} questions!`, 'success')
+            }
         }
         
         btn.textContent = '📦 Bulk Import (.csv)'

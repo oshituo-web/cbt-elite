@@ -161,6 +161,10 @@ body.dark-mode {
   color: #f8fafc !important;
 }
 
+body.dark-mode .branding-logo img {
+  filter: brightness(0) invert(1);
+}
+
 body.dark-mode .glass.card {
   background: #0f172a !important;
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.25), 0 4px 15px rgba(0, 0, 0, 0.5) !important;

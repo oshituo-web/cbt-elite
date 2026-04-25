@@ -43,6 +43,38 @@ export const QuestionRenderer = {
       return;
     }
 
+    // 🛡️ DATA INTEGRITY CHECK: Ensure at least one answer is correct
+    const hasCorrectAnswer = options.some(a => a.is_correct);
+    if (!hasCorrectAnswer && !isReviewMode) {
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'glass card scale-in';
+        errorMsg.style.border = '1px solid var(--error)';
+        errorMsg.style.padding = '1rem';
+        errorMsg.style.marginBottom = '1rem';
+        errorMsg.style.color = 'var(--error)';
+        errorMsg.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="alert-triangle" style="width: 20px;"></i>
+            <div style="flex: 1;">
+              <strong style="display: block;">Content Integrity Error</strong>
+              <span style="font-size: 0.8rem; opacity: 0.8;">The correct answer for this question is missing or incorrectly mapped in the database.</span>
+            </div>
+            <button id="report-broken-q" class="btn-secondary" style="font-size: 0.7rem; padding: 0.4rem 0.8rem; color: var(--error); border-color: var(--error);">REPORT NOW</button>
+          </div>
+        `;
+        container.appendChild(errorMsg);
+        if (window.lucide) window.lucide.createIcons({ root: errorMsg });
+        
+        const reportBtn = errorMsg.querySelector('#report-broken-q');
+        if (reportBtn) {
+            reportBtn.onclick = () => {
+                // This will trigger the global report modal if attached
+                const event = new CustomEvent('elite:report-question', { detail: { questionId: question.id, reason: 'Logical Error' } });
+                window.dispatchEvent(event);
+            };
+        }
+    }
+
     // Randomize options only if not in review mode and not already shuffled
     if (!isReviewMode && !question._shuffledOptions) {
       for (let i = options.length - 1; i > 0; i--) {

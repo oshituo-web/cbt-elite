@@ -797,6 +797,13 @@ export const DataService = {
       .or('explanation.eq.,explanation.is.null')
       .limit(limit);
 
+    // 3. Fetch questions with logical gaps (missing correct answer)
+    const { data: logicalGaps } = await supabase
+      .from('question_answers')
+      .select('question_id, questions(*, question_answers(*))')
+      .or('correct_option.is.null,correct_option.eq.')
+      .limit(limit);
+
     // Merge and deduplicate
     const combined = [];
     const seenIds = new Set();
@@ -815,6 +822,15 @@ export const DataService = {
         if (!seenIds.has(g.id)) {
           combined.push({ ...g, audit_reason: 'Structural Gap' });
           seenIds.add(g.id);
+        }
+      });
+    }
+
+    if (logicalGaps) {
+      logicalGaps.forEach(lg => {
+        if (lg.questions && !seenIds.has(lg.questions.id)) {
+          combined.push({ ...lg.questions, audit_reason: 'Missing Correct Answer' });
+          seenIds.add(lg.questions.id);
         }
       });
     }
@@ -934,8 +950,19 @@ export const DataService = {
 
   async bulkAddQuestions(questions) {
     let successCount = 0;
+    let failCount = 0;
+    let errors = [];
     
     for (const q of questions) {
+      // 🛡️ PRE-IMPORT VALIDATION
+      const hasCorrect = q.answers && q.answers.some(a => a.is_correct);
+      if (!hasCorrect) {
+        console.error("Bulk Import Validation Failed: No correct answer for question:", q.question_text.substring(0, 50));
+        failCount++;
+        errors.push(`Missing correct answer: "${q.question_text.substring(0, 30)}..."`);
+        continue;
+      }
+
       const { data: question, error: qErr } = await supabase.from('questions').insert({
         question_text: q.question_text,
         exam_type: q.exam_type,
@@ -947,6 +974,7 @@ export const DataService = {
 
       if (qErr) {
         console.error("Bulk Import Error on Question:", qErr)
+        failCount++;
         continue
       }
 
@@ -965,7 +993,7 @@ export const DataService = {
       successCount++
     }
     
-    return { count: successCount, error: null }
+    return { count: successCount, failed: failCount, errors, error: null }
   },
 
   // --- ADMIN: REPORTS ---

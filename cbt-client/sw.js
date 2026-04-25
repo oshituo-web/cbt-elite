@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cbt-elite-v3' // Incremented to v3
+const CACHE_NAME = 'cbt-elite-v7' // Incremented to v7
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,7 +7,9 @@ const ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap',
   'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css',
-  'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js'
+  'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js',
+  '/pwa-icon.svg',
+  '/brand-icon.svg'
 ]
 
 // 1. Install - Precaching static assets
