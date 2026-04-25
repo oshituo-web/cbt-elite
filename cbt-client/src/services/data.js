@@ -572,13 +572,6 @@ export const DataService = {
   },
 
   // --- SECURE MONETIZATION (RPCs) ---
-  async activateUserLifetime(userId) {
-    return await supabase.rpc('secure_activate_user', { p_user_id: userId, p_plan: 'lifetime' })
-  },
-
-  async subscribeUser(userId, plan = 'monthly') {
-    return await supabase.rpc('secure_subscribe_user', { p_user_id: userId, p_plan: plan })
-  },
 
   async useAICredit(userId, action = 'explanation') {
     return await supabase.rpc('secure_deduct_credit', { p_user_id: userId, p_action: action })

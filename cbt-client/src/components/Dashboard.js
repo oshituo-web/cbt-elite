@@ -815,25 +815,15 @@ export const DashboardComponent = {
                 amount: finalAmountKobo,
                 currency: 'NGN',
                 callback: async (response) => {
-                    const isFirstTime = !profile.activation_status
-                    let rpcError;
-                    if (isFirstTime) {
-                       const { error } = await DataService.activateUserLifetime(this.profile.id)
-                       rpcError = error
-                    } else {
-                       const { error } = await DataService.subscribeUser(this.profile.id, 'monthly')
-                       rpcError = error
-                    }
-                     if (!rpcError) {
-                         // If first time activation, also grant initial credits if configured
-                         if (isFirstTime && systemConfig.ai_credits_initial_medium > 0) {
-                            await DataService.updateUser(this.profile.id, { 
-                              ai_credits: systemConfig.ai_credits_initial_medium 
-                            })
-                         }
-                         await ModalService.alert("Success!", `Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`, 'success');
-                         location.reload()
-                     } else { await ModalService.alert("Upgrade Failed", "Transaction failed. Contact support.", 'error') }
+                    const isFirstTime = !profile.activation_status;
+                    
+                    // Show processing UI while the secure backend webhook does the actual database upgrade
+                    ModalService.showToast("Verifying payment securely...", "info");
+                    
+                    setTimeout(async () => {
+                        await ModalService.alert("Success!", \`Congratulations! Account \${isFirstTime ? 'Activated' : 'Renewed'}.\`, 'success');
+                        location.reload();
+                    }, 2500);
                 },
                 onClose: () => ModalService.showToast('Transaction cancelled.', 'info')
             })

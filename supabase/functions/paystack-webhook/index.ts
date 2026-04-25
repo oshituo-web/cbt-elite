@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       // If we had distinct amounts, we could check event.data.amount as well.
       let planName = 'Monthly Renewed';
       if (!user.activation_status) {
-         const { error: actError } = await supabaseAdmin.rpc('secure_activate_user', { p_user_id: user.id })
+         const { error: actError } = await supabaseAdmin.rpc('secure_activate_user', { p_user_id: user.id, p_plan: 'lifetime' })
          if (actError) throw actError;
          
          // Fetch initial credits from system_config (we default to 10 if we can't load it instantly)
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
          await supabaseAdmin.from('users').update({ ai_credits: 10 }).eq('id', user.id)
          planName = 'Lifetime Activated';
       } else {
-         const { error: subError } = await supabaseAdmin.rpc('secure_subscribe_user', { p_user_id: user.id, p_plan_type: 'monthly' })
+         const { error: subError } = await supabaseAdmin.rpc('secure_subscribe_user', { p_user_id: user.id, p_plan: 'monthly' })
          if (subError) throw subError;
          console.log(`Renewed user ${email} successfully.`)
       }
