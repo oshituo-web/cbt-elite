@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     }
 
     // Use gemini-1.5-flash-latest as the high-availability identifier
-    const { prompt, temperature = 0.7, maxOutputTokens = 1000 } = requestBody
+    const { prompt, temperature = 0.7, maxOutputTokens = 1000, responseMimeType } = requestBody
     
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
@@ -46,7 +46,11 @@ Deno.serve(async (req) => {
     
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature, maxOutputTokens }
+      generationConfig: { 
+          temperature, 
+          maxOutputTokens,
+          ...(responseMimeType && { responseMimeType })
+      }
     }
 
     console.log(`DIAGNOSTIC: Using verified production model: ${modelToUse}`)

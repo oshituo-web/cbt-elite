@@ -372,39 +372,61 @@ export const AiService = {
       You are "Elite AI Question Architect". 
       Your task is to generate ${count} high-quality, exam-standard objective questions for the subject "${subject}" and topic "${topic}".
       
-      STANDARDS:
+      CRITICAL RULES (Failure to comply will break the database):
       1. DIFFICULTY: Match JAMB/WAEC standard (balanced easy, medium, hard).
-      2. FORMAT: Exactly 4 options (A, B, C, D).
-      3. ACCURACY: Fact-check every question internally.
+      2. FORMAT: Options must be plain text. Do NOT prefix them with "A)", "B)", etc.
+      3. CORRECT OPTION: The 'correct_option' field MUST be strictly one of these four uppercase letters: "A", "B", "C", or "D".
       4. EXPLANATIONS: Provide deep pedagogical explanations for each.
       5. LaTeX: Use $...$ for inline math and $$...$$ for block math.
       
-      RETURN ONLY A JSON ARRAY of objects:
+      RETURN A JSON ARRAY OF OBJECTS matching this exact schema:
       [
         {
-          "question_text": "...",
-          "option_a": "...",
-          "option_b": "...",
-          "option_c": "...",
-          "option_d": "...",
-          "correct_option": "A" | "B" | "C" | "D",
-          "explanation": "...",
+          "question_text": "string",
+          "option_a": "string (no prefix)",
+          "option_b": "string (no prefix)",
+          "option_c": "string (no prefix)",
+          "option_d": "string (no prefix)",
+          "correct_option": "A | B | C | D",
+          "explanation": "string",
           "subject": "${subject}",
           "topic": "${topic}"
         }
       ]
-      No other text or markdown backticks.
     `;
 
     try {
       const { data, error } = await invokeWithRetry('gemini-proxy', {
-        body: { prompt, temperature: 0.8, maxOutputTokens: 2500 }
+        body: { 
+            prompt, 
+            temperature: 0.7, 
+            maxOutputTokens: 3500,
+            responseMimeType: "application/json"
+        }
       });
 
       if (error || !data) throw error || new Error("AI Generation service unavailable");
       const text = data.text || "[]";
       const cleanJson = text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
-      return JSON.parse(cleanJson);
+      
+      let parsed = JSON.parse(cleanJson);
+      if (!Array.isArray(parsed)) {
+          if (parsed.questions && Array.isArray(parsed.questions)) {
+              parsed = parsed.questions;
+          } else {
+              parsed = [parsed];
+          }
+      }
+      
+      // Auto-heal strictly to standard
+      return parsed.map(q => ({
+          ...q,
+          correct_option: (q.correct_option || 'A').toUpperCase().replace(/[^ABCD]/g, '').charAt(0) || 'A',
+          option_a: String(q.option_a || '').replace(/^[A-D][\.\)]\s*/i, ''),
+          option_b: String(q.option_b || '').replace(/^[A-D][\.\)]\s*/i, ''),
+          option_c: String(q.option_c || '').replace(/^[A-D][\.\)]\s*/i, ''),
+          option_d: String(q.option_d || '').replace(/^[A-D][\.\)]\s*/i, ''),
+      }));
     } catch (err) {
       console.error("AI Question Generation Error:", err);
       throw err;
