@@ -341,7 +341,10 @@ export const DataService = {
         is_correct: q.question_type !== 'theory' && (userAnswers[i] === q.answers.find(a => a.is_correct)?.id)
     }))
 
-    const localDate = this.getWATDate().toISOString().split('T')[0];
+    // 💡 Use Intl.DateTimeFormat with en-CA locale to get a stable YYYY-MM-DD string in WAT
+    const localDate = new Intl.DateTimeFormat('en-CA', { 
+        timeZone: 'Africa/Lagos' 
+    }).format(new Date());
 
     // 🛡️ HARDENING: Ensure all types are strictly correct to prevent 400 Bad Request
     const payload = {
@@ -405,10 +408,9 @@ export const DataService = {
 
   // --- CLASH HARDENING & RANKINGS ---
   getWATDate() {
-    // 💡 Strict West Africa Time (GMT+1)
+    // 💡 Returns a Date object representing the current time in West Africa (GMT+1)
     const now = new Date();
-    const watTime = new Date(now.toLocaleString("en-US", {timeZone: "Africa/Lagos"}));
-    return watTime;
+    return new Date(now.toLocaleString("en-US", {timeZone: "Africa/Lagos"}));
   },
 
   async syncClashProgress(clashId, userId, answers, answeredCount, totalCount) {

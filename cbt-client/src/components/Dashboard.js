@@ -306,10 +306,15 @@ export const DashboardComponent = {
         
         <!-- DASHBOARD HEADER -->
         <div style="margin-bottom: 0.75rem;">
-          <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
-            Hello, ${this.profile.username || 'Student'} 
-            <i data-lucide="sun" style="width: 20px; height: 20px; color: var(--warning);"></i>
-          </h1>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
+              Hello, ${this.profile.username || 'Student'} 
+              <i data-lucide="sun" style="width: 20px; height: 20px; color: var(--warning);"></i>
+            </h1>
+            <div id="header-tier" class="tier-mini" title="Your Account Tier" style="display: flex; align-items: center; gap: 0.35rem; background: ${this.profile.activation_status ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.05)'};">
+              <i data-lucide="award" style="width: 16px; height: 16px;"></i> <span id="tier-text">${this.profile.activation_status ? 'PREMIUM' : 'FREE'}</span>
+            </div>
+          </div>
           <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; font-weight: 800; letter-spacing: 0.02em;">Let's make today count.</p>
         </div>
 
@@ -564,16 +569,16 @@ export const DashboardComponent = {
               <div style="background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 0.75rem; padding: 0.65rem; display: flex; justify-content: space-between; align-items: center; gap: 0.25rem; border: 1px solid var(--glass-border);">
                 <div style="flex: 1; text-align: center;">
                   <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
-                      <span style="color: var(--primary);">${v2_totalQuestions}</span> • <span style="color: var(--success);">${accuracy}%</span>
+                      <span style="color: var(--primary);">${v2_totalQuestions}</span> <span style="opacity: 0.3; font-weight: 300; margin: 0 0.2rem;">|</span> <span style="color: var(--success);">${accuracy}%</span>
                   </div>
-                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Solved • Accuracy</div>
+                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Solved <span style="opacity: 0.5;">|</span> Accuracy</div>
                 </div>
                 <div style="width: 1px; height: 16px; background: var(--glass-border);"></div>
                 <div style="flex: 1; text-align: center;">
                   <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
-                      <span style="color: var(--accent-secondary);">${examsCompleted}</span> • <span style="color: var(--warning);">${studyTimeMinutes}m</span>
+                      <span style="color: var(--accent-secondary);">${examsCompleted}</span> <span style="opacity: 0.3; font-weight: 300; margin: 0 0.2rem;">|</span> <span style="color: var(--warning);">${studyTimeMinutes}m</span>
                   </div>
-                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Exams • Time</div>
+                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Exams <span style="opacity: 0.5;">|</span> Time</div>
                 </div>
               </div>
               ${badgesHTML}
@@ -1186,6 +1191,10 @@ export const DashboardComponent = {
         gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)')
         gradient.addColorStop(1, 'rgba(37, 99, 235, 0)')
 
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const textColor = isDarkMode ? '#f8fafc' : '#0369A1';
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
         this._historyChart = new Chart(historyCtx, {
             type: 'line',
             data: {
@@ -1196,12 +1205,12 @@ export const DashboardComponent = {
                 datasets: [{
                     label: 'Session Accuracy',
                     data: displayHistory.map(h => h.score_percentage),
-                    borderColor: '#2563EB',
+                    borderColor: isDarkMode ? '#38bdf8' : '#2563EB',
                     backgroundColor: gradient,
                     fill: true,
                     tension: 0.45,
                     pointRadius: 4,
-                    pointBackgroundColor: '#2563EB',
+                    pointBackgroundColor: isDarkMode ? '#38bdf8' : '#2563EB',
                     borderWidth: 3
                 }]
             },
@@ -1215,12 +1224,12 @@ export const DashboardComponent = {
                     y: { 
                         beginAtZero: true, 
                         max: 100,
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: 'var(--text-secondary)', font: { family: 'Outfit', size: 10 } }
+                        grid: { color: gridColor },
+                        ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { color: 'var(--text-secondary)', font: { family: 'Outfit', size: 10 } }
+                        ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } }
                     }
                 } 
             }

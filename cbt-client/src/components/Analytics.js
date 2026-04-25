@@ -282,6 +282,10 @@ export const AnalyticsComponent = {
     const labels = data.map((_, i) => `Session ${i + 1}`)
     const scores = data.map(s => s.score_percentage)
 
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const textColor = isDarkMode ? '#f8fafc' : '#475569';
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)';
+
     new Chart(ctx, {
       type: 'line',
       data: {
@@ -289,21 +293,30 @@ export const AnalyticsComponent = {
         datasets: [{
           label: 'Score %',
           data: scores,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: isDarkMode ? '#38bdf8' : '#3b82f6',
+          backgroundColor: isDarkMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(59, 130, 246, 0.1)',
           borderWidth: 3,
           tension: 0.4,
           fill: true,
           pointRadius: 4,
-          pointBackgroundColor: '#3b82f6'
+          pointBackgroundColor: isDarkMode ? '#38bdf8' : '#3b82f6'
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-          x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          y: { 
+            beginAtZero: true, 
+            max: 100, 
+            grid: { color: gridColor }, 
+            ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } } 
+          },
+          x: { 
+            grid: { display: false }, 
+            ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } } 
+          }
         }
       }
     })
