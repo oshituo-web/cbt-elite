@@ -1,7 +1,10 @@
 import { AuthService } from './src/services/auth'
 import { IndexedDbService } from './src/services/indexedDbService'
 import { DataService } from './src/services/data'
+import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
+
+import { TourGuide } from './src/utils/TourGuide'
 
 // Local Font Imports (Bundled for performance)
 import "@fontsource/inter/index.css"
@@ -14,6 +17,8 @@ import 'katex/dist/katex.min.css'
 
 // Global confetti access for legacy component compatibility
 window.confetti = confetti;
+window.DataService = DataService;
+window.supabase = supabase;
 
 // Wrap Lucide to automatically include icons object (ESM requirement)
 const originalCreateIcons = lucide.createIcons;
@@ -24,6 +29,7 @@ window.lucide = {
 
 let dashboardLoaded = false;
 let currentProfile = null;
+window.currentProfile = null;
 
 /**
  * 🧭 Centralized URL-based Navigation Handler
@@ -93,8 +99,7 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
       break;
       
     case 'profile':
-      showDashboard(profile);
-      // Logic remained same but now it's a dedicated URL /profile
+      showProfile(profile);
       break;
       
     case 'settings':
@@ -282,9 +287,20 @@ function updateHeaderProfile(profile) {
 
   const streakText = document.getElementById('streak-text')
   const tierText = document.getElementById('tier-text')
+  const userIcon = document.querySelector('#profile-trigger i[data-lucide="user-circle"]');
 
-  if (avatar) avatar.textContent = profile.username.charAt(0).toUpperCase()
-  if (username) username.textContent = profile.username
+  if (avatar) {
+    if (profile.avatar_url) {
+      avatar.innerHTML = `<img src="${profile.avatar_url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      avatar.style.display = 'flex';
+      if (userIcon) userIcon.style.display = 'none';
+    } else {
+      avatar.textContent = (profile.username || 'S').charAt(0).toUpperCase();
+      avatar.style.display = 'flex';
+      if (userIcon) userIcon.style.display = 'none';
+    }
+  }
+  if (username) username.textContent = profile.username || 'Student'
   
   if (streakText) streakText.textContent = `${profile.streak_count || 0}`
   
@@ -518,12 +534,13 @@ function setupGlobalActions(profile) {
 
 function setupNavigation(profile) {
   currentProfile = profile; 
+  window.currentProfile = profile;
   // Only target elements with data-view to prevent overwriting specific handlers
-  const navItems = document.querySelectorAll('.nav-item[data-view], .bottom-nav-item[data-view], .more-menu-item[data-view]')
+  const navItems = document.querySelectorAll('.nav-item[data-view], .bottom-nav-item[data-view], .more-menu-item[data-view], #profile-trigger')
   navItems.forEach(item => {
     item.onclick = (e) => {
       e.preventDefault();
-      const view = item.dataset.view
+      const view = item.dataset.view || 'profile';
       if (view) {
         // If it's a more-menu-item, close the drawer first
         if (item.classList.contains('more-menu-item')) {
@@ -566,6 +583,15 @@ async function showProfileSetup(user) {
     showDashboard(profile)
   })
 }
+
+async function showProfile(profile) {
+  currentProfile = profile;
+  hideAll();
+  const { ProfileComponent } = await import('./src/components/Profile');
+  ProfileComponent.render(profile, () => window.navigateTo('dashboard', profile));
+}
+
+window.updateHeaderProfile = updateHeaderProfile;
 
 async function showDashboard(profile) {
    if (!profile) return;
@@ -664,7 +690,8 @@ function hideAll(isExam = false, forceHideLayout = false) {
   const containers = [
     'auth-container', 'dashboard-container', 'exam-container', 
     'admin-container', 'settings-container', 'news-article-container',
-    'practice-container', 'exams-container', 'analytics-container'
+    'practice-container', 'exams-container', 'analytics-container',
+    'profile-container'
   ];
   
   containers.forEach(id => {

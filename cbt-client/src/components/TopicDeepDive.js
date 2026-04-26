@@ -40,6 +40,9 @@ export const TopicDeepDiveComponent = {
         </div>
 
         <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 1rem;">
+           <button id="modal-tutor-btn" class="btn-secondary" style="width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-color: #f59e0b; color: #f59e0b;">
+             <i data-lucide="bot" style="width: 18px;"></i> Chat with AI Tutor
+           </button>
            <button id="modal-focus-btn" class="btn-dominant" style="width: 100%; height: 56px; background: var(--accent-gradient);">
              Master this Topic (10 Questions)
            </button>
@@ -79,11 +82,23 @@ export const TopicDeepDiveComponent = {
     const closeBtn = document.getElementById('close-deep-dive');
     const bottomCloseBtn = document.getElementById('modal-close-btn');
     const focusBtn = document.getElementById('modal-focus-btn');
+    const tutorBtn = document.getElementById('modal-tutor-btn');
     const modal = document.getElementById('topic-deep-dive-modal');
 
     const closeModal = () => {
       modal.style.display = 'none';
     };
+
+    if (tutorBtn) {
+        tutorBtn.onclick = () => {
+            // closeModal(); // Optional: keep modal open or close it
+            import('./AITutorSidebar').then(({ AITutorSidebar }) => {
+                // Get profile from window or pass it through
+                const profile = window.currentProfile; 
+                AITutorSidebar.open(null, profile, topic, subject);
+            });
+        };
+    }
 
     closeBtn.onclick = closeModal;
     bottomCloseBtn.onclick = closeModal;

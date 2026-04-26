@@ -1,20 +1,22 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background (Optional, but let's keep it transparent for maskable) -->
-  <rect width="512" height="512" rx="0" fill="transparent"/>
-  
-  <!-- Graduation Cap (Mortarboard) - Expanded to Full Width -->
-  <path d="M256 40L512 180L256 320L0 180L256 40Z" fill="#0F172A"/>
-  
-  <!-- Cap Body - Scaled up -->
-  <path d="M100 210V330C100 330 170 390 256 390C342 390 412 330 412 330V210" fill="#0F172A" stroke="#0F172A" stroke-width="4" stroke-linejoin="round"/>
-  
-  <!-- Tassel - Moved to the very edge -->
-  <path d="M500 180V320" stroke="#7dd3fc" stroke-width="14" stroke-linecap="round"/>
-  <rect x="486" y="320" width="28" height="45" rx="4" fill="#7dd3fc"/>
-  
-  <!-- Highlight / Accent (Elite Identity) -->
-  <path d="M256 40L460 160L256 280L52 160L256 40Z" fill="#7dd3fc" fill-opacity="0.1"/>
+  <!-- Safe-zone background for maskable icon -->
+  <rect width="512" height="512" rx="0" fill="#0F172A"/>
 
-  <!-- Text: CBT ELITE - Positioned clearly at the bottom -->
-  <text x="256" y="480" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="68" fill="#0F172A" letter-spacing="-1">CBT ELITE</text>
+  <!-- Graduation Cap - Scaled down to ~65% of canvas so text below is visible -->
+  <!-- Top diamond/flat face of cap -->
+  <path d="M256 60L460 168L256 276L52 168L256 60Z" fill="#7dd3fc"/>
+
+  <!-- Cap body / under-brim -->
+  <path d="M136 200V305C136 305 185 355 256 355C327 355 376 305 376 305V200" fill="#38bdf8" stroke="#0ea5e9" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- Highlight on top face -->
+  <path d="M256 60L440 160L256 258L72 160L256 60Z" fill="#ffffff" fill-opacity="0.08"/>
+
+  <!-- Tassel rope -->
+  <path d="M452 168V280" stroke="#0ea5e9" stroke-width="12" stroke-linecap="round"/>
+  <!-- Tassel end block -->
+  <rect x="440" y="280" width="24" height="36" rx="4" fill="#0ea5e9"/>
+
+  <!-- CBT ELITE label at bottom - larger gap from cap so it's clearly visible -->
+  <text x="256" y="460" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="60" fill="#7dd3fc" letter-spacing="2">CBT ELITE</text>
 </svg>

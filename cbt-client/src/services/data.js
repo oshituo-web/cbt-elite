@@ -49,7 +49,6 @@ export const DataService = {
         selectFields += `, question_groups (*)`;
     }
 
-    // --- TIERED ACCESS & REPETITION LOGIC ---
     const user = (await supabase.auth.getUser()).data.user;
     const userId = user?.id;
     
@@ -62,7 +61,6 @@ export const DataService = {
         isPremium = profile?.tier === 'premium' || profile?.tier === 'medium' || globalPremium === true;
     }
 
-    // Enforce limits for free users
     if (!isPremium && filters.randomize) {
         filters.limit = Math.min(filters.limit || 10, 10);
     }
@@ -88,14 +86,11 @@ export const DataService = {
     if (filters.randomize) {
       try {
         let excludeIds = [];
-        
-        // Premium users: Get seen IDs from database for true non-repetition
         if (isPremium && userId) {
             const { data: seenData } = await supabase
                 .from('user_seen_questions')
                 .select('question_id')
                 .eq('user_id', userId);
-            
             if (seenData) excludeIds = seenData.map(s => s.question_id);
         }
 
@@ -109,7 +104,7 @@ export const DataService = {
           p_topic: filters.topic || null,
           p_question_type: filters.question_type || 'objective',
           p_limit: filters.limit || 20,
-          p_exclude_ids: combinedExclude // Pass excluded IDs to RPC
+          p_exclude_ids: combinedExclude
         })
         
         if (idError) throw idError
@@ -139,18 +134,14 @@ export const DataService = {
 
     const formattedData = this._formatQuestions(data || []);
     
-    // Mark questions as seen
     if (formattedData.length > 0 && filters.randomize) {
         const questionIds = formattedData.map(q => q.id);
-        
-        // Always track in session for immediate repetition avoidance
         RepetitionManager.markAsSeen(questionIds);
         
-        // Premium users: Persist to database for long-term tracking
         if (isPremium && userId) {
             const seenPayload = questionIds.map(qid => ({ user_id: userId, question_id: qid }));
             supabase.from('user_seen_questions').insert(seenPayload).then(({ error }) => {
-                if (error && error.code !== '23505') { // Ignore duplicate key errors
+                if (error && error.code !== '23505') {
                     console.error("Error recording seen questions:", error);
                 }
             });
@@ -380,9 +371,16 @@ export const DataService = {
     const type = isSunday ? 'Super' : 'Normal'
     const department = isSunday ? 'General' : (profile?.department || 'General')
     
-    const weekDate = new Date()
-    weekDate.setDate(now.getDate() - (now.getDay() === 0 ? 1 : now.getDay()) + 6) // Current Week's Saturday
-    const dateStr = weekDate.toISOString().split('T')[0]
+    // 🐛 FIX: On Sundays, the clash IS today (Super Sunday). On other days, find this week's Saturday.
+    let weekDate
+    if (isSunday) {
+        weekDate = new Date(now) // TODAY is Super Sunday
+    } else {
+        weekDate = new Date(now)
+        // Move to this week's Saturday: go back to Monday (subtract getDay()-1), then add 5
+        weekDate.setDate(now.getDate() - now.getDay() + 6)
+    }
+    const dateStr = weekDate.toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }) // YYYY-MM-DD in WAT
 
     const { data, error } = await supabase
         .from('scheduled_clashes')
@@ -1115,5 +1113,13 @@ export const DataService = {
 
   async runWeeklyLeagueReset() {
     return await supabase.rpc('run_weekly_league_reset')
+  },
+
+  async useAICredit(userId, action = 'tutor_chat') {
+    const { error } = await supabase.rpc('secure_deduct_credit', { 
+      p_user_id: userId, 
+      p_action: action 
+    })
+    return { error }
   }
 }

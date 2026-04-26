@@ -105,6 +105,73 @@ export const AiService = {
   },
 
   /**
+   * Handles a real-time chat interaction with the Elite AI Tutor.
+   * @param {Object} question - The current question context (optional).
+   * @param {string} userMessage - The student's message.
+   * @param {Array} history - Previous messages in this session.
+   * @param {string} topic - Optional topic context.
+   * @param {string} subject - Optional subject context.
+   * @returns {Promise<string>} - The AI response.
+   */
+  async tutorChat(question, userMessage, history = [], topic = null, subject = null) {
+    const correctChoice = question?.answers?.find(a => a.is_correct)?.answer_text || "Unknown";
+    
+    // Context strings
+    const questionContext = question ? `
+      QUESTION: ${question.question_text}
+      ${question.question_groups?.content ? `CONTEXT/PASSAGE: ${question.question_groups.content}` : ''}
+      OPTIONS: ${question.answers?.map((a, i) => `${String.fromCharCode(65+i)}) ${a.answer_text}`).join(', ')}
+      CORRECT ANSWER: ${correctChoice}
+      EXPLANATION: ${question.explanation || 'No standard explanation available.'}
+    ` : 'No specific question is currently being discussed.';
+
+    const topicalContext = topic ? `
+      CURRENT STUDY TOPIC: ${topic}
+      SUBJECT: ${subject || 'General'}
+    ` : '';
+
+    // Construct the context-aware prompt
+    const systemPrompt = `
+      You are the "Elite AI Tutor", a world-class academic assistant for secondary and pre-university students (JAMB, WAEC, NECO standards).
+      
+      ${topicalContext}
+      ${questionContext}
+      
+      INSTRUCTIONS:
+      1. Be highly intelligent, smart, and context-aware. Detect the specific subject and topic automatically from the discussion.
+      2. If a specific question is provided, use it as the primary focus. If only a topic is provided, act as a subject matter expert for that topic.
+      3. Do NOT just give answers away; guide the student with Socratic questioning and pedagogical hints.
+      4. Use Markdown for formatting and LaTeX for all mathematical or scientific formulas (e.g., $H_2O$, $v = u + at$).
+      5. Tone: Elite, encouraging, authoritative yet accessible. 
+      6. Limit responses to 150 words to fit a sidebar.
+    `;
+
+    // Format history for Gemini
+    let fullPrompt = `${systemPrompt}\n\nCONVERSATION HISTORY:\n`;
+    history.forEach(msg => {
+      fullPrompt += `${msg.role === 'user' ? 'Student' : 'Elite AI'}: ${msg.content}\n`;
+    });
+    fullPrompt += `\nStudent: ${userMessage}\nElite AI:`;
+
+    try {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
+        body: { 
+           prompt: fullPrompt, 
+           temperature: 0.8, 
+           maxOutputTokens: 800 
+        }
+      });
+
+      if (error || !data) throw error || new Error("Elite AI is taking a quick break.");
+
+      return data.text || "I'm sorry, I couldn't process that. Could you rephrase?";
+    } catch (err) {
+      console.error("Tutor Chat Error:", err);
+      return "I'm having trouble connecting to the Elite servers. Please try again in a moment.";
+    }
+  },
+
+  /**
    * Generates a dynamic HTML study guide for a specific topic, tailored by historical weak/strong points.
    */
   async getTopicDeepDive(topic, subject, userAnalytics = null) {

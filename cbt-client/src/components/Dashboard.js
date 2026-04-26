@@ -229,7 +229,7 @@ export const DashboardComponent = {
     const finalOverallTime = Math.max(v2_overallTime, (analytics.stats?.overall?.time || 0));
 
     const accuracy = v2_totalQuestions > 0 ? Math.round((v2_totalCorrect / v2_totalQuestions) * 100) : 0
-    const studyTimeMinutes = Math.floor(finalOverallTime / 60)
+    const studyTimeHours = (finalOverallTime / 3600).toFixed(1)
     const examsCompleted = history.length
 
     // Fetch Target from storage (50 or 100)
@@ -526,8 +526,8 @@ export const DashboardComponent = {
                     })()}
                   </svg>
                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                    <div id="daily-solved-val" style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${currentDailyCount}</div>
-                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
+                    <div id="daily-solved-val" style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${currentDailyCount}</div>
+                    <div style="font-size: 0.5rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
                   </div>
                 </div>
                 
@@ -539,49 +539,59 @@ export const DashboardComponent = {
               </div>
 
               <div style="margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 8px; border: 1px solid var(--glass-border);">
-                 <div style="display: flex; align-items: center; gap: 0.4rem;">
-                    <button class="goal-toggle badge glass" data-target="50" style="font-size: 0.6rem; padding: 0.1rem 0.4rem; border: ${dailyGoalLimit === 50 ? '1px solid var(--accent-primary)' : '0'};">50</button>
-                    <button class="goal-toggle badge glass" data-target="100" style="font-size: 0.6rem; padding: 0.1rem 0.4rem; border: ${dailyGoalLimit === 100 ? '1px solid var(--accent-primary)' : '0'};">100</button>
-                 </div>
+                  <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <button class="goal-toggle badge glass" data-target="50" style="min-width: 36px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; padding: 0 4px; border-radius: 8px; border: ${dailyGoalLimit === 50 ? '1.5px solid var(--accent-primary)' : '1px solid var(--glass-border)'}; background: ${dailyGoalLimit === 50 ? 'rgba(37, 99, 235, 0.1)' : 'transparent'};">50</button>
+                    <button class="goal-toggle badge glass" data-target="100" style="min-width: 36px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; padding: 0 4px; border-radius: 8px; border: ${dailyGoalLimit === 100 ? '1.5px solid var(--accent-primary)' : '1px solid var(--glass-border)'}; background: ${dailyGoalLimit === 100 ? 'rgba(37, 99, 235, 0.1)' : 'transparent'};">100</button>
+                    <button class="goal-toggle badge glass" data-target="150" style="min-width: 36px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; padding: 0 4px; border-radius: 8px; border: ${dailyGoalLimit === 150 ? '1.5px solid var(--accent-primary)' : '1px solid var(--glass-border)'}; background: ${dailyGoalLimit === 150 ? 'rgba(37, 99, 235, 0.1)' : 'transparent'};">150+</button>
+                  </div>
                  <div style="font-size: 0.75rem; font-weight: 900; color: ${currentMilestone ? currentMilestone.color : 'var(--text-primary)'};">${currentMilestone ? currentMilestone.title : 'Novice'}</div>
               </div>
             </div>
 
-            <!-- Readiness Progress Card (Compact) -->
-            <div class="glass card" style="padding: 0.85rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-radius: 16px;">
-              <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Study Stats</h3>
+            <div class="glass card" style="padding: 0.5rem 0.7rem; display: flex; flex-direction: column; min-height: 205px; justify-content: flex-start; gap: 0.4rem; border-radius: 16px;">
+              <h3 style="color: var(--text-secondary); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Study Stats</h3>
               
-              <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex: 1;">
-                 <div id="readiness-gauge-container" style="position: relative; width: 64px; height: 64px; flex-shrink: 0;">
-                    <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="3" />
-                      <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" />
-                    </svg>
-                    <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 0.9rem; color: var(--primary);">0%</div>
-                 </div>
-                 <div style="text-align: left; min-width: 0;">
-                      <div id="readiness-label" style="font-size: 0.55rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Primary Track</div>
-                    <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.85rem; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px;">...</div>
-                    <div id="readiness-status" style="font-size: 0.7rem; font-weight: 800; color: var(--success); letter-spacing: 0.02em;">Elite Level</div>
-                 </div>
+              <!-- Top Metrics Grid (Compact) -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.3rem; row-gap: 0.2rem;">
+                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Solved</div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--primary);">${v2_totalQuestions}</div>
+                </div>
+                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Accuracy</div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--success);">${accuracy}%</div>
+                </div>
+                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Exams</div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--accent-secondary);">${examsCompleted}</div>
+                </div>
+                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Time</div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--warning);">${studyTimeHours}h</div>
+                </div>
               </div>
 
-              <div style="background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 0.75rem; padding: 0.65rem; display: flex; justify-content: space-between; align-items: center; gap: 0.25rem; border: 1px solid var(--glass-border);">
-                <div style="flex: 1; text-align: center;">
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
-                      <span style="color: var(--primary);">${v2_totalQuestions}</span> <span style="opacity: 0.3; font-weight: 300; margin: 0 0.2rem;">|</span> <span style="color: var(--success);">${accuracy}%</span>
-                  </div>
-                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Solved <span style="opacity: 0.5;">|</span> Accuracy</div>
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--glass-border); opacity: 0.5;"></div>
+
+              <!-- Bottom: Focus Area (Ultra Compact) -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 0.2rem 0.4rem; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--glass-border);">
+                <div style="text-align: left; min-width: 0;">
+                  <div id="readiness-label" style="font-size: 0.4rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0px;">Primary Focus</div>
+                  <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.8rem; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; line-height: 1.1;">...</div>
+                  <div id="readiness-status" style="font-size: 0.4rem; font-weight: 800; color: var(--success); text-transform: uppercase;">Elite Level</div>
                 </div>
-                <div style="width: 1px; height: 16px; background: var(--glass-border);"></div>
-                <div style="flex: 1; text-align: center;">
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.9rem; color: var(--text-primary);">
-                      <span style="color: var(--accent-secondary);">${examsCompleted}</span> <span style="opacity: 0.3; font-weight: 300; margin: 0 0.2rem;">|</span> <span style="color: var(--warning);">${studyTimeMinutes}m</span>
-                  </div>
-                  <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">Exams <span style="opacity: 0.5;">|</span> Time</div>
+                
+                <!-- Side Gauge with Percentage Inside -->
+                <div id="readiness-gauge-container" style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
+                  <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="4" />
+                    <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="4" stroke-dasharray="0, 100" stroke-linecap="round" />
+                  </svg>
+                  <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 0.7rem; color: var(--primary);">0%</div>
                 </div>
               </div>
-              ${badgesHTML}
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 2px;">${badgesHTML}</div>
               <!-- AI Insight Card Removed as per feedback -->
             </div>
 
@@ -612,7 +622,7 @@ export const DashboardComponent = {
               </div>
 
               <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
-                These are questions you missed recently. Fixing them is the fastest way to master your JAMB, WAEC, and NECO exams.
+                Fix your recent mistakes to bridge knowledge gaps and master your exams.
               </p>
               <button id="repair-mistakes-btn" class="btn-dominant" style="width: 100%; height: 48px; background: linear-gradient(90deg, #ef4444 0%, #b91c1c 100%); border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
                 <i data-lucide="zap" style="width: 18px;"></i> MASTER MISTAKES
@@ -631,9 +641,12 @@ export const DashboardComponent = {
             <div style="background: rgba(147, 51, 234, 0.1); padding: 0.5rem; border-radius: 10px; color: var(--accent-secondary);"><i data-lucide="trophy" style="width:20px;"></i></div>
             <div style="text-align: left;"><h4 style="font-weight: 800; font-size: 0.9rem; margin: 0;">Exams</h4></div>
           </div>
-          <div id="view-leaderboard-grid" class="glass card scale-in" style="cursor: pointer; padding: 1rem; border-bottom: 3px solid var(--success); align-items: center; flex-direction: row; gap: 0.75rem;">
+          <div id="view-leaderboard-grid" class="glass card scale-in" style="cursor: pointer; padding: 1rem; border-bottom: 3px solid var(--success); align-items: center; flex-direction: row; gap: 0.75rem; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 10px; color: var(--success);"><i data-lucide="bar-chart-3" style="width:20px;"></i></div>
-            <div style="text-align: left;"><h4 style="font-weight: 800; font-size: 0.9rem; margin: 0;">Rankings</h4></div>
+            <div style="text-align: left;">
+                <h4 style="font-weight: 800; font-size: 0.9rem; margin: 0;">Rankings</h4>
+                <div id="global-rank-indicator" style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); white-space: nowrap;">Loading rank...</div>
+            </div>
           </div>
         </div>
 
@@ -668,7 +681,7 @@ export const DashboardComponent = {
         <div id="analytics-section" style="margin-top: 1.5rem;">
           <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
             <i data-lucide="line-chart" style="color: var(--primary); width: 24px;"></i> Performance Trend
-            <button id="view-history-btn" class="btn-secondary" style="border-radius: 8px; font-size: 0.7rem; font-weight: 800; padding: 0.4rem 0.75rem;">VIEW FULL HISTORY</button>
+            <button id="view-history-btn" class="glass-btn" style="border-radius: 10px; font-size: 0.65rem; font-weight: 900; padding: 0.5rem 0.85rem; border: 1.5px solid var(--accent-primary); background: rgba(37, 99, 235, 0.05); color: var(--accent-primary); letter-spacing: 0.05em;">VIEW FULL HISTORY</button>
           </h2>
           <div class="glass card scale-in" id="accuracy-trend-card" style="padding: 1rem; min-height: 260px; width: 100%; overflow: hidden; cursor: pointer; transition: transform 0.2s; border-bottom: 3px solid var(--accent-primary);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -821,7 +834,7 @@ export const DashboardComponent = {
                     ModalService.showToast("Verifying payment securely...", "info");
                     
                     setTimeout(async () => {
-                        await ModalService.alert("Success!", \`Congratulations! Account \${isFirstTime ? 'Activated' : 'Renewed'}.\`, 'success');
+                        await ModalService.alert("Success!", `Congratulations! Account ${isFirstTime ? 'Activated' : 'Renewed'}.`, 'success');
                         location.reload();
                     }, 2500);
                 },
@@ -851,6 +864,9 @@ export const DashboardComponent = {
     if (DASH_quickExamGrid) DASH_quickExamGrid.onclick = () => window.navigateTo('exams', profile)
     if (DASH_quickPracticeBtn) DASH_quickPracticeBtn.onclick = () => window.navigateTo('practice', profile)
     if (DASH_quickExamBtn) DASH_quickExamBtn.onclick = () => window.navigateTo('exams', profile)
+
+    const DASH_viewLeaderboardGrid = document.getElementById('view-leaderboard-grid')
+    if (DASH_viewLeaderboardGrid) DASH_viewLeaderboardGrid.onclick = () => openLeaderboard.click()
 
     // Elite Store Listeners
     const openStoreBtns = [
@@ -1436,13 +1452,34 @@ export const DashboardComponent = {
   async updateLeagueMiniRank(userId) {
     const { data } = await DataService.getLeagueTable(userId)
     const indicator = document.getElementById('league-rank-indicator')
-    if (indicator && data && data.length > 0) {
+    const globalIndicator = document.getElementById('global-rank-indicator')
+    
+    if (data && data.length > 0) {
         const myEntry = data.find(u => u.user_id === userId)
         if (myEntry) {
-            indicator.textContent = `#${myEntry.rank} of ${data.length} in group`
-            if (myEntry.rank <= 10) indicator.style.color = 'var(--success)'
-            if (myEntry.rank >= 45) indicator.style.color = 'var(--error)'
+            if (indicator) {
+                indicator.textContent = `#${myEntry.rank} of ${data.length} in group`
+                if (myEntry.rank <= 10) indicator.style.color = 'var(--success)'
+                if (myEntry.rank >= 45) indicator.style.color = 'var(--error)'
+            }
         }
+    }
+
+    // Also Fetch Global Rank for the small card
+    try {
+        const { data: globalData } = await DataService.getLeaderboard()
+        if (globalIndicator && globalData) {
+            const myGlobalEntry = globalData.find(d => d.username === this.profile.username)
+            const myGlobalIndex = globalData.findIndex(d => d.username === this.profile.username)
+            if (myGlobalIndex !== -1) {
+                globalIndicator.textContent = `Score: ${globalData[myGlobalIndex].total_score || 0} (#${myGlobalIndex + 1})`
+                globalIndicator.style.color = 'var(--success)'
+            } else {
+                globalIndicator.textContent = "Unranked Overall"
+            }
+        }
+    } catch (e) {
+        console.warn("Dashboard: Global rank fetch failed", e)
     }
   },
 

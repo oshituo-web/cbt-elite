@@ -60,32 +60,84 @@ export const ResultsComponent = {
     
     const answeredCount = Object.values(userAnswers || {}).filter(a => a !== null && a !== "").length;
     
+    const oldDailyCount = profile?.daily_questions_count || 0;
     let latestStreak = profile?.streak_count || 0;
-    if (profile && profile.id) {
-        // 🔥 FIX: Await the save session to ensure it completes before UI navigation
-        await DataService.saveExamSession(profile.id, {
-            session_type: mode,
-            subject: subject || 'Various',
-            total_questions: questions.length,
-            answered_questions: answeredCount,
-            correct_answers: correct,
-            time_taken_seconds: timeTaken,
-            score_percentage: scorePercent
-        }, questions, userAnswers).catch(err => console.error("Result save error:", err));
 
-        // 🔄 REFRESH: Get latest profile to show updated streak/coins immediately
+    console.log("[Streak Debug] PRE-SESSION streak:", latestStreak, "| last_session_date:", profile?.last_session_date);
+
+    if (profile && profile.id) {
+        // ✅ FIXED: Use try/catch so we properly await the save before refreshing profile
+        try {
+            const { error: saveError } = await DataService.saveExamSession(profile.id, {
+                session_type: mode,
+                subject: subject || 'Various',
+                total_questions: questions.length,
+                answered_questions: answeredCount,
+                correct_answers: correct,
+                time_taken_seconds: timeTaken,
+                score_percentage: scorePercent
+            }, questions, userAnswers);
+
+            if (saveError) {
+                console.error("[Streak Debug] saveExamSession error:", saveError);
+            } else {
+                console.log("[Streak Debug] Session saved OK. Now refreshing profile...");
+            }
+        } catch (err) {
+            console.error("[Streak Debug] Critical save error:", err);
+        }
+
+        // 🔄 REFRESH: Get latest profile AFTER save completes
         const { data: refreshed } = await DataService.getProfile(profile.id);
         if (refreshed) {
-            latestStreak = refreshed.streak_count;
-            // Update global profile if possible (main.js handles the rest)
+            latestStreak = refreshed.streak_count || 0;
             profile.streak_count = refreshed.streak_count;
             profile.elite_coins = refreshed.elite_coins;
+            profile.daily_questions_count = refreshed.daily_questions_count;
+            profile.last_session_date = refreshed.last_session_date;
+
+            console.log("[Streak Debug] POST-SESSION streak:", latestStreak, "| last_session_date:", refreshed.last_session_date);
+
+            // 🔥 UPDATE GLOBAL UI (Header Streak/Coins)
+            if (window.updateHeaderProfile) {
+                window.updateHeaderProfile(refreshed);
+            }
+        } else {
+            console.warn("[Streak Debug] Profile refresh returned null.");
         }
     }
 
     const isJambMock = mode === 'exam' && examType === 'JAMB'
     
-    // ... stats calculation code remains ...
+    // 📊 Granular Topic Stats calculation
+    const topicStatsMap = {};
+    questions.forEach((q, i) => {
+        const topic = q.topic || (q.subject ? `General ${q.subject}` : 'General');
+        if (!topicStatsMap[topic]) topicStatsMap[topic] = { correct: 0, total: 0 };
+        
+        if (q.question_type !== 'theory') {
+            topicStatsMap[topic].total++;
+            const selectedId = userAnswers[i];
+            const correctId = q.answers.find(a => a.is_correct)?.id;
+            if (selectedId === correctId) topicStatsMap[topic].correct++;
+        }
+    });
+
+    const sessionStats = Object.keys(topicStatsMap)
+        .filter(topic => topicStatsMap[topic].total > 0)
+        .map(topic => {
+            const s = topicStatsMap[topic];
+            return {
+                label: topic,
+                correct: s.correct,
+                total: s.total,
+                percent: Math.round((s.correct / s.total) * 100)
+            };
+        })
+        .sort((a, b) => a.percent - b.percent); // Show weakest topics first
+
+    // Identify weakest topic for AI Recommendation
+    this._weakestTopic = sessionStats.length > 0 ? sessionStats[0].label : null;
 
     container.innerHTML = `
       <div class="results-view-container" style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; box-sizing: border-box;">
@@ -126,8 +178,7 @@ export const ResultsComponent = {
             </div>
           </div>
             ${(() => {
-                const currentDaily = profile?.daily_questions_count || 0;
-                const dailyGoalHit = currentDaily < 50 && currentDaily + answeredCount >= 50;
+                const dailyGoalHit = oldDailyCount < 50 && (oldDailyCount + answeredCount) >= 50;
                 const isClash = mode === 'clash';
                 const day = new Date().getDay();
                 const isSunday = day === 0;
@@ -155,7 +206,7 @@ export const ResultsComponent = {
           <!-- PERFORMANCE FOR THIS SESSION -->
           <div style="text-align: left; width: 100%;">
             <h3 style="font-family: 'Outfit'; margin-bottom: 1.25rem; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">
-                Performance Breakdown
+                Topic-wise Performance
             </h3>
             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2.5rem; width: 100%;">
               ${sessionStats.map(s => `

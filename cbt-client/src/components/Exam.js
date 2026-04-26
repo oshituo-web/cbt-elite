@@ -8,6 +8,7 @@ import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { AiService } from '../services/aiService'
 import { CalculatorComponent } from './Calculator'
+import { AITutorSidebar } from './AITutorSidebar'
 import { ModalService } from '../services/ModalService'
 import renderMathInElement from 'katex/dist/contrib/auto-render.mjs'
 
@@ -198,6 +199,9 @@ export class Exam {
             <div class="header-right">
               <button id="mobile-map-toggle" class="header-icon-btn" title="Question Navigator">
                 <i data-lucide="layout-grid"></i>
+              </button>
+              <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'};">
+                <i data-lucide="bot"></i>
               </button>
               <button id="toggle-calc" class="header-icon-btn" title="Open Calculator">
                 <i data-lucide="calculator"></i>
@@ -458,6 +462,18 @@ export class Exam {
     const toggleCalc = document.getElementById('toggle-calc')
     if (toggleCalc) {
       toggleCalc.onclick = () => CalculatorComponent.toggle()
+    }
+
+    const toggleTutor = document.getElementById('toggle-tutor')
+    if (toggleTutor) {
+      toggleTutor.onclick = () => {
+        if (!this.isReviewMode) {
+          ModalService.showToast("AI Tutor is only available during Review to ensure exam integrity.", "info");
+          return;
+        }
+        const q = this.session.getCurrentQuestion()
+        AITutorSidebar.toggle(q, this.profile)
+      }
     }
 
     const mapToggle = document.getElementById('mobile-map-toggle')

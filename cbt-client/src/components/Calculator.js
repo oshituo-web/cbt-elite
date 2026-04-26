@@ -42,7 +42,7 @@ export const CalculatorComponent = {
           <button class="calc-btn fn" data-val="cos(">cos</button>
           <button class="calc-btn fn" data-val="tan(">tan</button>
           <button class="calc-btn fn" data-val="log(">log</button>
-          <button class="calc-btn fn" data-val="sqrt(">√</button>
+          <button class="calc-btn fn" data-val="sqrt(">\u221A</button>
 
           <!-- Row 2 -->
           <button class="calc-btn clear" data-val="C" style="color:#F87171; background:rgba(239,68,68,0.15); font-size: 0.9rem;">CLR</button>
@@ -55,8 +55,8 @@ export const CalculatorComponent = {
           <button class="calc-btn num" data-val="7">7</button>
           <button class="calc-btn num" data-val="8">8</button>
           <button class="calc-btn num" data-val="9">9</button>
-          <button class="calc-btn op" data-val="/">÷</button>
-          <button class="calc-btn op" data-val="*">×</button>
+          <button class="calc-btn op" data-val="/">\u00F7</button>
+          <button class="calc-btn op" data-val="*">\u00D7</button>
 
           <!-- Row 4 -->
           <button class="calc-btn num" data-val="4">4</button>
@@ -83,25 +83,49 @@ export const CalculatorComponent = {
     const style = document.createElement('style')
     style.textContent = `
       .calc-btn {
-         padding: 0;
-         height: 44px;
-         font-size: 1.1rem;
+         padding: 2px;
+         height: 48px;
+         font-size: clamp(0.9rem, 3.8vw, 1.2rem);
          font-weight: 700;
-         border-radius: 8px;
+         border-radius: 10px;
          border: 1px solid rgba(255,255,255,0.08);
          background: rgba(255,255,255,0.03);
          color: #fff;
          cursor: pointer;
-         transition: transform 0.1s, background 0.2s;
+         transition: all 0.1s ease-out;
          display: flex;
          align-items: center;
          justify-content: center;
+         line-height: 1;
+         white-space: nowrap;
+         overflow: hidden;
       }
-      .calc-btn:hover { background: rgba(255,255,255,0.1); }
-      .calc-btn:active { transform: scale(0.95); }
-      .calc-btn.fn { font-size: 0.8rem; background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.2); color: #60A5FA; }
+      .calc-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+      .calc-btn:active { transform: scale(0.92); }
+      
+      /* Target multi-character buttons for extra scaling */
+      .calc-btn.fn, 
+      .calc-btn.clear, 
+      .calc-btn[data-val="ans"],
+      .calc-btn[data-val="EXP"] { 
+        font-size: clamp(0.55rem, 2.5vw, 0.75rem); 
+        letter-spacing: -0.01em;
+        background: rgba(37, 99, 235, 0.1); 
+        border-color: rgba(37, 99, 235, 0.2); 
+        color: #60A5FA; 
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
       .calc-btn.op { background: rgba(147, 51, 234, 0.15); color: #C084FC; border-color: rgba(147, 51, 234, 0.2); }
+      .calc-btn.equal { background: var(--accent-primary) !important; color: white !important; border: none; }
       .calc-btn.equal:hover { background: #1D4ED8; opacity: 0.9; }
+
+      @media (max-width: 480px) {
+        .calc-btn {
+          height: 44px;
+        }
+      }
     `
     calc.appendChild(style)
     parent.appendChild(calc)
