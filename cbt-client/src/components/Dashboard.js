@@ -491,7 +491,7 @@ export const DashboardComponent = {
             <!-- Daily Goal Card (Compacted) -->
             <div class="glass card" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 3px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Star Target</h3>
+                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Daily Star Target</h3>
                 <div style="display: flex; gap: 4px;">
                     ${this.MILESTONES.map(m => `
                         <div title="${m.title}" style="color: ${currentDailyCount >= m.target ? m.color : 'var(--text-secondary)'} !important; opacity: ${currentDailyCount >= m.target ? '1' : '0.2'} !important; transition: all 0.3s ease;">
@@ -548,51 +548,55 @@ export const DashboardComponent = {
               </div>
             </div>
 
-            <div class="glass card" style="padding: 0.5rem 0.7rem; display: flex; flex-direction: column; min-height: 205px; justify-content: flex-start; gap: 0.4rem; border-radius: 16px;">
-              <h3 style="color: var(--text-secondary); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Study Stats</h3>
+            <!-- Study Stats Card (Ultra Compact Grid) -->
+            <div class="glass card" style="padding: 12px; display: flex; flex-direction: column; gap: 10px; border-radius: 16px;">
+              <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Study Stats</h3>
               
-              <!-- Top Metrics Grid (Compact) -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.3rem; row-gap: 0.2rem;">
-                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Solved</div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--primary);">${v2_totalQuestions}</div>
+              <!-- Top Metrics 2x2 Grid -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <i data-lucide="book-open" style="width: 10px; color: var(--primary);"></i> SOLVED
+                  </div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--primary); margin-top: 2px;">${v2_totalQuestions}</div>
                 </div>
-                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Accuracy</div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--success);">${accuracy}%</div>
+                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <i data-lucide="target" style="width: 10px; color: var(--success);"></i> ACCURACY
+                  </div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--success); margin-top: 2px;">${accuracy}%</div>
                 </div>
-                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Exams</div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--accent-secondary);">${examsCompleted}</div>
+                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <i data-lucide="trophy" style="width: 10px; color: var(--accent-secondary);"></i> EXAMS
+                  </div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--accent-secondary); margin-top: 2px;">${examsCompleted}</div>
                 </div>
-                <div class="glass card" style="padding: 0.35rem; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="font-size: 0.45rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">Time</div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 0.8rem; color: var(--warning);">${studyTimeHours}h</div>
+                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <i data-lucide="clock" style="width: 10px; color: var(--warning);"></i> TIME
+                  </div>
+                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--warning); margin-top: 2px;">${studyTimeHours}h</div>
                 </div>
               </div>
 
-              <!-- Divider -->
-              <div style="height: 1px; background: var(--glass-border); opacity: 0.5;"></div>
-
-              <!-- Bottom: Focus Area (Ultra Compact) -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 0.2rem 0.4rem; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--glass-border);">
-                <div style="text-align: left; min-width: 0;">
-                  <div id="readiness-label" style="font-size: 0.4rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0px;">Primary Focus</div>
-                  <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 0.8rem; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; line-height: 1.1;">...</div>
-                  <div id="readiness-status" style="font-size: 0.4rem; font-weight: 800; color: var(--success); text-transform: uppercase;">Elite Level</div>
+              <!-- Bottom: Focus Area Inline -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--glass-border);">
+                <div>
+                  <div id="readiness-label" style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Primary Focus</div>
+                  <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 14px; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; line-height: 1;">...</div>
                 </div>
                 
-                <!-- Side Gauge with Percentage Inside -->
-                <div id="readiness-gauge-container" style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
+                <div id="readiness-gauge-container" style="position: relative; width: 36px; height: 36px; flex-shrink: 0;">
                   <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="4" />
                     <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="4" stroke-dasharray="0, 100" stroke-linecap="round" />
                   </svg>
-                  <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 0.7rem; color: var(--primary);">0%</div>
+                  <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 11px; color: var(--primary);">0%</div>
                 </div>
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 2px;">${badgesHTML}</div>
-              <!-- AI Insight Card Removed as per feedback -->
+              
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">${badgesHTML}</div>
             </div>
 
             <!-- ELITE REPAIR CENTER CARD -->

@@ -161,8 +161,14 @@ body.dark-mode {
   color: #f8fafc !important;
 }
 
+/* Dynamically remove white background from logo */
 body.dark-mode .branding-logo img {
-  filter: brightness(0) invert(1);
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
+body:not(.dark-mode) .branding-logo img {
+  mix-blend-mode: multiply;
 }
 
 body.dark-mode .glass.card {

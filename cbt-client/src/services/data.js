@@ -826,12 +826,20 @@ export const DataService = {
       });
     }
 
+    // Shuffle combined array so admin doesn't always see the exact same 50 errors
+    for (let i = combined.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [combined[i], combined[j]] = [combined[j], combined[i]];
+    }
+
     // Filter by subject if specified
     const filtered = filters.subject 
       ? combined.filter(q => q.subject === filters.subject)
       : combined;
 
-    return { data: filtered.slice(0, limit), error: null };
+    const formattedData = this._formatQuestions(filtered.slice(0, limit));
+
+    return { data: formattedData, error: null };
   },
 
   async getMockHistory(userId, examType = 'JAMB') {

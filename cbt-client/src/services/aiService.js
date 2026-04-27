@@ -13,26 +13,40 @@ async function invokeWithRetry(functionName, options, maxRetries = 3) {
   while (attempt < maxRetries) {
     const { data, error } = await supabase.functions.invoke(functionName, options);
     
-    // Check if error exists and is potentially a 429 or 500 rate limit proxy error
-    if (error && error.context) {
+    if (error) {
       let isRateLimit = false;
-      try {
-        const body = typeof error.context.json === 'function' ? await error.context.json() : error.context;
-        if (body?.error?.code === 429 || JSON.stringify(body).includes('429')) {
-          isRateLimit = true;
+      let diagnosticMessage = error.message;
+
+      // Extract details from the response body if available
+      if (error.context) {
+        try {
+          const body = typeof error.context.json === 'function' ? await error.context.json() : error.context;
+          if (body?.error) {
+              diagnosticMessage = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+              if (body.details) diagnosticMessage += ` (${body.details})`;
+          }
+          
+          if (diagnosticMessage.includes('429') || diagnosticMessage.toLowerCase().includes('quota')) {
+            isRateLimit = true;
+          }
+        } catch (e) {
+           if (error.message.includes('429')) isRateLimit = true;
         }
-      } catch (e) {
-         // Silently fail parsing
-         if (JSON.stringify(error).includes('429')) isRateLimit = true;
       }
 
       if (isRateLimit && attempt < maxRetries - 1) {
         attempt++;
-        const backoffMs = attempt * 2000; // wait 2s, 4s, 6s...
-        console.warn(`[AI Service] Rate limited (429). Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxRetries-1})`);
+        const backoffMs = attempt * 2000;
+        console.warn(`[AI Service] Rate limited or Quota issue. Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxRetries-1})`);
         await new Promise(r => setTimeout(r, backoffMs));
         continue;
       }
+      
+      // If we're here, it's either not a rate limit or we're out of retries
+      // We throw a more descriptive error for the UI
+      const finalError = new Error(diagnosticMessage);
+      finalError.status = error.status;
+      return { data: null, error: finalError };
     }
     
     return { data, error };
@@ -434,13 +448,13 @@ export const AiService = {
   /**
    * Generates multiple high-quality academic questions from scratch.
    */
-  async generateQuestions(subject, topic, count = 5) {
+  async generateQuestions(exam, subject, topic, count = 5) {
     const prompt = `
       You are "Elite AI Question Architect". 
-      Your task is to generate ${count} high-quality, exam-standard objective questions for the subject "${subject}" and topic "${topic}".
+      Your task is to generate ${count} high-quality, exam-standard objective questions for the subject "${subject}" and topic "${topic || 'General'}" specifically tailored for the "${exam || 'General'}" examination standard.
       
       CRITICAL RULES (Failure to comply will break the database):
-      1. DIFFICULTY: Match JAMB/WAEC standard (balanced easy, medium, hard).
+      1. DIFFICULTY: Match ${exam || 'JAMB/WAEC'} standard (balanced easy, medium, hard).
       2. FORMAT: Options must be plain text. Do NOT prefix them with "A)", "B)", etc.
       3. CORRECT OPTION: The 'correct_option' field MUST be strictly one of these four uppercase letters: "A", "B", "C", or "D".
       4. EXPLANATIONS: Provide deep pedagogical explanations for each.

@@ -61,9 +61,24 @@ export const ResultsComponent = {
     const answeredCount = Object.values(userAnswers || {}).filter(a => a !== null && a !== "").length;
     
     const oldDailyCount = profile?.daily_questions_count || 0;
-    let latestStreak = profile?.streak_count || 0;
+    
+    // --- OPTIMISTIC STREAK CALCULATION ---
+    const calculateStreak = (lastSessionDate, currentStreak) => {
+      if (!lastSessionDate) return 1;
+      const today = new Date();
+      const lastDate = new Date(lastSessionDate);
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+      const diffDays = Math.round((todayDate - lastDateOnly) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return Math.max(currentStreak || 0, 1);
+      if (diffDays === 1) return (currentStreak || 0) + 1;
+      return 1;
+    };
 
-    console.log("[Streak Debug] PRE-SESSION streak:", latestStreak, "| last_session_date:", profile?.last_session_date);
+    let latestStreak = calculateStreak(profile?.last_session_date, profile?.streak_count);
+
+    console.log("[Streak Debug] PRE-SESSION actual:", profile?.streak_count, "| optimistic:", latestStreak, "| last_session_date:", profile?.last_session_date);
 
     if (profile && profile.id) {
         // ✅ FIXED: Use try/catch so we properly await the save before refreshing profile
@@ -90,8 +105,9 @@ export const ResultsComponent = {
         // 🔄 REFRESH: Get latest profile AFTER save completes
         const { data: refreshed } = await DataService.getProfile(profile.id);
         if (refreshed) {
-            latestStreak = refreshed.streak_count || 0;
-            profile.streak_count = refreshed.streak_count;
+            // Trust optimistic streak if the database sync hasn't caught up yet
+            latestStreak = Math.max(refreshed.streak_count || 0, latestStreak);
+            profile.streak_count = latestStreak;
             profile.elite_coins = refreshed.elite_coins;
             profile.daily_questions_count = refreshed.daily_questions_count;
             profile.last_session_date = refreshed.last_session_date;
