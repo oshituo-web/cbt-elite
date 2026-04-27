@@ -21,14 +21,9 @@ export const SubscriptionService = {
     // 2. Check Daily Reset (Sessions, Questions, Streaks)
     const todayStr = now.toISOString().split('T')[0]
     
-    // Reset daily sessions if date changed
-    if (user.last_session_date !== todayStr) {
-      updates.daily_sessions = 0
-      updates.last_session_date = todayStr
-    }
-
-    // Reset daily questions if date changed
+    // Reset daily counters if date changed
     if (user.last_daily_reset_date !== todayStr) {
+      updates.daily_sessions = 0
       updates.daily_questions_count = 0
       updates.last_daily_reset_date = todayStr
     }

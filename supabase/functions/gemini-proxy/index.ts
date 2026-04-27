@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    // PRODUCTION MODEL: Verified from account model list
-    const modelToUse = "models/gemini-2.5-flash";
+    // PRODUCTION MODEL: Standard high-availability model
+    const modelToUse = "models/gemini-1.5-flash-latest";
     
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],

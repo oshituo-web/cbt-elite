@@ -168,12 +168,16 @@ export const AdminComponent = {
             <div class="glass card" style="padding: 2.5rem; border-radius: 24px; border-left: 4px solid var(--accent-secondary); margin-bottom: 2.5rem;">
                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
                   <div>
+                    <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Exam Type</label>
+                    <select id="lab-exam" class="glass-select" style="width: 100%; height: 50px;"><option value="">Select Exam</option></select>
+                  </div>
+                  <div>
                     <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Subject</label>
                     <select id="lab-subject" class="glass-select" style="width: 100%; height: 50px;"><option value="">Select Subject</option></select>
                   </div>
                   <div>
                     <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Topic (optional)</label>
-                    <input type="text" id="lab-topic" placeholder="e.g. Thermodynamics" class="glass-input" style="width: 100%; height: 50px;">
+                    <select id="lab-topic" class="glass-select" style="width: 100%; height: 50px;"><option value="">All Topics</option></select>
                   </div>
                   <div>
                     <label style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem;">Batch Size</label>
@@ -385,9 +389,14 @@ export const AdminComponent = {
                    <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem; text-transform: uppercase;">Announcement Banner</h3>
                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Visible at the top of all dashboards.</p>
                    <textarea id="broadcast-message-input" class="glass-input" style="width: 100%; min-height: 120px; margin-bottom: 1.25rem; padding: 1rem; font-size: 0.9rem;" placeholder="Enter message..."></textarea>
-                   <button id="save-broadcast-btn" class="btn-secondary" style="width: 100%; padding: 0.75rem; font-weight: 800; border-color: var(--error); color: #ff6b6b;">
-                      <i data-lucide="radio" style="width: 18px; margin-right: 0.5rem;"></i> PUSH BROADCAST
-                   </button>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                      <button id="save-broadcast-btn" class="btn-primary" style="flex: 2; height: 48px; font-weight: 800; border: none; background: var(--error); color: white !important; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);">
+                         <i data-lucide="radio" style="width: 18px; margin-right: 0.5rem;"></i> PUSH BROADCAST
+                      </button>
+                      <button id="clear-broadcast-btn" class="btn-secondary" style="flex: 1; height: 48px; font-weight: 800; border-radius: 12px; border-color: rgba(239, 68, 68, 0.3); color: #ff6b6b;">
+                         <i data-lucide="trash-2" style="width: 18px; margin-right: 0.5rem;"></i> CLEAR
+                      </button>
+                    </div>
                 </div>
               </section>
 
@@ -673,9 +682,14 @@ export const AdminComponent = {
 
     // Marketing Events
     const saveBroadcastBtn = document.getElementById('save-broadcast-btn')
+    const clearBroadcastBtn = document.getElementById('clear-broadcast-btn')
+    const broadcastInput = document.getElementById('broadcast-message-input')
+
     if (saveBroadcastBtn) {
         saveBroadcastBtn.onclick = async () => {
-            const msg = document.getElementById('broadcast-message-input').value.trim()
+            const msg = broadcastInput.value.trim()
+            if (!msg) return ModalService.alert('Empty Message', 'Please enter a message to broadcast.', 'warning')
+            
             saveBroadcastBtn.textContent = 'Pushing...'
             saveBroadcastBtn.disabled = true
             const { error } = await DataService.updateSystemConfig('broadcast_message', msg)
@@ -684,9 +698,36 @@ export const AdminComponent = {
                 await DataService.logAdminAction(this._adminProfile.email, 'Update Broadcast', 'global', msg.substring(0, 50))
                 ModalService.showToast('📡 Broadcast pushed to all dashboards!', 'success')
             }
-            saveBroadcastBtn.textContent = 'Push Broadcast'
+            saveBroadcastBtn.innerHTML = '<i data-lucide="radio" style="width: 18px; margin-right: 0.5rem;"></i> PUSH BROADCAST'
             saveBroadcastBtn.disabled = false
+            if (window.lucide) window.lucide.createIcons({ root: saveBroadcastBtn })
         }
+    }
+
+    if (clearBroadcastBtn) {
+        clearBroadcastBtn.onclick = async () => {
+            const confirmed = await ModalService.confirm("Clear Broadcast?", "This will remove the announcement banner from all user dashboards. Continue?");
+            if (!confirmed) return;
+
+            clearBroadcastBtn.disabled = true
+            clearBroadcastBtn.textContent = 'Clearing...'
+            const { error } = await DataService.updateSystemConfig('broadcast_message', '')
+            if (error) ModalService.alert('Failed to Clear', error.message, 'error')
+            else {
+                broadcastInput.value = ''
+                await DataService.logAdminAction(this._adminProfile.email, 'Clear Broadcast', 'global', 'Announcement cleared')
+                ModalService.showToast('🧹 Broadcast cleared successfully!', 'success')
+            }
+            clearBroadcastBtn.innerHTML = '<i data-lucide="trash-2" style="width: 18px; margin-right: 0.5rem;"></i> CLEAR'
+            clearBroadcastBtn.disabled = false
+            if (window.lucide) window.lucide.createIcons({ root: clearBroadcastBtn })
+        }
+    }
+
+    // News Events
+    const addNewsBtn = document.getElementById('add-news-btn')
+    if (addNewsBtn) {
+        addNewsBtn.onclick = () => this.openNewsEditModal()
     }
 
     const saveLimitsBtn = document.getElementById('save-limits-btn')
@@ -808,18 +849,49 @@ export const AdminComponent = {
   // --- AI QUESTION LAB ---
 
   async loadLab() {
+    const examSelect = document.getElementById('lab-exam');
     const subSelect = document.getElementById('lab-subject');
+    const topicSelect = document.getElementById('lab-topic');
+
+    if (examSelect.options.length <= 1) {
+      const { data: exams } = await DataService.getExams();
+      if (exams) exams.forEach(e => examSelect.appendChild(new Option(e.exam_name, e.exam_name)));
+    }
+
     if (subSelect.options.length <= 1) {
       const { data: subjects } = await DataService.getSubjects();
       if (subjects) subjects.forEach(s => subSelect.appendChild(new Option(s.subject_name, s.subject_name)));
     }
-    
+
+    const updateLabTopics = async () => {
+        topicSelect.innerHTML = '<option value="">All Topics</option>';
+        if (subSelect.value) {
+            const { data: subjects } = await DataService.getSubjects();
+            const subId = subjects.find(s => s.subject_name === subSelect.value)?.id;
+            
+            const { data: exams } = await DataService.getExams();
+            const examId = exams.find(e => e.exam_name === examSelect.value)?.id;
+
+            if (subId) {
+                const { data: topics } = await DataService.getTopics(subId, examId);
+                topics.forEach(t => {
+                    const topicName = typeof t === 'string' ? t : t.topic;
+                    topicSelect.appendChild(new Option(topicName, topicName));
+                });
+            }
+        }
+    };
+
+    examSelect.onchange = updateLabTopics;
+    subSelect.onchange = updateLabTopics;
+
     if (window.lucide) window.lucide.createIcons({ root: document.getElementById('admin-lab-tab') });
   },
 
   async handleAiGenerate() {
+    const exam = document.getElementById('lab-exam').value;
     const subject = document.getElementById('lab-subject').value;
-    const topic = document.getElementById('lab-topic').value.trim();
+    const topic = document.getElementById('lab-topic').value;
     const count = parseInt(document.getElementById('lab-count').value);
     
     if (!subject) return ModalService.alert("Subject Required", "Please select a subject to guide the AI.", 'warning');
@@ -835,7 +907,7 @@ export const AdminComponent = {
 
     try {
       const { AiService } = await import('../services/aiService');
-      const questions = await AiService.generateQuestions(subject, topic, count);
+      const questions = await AiService.generateQuestions(exam, subject, topic, count);
       
       this._labDrafts = questions; 
       
@@ -889,9 +961,10 @@ export const AdminComponent = {
     btn.textContent = 'Saving Batch...';
 
     try {
+      const examVal = document.getElementById('lab-exam').value || 'JAMB';
       const formatted = this._labDrafts.map(q => ({
         question_text: q.question_text,
-        exam_type: 'JAMB',
+        exam_type: examVal,
         subject: q.subject,
         topic: q.topic,
         explanation: q.explanation,
@@ -2275,7 +2348,7 @@ export const AdminComponent = {
       <div style="text-align: center; padding: 4rem;">
         <div class="loader-spinner" style="margin-bottom: 2rem;"></div>
         <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1.2rem;">Elite AI is Scanning...</div>
-        <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.85rem;">Deep Fact-Checking & Syllabus Alignment Check (Batch Size: 50)</div>
+        <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.85rem;">Fast Database Integrity Scan (Batch Size: 50)</div>
       </div>
     `
     
@@ -2294,9 +2367,28 @@ export const AdminComponent = {
         return
       }
 
-      // Step 2: Batch Audit via AI
-      const { AiService } = await import('../services/aiService')
-      const auditedBatch = await AiService.auditQuestionBatch(rawQuestions)
+      // Step 2: Deterministic Rules Engine (Replacing AI batch to save tokens and load instantly)
+      const auditedBatch = rawQuestions.map(q => {
+          let score = 100;
+          let status = 'HEALTHY';
+          let reason = 'Optimal';
+
+          if (q.audit_reason === 'User Reported') {
+              score = 50;
+              status = 'USER FLAGGED';
+              reason = 'Flagged by a student for review';
+          } else if (q.audit_reason === 'Structural Gap') {
+              score = 60;
+              status = 'INCOMPLETE';
+              reason = 'Missing explanation or formatting issues';
+          } else if (q.audit_reason === 'Missing Correct Answer') {
+              score = 0;
+              status = 'CRITICAL ERROR';
+              reason = 'No correct answer defined';
+          }
+
+          return { ...q, audit: { score, status, reason } };
+      });
 
       // Render Dashboard & List
       const healthyRange = auditedBatch.filter(q => q.audit.score >= 90).length;
@@ -2641,6 +2733,83 @@ export const AdminComponent = {
         document.getElementById('news-edit-overlay').remove()
         this.loadNews()
       }
+    }
+  },
+
+  async loadNews() {
+    const list = document.getElementById('admin-news-list')
+    if (!list) return
+    list.innerHTML = '<div class="loader-spinner" style="margin: 3rem auto;"></div>'
+    
+    try {
+      const { data, error } = await DataService.getNewsUpdates(50)
+      if (error) throw error
+      
+      if (!data || data.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--glass-border);">
+            <i data-lucide="newspaper" style="width: 48px; height: 48px; color: var(--text-secondary); opacity: 0.2; margin-bottom: 1rem;"></i>
+            <p style="color: var(--text-secondary); font-weight: 600;">No articles published yet.</p>
+            <button class="btn-primary" style="margin-top: 1.5rem; height: 40px;" onclick="document.getElementById('add-news-btn').click()">Create First Article</button>
+          </div>
+        `
+        if (window.lucide) window.lucide.createIcons({ root: list })
+        return
+      }
+
+      list.innerHTML = data.map(news => `
+        <div class="glass card scale-in" style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; border-left: 4px solid var(--accent-primary); background: rgba(255,255,255,0.02);">
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+               <span class="badge" style="background: rgba(124, 58, 237, 0.1); color: var(--accent-primary); font-size: 0.65rem; font-weight: 800;">${news.category || 'GENERAL'}</span>
+               <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">${new Date(news.created_at).toLocaleDateString()}</span>
+            </div>
+            <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${news.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${news.summary || ''}</p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+            <button class="edit-news-btn btn-secondary" data-id="${news.id}" style="height: 40px; width: 40px; padding: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center;" title="Edit Article">
+              <i data-lucide="edit-3" style="width: 18px;"></i>
+            </button>
+            <button class="delete-news-btn btn-secondary" data-id="${news.id}" style="height: 40px; width: 40px; padding: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);" title="Delete Article">
+              <i data-lucide="trash-2" style="width: 18px;"></i>
+            </button>
+          </div>
+        </div>
+      `).join('')
+
+      // Attach events
+      list.querySelectorAll('.edit-news-btn').forEach(btn => {
+        btn.onclick = () => {
+          const news = data.find(n => n.id === btn.dataset.id)
+          this.openNewsEditModal(news)
+        }
+      })
+
+      list.querySelectorAll('.delete-news-btn').forEach(btn => {
+        btn.onclick = () => this.deleteNews(btn.dataset.id)
+      })
+
+      if (window.lucide) window.lucide.createIcons({ root: list })
+
+    } catch (err) {
+      list.innerHTML = `<div style="color: var(--error); text-align: center; padding: 2rem;">Error loading news: ${err.message}</div>`
+    }
+  },
+
+  async deleteNews(id) {
+    const confirmed = await ModalService.confirm("Delete Article?", "Are you sure you want to permanently delete this news article? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      const { error } = await DataService.adminDeleteNews(id);
+      if (error) throw error;
+      
+      ModalService.showToast("Article deleted successfully", "success");
+      await DataService.logAdminAction(this._adminProfile.email, 'Delete News', id, 'Permanently deleted article');
+      this.loadNews();
+    } catch (err) {
+      ModalService.alert("Delete Failed", err.message, 'error');
     }
   },
 
