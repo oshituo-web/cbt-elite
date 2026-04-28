@@ -512,5 +512,54 @@ export const AiService = {
       console.error("AI Question Generation Error:", err);
       throw err;
     }
+  },
+
+  /**
+   * Platform-specific Help Bot.
+   */
+  async askHelpBot(query, history = []) {
+    const platformDocs = `
+      PLATFORM RULES & INFO (CBT ELITE):
+      - Daily Star Target: Users must answer 50 questions daily to hit their goal.
+      - Streaks: Earned by hitting the Daily Star Target. 1 day = 1 flame. Streak Freezes protect your streak if you miss a day.
+      - Elite Coins: Virtual currency earned via targets, achievements, and clashes. Used to buy powerups and freezes.
+      - Elite Leagues: Weekly competition system. Tiers: Bronze, Silver, Gold, Platinum, Diamond, Elite.
+      - League Promotion: Top 3 performers in every 20-member clan are promoted every Sunday.
+      - Saturday Clashes: Weekend departmental battles (Science, Arts, Commercial, Engineering). Winners get massive point boosts.
+      - AI Tutor: Real-time academic help during practice.
+      - AI Repair: Community tools to fix mistakes in questions instantly.
+      - Elite Pro: Premium subscription. ₦1,000/month or ₦1,500 lifetime. Gives unlimited AI and full exam access.
+      - Offline Mode: PWA supports offline practice. Syncs data automatically when back online.
+      - Support: Contact us at cbtellite@gmail.com.
+    `;
+
+    const systemPrompt = `
+      You are the "Elite Help Bot", an expert on the CBT Elite platform.
+      Your goal is to help users understand how to use the app, explain rules, and provide technical guidance.
+      
+      ${platformDocs}
+      
+      INSTRUCTIONS:
+      1. Be concise, professional, and friendly.
+      2. If you don't know something about the platform, direct them to contact support at cbtellite@gmail.com.
+      3. Use simple Markdown (bolding) for emphasis.
+      4. Limit responses to 100 words.
+    `;
+
+    let fullPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n`;
+    history.forEach(msg => {
+      fullPrompt += `${msg.role === 'user' ? 'User' : 'Help Bot'}: ${msg.content}\n`;
+    });
+    fullPrompt += `\nUser: ${query}\nHelp Bot:`;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: { prompt: fullPrompt, temperature: 0.7, maxOutputTokens: 600 }
+      });
+      if (error || !data) throw error || new Error("Help bot is offline.");
+      return data.text || "I'm sorry, I couldn't process that.";
+    } catch (err) {
+      return "I'm having trouble connecting to the support servers. Please try again or contact cbtellite@gmail.com.";
+    }
   }
 }

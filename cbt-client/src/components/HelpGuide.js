@@ -1,6 +1,9 @@
 import { ModalService } from '../services/ModalService'
+import { AiService } from '../services/aiService'
 
 export const HelpGuide = {
+  chatHistory: [],
+
   show() {
     const categories = [
       {
@@ -13,8 +16,8 @@ export const HelpGuide = {
             content: 'The dashboard is your mission control. Monitor your Daily Star Target (goal is 50 questions), your current Streak, and your League standing.'
           },
           {
-            title: 'Setting Goals',
-            content: 'Consistency is key. Aim to answer at least 50 questions daily to earn Elite Coins and maintain your streak.'
+            title: 'Daily Star Target',
+            content: 'Hit 50 questions daily to earn your Daily Star. Consistent Stars build your Streak and earn you bonus Elite Coins.'
           }
         ]
       },
@@ -24,12 +27,12 @@ export const HelpGuide = {
         icon: 'book-open',
         topics: [
           {
-            title: 'Examination Modes',
-            content: '<b>Full Exam:</b> Simulates the real environment with timers and standard marking.<br><b>Practice Mode:</b> Learn at your own pace with instant explanations.'
+            title: 'JAMB & Exam Simulation',
+            content: 'CBT Elite provides timed exam simulations that match the exact JAMB/WAEC marking schemes. Your results include deep analytics and predicted scores.'
           },
           {
-            title: 'AI Question Repair',
-            content: 'Found a mistake? Click the "Repair" button on any question. Our AI will analyze and fix it instantly for everyone.'
+            title: 'AI Tutor & Repair',
+            content: 'Use the <b>Elite AI Tutor</b> during practice for step-by-step guidance. Use the <b>Repair</b> tool to fix any question using AI instantly.'
           }
         ]
       },
@@ -39,77 +42,99 @@ export const HelpGuide = {
         icon: 'trophy',
         topics: [
           {
-            title: 'League Progression',
-            content: 'Start in Bronze and climb to the Elite tier. The top 3 performers in every clan are promoted every Sunday.'
+            title: 'Leagues & Promotions',
+            content: 'Compete in 20-member clans. The top 3 performers are promoted to higher tiers (Silver, Gold, etc.) every Sunday at midnight.'
           },
           {
             title: 'Saturday Clashes',
-            content: 'Every Saturday, join your departmental clash (Science, Arts, etc.) to compete for massive point rewards and glory.'
-          }
-        ]
-      },
-      {
-        id: 'economy-pro',
-        title: 'Coins & Pro Status',
-        icon: 'zap',
-        topics: [
-          {
-            title: 'Elite Coins',
-            content: 'Earn coins by hitting daily targets and winning clashes. Use them to buy Streak Freezes or unlock premium content.'
-          },
-          {
-            title: 'Elite Pro',
-            content: 'Upgrade to Elite Pro for unlimited AI Tutor access, deep analytics, and access to all examinations on the platform.'
+            content: 'Join your departmental clash every Saturday for specialized competitions. These are high-stakes events with significant point rewards.'
           }
         ]
       }
     ];
 
+    const faqs = [
+      { q: "How do I keep my streak?", a: "Answer at least 50 questions every day. If you might miss a day, use a <b>Streak Freeze</b> from the store." },
+      { q: "What are Elite Coins?", a: "Coins are earned by hitting targets and winning clashes. Use them to buy powerups, streak freezes, and league insurance." },
+      { q: "Is CBT Elite free?", a: "Basic practice is free. <b>Elite Pro</b> provides unlimited AI, full exam access, and deep insights for ₦1,500 lifetime." }
+    ];
+
     const helpHtml = `
-      <div class="help-guide-container animate-fadeIn" style="display: flex; flex-direction: column; height: 100%;">
+      <div id="help-center-root" class="help-guide-container animate-fadeIn" style="display: flex; flex-direction: column; height: 100%;">
         
         <!-- Header -->
-        <div style="background: var(--accent-primary); padding: 2rem 1.5rem; color: white; border-radius: 20px 20px 0 0;">
+        <div id="help-header" style="background: var(--accent-primary); padding: 2rem 1.5rem; color: white; border-radius: 20px 20px 0 0; transition: all 0.3s ease;">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
             <i data-lucide="help-circle" style="width: 24px; height: 24px;"></i>
             <h2 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.5rem;">Elite Help Center</h2>
           </div>
-          <p style="margin: 0; opacity: 0.9; font-size: 0.9rem; font-weight: 500;">Everything you need to master the platform.</p>
+          <p style="margin: 0; opacity: 0.9; font-size: 0.9rem; font-weight: 500;">Ask our AI Bot or browse the guides below.</p>
         </div>
 
-        <!-- Search Bar (Visual only for now) -->
-        <div style="padding: 1.25rem; background: rgba(0,0,0,0.05); border-bottom: 1px solid var(--glass-border);">
-          <div style="position: relative;">
-            <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
-            <input type="text" placeholder="Search topics..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--surface-color); color: var(--text-primary); font-size: 0.9rem;" disabled>
+        <!-- AI Search / Bot Bar -->
+        <div id="help-search-area" style="padding: 1.25rem; background: rgba(0,0,0,0.05); border-bottom: 1px solid var(--glass-border); position: relative; z-index: 5;">
+          <div style="position: relative; display: flex; gap: 0.5rem;">
+            <div style="position: relative; flex: 1;">
+              <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
+              <input id="help-bot-input" type="text" placeholder="Ask anything about CBT Elite..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--surface-color); color: var(--text-primary); font-size: 0.9rem;">
+            </div>
+            <button id="help-ask-btn" class="btn-primary" style="padding: 0 1.25rem; border-radius: 12px; font-size: 0.8rem; font-weight: 800;">ASK AI</button>
           </div>
         </div>
 
-        <!-- Content Area -->
-        <div style="flex: 1; overflow-y: auto; padding: 1.5rem;">
-          <div class="help-categories" style="display: grid; gap: 1.5rem;">
-            ${categories.map(cat => `
-              <div class="help-section">
-                <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--accent-primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                  <i data-lucide="${cat.icon}" style="width: 18px;"></i> ${cat.title}
-                </h3>
-                <div style="display: grid; gap: 0.75rem;">
-                  ${cat.topics.map(topic => `
-                    <div class="help-card glass" style="padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                      <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">${topic.title}</h4>
-                      <p style="margin: 0; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">${topic.content}</p>
-                    </div>
-                  `).join('')}
+        <!-- Main Scrollable Content -->
+        <div id="help-main-content" style="flex: 1; overflow-y: auto; padding: 1.5rem; scroll-behavior: smooth;">
+          
+          <!-- AI Chat View (Hidden by default) -->
+          <div id="help-chat-view" style="display: none; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+            <div id="help-chat-messages"></div>
+            <div id="help-chat-loader" style="display: none; text-align: center; padding: 1rem;">
+               <div class="loader-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+               <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Elite Bot is thinking...</p>
+            </div>
+            <div style="text-align: center;">
+              <button id="close-chat-btn" style="background: none; border: none; color: var(--accent-primary); font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: underline;">Back to Help Guides</button>
+            </div>
+          </div>
+
+          <!-- Category Guides -->
+          <div id="help-guides-view">
+            <div class="help-categories" style="display: grid; gap: 1.5rem; margin-bottom: 3rem;">
+              ${categories.map(cat => `
+                <div class="help-section">
+                  <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--accent-primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="${cat.icon}" style="width: 18px;"></i> ${cat.title}
+                  </h3>
+                  <div style="display: grid; gap: 0.75rem;">
+                    ${cat.topics.map(topic => `
+                      <div class="help-card glass" style="padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">${topic.title}</h4>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">${topic.content}</p>
+                      </div>
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
-            `).join('')}
-          </div>
+              `).join('')}
+            </div>
 
-          <!-- Footer Action -->
-          <div style="margin-top: 3rem; padding: 2rem; text-align: center; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.02); border-radius: 16px;">
-            <p style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Still need help?</p>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Our support team is available 24/7 to assist you.</p>
-            <button id="help-contact-btn" class="btn-primary" style="width: 100%; max-width: 200px;">Contact Support</button>
+            <!-- FAQ Section -->
+            <div style="margin-bottom: 3rem;">
+              <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--accent-primary); margin: 0 0 1rem 0;">Frequently Asked Questions</h3>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${faqs.map(faq => `
+                  <div class="faq-item" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem;">Q: ${faq.q}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">${faq.a}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div style="padding: 2rem; text-align: center; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.02); border-radius: 16px;">
+              <p style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Still need help?</p>
+              <button id="help-contact-btn" class="btn-primary" style="width: 100%; max-width: 200px;">Contact Support</button>
+            </div>
           </div>
         </div>
       </div>
@@ -119,7 +144,41 @@ export const HelpGuide = {
       maxWidth: '700px',
       padding: '0',
       onRender: () => {
+        const input = document.getElementById('help-bot-input');
+        const askBtn = document.getElementById('help-ask-btn');
+        const guidesView = document.getElementById('help-guides-view');
+        const chatView = document.getElementById('help-chat-view');
+        const closeChatBtn = document.getElementById('close-chat-btn');
         const contactBtn = document.getElementById('help-contact-btn');
+
+        const triggerBot = async () => {
+          const query = input.value.trim();
+          if (!query) return;
+
+          // Switch views
+          guidesView.style.display = 'none';
+          chatView.style.display = 'flex';
+          document.getElementById('help-header').style.padding = '1.25rem 1.5rem';
+          
+          this.addMessage('user', query);
+          input.value = '';
+          
+          document.getElementById('help-chat-loader').style.display = 'block';
+          const response = await AiService.askHelpBot(query, this.chatHistory);
+          document.getElementById('help-chat-loader').style.display = 'none';
+          
+          this.addMessage('bot', response);
+        };
+
+        input.onkeypress = (e) => { if (e.key === 'Enter') triggerBot(); };
+        askBtn.onclick = triggerBot;
+
+        closeChatBtn.onclick = () => {
+          chatView.style.display = 'none';
+          guidesView.style.display = 'block';
+          document.getElementById('help-header').style.padding = '2rem 1.5rem';
+        };
+
         if (contactBtn) {
           contactBtn.onclick = () => {
             ModalService.hide();
@@ -129,5 +188,23 @@ export const HelpGuide = {
         }
       }
     });
+  },
+
+  addMessage(role, text) {
+    const chatContainer = document.getElementById('help-chat-messages');
+    if (!chatContainer) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.style = role === 'user' 
+      ? "align-self: flex-end; background: var(--accent-primary); color: white; padding: 0.75rem 1rem; border-radius: 12px 12px 0 12px; max-width: 85%; font-size: 0.9rem; font-weight: 500;"
+      : "align-self: flex-start; background: var(--surface-color); color: var(--text-primary); padding: 0.75rem 1rem; border-radius: 12px 12px 12px 0; max-width: 85%; font-size: 0.9rem; border: 1px solid var(--glass-border); line-height: 1.5;";
+    
+    msgDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    chatContainer.appendChild(msgDiv);
+    
+    this.chatHistory.push({ role, content: text });
+    
+    const scrollArea = document.getElementById('help-main-content');
+    if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
   }
 }
