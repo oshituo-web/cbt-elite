@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cbt-elite-v7' // Incremented to v7
+const CACHE_NAME = 'cbt-elite-v9' // Incremented to v9
 const ASSETS = [
   '/',
   '/index.html',
@@ -40,18 +40,38 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// 3. Fetch - Stale-While-Revalidate Strategy
+// 3. Fetch - Optimized Strategy
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+  
+  // Skip non-GET and Supabase API calls
   if (event.request.method !== 'GET') return
-  if (event.request.url.includes('supabase.co')) return
+  if (url.hostname.includes('supabase.co')) return
 
+  // NETWORK-FIRST for Navigation (HTML) and Application Logic (main.js)
+  // This ensures users always get the latest version if online.
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('main.js') || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone())
+            return networkResponse
+          })
+        })
+        .catch(() => caches.match(event.request))
+    )
+    return
+  }
+
+  // STALE-WHILE-REVALIDATE for other assets (CSS, Images, Fonts)
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
         const fetchedResponse = fetch(event.request).then((networkResponse) => {
           cache.put(event.request, networkResponse.clone())
           return networkResponse
-        }).catch(() => cachedResponse) // Fallback to cache if network fails
+        }).catch(() => cachedResponse)
 
         return cachedResponse || fetchedResponse
       })

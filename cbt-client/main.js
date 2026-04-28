@@ -1,6 +1,7 @@
 import { AuthService } from './src/services/auth'
 import { IndexedDbService } from './src/services/indexedDbService'
 import { DataService } from './src/services/data'
+import { NotificationService } from './src/services/NotificationService'
 import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
 
@@ -211,6 +212,11 @@ async function initApp() {
     // Global Theme Initialization (Corrected for .dark-mode architecture)
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.body.classList.toggle('dark-mode', savedTheme === 'dark');
+    
+    // Initialize Font Size Scaling
+    const savedFontSize = localStorage.getItem('font_size') || 'medium';
+    const fontMap = { small: '14px', medium: '16px', large: '18px' };
+    document.documentElement.style.setProperty('--base-font-size', fontMap[savedFontSize]);
     
     // Register event listeners immediately
     setupGlobalActions({ id: 'anon', username: 'Student' });
@@ -642,8 +648,86 @@ async function showDashboard(profile) {
   }, (article) => {
     showNewsArticle(article, activeProfile)
   })
+  // 📱 Mobile Tab Navigation Initialization
+  updateBottomNavForDashboard(activeProfile);
   
   dashboardLoaded = true
+}
+
+let originalBottomNavContent = null;
+
+function restoreBottomNav() {
+  const bottomNav = document.getElementById('bottom-nav');
+  if (bottomNav && originalBottomNavContent) {
+    bottomNav.innerHTML = originalBottomNavContent;
+    originalBottomNavContent = null;
+    if (window.lucide) window.lucide.createIcons();
+    
+    // Re-wire original listeners if necessary, but setupNavigation usually handles it
+    // Actually, setupNavigation is called in showDashboard and other views, 
+    // so we should rely on the standard view rendering to re-attach listeners.
+  }
+}
+
+/**
+ * 📱 Dynamically swaps bottom nav items when on the dashboard
+ */
+function updateBottomNavForDashboard(profile) {
+  const bottomNav = document.getElementById('bottom-nav');
+  if (!bottomNav || window.innerWidth > 768) return;
+
+  if (!originalBottomNavContent) {
+    originalBottomNavContent = bottomNav.innerHTML;
+  }
+  
+  const isAdmin = profile && profile.email === 'oshituo@gmail.com';
+  
+  bottomNav.innerHTML = `
+    <button class="bottom-nav-item active" data-tab="home" title="Home">
+      <i data-lucide="home"></i>
+      <span>Home</span>
+    </button>
+    <button class="bottom-nav-item" data-tab="progress" title="Progress">
+      <i data-lucide="bar-chart-2"></i>
+      <span>Progress</span>
+    </button>
+    <button class="bottom-nav-item" data-tab="compete" title="Compete">
+      <i data-lucide="users"></i>
+      <span>Compete</span>
+    </button>
+    ${isAdmin ? `
+    <button class="bottom-nav-item" data-view="admin" title="Admin">
+      <i data-lucide="shield-check"></i>
+      <span>Admin</span>
+    </button>
+    ` : ''}
+    <button class="bottom-nav-item" id="bottom-more-btn" data-view="more" title="More">
+      <i data-lucide="grid-2x2"></i>
+      <span>More</span>
+    </button>
+  `;
+
+  if (window.lucide) window.lucide.createIcons();
+
+  // Tab Listeners (Dashboard specific)
+  bottomNav.querySelectorAll('.bottom-nav-item[data-tab]').forEach(btn => {
+    btn.onclick = (e) => {
+      const tab = btn.dataset.tab;
+      import('./src/components/Dashboard').then(({ DashboardComponent }) => {
+        DashboardComponent.setActiveTab(tab);
+        bottomNav.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    };
+  });
+
+  // Global View Listeners (Admin, More)
+  bottomNav.querySelectorAll('.bottom-nav-item[data-view]').forEach(btn => {
+    btn.onclick = (e) => {
+      const view = btn.dataset.view;
+      window.navigateTo(view, profile);
+    };
+  });
 }
 
 async function showAnalytics(profile) {
@@ -734,6 +818,11 @@ function hideAll(isExam = false, forceHideLayout = false) {
     if (sidebar) sidebar.style.display = 'flex'
     if (bottomNav) bottomNav.style.display = 'flex'
     document.body.classList.remove('in-exam')
+    
+    // 🔄 RESTORE: Revert Dashboard-specific bottom nav to original if we are NOT on the dashboard
+    if (document.getElementById('dashboard-container').style.display === 'none') {
+      restoreBottomNav();
+    }
   }
 }
 
@@ -774,9 +863,16 @@ async function initNotifications(profile) {
         if (!newsItems) return
 
         const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
-        const unseenCount = newsItems.filter(item => !seenIds.includes(item.id)).length
+        const unseenItems = newsItems.filter(item => !seenIds.includes(item.id))
+        const unseenCount = unseenItems.length
         
         updateBellState(unseenCount)
+
+        // Trigger Push Notification if enabled
+        if (unseenCount > 0 && localStorage.getItem('push_notifications') === 'true') {
+            const latest = unseenItems[0];
+            NotificationService.notify(`New Elite Update: ${latest.title}`, 'Check the News Drawer for the latest exam updates.', 'news');
+        }
     } catch (e) {
         console.warn("Notification check failed:", e)
     }
@@ -870,7 +966,8 @@ function showAboutModal() {
 
         <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
           <p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">
-            Version 2.1.0 - Built for Excellence.
+            Version 2.1.1 - Built for Excellence.
+            <a href="#" id="force-update-link" style="color: var(--accent-primary); margin-left: 10px; font-weight: 700; text-decoration: underline; cursor: pointer;">(Force Update)</a>
             <br>
             &copy; 2026 CBT Elite Learning Systems.
           </p>
@@ -884,5 +981,28 @@ function showAboutModal() {
   const closeBtn = document.getElementById('close-about-modal');
   closeBtn.onclick = () => modal.remove();
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  // Force Update Logic
+  document.getElementById('force-update-link')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (confirm("Force update will clear application cache and reload. Continue?")) {
+      try {
+        if (navigator.serviceWorker) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        }
+        // Clear all caches
+        if (window.caches) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        window.location.reload(true);
+      } catch (err) {
+        window.location.reload(true);
+      }
+    }
+  });
 }
 

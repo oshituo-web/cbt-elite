@@ -7,4 +7,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase credentials missing!')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// 💡 Singleton Pattern to prevent "Multiple GoTrueClient instances" warning
+// Use globalThis to work in both main thread and Service Workers
+if (!globalThis._supabaseInstance) {
+    globalThis._supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+}
+
+export const supabase = globalThis._supabaseInstance

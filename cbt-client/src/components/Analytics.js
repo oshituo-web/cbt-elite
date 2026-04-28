@@ -34,7 +34,7 @@ export const AnalyticsComponent = {
       const canSeeAnalytics = isPremium || hasPredictionToken;
 
       container.innerHTML = `
-        <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative; max-width: 1000px; margin: 0 auto; width: 100%;">
+        <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative; max-width: 1000px; margin: 0 auto; width: 100%; overflow-x: hidden;">
           ${!canSeeAnalytics ? `
             <div id="analytics-premium-gate" style="position: absolute; top: 120px; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); border-radius: 24px; padding: 2rem; text-align: center;">
                <div style="background: var(--accent-gradient); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);">
@@ -48,8 +48,8 @@ export const AnalyticsComponent = {
 
           <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; padding: 0 1rem;">
             <div>
-              <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: 2.25rem; color: var(--text-primary); margin: 0;">Elite Insights</h1>
-              <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; margin-top: 0.25rem;">Advanced Performance Analytics & Mastery</p>
+              <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: clamp(1.2rem, 4vw, 1.8rem); color: var(--text-primary); margin: 0;">Elite Insights</h1>
+              <p style="color: var(--text-secondary); font-weight: 500; font-size: clamp(0.85rem, 2vw, 1rem); margin-top: 0.25rem;">Advanced Performance Analytics & Mastery</p>
             </div>
             <div style="display: flex; gap: 0.75rem;">
                 <button id="show-recap-btn" class="glass-btn" style="height: 48px; border: 1.5px solid var(--accent-primary); color: var(--accent-primary); padding: 0 1.5rem; font-weight: 700; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; background: rgba(37, 99, 235, 0.05);">
@@ -63,31 +63,31 @@ export const AnalyticsComponent = {
 
           <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''} padding: 0 1rem;">
             <!-- TOP LEVEL METRICS -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 3rem;">
-              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--accent-primary); text-align: center;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Total Answered</div>
-                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
-                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--success); font-weight: 600;">\u2191 Lifetime Progress</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 0.75rem; margin-bottom: 3rem;">
+              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--accent-primary); text-align: center;">
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Total Answered</div>
+                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--success); font-weight: 600;">\u2191 Progress</div>
               </div>
               
-              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--success); text-align: center;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Global Accuracy</div>
-                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${accuracy}%</div>
+              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--success); text-align: center;">
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Global Accuracy</div>
+                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${accuracy}%</div>
                 <div style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 0.75rem; overflow: hidden; width: 80%; margin-left: 10%;">
                   <div style="width: ${accuracy}%; height: 100%; background: var(--success); border-radius: 3px;"></div>
                 </div>
               </div>
-
-              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--accent-secondary); text-align: center;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Study Hours</div>
-                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${hours}h</div>
-                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Efficient Preparation</div>
+ 
+              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--accent-secondary); text-align: center;">
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Study Hours</div>
+                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${hours}h</div>
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Efficient Prep</div>
               </div>
-
-              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03); text-align: center;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">JAMB Projection</div>
-                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: #f59e0b;">...</div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Based on weighted mastery</div>
+ 
+              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03); text-align: center;">
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">JAMB Projection</div>
+                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: #f59e0b;">...</div>
+                <div style="margin-top: 0.5rem; font-size: 0.65rem; color: var(--text-secondary); font-weight: 500;">Est. Score</div>
               </div>
             </div>
 
@@ -104,11 +104,11 @@ export const AnalyticsComponent = {
 
             <!-- ELITE AI SYNTHESIS -->
             <div class="glass card scale-in" style="padding: 2.5rem; margin-bottom: 3rem; background: rgba(124, 58, 237, 0.05); border: 1.5px solid var(--accent-secondary); position: relative; overflow: hidden; border-radius: 20px;">
-              <h3 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em;">
-                <i data-lucide="sparkles" style="width: 28px; height: 28px;"></i> Elite AI Synthesis
+              <h3 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i> Elite AI Synthesis
               </h3>
-              <div id="analytics-ai-synthesis" style="font-size: 1.1rem; color: var(--text-primary); line-height: 1.8; font-weight: 500;">
-                <div style="display:flex; align-items:center; gap:10px;"><div class="loader-spinner" style="width:20px;height:20px;"></div> <span style="color:var(--text-secondary);">Analyzing your historical data trajectory...</span></div>
+              <div id="analytics-ai-synthesis" style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.7; font-weight: 500;">
+                <div style="display:flex; align-items:center; gap:10px;"><div class="loader-spinner" style="width:20px;height:20px;"></div> <span style="color:var(--text-secondary); font-size: 0.85rem;">Analyzing your historical data trajectory...</span></div>
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import { AuthService } from '../services/auth'
 import { ModalService } from '../services/ModalService'
+import { SoundService } from '../services/SoundService'
 
 export const SettingsComponent = {
   profile: null,
@@ -272,6 +273,8 @@ export const SettingsComponent = {
       const btn = e.currentTarget
       const isActive = btn.classList.toggle('active')
       localStorage.setItem('sound_effects', isActive ? 'true' : 'false')
+      if (isActive) SoundService.playCorrect();
+      else SoundService.playClick();
     })
 
     // ── Auto-Advance Toggle ───────────────────────────────────
@@ -279,6 +282,7 @@ export const SettingsComponent = {
       const btn = e.currentTarget
       const isActive = btn.classList.toggle('active')
       localStorage.setItem('auto_advance', isActive ? 'true' : 'false')
+      ModalService.showToast(`Auto-advance ${isActive ? 'Enabled' : 'Disabled'}`, isActive ? 'success' : 'info');
     })
 
     // ── Copy Student ID ───────────────────────────────────────

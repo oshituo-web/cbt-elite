@@ -50,6 +50,21 @@ export const HelpGuide = {
             content: 'Join your departmental clash every Saturday for specialized competitions. These are high-stakes events with significant point rewards.'
           }
         ]
+      },
+      {
+        id: 'account-elite',
+        title: 'Elite Account',
+        icon: 'user-check',
+        topics: [
+          {
+            title: 'Free vs Pro',
+            content: 'Free users can practice and join leagues. <b>Elite Pro</b> (₦1,500 Lifetime) unlocks unlimited AI explanations, unlimited Mock Exams, and detailed Subject Weakness analysis.'
+          },
+          {
+            title: 'Activation',
+            content: 'Upgrade via the Settings page. We support Paystack for instant activation. If you have a promo code, apply it during checkout for a discount.'
+          }
+        ]
       }
     ];
 
@@ -60,19 +75,19 @@ export const HelpGuide = {
     ];
 
     const helpHtml = `
-      <div id="help-center-root" class="help-guide-container animate-fadeIn" style="display: flex; flex-direction: column; height: 100%;">
+      <div id="help-center-root" class="help-guide-container animate-fadeIn" style="display: flex; flex-direction: column; height: 85vh; max-height: 800px; overflow: hidden; border-radius: 20px;">
         
-        <!-- Header -->
-        <div id="help-header" style="background: var(--accent-primary); padding: 2rem 1.5rem; color: white; border-radius: 20px 20px 0 0; transition: all 0.3s ease;">
+        <!-- Header (Sticky) -->
+        <div id="help-header" style="background: var(--accent-primary); padding: 1.75rem 1.5rem; color: white; transition: all 0.3s ease; flex-shrink: 0;">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
             <i data-lucide="help-circle" style="width: 24px; height: 24px;"></i>
             <h2 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.5rem;">Elite Help Center</h2>
           </div>
-          <p style="margin: 0; opacity: 0.9; font-size: 0.9rem; font-weight: 500;">Ask our AI Bot or browse the guides below.</p>
+          <p style="margin: 0; opacity: 0.9; font-size: 0.85rem; font-weight: 500;">Ask our AI Bot or browse the guides below.</p>
         </div>
 
-        <!-- AI Search / Bot Bar -->
-        <div id="help-search-area" style="padding: 1.25rem; background: rgba(0,0,0,0.05); border-bottom: 1px solid var(--glass-border); position: relative; z-index: 5;">
+        <!-- AI Search / Bot Bar (Sticky) -->
+        <div id="help-search-area" style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.05); border-bottom: 1px solid var(--glass-border); position: relative; z-index: 5; flex-shrink: 0;">
           <div style="position: relative; display: flex; gap: 0.5rem;">
             <div style="position: relative; flex: 1;">
               <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
@@ -83,32 +98,46 @@ export const HelpGuide = {
         </div>
 
         <!-- Main Scrollable Content -->
-        <div id="help-main-content" style="flex: 1; overflow-y: auto; padding: 1.5rem; scroll-behavior: smooth;">
+        <div id="help-main-content" style="flex: 1; overflow-y: auto; padding: 1.5rem; scroll-behavior: smooth; background: var(--surface-color);">
           
           <!-- AI Chat View (Hidden by default) -->
           <div id="help-chat-view" style="display: none; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-            <div id="help-chat-messages"></div>
+            <div id="help-chat-messages" style="display: flex; flex-direction: column; gap: 1rem;"></div>
             <div id="help-chat-loader" style="display: none; text-align: center; padding: 1rem;">
                <div class="loader-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Elite Bot is thinking...</p>
             </div>
-            <div style="text-align: center;">
-              <button id="close-chat-btn" style="background: none; border: none; color: var(--accent-primary); font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: underline;">Back to Help Guides</button>
+            <div style="text-align: center; margin-top: 1rem;">
+              <button id="close-chat-btn" style="background: rgba(0,0,0,0.05); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">← Back to Guides</button>
             </div>
           </div>
 
           <!-- Category Guides -->
           <div id="help-guides-view">
-            <div class="help-categories" style="display: grid; gap: 1.5rem; margin-bottom: 3rem;">
+            <!-- 💎 PREMIUM CTA -->
+            <div class="glass card scale-in" style="margin-bottom: 2rem; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4338ca; padding: 1.5rem; border-radius: 16px; color: white;">
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <div style="background: rgba(255,215,0,0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fbbf24; flex-shrink: 0;">
+                        <i data-lucide="crown" style="width: 24px;"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: #fbbf24;">Elite Pro Access</h4>
+                        <p style="margin: 0.25rem 0 1rem 0; font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.4;">Unlock unlimited AI explanations, premium mock exams, and deep weakness analysis.</p>
+                        <button onclick="window.navigateTo('settings')" class="btn-primary" style="background: #fbbf24; color: #1e1b4b; border: none; font-size: 0.75rem; padding: 0.5rem 1rem; height: auto;">UPGRADE NOW</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-categories" style="display: grid; gap: 2rem; margin-bottom: 2.5rem;">
               ${categories.map(cat => `
                 <div class="help-section">
-                  <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--accent-primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.05rem; color: var(--accent-primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
                     <i data-lucide="${cat.icon}" style="width: 18px;"></i> ${cat.title}
                   </h3>
-                  <div style="display: grid; gap: 0.75rem;">
+                  <div style="display: grid; gap: 0.85rem;">
                     ${cat.topics.map(topic => `
-                      <div class="help-card glass" style="padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">${topic.title}</h4>
+                      <div class="help-card glass" style="padding: 1.25rem; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.02);">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 800; color: var(--text-primary);">${topic.title}</h4>
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">${topic.content}</p>
                       </div>
                     `).join('')}
@@ -118,22 +147,43 @@ export const HelpGuide = {
             </div>
 
             <!-- FAQ Section -->
-            <div style="margin-bottom: 3rem;">
-              <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; color: var(--accent-primary); margin: 0 0 1rem 0;">Frequently Asked Questions</h3>
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="margin-bottom: 2.5rem; background: rgba(0,0,0,0.02); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border);">
+              <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.05rem; color: var(--text-primary); margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="message-square" style="width: 18px;"></i> Frequently Asked Questions
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 ${faqs.map(faq => `
                   <div class="faq-item" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
-                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem;">Q: ${faq.q}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">${faq.a}</div>
+                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--accent-primary); margin-bottom: 0.35rem;">${faq.q}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">${faq.a}</div>
                   </div>
                 `).join('')}
               </div>
             </div>
 
+            <!-- Community / Social -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem;">
+                <a href="https://chat.whatsapp.com/..." target="_blank" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #25d36630;">
+                    <i data-lucide="users" style="color: #25d366;"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Elite Community</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Join WhatsApp</div>
+                    </div>
+                </a>
+                <a href="https://twitter.com/..." target="_blank" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #1da1f230;">
+                    <i data-lucide="twitter" style="color: #1da1f2;"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Updates</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Follow Elite</div>
+                    </div>
+                </a>
+            </div>
+
             <!-- Footer Action -->
-            <div style="padding: 2rem; text-align: center; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.02); border-radius: 16px;">
-              <p style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Still need help?</p>
-              <button id="help-contact-btn" class="btn-primary" style="width: 100%; max-width: 200px;">Contact Support</button>
+            <div style="padding: 2rem; text-align: center; border-top: 1px solid var(--glass-border); background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.03) 100%); border-radius: 0 0 16px 16px;">
+              <p style="font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Still have questions?</p>
+              <button id="help-contact-btn" class="btn-dominant" style="width: 100%; max-width: 250px; height: 48px;">MESSAGE SUPPORT</button>
+              <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 1rem; opacity: 0.7;">Typical response time: < 2 hours</p>
             </div>
           </div>
         </div>
@@ -143,6 +193,7 @@ export const HelpGuide = {
     ModalService.showCustom(helpHtml, {
       maxWidth: '700px',
       padding: '0',
+      allowScroll: false,
       onRender: () => {
         const input = document.getElementById('help-bot-input');
         const askBtn = document.getElementById('help-ask-btn');

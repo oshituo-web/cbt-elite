@@ -22,7 +22,7 @@ export const QuestionRenderer = {
         <p style="font-size: 0.875rem; color: var(--accent-primary); font-weight: 600; margin: 0 0 0.5rem 0;">Your Answer:</p>
         <textarea id="theory-input" class="glass" 
           placeholder="Type your detailed answer here..." 
-          style="width: 100%; min-height: 200px; padding: 1rem; color: inherit; line-height: 1.6; resize: vertical;"
+          style="width: 100%; min-height: 200px; padding: 1rem; color: inherit; line-height: 1.6; resize: vertical; font-size: var(--base-font-size, 1rem);"
           ${isReviewMode ? 'disabled' : ''}>${sanitizeContent(value)}</textarea>
         <div id="paste-warning" style="color: var(--error); font-size: 0.75rem; margin-top: 0.25rem; display: none;">⚠️ Pasting is disabled in exam mode.</div>
       </div>
@@ -103,7 +103,7 @@ export const QuestionRenderer = {
       btn.dataset.id = ans.id;
       btn.innerHTML = `
         <span class="option-holder">${letter}</span>
-        <span style="flex: 1; color: inherit; font-weight: inherit;">${sanitizeContent(ans.option_text || ans.answer_text || 'Missing Option')}</span>
+        <span style="flex: 1; color: inherit; font-weight: inherit; font-size: var(--base-font-size, 1.15rem);">${sanitizeContent(ans.option_text || ans.answer_text || 'Missing Option')}</span>
         ${isReviewMode && isCorrect ? `
           <span style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700;">
             ${isSelected ? '✅ Matches Your Choice' : '✓ Correct Answer'}

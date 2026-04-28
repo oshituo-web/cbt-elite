@@ -132,8 +132,10 @@ export const ModalService = {
     overlay.className = 'modal-overlay fade-in';
     overlay.style = `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(12px); padding: ${options.padding || '1.5rem'};`;
     
+    const allowScroll = options.allowScroll !== false;
+    
     overlay.innerHTML = `
-      <div class="glass card scale-in" style="width:100%; max-width:${options.maxWidth || '500px'}; max-height: 90vh; overflow-y: auto; border-radius:24px; border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,0.6); position: relative;">
+      <div class="glass card scale-in" style="width:100%; max-width:${options.maxWidth || '500px'}; max-height: 90vh; overflow-y: ${allowScroll ? 'auto' : 'hidden'}; border-radius:24px; border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,0.6); position: relative; display: flex; flex-direction: column;">
         <button id="elite-modal-close" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;">
           <i data-lucide="x" style="width: 18px;"></i>
         </button>

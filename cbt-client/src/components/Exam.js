@@ -10,6 +10,7 @@ import { AiService } from '../services/aiService'
 import { CalculatorComponent } from './Calculator'
 import { AITutorSidebar } from './AITutorSidebar'
 import { ModalService } from '../services/ModalService'
+import { SoundService } from '../services/SoundService'
 import renderMathInElement from 'katex/dist/contrib/auto-render.mjs'
 
 export class Exam {
@@ -193,7 +194,7 @@ export class Exam {
                 <i data-lucide="chevron-left"></i>
               </button>
               <span id="display-exam-type" class="badge-exam">...</span>
-              <div id="q-meta" class="q-counter-mini" style="margin-left: 0.5rem; opacity: 0.8; font-size: 0.75rem;">1 of 0</div>
+              <div id="q-meta" class="q-counter-mini">1 of 0</div>
             </div>
 
             <div class="header-right">
@@ -236,7 +237,7 @@ export class Exam {
               
               <div id="q-diagram" style="display: none; margin-bottom: 2.5rem;"></div>
               
-              <div id="q-text" style="font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem; font-weight: 600; color: var(--text-primary); font-family: 'Outfit';">...</div>
+              <div id="q-text" style="font-size: var(--base-font-size, 1.2rem); line-height: 1.6; margin-bottom: 2.5rem; font-weight: 600; color: var(--text-primary); font-family: 'Outfit';">...</div>
 
               <div id="options-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
               
@@ -547,7 +548,7 @@ export class Exam {
           <div class="passage-header">
             <i data-lucide="book-open" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 0.4rem;"></i> ${headerText}
           </div>
-          <div class="passage-body">
+          <div class="passage-body" style="font-size: var(--base-font-size, 1.1rem); line-height: 1.7;">
             ${sanitizeContent(formattedContent)}
           </div>`
         
@@ -687,7 +688,23 @@ export class Exam {
       } else {
         document.querySelectorAll('.option-btn').forEach(btn => {
           btn.onclick = () => {
-            this.session.setAnswer(this.session.currentIndex, btn.dataset.id)
+            const q = this.session.getCurrentQuestion();
+            const selectedId = btn.dataset.id;
+            
+            // Sound Effects Logic
+            if (this.mode === 'practice' && !this.isReviewMode) {
+              const correctAns = q.answers?.find(a => a.is_correct);
+              if (correctAns) {
+                if (selectedId === correctAns.id) SoundService.playCorrect();
+                else SoundService.playWrong();
+              } else {
+                SoundService.playClick();
+              }
+            } else {
+              SoundService.playClick();
+            }
+
+            this.session.setAnswer(this.session.currentIndex, selectedId)
             this.saveState()
             
             // 🔥 CLASH HARDENING: Instant Sync for competitions
@@ -701,6 +718,13 @@ export class Exam {
 
             this.updateUI()
             this.renderSidebar()
+
+            // Auto-Advance Logic
+            if (localStorage.getItem('auto_advance') !== 'false' && !this.isReviewMode) {
+              setTimeout(() => {
+                if (this.session.next()) this.updateUI();
+              }, 600); // Slight delay so they see the selected state
+            }
           }
         })
       }
