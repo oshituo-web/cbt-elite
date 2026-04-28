@@ -158,26 +158,32 @@ export const DashboardComponent = {
         isSystemFree = systemConfig.explanations_free_access // For legacy checks
         // Sync League Status & Check for Tier Changes
         const lastTier = localStorage.getItem('elite_last_league_tier')
-        const { data: leagueSync } = await DataService.syncLeagueStatus(this.profile.id)
-        
-        // --- 🔥 FIX: Sanitize Tiers to prevent Subscription levels leaking into Leagues ---
-        const VALID_LEAGUE_TIERS = ['Bronze', 'Silver', 'Gold', 'Diamond', 'Elite'];
-        let currentTier = (leagueSync && leagueSync.tier) ? leagueSync.tier : 'Bronze';
-        
-        // If the server returns a subscription tier (free/medium/premium), map to Bronze
-        const subsTiers = ['free', 'freemium', 'medium', 'premium'];
-        if (subsTiers.includes(currentTier.toLowerCase()) || !VALID_LEAGUE_TIERS.includes(currentTier)) {
-            currentTier = 'Bronze';
-        }
+        if (this.profile.id === 'anon') {
+            console.warn("Dashboard: Skipping league sync for anonymous session");
+            this.leagueData = { tier: 'Bronze' };
+            if (this.profile) this.profile.league_tier = 'Bronze';
+        } else {
+            const { data: leagueSync } = await DataService.syncLeagueStatus(this.profile.id)
+            
+            // --- 🔥 FIX: Sanitize Tiers to prevent Subscription levels leaking into Leagues ---
+            const VALID_LEAGUE_TIERS = ['Bronze', 'Silver', 'Gold', 'Diamond', 'Elite'];
+            let currentTier = (leagueSync && leagueSync.tier) ? leagueSync.tier : 'Bronze';
+            
+            // If the server returns a subscription tier (free/medium/premium), map to Bronze
+            const subsTiers = ['free', 'freemium', 'medium', 'premium'];
+            if (subsTiers.includes(currentTier.toLowerCase()) || !VALID_LEAGUE_TIERS.includes(currentTier)) {
+                currentTier = 'Bronze';
+            }
 
-        this.leagueData = { ...(leagueSync || {}), tier: currentTier };
-        if (this.profile) this.profile.league_tier = currentTier;
-        
-        if (lastTier && lastTier !== currentTier && VALID_LEAGUE_TIERS.includes(lastTier)) {
-            const isPromotion = this._isPromotion(lastTier, currentTier);
-            this.showTierChangeModal(lastTier, currentTier, isPromotion);
+            this.leagueData = { ...(leagueSync || {}), tier: currentTier };
+            if (this.profile) this.profile.league_tier = currentTier;
+            
+            if (lastTier && lastTier !== currentTier && VALID_LEAGUE_TIERS.includes(lastTier)) {
+                const isPromotion = this._isPromotion(lastTier, currentTier);
+                this.showTierChangeModal(lastTier, currentTier, isPromotion);
+            }
+            localStorage.setItem('elite_last_league_tier', currentTier);
         }
-        localStorage.setItem('elite_last_league_tier', currentTier);
         console.log("Dashboard: League synced", this.leagueData)
     } catch (err) {
         console.error("Dashboard data fetch failed:", err)
@@ -267,15 +273,9 @@ export const DashboardComponent = {
     // Determine Achievements
     const badges = [];
     if (this.profile.streak_count >= 7) badges.push({ emoji: '<i data-lucide="flame" style="width: 16px; height: 16px; color: var(--warning);"></i>', title: '7-Day Streak' });
-    if (v2_totalQuestions >= 500) badges.push({ emoji: '<i data-lucide="shield" style="width: 16px; height: 16px; color: var(--accent-secondary);"></i>', title: 'Veteran' });
     if (accuracy >= 80 && history.length >= 5) badges.push({ emoji: '<i data-lucide="target" style="width: 16px; height: 16px; color: var(--primary);"></i>', title: 'Sharpshooter' });
     if (this.profile.activation_status) badges.push({ emoji: '<i data-lucide="gem" style="width: 16px; height: 16px; color: var(--accent-primary);"></i>', title: 'Activated' });
-    if (currentMilestone) {
-        badges.push({ 
-            emoji: `<i data-lucide="${currentMilestone.badge}" style="width: 16px; height: 16px; color: ${currentMilestone.color};"></i>`, 
-            title: `Daily ${currentMilestone.title}` 
-        });
-    }
+
 
     const badgesHTML = badges.length > 0 ? `
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
@@ -549,55 +549,59 @@ export const DashboardComponent = {
             </div>
 
             <!-- Study Stats Card (Ultra Compact Grid) -->
-            <div class="glass card" style="padding: 12px; display: flex; flex-direction: column; gap: 10px; border-radius: 16px;">
-              <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Study Stats</h3>
+            <div class="glass card study-stats-card" style="display: flex; flex-direction: column; gap: 8px; border-radius: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Study Stats</h3>
+                ${v2_totalQuestions >= 500 ? `<div class="veteran-badge-compact"><i data-lucide="shield" style="width: 11px; height: 11px;"></i> VETERAN</div>` : ''}
+              </div>
               
               <!-- Top Metrics 2x2 Grid -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-label">
                     <i data-lucide="book-open" style="width: 10px; color: var(--primary);"></i> SOLVED
                   </div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--primary); margin-top: 2px;">${v2_totalQuestions}</div>
+                  <div class="stat-value" style="color: var(--primary);">${v2_totalQuestions}</div>
                 </div>
-                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                <div class="stat-item">
+                  <div class="stat-label">
                     <i data-lucide="target" style="width: 10px; color: var(--success);"></i> ACCURACY
                   </div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--success); margin-top: 2px;">${accuracy}%</div>
+                  <div class="stat-value" style="color: var(--success);">${accuracy}%</div>
                 </div>
-                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                <div class="stat-item">
+                  <div class="stat-label">
                     <i data-lucide="trophy" style="width: 10px; color: var(--accent-secondary);"></i> EXAMS
                   </div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--accent-secondary); margin-top: 2px;">${examsCompleted}</div>
+                  <div class="stat-value" style="color: var(--accent-secondary);">${examsCompleted}</div>
                 </div>
-                <div class="glass card" style="padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02);">
-                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                <div class="stat-item">
+                  <div class="stat-label">
                     <i data-lucide="clock" style="width: 10px; color: var(--warning);"></i> TIME
                   </div>
-                  <div style="font-family: 'Outfit'; font-weight: 900; font-size: 18px; color: var(--warning); margin-top: 2px;">${studyTimeHours}h</div>
+                  <div class="stat-value" style="color: var(--warning);">${studyTimeHours}h</div>
                 </div>
               </div>
 
               <!-- Bottom: Focus Area Inline -->
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--glass-border);">
-                <div>
-                  <div id="readiness-label" style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Primary Focus</div>
-                  <div id="readiness-subject" style="font-family: 'Outfit'; font-size: 14px; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; line-height: 1;">...</div>
+              <div class="primary-focus-row">
+                <div style="overflow: hidden;">
+                  <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; opacity: 0.7;">Focus</div>
+                  <strong id="readiness-subject" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px;">...</strong>
                 </div>
                 
-                <div id="readiness-gauge-container" style="position: relative; width: 36px; height: 36px; flex-shrink: 0;">
+                <div id="readiness-gauge-container" style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
                   <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="4" />
                     <path id="readiness-progress-path" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary)" stroke-width="4" stroke-dasharray="0, 100" stroke-linecap="round" />
                   </svg>
-                  <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 11px; color: var(--primary);">0%</div>
+                  <div id="readiness-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 10px; color: var(--primary);">0%</div>
                 </div>
               </div>
               
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">${badgesHTML}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 2px;">${badgesHTML}</div>
             </div>
+
 
             <!-- ELITE REPAIR CENTER CARD -->
             ${this.unresolvedMistakeIds.length > 0 ? `
@@ -1021,12 +1025,15 @@ export const DashboardComponent = {
     if (closeLeague) closeLeague.onclick = () => leagueModal.style.display = 'none'
 
     // Update League Timer & Mini Rank
-    this.updateLeagueMiniRank(this.profile.id)
+    if (this.profile.id !== 'anon') {
+        this.updateLeagueMiniRank(this.profile.id)
+    }
     setInterval(() => this.updateLeagueTimer(), 60000)
     this.updateLeagueTimer()
 
     const initData = async () => {
       try {
+        if (this.profile.id === 'anon') return;
         const { count: bCount } = await DataService.getBookmarkCount(this.profile.id)
         const bCountEl = document.getElementById('bookmark-count')
         if (bCountEl) bCountEl.textContent = bCount || 0
@@ -1172,6 +1179,7 @@ export const DashboardComponent = {
   },
 
   async renderCharts(userId, providedAnalytics = null) {
+    if (userId === 'anon') return;
     const { history, mastery, error } = providedAnalytics || await DataService.getUserAnalytics(userId)
     const historyCtx = document.getElementById('score-history-chart')?.getContext('2d')
     if (historyCtx) {

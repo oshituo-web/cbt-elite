@@ -5,6 +5,7 @@ import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
 
 import { TourGuide } from './src/utils/TourGuide'
+import { HelpGuide } from './src/components/HelpGuide'
 
 // Local Font Imports (Bundled for performance)
 import "@fontsource/inter/index.css"
@@ -34,7 +35,7 @@ window.currentProfile = null;
 /**
  * 🧭 Centralized URL-based Navigation Handler
  */
-window.navigateTo = function(view, profile = currentProfile, pushState = true) {
+window.navigateTo = async function(view, profile = currentProfile, pushState = true) {
   if (!view || !profile) return;
   
   // 🔐 Global Admin Authorization Check (Strict: oshituo@gmail.com only)
@@ -83,35 +84,35 @@ window.navigateTo = function(view, profile = currentProfile, pushState = true) {
   // 3. Handle Modular Views
   switch (view) {
     case 'dashboard':
-      showDashboard(profile);
+      await showDashboard(profile);
       break;
       
     case 'admin':
-      showAdmin(profile);
+      await showAdmin(profile);
       break;
       
     case 'exams':
-      showExamsDashboard(profile);
+      await showExamsDashboard(profile);
       break;
 
     case 'practice':
-      showPracticeDashboard(profile);
+      await showPracticeDashboard(profile);
       break;
       
     case 'profile':
-      showProfile(profile);
+      await showProfile(profile);
       break;
       
     case 'settings':
-      showSettings(profile);
+      await showSettings(profile);
       break;
       
     case 'analytics':
-      showAnalytics(profile);
+      await showAnalytics(profile);
       break;
       
     case 'recap':
-      showWeeklyRecap(profile);
+      await showWeeklyRecap(profile);
       break;
       
     case 'more':
@@ -212,7 +213,7 @@ async function initApp() {
     document.body.classList.toggle('dark-mode', savedTheme === 'dark');
     
     // Register event listeners immediately
-    setupGlobalActions({ username: 'Student' });
+    setupGlobalActions({ id: 'anon', username: 'Student' });
 
     // 🔐 2. START AUTH & DATA FLOW (Parallelized)
     console.log("main.js: Initializing Parallel Boot...")
@@ -288,6 +289,7 @@ function updateHeaderProfile(profile) {
   const streakText = document.getElementById('streak-text')
   const tierText = document.getElementById('tier-text')
   const userIcon = document.querySelector('#profile-trigger i[data-lucide="user-circle"]');
+  currentProfile = profile;
 
   if (avatar) {
     if (profile.avatar_url) {
@@ -346,74 +348,87 @@ function setupGlobalActions(profile) {
   const newsDrawer = document.getElementById('news-drawer')
   const closeNewsBtn = document.getElementById('close-news-drawer')
 
-  if (newsBtn && newsDrawer && !newsBtn.dataset.init) {
-    newsBtn.dataset.init = "true"
-    newsBtn.onclick = async () => {
-      const isActive = newsDrawer.classList.contains('active')
-      const overlay = document.getElementById('sidebar-overlay');
-      
-      if (isActive) {
-        newsDrawer.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-      } else {
-        // Close other drawers first
-        window.navigateTo('dashboard'); // Helper to clean state
-        newsDrawer.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        
-        // Fetch and Render News
-        const contentArea = document.getElementById('news-drawer-content')
-        if (contentArea) {
-           contentArea.innerHTML = '<div style="display:flex;justify-content:center;padding:2rem;"><div class="loader-spinner"></div></div>'
-           try {
-               const { DataService } = await import('./src/services/data')
-               const { data: newsItems } = await DataService.getNewsUpdates(15)
-               
-               if (!newsItems || newsItems.length === 0) {
-                 contentArea.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">No new updates at this time.</p>'
-               } else {
-                 contentArea.innerHTML = newsItems.map(item => `
-                   <div class="news-item-card glass" style="margin-bottom: 0.75rem; padding: 1rem; cursor: pointer; border-left: 3px solid var(--accent-primary);" data-news-id="${item.id}">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                         <span style="font-size: 0.65rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase;">${item.category || 'EXAM UPDATE'}</span>
-                         <span style="font-size: 0.65rem; color: var(--text-secondary);">${new Date(item.created_at).toLocaleDateString()}</span>
-                      </div>
-                      <h4 style="font-size: 0.9rem; margin: 0; color: var(--text-primary); line-height: 1.4;">${item.title}</h4>
-                      <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
-                   </div>
-                 `).join('')
+  const toggleNewsDrawer = async () => {
+    if (!newsDrawer) return;
+    const isActive = newsDrawer.classList.contains('active')
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    if (isActive) {
+      newsDrawer.classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
+    } else {
+      // Specifically close the more drawer if it's open
+      const moreDrawer = document.getElementById('more-drawer');
+      if (moreDrawer) moreDrawer.classList.remove('active');
 
-                 contentArea.querySelectorAll('.news-item-card').forEach(card => {
-                   card.onclick = () => {
-                     const nid = card.dataset.newsId
-                     if (nid) {
-                       newsDrawer.classList.remove('active')
-                       if (overlay) overlay.classList.remove('active');
-                       import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
-                         const dash = document.getElementById('dashboard-container')
-                         if (dash) dash.style.display = 'none'
-                         // 🔥 FIX: Pass ID, not object
-                         NewsArticleComponent.render(nid, () => {
-                           if (dash) dash.style.display = 'block'
-                         })
-                       })
-                     }
+      // Close other drawers first and cleanup state
+      await window.navigateTo('dashboard', profile);
+      
+      newsDrawer.classList.add('active');
+      if (overlay) overlay.classList.add('active');
+      
+      // Fetch and Render News
+      const contentArea = document.getElementById('news-drawer-content')
+      if (contentArea) {
+         contentArea.innerHTML = '<div style="display:flex;justify-content:center;padding:2rem;"><div class="loader-spinner"></div></div>'
+         try {
+             const { DataService } = await import('./src/services/data')
+             const { data: newsItems } = await DataService.getNewsUpdates(15)
+             
+             if (!newsItems || newsItems.length === 0) {
+               contentArea.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">No new updates at this time.</p>'
+             } else {
+               contentArea.innerHTML = newsItems.map(item => `
+                 <div class="news-item-card glass" style="margin-bottom: 0.75rem; padding: 1rem; cursor: pointer; border-left: 3px solid var(--accent-primary);" data-news-id="${item.id}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                       <span style="font-size: 0.65rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase;">${item.category || 'EXAM UPDATE'}</span>
+                       <span style="font-size: 0.65rem; color: var(--text-secondary);">${new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <h4 style="font-size: 0.9rem; margin: 0; color: var(--text-primary); line-height: 1.4;">${item.title}</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                 </div>
+               `).join('')
+
+               contentArea.querySelectorAll('.news-item-card').forEach(card => {
+                 card.onclick = () => {
+                   const nid = card.dataset.newsId
+                   if (nid) {
+                     newsDrawer.classList.remove('active')
+                     if (overlay) overlay.classList.remove('active');
+                      import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
+                        const dash = document.getElementById('dashboard-container')
+                        if (dash) dash.style.display = 'none'
+                        
+                        // Close the drawer so it doesn't stay open behind the article
+                        newsDrawer.classList.remove('active');
+                        const overlay = document.getElementById('sidebar-overlay');
+                        if (overlay) overlay.classList.remove('active');
+
+                        NewsArticleComponent.render(nid, () => {
+                          if (dash) dash.style.display = 'block'
+                        })
+                      })
                    }
-                 })
-                 
-                 const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
-                 const newIds = newsItems.map(n => n.id)
-                 const updatedSeen = [...new Set([...seenIds, ...newIds])]
-                 localStorage.setItem('seen_news_ids', JSON.stringify(updatedSeen))
-                 updateBellState(0)
-               }
-           } catch (err) {
-               console.error("News load error:", err)
-               contentArea.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: var(--error);">Failed to load news updates.</p>'
-           }
-        }
+                 }
+               })
+               
+               const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
+               const newIds = newsItems.map(n => n.id)
+               const updatedSeen = [...new Set([...seenIds, ...newIds])]
+               localStorage.setItem('seen_news_ids', JSON.stringify(updatedSeen))
+               updateBellState(0)
+             }
+         } catch (err) {
+             console.error("News load error:", err)
+             contentArea.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: var(--error);">Failed to load news updates.</p>'
+         }
       }
     }
+  }
+
+  if (newsBtn && newsDrawer) {
+    newsBtn.dataset.init = "true"
+    newsBtn.onclick = toggleNewsDrawer;
   }
 
   if (closeNewsBtn) {
@@ -431,10 +446,7 @@ function setupGlobalActions(profile) {
   
   const moreNewsBtn = document.getElementById('more-news-btn');
   if (moreNewsBtn) {
-    moreNewsBtn.onclick = () => {
-      toggleMoreDrawer();
-      setTimeout(() => newsBtn?.click(), 300);
-    }
+    moreNewsBtn.onclick = () => toggleNewsDrawer();
   }
   // Wire up Logout button in More drawer
   const moreLogoutBtn = document.getElementById('more-logout-btn');
@@ -474,7 +486,7 @@ function setupGlobalActions(profile) {
   if (moreHelpBtn) {
     moreHelpBtn.onclick = () => {
       toggleMoreDrawer();
-      setTimeout(() => TourGuide.start(profile), 300);
+      setTimeout(() => HelpGuide.show(), 300);
     }
   }
 
@@ -527,7 +539,7 @@ function setupGlobalActions(profile) {
   if (helpBtn && !helpBtn.dataset.init) {
     helpBtn.dataset.init = "true"
     helpBtn.onclick = () => {
-      TourGuide.start(profile)
+      HelpGuide.show()
     }
   }
 }
@@ -648,8 +660,8 @@ async function showWeeklyRecap(profile) {
   currentProfile = profile;
   const { DataService } = await import('./src/services/data');
   const { WeeklyRecapComponent } = await import('./src/components/WeeklyRecap');
-  const { mastery, stats } = await DataService.getUserAnalytics(profile.id);
-  WeeklyRecapComponent.render(null, stats, mastery);
+  const { mastery, stats, weekly } = await DataService.getUserAnalytics(profile.id);
+  WeeklyRecapComponent.render(weekly, stats, mastery);
 }
 
 async function showNewsArticle(article, profile) {
@@ -771,15 +783,20 @@ async function initNotifications(profile) {
 }
 
 function updateBellState(count) {
-    const badge = document.getElementById('notification-badge')
-    if (!badge) return
+    const badges = [
+        document.getElementById('notification-badge'),
+        document.getElementById('more-notification-badge')
+    ];
     
-    if (count > 0) {
-        badge.textContent = count > 9 ? '9+' : count
-        badge.style.display = 'flex'
-    } else {
-        badge.style.display = 'none'
-    }
+    badges.forEach(badge => {
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 9 ? '9+' : count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    });
 }
 
 async function syncOfflineData() {

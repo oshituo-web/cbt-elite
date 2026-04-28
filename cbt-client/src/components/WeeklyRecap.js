@@ -50,86 +50,109 @@ export const WeeklyRecapComponent = {
     const wWrong = (weeklySafe.total_questions_answered || 0) - wCorrect
 
     modal.innerHTML = `
-      <div class="modal-content glass" style="max-width: 680px; width: 100%; padding: 3rem; background: var(--bg-color); border-radius: var(--radius-lg); position: relative; max-height: 90vh; overflow-y: auto;">
-        <button id="close-recap" class="btn-secondary" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 40px; height: 40px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+      <div class="modal-content glass scale-in" style="max-width: 800px; width: 95%; padding: 2.5rem; background: var(--bg-color); border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; margin: auto; border: 1.5px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <button id="close-recap" class="btn-secondary" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 36px; height: 36px; padding: 0; min-width: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border);"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
         
-        <div style="text-align: center; margin-bottom: 3rem;">
-          <h2 style="font-family: 'Outfit'; margin: 0; font-weight: 900; font-size: 2rem; color: var(--text-primary); display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
-            <i data-lucide="bar-chart-2" style="color: var(--accent-primary); width: 32px; height: 32px;"></i> Performance Insights
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+          <h2 style="font-family: 'Outfit'; margin: 0; font-weight: 900; font-size: 2.25rem; color: var(--text-primary); display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
+            <i data-lucide="bar-chart-2" style="color: var(--accent-primary); width: 36px; height: 36px;"></i> Elite Recap
           </h2>
-          <p style="color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">Comprehensive analysis of your learning journey</p>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem; font-weight: 600; font-size: 1.1rem;">Your Personalized Performance Audit</p>
         </div>
 
         <!-- Section 1: Weekly Snapshot -->
-        <h3 style="font-size: 0.9rem; color: var(--accent-primary); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; font-family: 'Outfit';">Weekly Snapshot</h3>
-        <div class="glass card mb-xl" style="padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; text-align: center;">
-           <div>
-             <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Answered</div>
-             <div style="font-size: 1.75rem; font-weight: 900; color: var(--primary); font-family: 'Outfit';">${weeklySafe.total_questions_answered || 0}</div>
-           </div>
-           <div>
-             <div style="font-size: 0.75rem; color: var(--success); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Correct</div>
-             <div style="font-size: 1.75rem; font-weight: 900; color: var(--success); font-family: 'Outfit';">${wCorrect}</div>
-           </div>
-           <div>
-             <div style="font-size: 0.75rem; color: var(--error); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Inaccurate</div>
-             <div style="font-size: 1.75rem; font-weight: 900; color: var(--error); font-family: 'Outfit';">${wWrong}</div>
-           </div>
-           <div>
-             <div style="font-size: 0.75rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Globa Rank</div>
-             <div style="font-size: 1.75rem; font-weight: 900; color: var(--accent-secondary); font-family: 'Outfit';">#${weeklySafe.leaderboard_rank || '--'}</div>
-           </div>
+        <div style="margin-bottom: 2.5rem;">
+          <h3 style="font-size: 0.85rem; color: var(--accent-primary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 900; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="calendar" style="width: 16px;"></i> Weekly Snapshot
+          </h3>
+          <div class="glass card" style="padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; text-align: center; border-radius: 16px;">
+             <div>
+               <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Answered</div>
+               <div style="font-size: 1.8rem; font-weight: 900; color: var(--text-primary); font-family: 'Outfit';">${weeklySafe.total_questions_answered || 0}</div>
+             </div>
+             <div>
+               <div style="font-size: 0.7rem; color: var(--success); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Correct</div>
+               <div style="font-size: 1.8rem; font-weight: 900; color: var(--success); font-family: 'Outfit';">${wCorrect}</div>
+             </div>
+             <div>
+               <div style="font-size: 0.7rem; color: var(--error); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Efficiency</div>
+               <div style="font-size: 1.8rem; font-weight: 900; color: var(--error); font-family: 'Outfit';">${weeklySafe.average_score_percentage}%</div>
+             </div>
+             <div>
+               <div style="font-size: 0.7rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Study Time</div>
+               <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-secondary); font-family: 'Outfit';">${(weeklySafe.time_taken_seconds / 3600).toFixed(1)}h</div>
+             </div>
+          </div>
         </div>
 
         <!-- Section 2: Lifetime Performance -->
-        <h3 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; font-family: 'Outfit';">Lifetime Summary</h3>
-        ${renderStatLine('Overall Proficiency', overall.total, overall.correct, 'var(--primary)')}
-        <div class="glass card mb-xl" style="padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-            <div style="background: rgba(147, 51, 234, 0.1); padding: 1rem; border-radius: 12px; color: var(--accent-secondary);">
-              <i data-lucide="clock" style="width: 24px; height: 24px;"></i>
+        <div style="margin-bottom: 2.5rem;">
+          <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 900; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="activity" style="width: 16px;"></i> Lifetime Summary
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            ${renderStatLine('Overall Proficiency', overall.total, overall.correct, 'var(--primary)')}
+            <div class="glass card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem; border-radius: 16px; height: fit-content;">
+                <div style="background: rgba(147, 51, 234, 0.1); width: 44px; height: 44px; border-radius: 12px; color: var(--accent-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <i data-lucide="clock" style="width: 22px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800;">Total Engagement</div>
+                  <div style="font-size: 1.2rem; font-weight: 900; color: var(--text-primary); font-family: 'Outfit';">${(overall.time / 3600).toFixed(1)} Hours Explored</div>
+                </div>
             </div>
-            <div>
-              <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Total Study Time</div>
-              <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); font-family: 'Outfit';">${(overall.time / 3600).toFixed(1)} Hours</div>
-            </div>
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-          <!-- Section 3: Analysis by Mode -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 2.5rem;">
+          <!-- Section 3: My Mode (Exam vs Practice) -->
           <div>
-            <h3 style="font-size: 0.9rem; color: var(--accent-secondary); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; font-family: 'Outfit';">By Mode</h3>
-            <div>
-              ${modeHtml || '<div class="glass card" style="padding: 2rem; color: var(--text-secondary); text-align: center; font-weight: 500;">No data yet.</div>'}
+            <h3 style="font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 900; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="layers" style="width: 16px;"></i> My Mode
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${modeHtml || '<div class="glass card" style="padding: 2rem; color: var(--text-secondary); text-align: center; font-weight: 700;">No mode data detected.</div>'}
             </div>
           </div>
 
-          <!-- Section 4: Analysis by Subject -->
+          <!-- Section 4: By Subject -->
           <div>
-            <h3 style="font-size: 0.9rem; color: var(--success); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; font-family: 'Outfit';">By Subject</h3>
-            <div>
-              ${subjectHtml || '<div class="glass card" style="padding: 2rem; color: var(--text-secondary); text-align: center; font-weight: 500;">No data yet.</div>'}
+            <h3 style="font-size: 0.85rem; color: var(--success); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 900; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="target" style="width: 16px;"></i> By Subjects
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${subjectHtml || '<div class="glass card" style="padding: 2rem; color: var(--text-secondary); text-align: center; font-weight: 700;">No subject data detected.</div>'}
             </div>
           </div>
         </div>
 
         <!-- Section 5: Mastery Breakdown -->
-        <h3 style="font-size: 0.9rem; color: var(--accent-primary); margin-top: 3rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; font-family: 'Outfit';">Mastery Breakdown</h3>
-        <div class="glass card" style="padding: 2rem;">
-          ${masterySafe.length > 0 ? masterySafe.slice(0, 8).map(m => `
-            <div style="margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; align-items: center;">
-                <span style="color: var(--text-primary); font-weight: 700; font-size: 0.9rem;">${m.subject} <span style="color: var(--text-secondary); font-weight: 500; font-size: 0.8rem;">&rsaquo; ${m.topic}</span></span>
-                <span style="font-weight: 900; color: var(--success);">${m.mastery_percentage}%</span>
-              </div>
-              <div style="height: 4px; background: rgba(0,0,0,0.2); border-radius: 2px; overflow: hidden;">
-                <div style="width: ${m.mastery_percentage}%; height: 100%; background: var(--success); border-radius: 2px; transition: width 1s ease;"></div>
-              </div>
+        <div style="margin-bottom: 3rem;">
+          <h3 style="font-size: 0.85rem; color: var(--accent-primary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 900; font-family: 'Outfit'; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="award" style="width: 16px;"></i> Topic Mastery Trajectory
+          </h3>
+          <div class="glass card" style="padding: 1.75rem; border-radius: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+              ${masterySafe.length > 0 ? masterySafe.slice(0, 8).map(m => `
+                <div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;">
+                    <div style="display: flex; flex-direction: column;">
+                      <span style="color: var(--text-primary); font-weight: 800; font-size: 0.85rem; line-height: 1.2;">${m.subject}</span>
+                      <span style="color: var(--text-secondary); font-weight: 600; font-size: 0.75rem;">${m.topic}</span>
+                    </div>
+                    <span style="font-weight: 900; color: var(--success); font-family: 'Outfit';">${m.mastery_percentage}%</span>
+                  </div>
+                  <div style="height: 5px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
+                    <div style="width: ${m.mastery_percentage}%; height: 100%; background: var(--success); border-radius: 3px; transition: width 1s ease;"></div>
+                  </div>
+                </div>
+              `).join('') : '<div style="grid-column: 1/-1; color: var(--text-secondary); text-align: center; padding: 2rem; font-weight: 700;">Complete sessions to unlock deep topic analysis.</div>'}
             </div>
-          `).join('') : '<div style="color: var(--text-secondary); text-align: center; padding: 2rem; font-weight: 500;">Continue your sessions to generate topic mastery data!</div>'}
+          </div>
         </div>
 
-        <div style="margin-top: 4rem; text-align: center;">
-          <button id="recap-back-btn" class="btn-dominant" style="padding: 0 3rem; height: 56px;"><i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i> BACK TO DASHBOARD</button>
+        <div style="text-align: center; padding-top: 1rem;">
+          <button id="recap-back-btn" class="btn-dominant" style="padding: 0 4rem; height: 56px; font-weight: 900; font-size: 1rem; border-radius: 16px;">CLOSE INSIGHTS</button>
         </div>
       </div>
     `

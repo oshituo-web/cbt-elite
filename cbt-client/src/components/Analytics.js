@@ -34,7 +34,7 @@ export const AnalyticsComponent = {
       const canSeeAnalytics = isPremium || hasPredictionToken;
 
       container.innerHTML = `
-        <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative;">
+        <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative; max-width: 1000px; margin: 0 auto; width: 100%;">
           ${!canSeeAnalytics ? `
             <div id="analytics-premium-gate" style="position: absolute; top: 120px; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); border-radius: 24px; padding: 2rem; text-align: center;">
                <div style="background: var(--accent-gradient); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);">
@@ -46,7 +46,7 @@ export const AnalyticsComponent = {
             </div>
           ` : ''}
 
-          <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+          <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; padding: 0 1rem;">
             <div>
               <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: 2.25rem; color: var(--text-primary); margin: 0;">Elite Insights</h1>
               <p style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; margin-top: 0.25rem;">Advanced Performance Analytics & Mastery</p>
@@ -61,33 +61,33 @@ export const AnalyticsComponent = {
             </div>
           </header>
 
-          <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''}">
+          <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''} padding: 0 1rem;">
             <!-- TOP LEVEL METRICS -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-              <div class="glass card" style="padding: 2rem; border-top: 4px solid var(--accent-primary);">
-                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1rem;">Total Answered</div>
-                <div style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
-                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--success); font-weight: 600;">\u2191 Lifetime Progress</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 3rem;">
+              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--accent-primary); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Total Answered</div>
+                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--success); font-weight: 600;">\u2191 Lifetime Progress</div>
               </div>
               
-              <div class="glass card" style="padding: 2rem; border-top: 4px solid var(--success);">
-                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1rem;">Global Accuracy</div>
-                <div style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: var(--text-primary);">${accuracy}%</div>
-                <div style="height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; margin-top: 1rem; overflow: hidden;">
+              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--success); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Global Accuracy</div>
+                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${accuracy}%</div>
+                <div style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 0.75rem; overflow: hidden; width: 80%; margin-left: 10%;">
                   <div style="width: ${accuracy}%; height: 100%; background: var(--success); border-radius: 3px;"></div>
                 </div>
               </div>
 
-              <div class="glass card" style="padding: 2rem; border-top: 4px solid var(--accent-secondary);">
-                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1rem;">Study Hours</div>
-                <div style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: var(--text-primary);">${hours}h</div>
-                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Equivalent to ${Math.round(hours/1.5)} Full Sessions</div>
+              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid var(--accent-secondary); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Study Hours</div>
+                <div style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: var(--text-primary);">${hours}h</div>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Efficient Preparation</div>
               </div>
 
-              <div class="glass card" style="padding: 2rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03);">
-                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1rem;">Projected JAMB Score</div>
-                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: #f59e0b;">...</div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Based on weighted subject mastery</div>
+              <div class="glass card" style="padding: 1.5rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">JAMB Projection</div>
+                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900; color: #f59e0b;">...</div>
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Based on weighted mastery</div>
               </div>
             </div>
 
@@ -113,28 +113,28 @@ export const AnalyticsComponent = {
             </div>
 
             <!-- MIDDLE SECTION: GRAPHS & SUBJECTS -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
               <!-- Score Trend Chart -->
-              <div class="glass card" style="padding: 2rem;">
-                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                  <i data-lucide="trending-up" style="color: var(--accent-primary);"></i> Score Progression
+              <div class="glass card" style="padding: 1.5rem;">
+                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+                  <i data-lucide="trending-up" style="color: var(--accent-primary); width: 20px;"></i> Score Progression
                 </h3>
-                <canvas id="insights-score-chart" height="300"></canvas>
+                <div style="height: 250px; width: 100%;"><canvas id="insights-score-chart"></canvas></div>
               </div>
 
               <!-- Subject Performance List -->
-              <div class="glass card" style="padding: 2rem;">
-                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                  <i data-lucide="target" style="color: var(--success);"></i> Subject Status
+              <div class="glass card" style="padding: 1.5rem;">
+                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+                  <i data-lucide="target" style="color: var(--success); width: 20px;"></i> Subject Status
                 </h3>
-                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-                  ${Object.entries(stats.bySubject).slice(0, 5).map(([sub, s]) => `
+                <div style="display: flex; flex-direction: column; gap: 1.1rem;">
+                  ${Object.entries(stats.bySubject).sort((a,b) => (b[1].correct/b[1].total) - (a[1].correct/a[1].total)).slice(0, 5).map(([sub, s]) => `
                     <div>
-                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.85rem;">
                         <span style="font-weight: 700; color: var(--text-primary);">${sub}</span>
                         <span style="font-weight: 800; color: var(--success);">${Math.round((s.correct / s.total) * 100)}%</span>
                       </div>
-                      <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
+                      <div style="height: 5px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
                         <div style="width: ${(s.correct / s.total) * 100}%; height: 100%; background: var(--accent-primary); transition: width 1s ease;"></div>
                       </div>
                     </div>
@@ -143,46 +143,39 @@ export const AnalyticsComponent = {
               </div>
             </div>
 
-            <!-- BOTTOM SECTION: TOPIC MASTERY -->
-            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">
-              <i data-lucide="award" style="color: var(--accent-secondary);"></i> Topic Mastery Rankings
+            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.35rem; margin-bottom: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">
+              <i data-lucide="award" style="color: var(--accent-secondary); width: 24px;"></i> Topic Proficiency Rankings
             </h2>
-            <div class="glass card" style="padding: 2rem; overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+            <div class="glass card" style="padding: 1.5rem; overflow-x: auto; border-radius: 16px;">
+              <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
                 <thead>
                   <tr style="text-align: left; border-bottom: 1px solid var(--glass-border);">
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Subject</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Topic</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Proficiency</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Status</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Action</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Subject</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Topic</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Proficiency</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${mastery.length > 0 ? mastery.slice(0, 10).map(m => `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                      <td style="padding: 1.25rem 1rem; font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">${m.subject}</td>
-                      <td style="padding: 1.25rem 1rem; color: var(--text-secondary); font-weight: 500;">${m.topic}</td>
-                      <td style="padding: 1.25rem 1rem;">
+                  ${mastery.length > 0 ? mastery.sort((a,b) => b.mastery_percentage - a.mastery_percentage).slice(0, 10).map(m => `
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
+                      <td style="padding: 1rem; font-weight: 700; color: var(--text-primary); font-size: 0.9rem;">${m.subject}</td>
+                      <td style="padding: 1rem; color: var(--text-secondary); font-weight: 500; font-size: 0.85rem;">${m.topic}</td>
+                      <td style="padding: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                          <div style="flex: 1; height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; max-width: 100px; overflow: hidden;">
+                          <div style="flex: 1; height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; min-width: 60px; overflow: hidden;">
                             <div style="width: ${m.mastery_percentage}%; height: 100%; background: ${m.mastery_percentage > 70 ? 'var(--success)' : m.mastery_percentage > 40 ? 'var(--accent-primary)' : 'var(--error)'};"></div>
                           </div>
-                          <span style="font-weight: 800; font-size: 0.9rem; color: var(--text-primary);">${m.mastery_percentage}%</span>
+                          <span style="font-weight: 800; font-size: 0.85rem; color: var(--text-primary);">${m.mastery_percentage}%</span>
                         </div>
                       </td>
-                      <td style="padding: 1.25rem 1rem;">
-                        <span style="font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 6px; background: ${m.mastery_percentage > 70 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)'}; color: ${m.mastery_percentage > 70 ? 'var(--success)' : 'var(--text-secondary)'};">
-                          ${m.mastery_percentage > 70 ? 'MASTERED' : 'LEARNING'}
-                        </span>
-                      </td>
-                      <td style="padding: 1.25rem 1rem;">
-                        <button class="topic-dive-trigger btn-secondary" data-topic="${m.topic}" data-subject="${m.subject}" style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 800; border-radius: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary); min-width: 100px;">
-                          DEEP DIVE
+                      <td style="padding: 1rem;">
+                        <button class="topic-dive-trigger btn-secondary" data-topic="${m.topic}" data-subject="${m.subject}" style="padding: 0.4rem 0.75rem; font-size: 0.7rem; font-weight: 800; border-radius: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                          DIVE
                         </button>
                       </td>
                     </tr>
-                  `).join('') : `<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
+                  `).join('') : `<tr><td colspan="4" style="text-align:center; padding: 3rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
                 </tbody>
               </table>
             </div>

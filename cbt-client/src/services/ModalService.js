@@ -119,5 +119,41 @@ export const ModalService = {
         setTimeout(() => toast.remove(), 300);
       }
     }, duration);
+  },
+
+  /**
+   * Shows a custom HTML modal.
+   */
+  showCustom(html, options = {}) {
+    this.hide(); // Close any existing custom modals
+
+    const overlay = document.createElement('div');
+    overlay.id = 'elite-custom-modal';
+    overlay.className = 'modal-overlay fade-in';
+    overlay.style = `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(12px); padding: ${options.padding || '1.5rem'};`;
+    
+    overlay.innerHTML = `
+      <div class="glass card scale-in" style="width:100%; max-width:${options.maxWidth || '500px'}; max-height: 90vh; overflow-y: auto; border-radius:24px; border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,0.6); position: relative;">
+        <button id="elite-modal-close" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;">
+          <i data-lucide="x" style="width: 18px;"></i>
+        </button>
+        ${html}
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    if (window.lucide) window.lucide.createIcons({ root: overlay });
+
+    document.getElementById('elite-modal-close').onclick = () => this.hide();
+    
+    if (options.onRender) options.onRender();
+  },
+
+  hide() {
+    const existing = document.getElementById('elite-custom-modal');
+    if (existing) {
+      existing.classList.add('fade-out');
+      setTimeout(() => existing.remove(), 200);
+    }
   }
 };

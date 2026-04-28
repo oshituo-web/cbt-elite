@@ -86,7 +86,7 @@ export const DataService = {
     if (filters.randomize) {
       try {
         let excludeIds = [];
-        if (isPremium && userId) {
+        if (isPremium && userId && userId !== 'anon') {
             const { data: seenData } = await supabase
                 .from('user_seen_questions')
                 .select('question_id')
@@ -246,6 +246,7 @@ export const DataService = {
 
   // --- USER & SESSIONS ---
   async getProfile(userId) {
+    if (!userId || userId === 'anon') return { data: null, error: 'Invalid User ID' }
     const { data, error } = await supabase.from('users').select('*').eq('id', userId).single()
     return { data, error }
   },
@@ -436,6 +437,27 @@ export const DataService = {
 
   // --- ANALYTICS ---
   async getUserAnalytics(userId) {
+    if (!userId || userId === 'anon') {
+      return { 
+        history: [], 
+        mastery: [], 
+        subjectMastery: [], 
+        stats: {
+          overall: { total: 0, correct: 0, time: 0 },
+          bySubject: {},
+          byMode: { 'practice': { total: 0, correct: 0 }, 'exam': { total: 0, correct: 0 } }
+        },
+        weekly: {
+          total_questions_answered: 0,
+          correct_answers: 0,
+          time_taken_seconds: 0,
+          average_score_percentage: 0
+        },
+        profile: null,
+        error: null 
+      };
+    }
+
     let userProfile = {
         daily_questions_count: 0,
         streak_count: 0,
@@ -490,7 +512,20 @@ export const DataService = {
 
     const stats = {
       overall: { total: 0, correct: 0, time: sessions.reduce((acc, s) => acc + (s.time_taken_seconds || 0), 0) },
-      bySubject: {}
+      bySubject: {},
+      byMode: { 'practice': { total: 0, correct: 0 }, 'exam': { total: 0, correct: 0 } }
+    }
+
+    // Weekly Snapshot Calculation
+    const nowWAT = this.getWATDate()
+    const sevenDaysAgo = new Date(nowWAT)
+    sevenDaysAgo.setDate(nowWAT.getDate() - 7)
+
+    const weekly = {
+      total_questions_answered: 0,
+      correct_answers: 0,
+      time_taken_seconds: 0,
+      average_score_percentage: 0
     }
 
     if (statsData) {
@@ -506,9 +541,29 @@ export const DataService = {
       })
     }
 
+    // Calculate By Mode and Weekly from sessions
+    if (sessions) {
+      sessions.forEach(s => {
+        const mode = s.session_type === 'exam' ? 'exam' : 'practice'
+        if (!stats.byMode[mode]) stats.byMode[mode] = { total: 0, correct: 0 }
+        stats.byMode[mode].total += (s.answered_questions ?? s.total_questions ?? 0)
+        stats.byMode[mode].correct += (s.correct_answers || 0)
+
+        const compDate = new Date(s.completed_at)
+        if (compDate >= sevenDaysAgo) {
+          weekly.total_questions_answered += (s.answered_questions ?? s.total_questions ?? 0)
+          weekly.correct_answers += (s.correct_answers || 0)
+          weekly.time_taken_seconds += (s.time_taken_seconds || 0)
+        }
+      })
+      if (weekly.total_questions_answered > 0) {
+        weekly.average_score_percentage = Math.round((weekly.correct_answers / weekly.total_questions_answered) * 100)
+      }
+    }
+
     const { data: masteryData, error: mError } = await supabase
       .from('topic_mastery')
-      .select('subject, mastery_percentage, total_attempted')
+      .select('subject, mastery_percentage, total_attempted, topic')
       .eq('user_id', userId)
 
     const subjectMap = {}
@@ -529,8 +584,10 @@ export const DataService = {
     
     return { 
       history, 
-      mastery: processedMastery, 
+      mastery: masteryData || [], // Keep full mastery for Topic Analysis
+      subjectMastery: processedMastery, 
       stats, 
+      weekly,
       profile: userProfile,
       error: hError || mError 
     }
@@ -1089,10 +1146,6 @@ export const DataService = {
     } catch (err) {
       return { data: null, error: err.message }
     }
-  },
-
-  async syncLeagueStatus(userId) {
-    return await supabase.rpc('join_league_group', { p_user_id: userId })
   },
 
   async commitRepair(qid, cleanData) {

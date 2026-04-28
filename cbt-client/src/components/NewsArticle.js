@@ -18,11 +18,19 @@ export const NewsArticleComponent = {
     `
 
     try {
-      const { data: article, error } = await DataService.getNewsArticle(articleId)
+      let article, error;
+      if (typeof articleId === 'object' && articleId !== null) {
+        article = articleId;
+      } else {
+        const result = await DataService.getNewsArticle(articleId)
+        article = result.data;
+        error = result.error;
+      }
+      
       if (error || !article) throw new Error("Article not found")
 
       // Fetch attachments if any
-      const { data: attachments } = await DataService.getNewsAttachments(articleId)
+      const { data: attachments } = await DataService.getNewsAttachments(article.id)
 
       container.innerHTML = `
         <div class="news-article-wrapper" style="width: 100%; max-width: 800px; margin: 0 auto; box-sizing: border-box;">

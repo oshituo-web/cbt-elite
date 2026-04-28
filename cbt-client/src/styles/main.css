@@ -2267,7 +2267,7 @@ body.light-mode .option-btn .option-holder {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 5000; /* Above everything */
+  z-index: 10020; /* Above everything including news-drawer */
   background: var(--bg-color);
   overflow-y: auto;
   display: none;
@@ -2322,7 +2322,7 @@ body.light-mode .option-btn .option-holder {
   height: 100vh;
   background: var(--bg-color);
   box-shadow: -10px 0 50px rgba(0,0,0,0.5);
-  z-index: 6000 !important; /* High enough to be above EVERYTHING */
+  z-index: 10010 !important; /* Above everything including more-drawer */
   transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
@@ -2577,9 +2577,9 @@ body.light-mode .option-btn .option-holder {
   border-bottom: none;
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -12px 48px rgba(0,0,0,0.25);
-  z-index: 6000;
+  z-index: 10001;
   transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(85px + env(safe-area-inset-bottom)); /* Increased to clear bottom navigation */
   display: flex;
   flex-direction: column;
   max-height: 88vh;
@@ -3487,3 +3487,16 @@ button { min-height: clamp(40px, 6vw, 52px) !important; padding: clamp(8px, 2.5v
 .branding-header svg, .topbar svg, .bottom-nav svg { width: clamp(18px, 4vw, 24px) !important; height: clamp(18px, 4vw, 24px) !important; }
 .bottom-nav { height: clamp(56px, 9vw, 72px) !important; }
 .bottom-nav span { font-size: clamp(10px, 2.5vw, 13px) !important; }
+
+/* =========================================
+   STUDY STATS COMPACT REDESIGN
+   ========================================= */
+.study-stats-card { padding: 12px !important; }
+.stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+.stat-item { padding: 8px !important; border-radius: 10px !important; text-align: center !important; border: 1px solid var(--glass-border) !important; background: rgba(255,255,255,0.02) !important; }
+.stat-value { font-family: 'Outfit', sans-serif !important; font-size: 16px !important; font-weight: 600 !important; margin-top: 2px !important; }
+.stat-label { display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; font-size: 11px !important; opacity: 0.7 !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; color: var(--text-secondary) !important; }
+.primary-focus-row { display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 10px !important; background: rgba(255,255,255,0.02) !important; border-radius: 10px !important; border: 1px solid var(--glass-border) !important; }
+.primary-focus-row strong { font-family: 'Outfit', sans-serif !important; font-size: 14px !important; font-weight: 900 !important; line-height: 1 !important; color: var(--text-primary) !important; }
+.veteran-badge-compact { font-size: 11px !important; padding: 4px 8px !important; border-radius: 8px !important; width: fit-content !important; display: flex !important; align-items: center !important; gap: 0.35rem !important; border: 1px solid var(--glass-border) !important; background: rgba(255,255,255,0.03) !important; font-weight: 800 !important; color: var(--accent-secondary) !important; }
+@media (max-width: 360px) { .stat-value { font-size: 14px !important; } .stat-label { font-size: 10px !important; } .study-stats-card { padding: 10px !important; } }
