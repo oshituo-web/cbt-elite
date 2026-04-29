@@ -976,8 +976,9 @@ export const DashboardComponent = {
         'quick-exam-btn': () => window.navigateTo('exams', profile),
         'help-guide-btn': () => TourGuide.start(),
         'open-store-btn': () => {
-            const storeModal = document.getElementById('elite-store-modal');
-            if (storeModal) openModal(storeModal);
+            EliteStoreComponent.render(profile, (updatedProfile) => {
+                document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
+            });
         },
         'open-leaderboard-btn': () => {
             const lbModal = document.getElementById('leaderboard-modal');
@@ -1013,8 +1014,8 @@ export const DashboardComponent = {
     };
 
     Object.entries(actions).forEach(([id, handler]) => {
-        const el = document.getElementById(id);
-        if (el) el.onclick = handler;
+        const els = document.querySelectorAll(`#${id}`);
+        els.forEach(el => el.onclick = handler);
     });
 
     // --- TAB SPECIFIC LOGIC ---

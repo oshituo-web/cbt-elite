@@ -137,7 +137,8 @@ export const EliteStoreComponent = {
                     
                 } catch (err) {
                     console.error("Purchase error:", err);
-                    await ModalService.alert("Purchase Failed", "Something went wrong with the transaction. Please try again later.", "error");
+                    const msg = typeof err === 'string' ? err : (err.message || "Something went wrong with the transaction. Please try again later.");
+                    await ModalService.alert("Purchase Failed", msg, "error");
                 } finally {
                     btn.disabled = false;
                     btn.innerHTML = `${price} <i data-lucide="coins" style="width:10px; margin-left:2px; vertical-align:middle;"></i>`;

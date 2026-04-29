@@ -266,6 +266,14 @@ export const DataService = {
     return { data: true, error: null };
   },
 
+  async purchaseEliteItem(userId, itemId, price) {
+    if (itemId === 'streak_freeze') {
+      return await this.buyStreakFreeze(userId);
+    }
+    // Phase 17: Other items are UI-only stubs for now until their specific RPCs are built
+    return { error: `The item '${itemId}' is coming in the next update!` };
+  },
+
   async updateUser(userId, updates) {
     // Note: Restricted columns (tier, credits) will be blocked by DB trigger
     return await supabase.from('users').update(updates).eq('id', userId).select()
