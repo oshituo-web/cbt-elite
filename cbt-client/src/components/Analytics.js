@@ -34,7 +34,51 @@ export const AnalyticsComponent = {
       const canSeeAnalytics = isPremium || hasPredictionToken;
 
       container.innerHTML = `
-        <div class="analytics-page-wrapper" style="padding-bottom: 5rem; animation: fadeIn 0.4s ease; position: relative; max-width: 1000px; margin: 0 auto; width: 100%; overflow-x: hidden;">
+        <style>
+          .analytics-page-wrapper {
+            padding: 0 1rem 5rem 1rem;
+            animation: fadeIn 0.4s ease;
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            width: 100%;
+          }
+          .synthesis-card {
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            background: rgba(124, 58, 237, 0.05);
+            border: 1.5px solid var(--accent-secondary);
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          @media (max-width: 600px) {
+            .analytics-page-wrapper {
+              padding: 0 0.75rem 6rem 0.75rem;
+            }
+            .metrics-grid {
+              grid-template-columns: repeat(2, 1fr);
+              gap: 0.75rem;
+            }
+            .synthesis-card {
+              padding: 1.25rem;
+            }
+            .charts-grid {
+               grid-template-columns: 1fr !important;
+            }
+          }
+        </style>
+        <div class="analytics-page-wrapper">
           ${!canSeeAnalytics ? `
             <div id="analytics-premium-gate" style="position: absolute; top: 120px; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); border-radius: 24px; padding: 2rem; text-align: center;">
                <div style="background: var(--accent-gradient); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);">
@@ -63,7 +107,7 @@ export const AnalyticsComponent = {
 
           <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''} padding: 0 1rem;">
             <!-- TOP LEVEL METRICS -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 0.75rem; margin-bottom: 3rem;">
+            <div class="metrics-grid">
               <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--accent-primary); text-align: center;">
                 <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Total Answered</div>
                 <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
@@ -103,7 +147,7 @@ export const AnalyticsComponent = {
             </div>
 
             <!-- ELITE AI SYNTHESIS -->
-            <div class="glass card scale-in" style="padding: 2.5rem; margin-bottom: 3rem; background: rgba(124, 58, 237, 0.05); border: 1.5px solid var(--accent-secondary); position: relative; overflow: hidden; border-radius: 20px;">
+            <div class="glass card synthesis-card">
               <h3 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em;">
                 <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i> Elite AI Synthesis
               </h3>
@@ -113,7 +157,7 @@ export const AnalyticsComponent = {
             </div>
 
             <!-- MIDDLE SECTION: GRAPHS & SUBJECTS -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
               <!-- Score Trend Chart -->
               <div class="glass card" style="padding: 1.5rem;">
                 <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">

@@ -200,6 +200,14 @@ async function initApp() {
       window.lucide.createIcons();
     }
 
+    // 🧭 Capture Referral Code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+        localStorage.setItem('elite_referral_code', refCode);
+        console.log("main.js: Referral code captured:", refCode);
+    }
+
     // Initialize layout visibility
     const header = document.getElementById('app-header');
     const sidebar = document.getElementById('app-sidebar');
@@ -966,7 +974,7 @@ function showAboutModal() {
 
         <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
           <p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">
-            Version 2.1.1 - Built for Excellence.
+            Version 2.1.2 - Built for Excellence.
             <a href="#" id="force-update-link" style="color: var(--accent-primary); margin-left: 10px; font-weight: 700; text-decoration: underline; cursor: pointer;">(Force Update)</a>
             <br>
             &copy; 2026 CBT Elite Learning Systems.

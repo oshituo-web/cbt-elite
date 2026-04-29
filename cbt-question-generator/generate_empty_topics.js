@@ -9,8 +9,9 @@ const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1;
 
 // TARGET FOCUS
-const TARGET_EXAM = 'WAEC';
-const TARGET_SUBJECTS = ['Mathematics']; 
+const TARGET_EXAMS = ['WAEC', 'NECO'];
+const TARGET_SUBJECTS = []; 
+const COVERAGE_THRESHOLD = 5;
 
 // Initialization
 const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || "").trim() });
@@ -151,36 +152,77 @@ async function saveToDatabase(items) {
 }
 
 async function requestAI(exam, subject, topic, subtopic) {
-    const prompt = `You are an elite Examination Setter for ${exam} ${subject}. Generate ${BATCH_SIZE} questions for topic: ${topic}, subtopic: ${subtopic}. Return JSON list.`;
+    const prompt = `You are a senior Examination Setter for ${exam} ${subject}. 
+Generate exactly ${BATCH_SIZE} high-quality, exam-standard questions for topic: ${topic}, subtopic: ${subtopic}.
+Requirements:
+1. Questions must be challenging and reflect the actual difficulty level of ${exam} examinations.
+2. All options must be plausible and well-structured.
+3. Explanations must be clear and pedagogically sound.
+4. Ensure curriculum accuracy for ${exam}.
+Return JSON list.`;
     try {
-        const response = await ai.models.generateContent({ model: 'gemini-1.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: generationSchema } });
+        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: generationSchema } });
         return JSON.parse(response.text);
-    } catch (e) { return { rateLimit: true }; }
+    } catch (e) { 
+        console.error(`[AI Error]:`, e.message || e);
+        return { rateLimit: true }; 
+    }
 }
 
 async function turboCharge() {
     await loadKnowledgeBase();
     const syllabus = JSON.parse(fs.readFileSync('syllabus.json', 'utf8'));
-    const combinations = [];
-    const coverageReport = JSON.parse(fs.readFileSync('coverage_report.json', 'utf8'));
-    const coverageMap = {};
-    coverageReport.forEach(item => coverageMap[`${item.exam}|${item.subject}|${item.topic}`] = item.count);
+    
+    console.log("Fetching current coverage from database...");
+    const { data: questions, error } = await supabase.from('questions').select('exam_type, subject, topic');
+    if (error) {
+        console.error("Error fetching coverage:", error.message);
+        return;
+    }
 
+    const coverageMap = {};
+    questions.forEach(q => {
+        const key = `${q.exam_type}|${q.subject}|${q.topic}`;
+        coverageMap[key] = (coverageMap[key] || 0) + 1;
+    });
+
+    const combinations = [];
     Object.keys(syllabus).forEach(exam => {
-        if (TARGET_EXAM && exam !== TARGET_EXAM) return;
+        if (!TARGET_EXAMS.includes(exam)) return;
         Object.keys(syllabus[exam]).forEach(subject => {
             if (TARGET_SUBJECTS.length > 0 && !TARGET_SUBJECTS.includes(subject)) return;
             syllabus[exam][subject].forEach(topic => {
-                if ((coverageMap[`${exam}|${subject}|${topic}`] || 0) === 0) combinations.push({ exam, subject, topic });
+                const count = coverageMap[`${exam}|${subject}|${topic}`] || 0;
+                if (count < COVERAGE_THRESHOLD) {
+                    combinations.push({ exam, subject, topic, currentCount: count });
+                }
             });
         });
     });
 
-    for (const combo of combinations) {
-        const items = await requestAI(combo.exam, combo.subject, combo.topic, "General");
-        if (items.rateLimit) await delay(30000);
-        else await saveToDatabase(items);
+    // Shuffle for variety
+    for (let i = combinations.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [combinations[i], combinations[j]] = [combinations[j], combinations[i]];
     }
+
+    console.log(`[GENERATOR] Found ${combinations.length} topics with < ${COVERAGE_THRESHOLD} questions for ${TARGET_EXAMS.join('/')}.`);
+    for (const combo of combinations) {
+        console.log(`[GENERATOR] Target: ${combo.exam} | ${combo.subject} | ${combo.topic} (Current: ${combo.currentCount})`);
+        const items = await requestAI(combo.exam, combo.subject, combo.topic, "General");
+        
+        if (items.rateLimit) {
+             console.log(`[GENERATOR] Rate limited! Sleeping for 30s...`);
+             await delay(30000);
+        } else if (items && items.length > 0) {
+             console.log(`[GENERATOR] Success! Received payload. Saving to DB...`);
+             const saved = await saveToDatabase(items);
+             console.log(`[GENERATOR] Saved ${saved} questions.`);
+        } else {
+             console.log(`[GENERATOR] Received empty payload.`);
+        }
+    }
+    console.log("[GENERATOR] Run complete.");
 }
 
 turboCharge().catch(console.error);

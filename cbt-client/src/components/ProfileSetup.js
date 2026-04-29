@@ -1,4 +1,5 @@
 import { AuthService } from '../services/auth'
+import { supabase } from '../utils/supabase'
 
 export const ProfileSetupComponent = {
   render(user, onComplete) {
@@ -88,8 +89,36 @@ export const ProfileSetupComponent = {
         full_name,
         department,
         email: user.email,
-        role: 'student'
+        role: 'student',
+        referred_by: localStorage.getItem('elite_referral_code') || null
       })
+
+      if (!error && data && data.length > 0) {
+        const referralCode = localStorage.getItem('elite_referral_code');
+        if (referralCode) {
+            try {
+                // Find the referrer by code
+                const { data: referrer } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('referral_code', referralCode)
+                    .maybeSingle();
+                
+                if (referrer) {
+                    // Create referral link
+                    await supabase.from('referrals').insert({
+                        referrer_id: referrer.id,
+                        referred_id: user.id,
+                        status: 'pending'
+                    });
+                    console.log("Referral link established with:", referrer.id);
+                }
+                localStorage.removeItem('elite_referral_code'); // Clear once used
+            } catch (e) {
+                console.warn("Referral link failed:", e);
+            }
+        }
+      }
 
       if (error) {
         errorDiv.textContent = error.message

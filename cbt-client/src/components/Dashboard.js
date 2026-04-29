@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { EliteStoreComponent } from './EliteStore'
 import { TourGuide } from '../utils/TourGuide'
+import { MasteryEngine } from '../utils/masteryEngine'
 import { SubscriptionService } from '../services/subscriptionService'
 import { SubscriptionManager } from '../utils/subscriptionManager'
 import { ExamCard } from './ExamCard'
@@ -138,6 +139,15 @@ export const DashboardComponent = {
             console.log("Dashboard: Profile synced from DB", this.profile)
         }
         
+        // Fetch Flashcards due
+        const { count: flashcardsDue } = await supabase
+            .from('flashcards')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', this.profile.id)
+            .eq('status', 'active')
+            .lte('next_review_at', new Date().toISOString());
+        this.flashcardsDueCount = flashcardsDue || 0;
+
         // Fetch all toggles
         const { data: configs } = await supabase.from('system_config').select('key, value')
         if (configs) {
@@ -325,7 +335,10 @@ export const DashboardComponent = {
         style,
         history,
         mastery,
-        weakSubject
+        weakSubject,
+        weakTopics: MasteryEngine.getWeakTopics(mastery),
+        strongestSubject: MasteryEngine.getStrongestSubject(this.state?.subjectMastery || []),
+        dailyMission: MasteryEngine.generateDailyMission(MasteryEngine.getWeakTopics(mastery), this.unresolvedMistakeIds)
     };
 
     this.updateUI();
@@ -449,6 +462,10 @@ export const DashboardComponent = {
           </div>
         </div>
 
+
+        <!-- 🧠 SMART DAILY MISSION (NEW) -->
+        ${this.renderDailyMission()}
+
         <!-- Daily Streak Card -->
         <div class="glass card scale-in mb-md" style="padding: 1.25rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -467,19 +484,6 @@ export const DashboardComponent = {
           </p>
         </div>
 
-        <!-- Mastery Center Card -->
-        <div id="mastery-center-card" class="glass card scale-in mb-md" style="padding: 1.25rem 1rem; cursor: pointer; border-left: 4px solid #ef4444; background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="background: rgba(239, 68, 68, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444;">
-              <i data-lucide="zap" style="width: 24px;"></i>
-            </div>
-            <div style="flex: 1;">
-              <h3 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin: 0;">Mastery Center</h3>
-              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">Fix weak points and master your mistakes.</p>
-            </div>
-            <i data-lucide="chevron-right" style="width: 20px; color: var(--text-secondary); opacity: 0.5;"></i>
-          </div>
-        </div>
 
         <!-- Help Guide CTA -->
         <div class="glass card scale-in" style="margin-top: 1rem; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); border: none; padding: 1.5rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1rem; text-align: center;">
@@ -574,6 +578,12 @@ export const DashboardComponent = {
           <div class="glass card scale-in" id="accuracy-trend-card" style="padding: 1rem; min-height: 220px; border-bottom: 3px solid var(--accent-primary);">
             <div style="flex: 1; width: 100%; height: 160px;"><canvas id="score-history-chart"></canvas></div>
           </div>
+        </div>
+
+        <!-- 🧠 MASTERY HUB -->
+        <div style="margin-top: 2rem; border-top: 2px solid var(--glass-border); padding-top: 2rem;">
+            ${this.renderRepairCenter()}
+            ${this.renderMasteryCenter()}
         </div>
     `;
   },
@@ -685,6 +695,24 @@ export const DashboardComponent = {
         </div>
         `}
         
+        <!-- 🎴 DAILY FLASHCARDS (SRS) -->
+        <div id="flashcards-section" style="margin-top: 2rem;">
+          <h2 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="layers" style="width: 20px; color: var(--accent-secondary);"></i> Active Review
+          </h2>
+          <div id="flashcards-card" class="glass card scale-in" style="padding: 1.25rem; border: 1.5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--surface-color) 100%); border-radius: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-family: 'Outfit'; font-size: 1.75rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${this.flashcardsDueCount}</div>
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-top: 0.25rem;">Cards Due Today</div>
+              </div>
+              <button id="start-flashcards-btn" class="btn-primary" ${this.flashcardsDueCount === 0 ? 'disabled' : ''} style="height: 44px; padding: 0 1.25rem; font-weight: 900; border-radius: 10px;">
+                REVIEW NOW
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Weakness analysis will go here in next version -->
         <div id="weakness-analysis-container"></div>
     `;
@@ -850,8 +878,6 @@ export const DashboardComponent = {
             </div>
          </div>
 
-        <!-- REPAIR CENTER -->
-        ${this.unresolvedMistakeIds.length > 0 ? `<div id="repair-center-card" class="glass card scale-in mb-md" style="padding: 1.5rem; border: 2px solid #ef4444; background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, var(--surface-color) 100%);"><button id="repair-mistakes-btn" class="btn-dominant" style="width: 100%; height: 48px; background: #ef4444;">MASTER MISTAKES</button></div>` : ''}
 
         <!-- TREND CHART -->
         <div id="analytics-section" style="margin-top: 1.5rem;">
@@ -1015,6 +1041,57 @@ export const DashboardComponent = {
             }
         };
         initSaved();
+    }
+
+    // --- MASTERY CENTER LISTENERS ---
+    const homeImproveBtn = document.getElementById('home-improve-btn');
+    if (homeImproveBtn) {
+        homeImproveBtn.onclick = () => this.setActiveTab('progress');
+    }
+
+    const practiceTopicBtns = document.querySelectorAll('.practice-topic-btn');
+    practiceTopicBtns.forEach(btn => {
+        btn.onclick = async (e) => {
+            const topic = btn.dataset.topic;
+            const subject = btn.dataset.subject;
+            
+            ModalService.showToast(`Loading ${topic} Practice...`, 'info');
+            
+            // 1. Fetch Subject Object to get ID
+            const { data: subjects } = await DataService.getSubjects();
+            const subjectObj = subjects.find(s => s.subject_name === subject);
+            
+            if (!subjectObj) {
+                ModalService.alert("Subject Not Found", `Could not find subject: ${subject}`, 'error');
+                return;
+            }
+
+            // 2. Fetch Questions with Topic filter
+            const { data: questions, error } = await DataService.getQuestions({
+                subject_id: subjectObj.id,
+                topic: topic,
+                limit: 10,
+                randomize: true
+            });
+
+            if (error || !questions || questions.length === 0) {
+                ModalService.alert("Topic Error", `No active questions found for ${topic}. Try another topic!`, 'warning');
+                return;
+            }
+
+            // 3. Start Exam (Practice Mode)
+            this.onStartExam(questions, 'practice', subject, topic);
+        };
+    });
+
+    const startMissionBtn = document.getElementById('start-mission-btn');
+    if (startMissionBtn) {
+        startMissionBtn.onclick = () => this.handleDailyMission();
+    }
+
+    const startFlashcardsBtn = document.getElementById('start-flashcards-btn');
+    if (startFlashcardsBtn) {
+        startFlashcardsBtn.onclick = () => this.handleFlashcardsReview();
     }
   },
 
@@ -1649,6 +1726,234 @@ export const DashboardComponent = {
             setTimeout(() => { flashEl.style.opacity = '0'; setTimeout(() => flashEl.remove(), 200) }, 150)
         })
         AnimationUtils.playLevelUpSound()
+    }
+  },
+
+  renderRepairCenter() {
+    const count = this.unresolvedMistakeIds.length;
+    if (count === 0) return '';
+
+    return `
+      <div id="repair-center-section" class="mb-lg">
+        <h2 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="shield-alert" style="width: 20px; color: #ef4444;"></i> Repair Center
+        </h2>
+        <div class="glass card scale-in" style="padding: 1.25rem; border: 2px solid #ef4444; background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, var(--surface-color) 100%); border-radius: 20px;">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="background: rgba(239, 68, 68, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444;">
+              <i data-lucide="zap" style="width: 24px;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 900; color: var(--text-primary); font-size: 1rem;">Unresolved Mistakes</div>
+              <div style="font-size: 0.75rem; color: #ef4444; font-weight: 800; text-transform: uppercase;">${count} WEAK POINTS</div>
+            </div>
+          </div>
+          <button id="repair-mistakes-btn" class="btn-dominant" style="width: 100%; height: 48px; background: linear-gradient(90deg, #ef4444 0%, #b91c1c 100%); border-radius: 12px; font-weight: 900;">
+            FIX MISTAKES NOW
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  renderMasteryPreview() {
+    const { weakTopics, strongestSubject } = this.state;
+    const weakCount = weakTopics?.length || 0;
+
+    if (weakCount === 0) {
+      return `
+        <div class="glass card scale-in mb-md" style="padding: 1rem; border-left: 3px solid var(--success); background: rgba(16, 185, 129, 0.03); border-radius: 16px;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--success);">
+              <i data-lucide="check-circle" style="width: 18px;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 800; color: var(--text-primary); font-size: 0.9rem;">Mastery Status</div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">You're doing great. Keep practicing!</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="glass card scale-in mb-md" style="padding: 1rem; border-left: 3px solid var(--warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%); border-radius: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; background: rgba(245, 158, 11, 0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--warning);">
+              <i data-lucide="brain-circuit" style="width: 20px;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 900; color: var(--text-primary); font-size: 0.95rem;">Mastery Preview</div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.1rem; flex-wrap: wrap;">
+                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; font-size: 0.6rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 800;">
+                  ${weakCount} WEAK TOPICS
+                </span>
+                ${strongestSubject ? `<span style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 600;">Strongest in ${strongestSubject.subject}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <button id="home-improve-btn" class="glass-btn" style="padding: 0.5rem 0.85rem; font-size: 0.75rem; color: var(--accent-primary); border-color: rgba(139, 92, 246, 0.3); white-space: nowrap;">
+            Improve Now →
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  renderMasteryCenter() {
+    const { weakTopics } = this.state;
+    
+    if (!weakTopics || weakTopics.length === 0) {
+      return `
+        <div class="glass card mb-lg" style="padding: 2rem 1.5rem; text-align: center; border: 1.5px dashed var(--glass-border); border-radius: 20px;">
+          <div style="width: 48px; height: 48px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--success); margin: 0 auto 1rem;">
+            <i data-lucide="shield-check" style="width: 24px;"></i>
+          </div>
+          <h3 style="font-weight: 900; color: var(--text-primary); margin: 0 0 0.5rem;">Elite Performance</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">No weak areas detected. Maintain your streak and keep pushing!</p>
+        </div>
+      `;
+    }
+
+    const top3 = weakTopics.slice(0, 3);
+
+    return `
+      <div id="mastery-center-section" class="mb-lg">
+        <h2 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="brain" style="width: 20px; color: var(--accent-secondary);"></i> Mastery Center
+        </h2>
+        
+        <div style="display: grid; gap: 0.75rem;">
+          ${top3.map(t => {
+            const priority = MasteryEngine.getPriorityLabel(t.accuracy);
+            return `
+              <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'}; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%); border-radius: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                      <span style="font-size: 0.6rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">${t.subject}</span>
+                      <span class="badge ${priority.class}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">${priority.label}</span>
+                    </div>
+                    <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem; line-height: 1.3;">${t.topic}</div>
+                  </div>
+                  <div style="text-align: right; white-space: nowrap;">
+                    <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'};">${t.accuracy}%</div>
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 700;">${t.attempts} attempts</div>
+                  </div>
+                </div>
+                
+                <button class="practice-topic-btn btn-primary" data-topic="${t.topic}" data-subject="${t.subject}" style="width: 100%; height: 36px; font-size: 0.8rem; font-weight: 800; border-radius: 10px;">
+                  Practice Topic →
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  renderDailyMission() {
+    const { dailyMission } = this.state;
+    if (!dailyMission || dailyMission.totalCount === 0) return '';
+
+    return `
+      <div id="daily-mission-card" class="glass card scale-in mb-lg" style="padding: 1.5rem; border: 2.5px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, var(--surface-color) 100%); border-radius: 24px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -10px; right: -10px; opacity: 0.15; transform: rotate(15deg);">
+          <i data-lucide="target" style="width: 100px; height: 100px; color: var(--accent-primary);"></i>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <span class="badge" style="background: var(--accent-primary); color: white; font-weight: 900; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 20px;">AI RECOMMENDED</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Today's Path</span>
+        </div>
+        
+        <h2 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0 0 0.5rem; line-height: 1.1;">Start Today's Mission</h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1.5rem; max-width: 85%;">
+          Master your weakest areas with a personalized mix of ${dailyMission.totalCount} high-priority questions.
+        </p>
+        
+        <button id="start-mission-btn" class="btn-dominant" style="width: 100%; height: 56px; font-size: 1.1rem; font-weight: 900; background: linear-gradient(90deg, var(--accent-primary) 0%, #1d4ed8 100%); border-radius: 14px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);">
+          LAUNCH MISSION 🔥
+        </button>
+      </div>
+    `;
+  },
+
+  async handleDailyMission() {
+    const { dailyMission } = this.state;
+    if (!dailyMission) return;
+
+    ModalService.showToast("Assembling your mission...", "info");
+
+    try {
+        let allQuestions = [];
+
+        // 1. Fetch Topic Questions
+        for (const t of dailyMission.topics) {
+            const { data: subjects } = await DataService.getSubjects();
+            const subjectObj = subjects.find(s => s.subject_name === t.subject);
+            if (subjectObj) {
+                const { data: q } = await DataService.getQuestions({
+                    subject_id: subjectObj.id,
+                    topic: t.topic,
+                    limit: t.limit,
+                    randomize: true
+                });
+                if (q) allQuestions = [...allQuestions, ...q];
+            }
+        }
+
+        // 2. Fetch Mistake Questions
+        if (dailyMission.mistakes.length > 0) {
+            const { data: mq } = await supabase
+                .from('questions')
+                .select('*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*)')
+                .in('id', dailyMission.mistakes);
+            if (mq) allQuestions = [...allQuestions, ...mq];
+        }
+
+        if (allQuestions.length === 0) {
+            ModalService.alert("Mission Empty", "Not enough data yet. Complete more practice sessions to unlock your Daily Mission!", "info");
+            return;
+        }
+
+        // 3. Start Exam
+        this.onStartExam(allQuestions, 'mission', "Today's Mission", "Personalized Path");
+
+    } catch (err) {
+        console.error("Daily Mission Failed:", err);
+        ModalService.alert("Mission Error", "Could not assemble your mission. Please try again later.", "error");
+    }
+  },
+
+  async handleFlashcardsReview() {
+    ModalService.showToast("Fetching cards...", "info");
+    try {
+        const { data: cards } = await supabase
+            .from('flashcards')
+            .select('*, questions(*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*))')
+            .eq('user_id', this.profile.id)
+            .eq('status', 'active')
+            .lte('next_review_at', new Date().toISOString())
+            .limit(10);
+
+        if (!cards || cards.length === 0) {
+            ModalService.alert("No Cards Due", "You're all caught up! New cards will appear as you make mistakes in practice.", "info");
+            return;
+        }
+
+        const questions = cards.map(c => ({
+            ...c.questions,
+            flashcardId: c.id // Tag it for the exam component to handle SRS updates
+        }));
+
+        this.onStartExam(questions, 'review', "Active Review", "SRS Flashcards");
+
+    } catch (err) {
+        console.error("SRS fetch failed:", err);
+        ModalService.alert("Error", "Could not load flashcards. Try again later.", "error");
     }
   }
 }

@@ -76,6 +76,25 @@ export const EliteStoreComponent = {
                         </div>
                     `).join('')}
                 </div>
+
+                <!-- 🔗 REFER & EARN SECTION -->
+                <div style="margin-top:1.5rem; padding:1.25rem; border-radius:20px; background:linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(139,92,246,0.1) 100%); border:1px solid var(--accent-primary);">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                        <div style="width:36px; height:36px; background:var(--accent-primary); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white;">
+                            <i data-lucide="share-2" style="width:18px;"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin:0; font-family:'Outfit'; font-weight:800; font-size:0.9rem; color:var(--text-primary);">Refer & Earn 100+</h4>
+                        </div>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:1rem; line-height:1.4;">Invite your friends to your League. You both get <strong style="color:#f59e0b;">100 Elite Coins</strong> when they sign up!</p>
+                    
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="referral-link-input" readonly value="${this.generateReferralLink(profile)}" style="flex:1; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; padding:0 0.75rem; font-size:0.7rem; color:var(--text-secondary); outline:none;">
+                        <button id="copy-referral-btn" class="btn-secondary" style="padding:0 0.75rem; font-size:0.75rem; height:36px; border-radius:8px;">COPY</button>
+                        <button id="share-referral-btn" class="btn-primary" style="padding:0 0.75rem; font-size:0.75rem; height:36px; border-radius:8px;">SHARE</button>
+                    </div>
+                </div>
                 
                 <div style="margin-top:2rem; padding:1.25rem; border-radius:16px; background:rgba(255,255,255,0.03); border:1px dashed var(--glass-border); text-align:center;">
                     <p style="font-size:0.75rem; color:var(--text-secondary); margin:0; font-weight:600;">Earn more coins by completing Daily Targets and winning weekend Clashes!</p>
@@ -126,5 +145,38 @@ export const EliteStoreComponent = {
                 }
             };
         });
+
+        // Referral Listeners
+        const copyBtn = document.getElementById('copy-referral-btn');
+        if (copyBtn) {
+            copyBtn.onclick = () => {
+                const input = document.getElementById('referral-link-input');
+                input.select();
+                document.execCommand('copy');
+                ModalService.showToast("Referral link copied!", "success");
+            };
+        }
+
+        const shareBtn = document.getElementById('share-referral-btn');
+        if (shareBtn) {
+            shareBtn.onclick = () => {
+                const link = this.generateReferralLink(profile);
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Join me on CBT Elite!',
+                        text: 'Practice JAMB/WAEC and compete in my League Group. Sign up here:',
+                        url: link
+                    }).catch(() => {});
+                } else {
+                    copyBtn.click();
+                }
+            };
+        }
+    },
+
+    generateReferralLink(profile) {
+        const code = profile.referral_code || 'ELITE-STUDENT';
+        const baseUrl = window.location.origin + window.location.pathname;
+        return `${baseUrl}?ref=${code}`;
     }
 };
