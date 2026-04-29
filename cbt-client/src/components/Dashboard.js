@@ -1905,13 +1905,13 @@ export const DashboardComponent = {
             }
         }
 
-        // 2. Fetch Mistake Questions
+        // 2. Fetch Mistake Questions and normalise through the same formatter
         if (dailyMission.mistakes.length > 0) {
             const { data: mq } = await supabase
                 .from('questions')
                 .select('*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*)')
                 .in('id', dailyMission.mistakes);
-            if (mq) allQuestions = [...allQuestions, ...mq];
+            if (mq) allQuestions = [...allQuestions, ...DataService._formatQuestions(mq)];
         }
 
         if (allQuestions.length === 0) {
@@ -1945,8 +1945,8 @@ export const DashboardComponent = {
         }
 
         const questions = cards.map(c => ({
-            ...c.questions,
-            flashcardId: c.id // Tag it for the exam component to handle SRS updates
+            ...DataService._formatQuestions([c.questions])[0],
+            flashcardId: c.id
         }));
 
         this.onStartExam(questions, 'review', "Active Review", "SRS Flashcards");
