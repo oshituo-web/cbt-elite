@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase'
 import { AuthService } from '../services/auth'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { EliteStoreComponent } from './EliteStore'
+import { SessionsHistoryComponent } from './SessionsHistory'
 import { TourGuide } from '../utils/TourGuide'
 import { MasteryEngine } from '../utils/masteryEngine'
 import { SubscriptionService } from '../services/subscriptionService'
@@ -1006,7 +1007,9 @@ export const DashboardComponent = {
             e.stopPropagation();
             this.showDepartmentPicker(profile);
         },
-        'mastery-center-card': () => this.setActiveTab('improve')
+        'mastery-center-card': () => this.setActiveTab('improve'),
+        'view-history-btn': () => this.showHistory(),
+        'open-mastery-modal-btn': () => this.showMasteryModal()
     };
 
     Object.entries(actions).forEach(([id, handler]) => {
@@ -1049,40 +1052,7 @@ export const DashboardComponent = {
         homeImproveBtn.onclick = () => this.setActiveTab('progress');
     }
 
-    const practiceTopicBtns = document.querySelectorAll('.practice-topic-btn');
-    practiceTopicBtns.forEach(btn => {
-        btn.onclick = async (e) => {
-            const topic = btn.dataset.topic;
-            const subject = btn.dataset.subject;
-            
-            ModalService.showToast(`Loading ${topic} Practice...`, 'info');
-            
-            // 1. Fetch Subject Object to get ID
-            const { data: subjects } = await DataService.getSubjects();
-            const subjectObj = subjects.find(s => s.subject_name === subject);
-            
-            if (!subjectObj) {
-                ModalService.alert("Subject Not Found", `Could not find subject: ${subject}`, 'error');
-                return;
-            }
-
-            // 2. Fetch Questions with Topic filter
-            const { data: questions, error } = await DataService.getQuestions({
-                subject_id: subjectObj.id,
-                topic: topic,
-                limit: 10,
-                randomize: true
-            });
-
-            if (error || !questions || questions.length === 0) {
-                ModalService.alert("Topic Error", `No active questions found for ${topic}. Try another topic!`, 'warning');
-                return;
-            }
-
-            // 3. Start Exam (Practice Mode)
-            this.onStartExam(questions, 'practice', subject, topic);
-        };
-    });
+    // Note: The practice-topic-btn listener is now attached inside showMasteryModal since they render inside the modal
 
     const startMissionBtn = document.getElementById('start-mission-btn');
     if (startMissionBtn) {
@@ -1816,42 +1786,103 @@ export const DashboardComponent = {
       `;
     }
 
-    const top3 = weakTopics.slice(0, 3);
-
     return `
-      <div id="mastery-center-section" class="mb-lg">
-        <h2 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i data-lucide="brain" style="width: 20px; color: var(--accent-secondary);"></i> Mastery Center
-        </h2>
-        
+      <div id="mastery-center-section" class="glass card scale-in mb-lg" style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent-secondary); border-radius: 16px;">
+        <div>
+          <h3 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 900; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);">
+            <i data-lucide="brain" style="width: 20px; color: var(--accent-secondary);"></i> Mastery Center
+          </h3>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">${weakTopics.length} weak areas detected.</p>
+        </div>
+        <button id="open-mastery-modal-btn" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 12px; font-weight: 800;">
+          OPEN
+        </button>
+      </div>
+    `;
+  },
+
+  showHistory() {
+    SessionsHistoryComponent.render(this.profile, () => {
+        // The SessionsHistoryComponent handles restoring the dashboard container display.
+        // We can just optionally refresh if needed.
+    });
+  },
+
+  showMasteryModal() {
+    const { weakTopics } = this.state;
+    if (!weakTopics || weakTopics.length === 0) return;
+
+    const topTopics = weakTopics.slice(0, 5); // Show top 5 weak areas
+
+    const content = `
         <div style="display: grid; gap: 0.75rem;">
-          ${top3.map(t => {
+          ${topTopics.map(t => {
             const priority = MasteryEngine.getPriorityLabel(t.accuracy);
-            return `
-              <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'}; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%); border-radius: 16px;">
+            return \`
+              <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid \${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'}; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%); border-radius: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
                   <div>
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                      <span style="font-size: 0.6rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">${t.subject}</span>
-                      <span class="badge ${priority.class}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">${priority.label}</span>
+                      <span style="font-size: 0.6rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">\${t.subject}</span>
+                      <span class="badge \${priority.class}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">\${priority.label}</span>
                     </div>
-                    <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem; line-height: 1.3;">${t.topic}</div>
+                    <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem; line-height: 1.3;">\${t.topic}</div>
                   </div>
                   <div style="text-align: right; white-space: nowrap;">
-                    <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'};">${t.accuracy}%</div>
-                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 700;">${t.attempts} attempts</div>
+                    <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: \${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'};">\${t.accuracy}%</div>
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 700;">\${t.attempts} attempts</div>
                   </div>
                 </div>
                 
-                <button class="practice-topic-btn btn-primary" data-topic="${t.topic}" data-subject="${t.subject}" style="width: 100%; height: 36px; font-size: 0.8rem; font-weight: 800; border-radius: 10px;">
+                <button class="practice-topic-btn btn-primary" data-topic="\${t.topic}" data-subject="\${t.subject}" style="width: 100%; height: 36px; font-size: 0.8rem; font-weight: 800; border-radius: 10px;">
                   Practice Topic →
                 </button>
               </div>
-            `;
+            \`;
           }).join('')}
         </div>
-      </div>
     `;
+
+    ModalService.alert("Mastery Center", content);
+
+    // Re-attach listeners for the buttons inside the modal
+    setTimeout(() => {
+        const practiceTopicBtns = document.querySelectorAll('.practice-topic-btn');
+        practiceTopicBtns.forEach(btn => {
+            btn.onclick = async (e) => {
+                const topic = btn.dataset.topic;
+                const subject = btn.dataset.subject;
+                
+                ModalService.closeModal(); // Close the modal
+                ModalService.showToast(\`Loading \${topic} Practice...\`, 'info');
+                
+                // 1. Fetch Subject Object to get ID
+                const { data: subjects } = await DataService.getSubjects();
+                const subjectObj = subjects.find(s => s.subject_name === subject);
+                
+                if (!subjectObj) {
+                    ModalService.alert("Subject Not Found", \`Could not find subject: \${subject}\`, 'error');
+                    return;
+                }
+
+                // 2. Fetch Questions with Topic filter
+                const { data: questions, error } = await DataService.getQuestions({
+                    subject_id: subjectObj.id,
+                    topic: topic,
+                    limit: 10,
+                    randomize: true
+                });
+
+                if (error || !questions || questions.length === 0) {
+                    ModalService.alert("Topic Error", \`No active questions found for \${topic}. Try another topic!\`, 'warning');
+                    return;
+                }
+
+                // 3. Start Exam (Practice Mode)
+                this.onStartExam(questions, 'practice', subject, topic);
+            };
+        });
+    }, 100);
   },
 
   renderDailyMission() {
@@ -1867,8 +1898,8 @@ export const DashboardComponent = {
         </div>
         
         <h2 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem; line-height: 1.2;">Today's Mission</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1.5rem; max-width: 90%; line-height: 1.5;">
-          Master your weakest areas with a personalized mix of <strong style="color: var(--text-primary);">${dailyMission.totalCount} high-priority questions</strong>.
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 1.5rem; max-width: 100%; line-height: 1.4;">
+          Master your weakest areas with a personalized mix of <strong style="color: var(--text-primary);">${dailyMission.totalCount} high-priority questions.</strong>
         </p>
         
         <button id="start-mission-btn" class="btn-primary" style="width: 100%; height: 48px; font-size: 0.95rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease;">
