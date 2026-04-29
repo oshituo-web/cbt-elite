@@ -129,6 +129,10 @@ export const EliteStoreComponent = {
                     const { error } = await DataService.purchaseEliteItem(profile.id, itemId, price);
                     if (error) throw error;
 
+                    if (itemId === 'streak_freeze') {
+                        profile.streak_freeze_count = (profile.streak_freeze_count || 0) + 1;
+                    }
+                    
                     profile.elite_coins -= price;
                     document.getElementById('store-balance').innerText = profile.elite_coins;
                     

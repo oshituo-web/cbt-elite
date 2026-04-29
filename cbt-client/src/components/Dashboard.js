@@ -435,7 +435,7 @@ export const DashboardComponent = {
 
         <!-- ELITE ECONOMY WIDGET -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
+          <div id="open-store-btn" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
             <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
               <i data-lucide="coins" style="width: 12px;"></i>
             </div>
@@ -740,7 +740,7 @@ export const DashboardComponent = {
 
         <!-- ELITE ECONOMY WIDGET -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
+          <div id="open-store-btn" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
             <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
               <i data-lucide="coins" style="width: 12px;"></i>
             </div>
@@ -978,6 +978,7 @@ export const DashboardComponent = {
         'open-store-btn': () => {
             EliteStoreComponent.render(profile, (updatedProfile) => {
                 document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
+                document.querySelectorAll('#economy-freeze-val').forEach(el => el.innerText = updatedProfile.streak_freeze_count || 0);
             });
         },
         'open-leaderboard-btn': () => {
