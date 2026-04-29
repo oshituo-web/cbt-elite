@@ -77,9 +77,9 @@ export class Exam {
         // Phase 17: WAEC / NECO Exam sessions
         initialTime = isTheory ? (12 * 60) : (30 * 60) 
       }
-    } else if (this.mode === 'practice') {
-      // Phase 17: Practice sessions
-      initialTime = 20 * 60 // 20 minutes strictly as requested
+    } else if (this.mode === 'practice' || this.mode === 'mission' || this.mode === 'review') {
+      // Mission and Review share the practice timer (20 mins)
+      initialTime = 20 * 60
     }
 
     this.initialTime = initialTime
