@@ -635,7 +635,7 @@ export const DashboardComponent = {
         </div>
 
         <!-- Rankings Section -->
-        <div id="view-leaderboard-grid" class="glass card" style="padding: 1.5rem 1rem; border-bottom: 4px solid var(--success); cursor: pointer;">
+        <div id="open-leaderboard-btn" class="glass card" style="padding: 1.5rem 1rem; border-bottom: 4px solid var(--success); cursor: pointer;">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="background: rgba(16, 185, 129, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success);"><i data-lucide="bar-chart-3" style="width:24px;"></i></div>
             <div style="flex: 1;">
@@ -1252,7 +1252,7 @@ export const DashboardComponent = {
             <tr style="text-align:left;color:var(--text-secondary);font-size:0.75rem; border-bottom: 1px solid var(--glass-border);">
               <th style="padding: 1rem;">RANK</th>
               <th style="padding: 1rem;">STUDENT</th>
-              <th style="padding: 1rem; text-align:right;">QUESTIONS</th>
+              <th style="padding: 1rem; text-align:right;">TOTAL SCORE</th>
             </tr>
           </thead>
           <tbody>
@@ -1274,13 +1274,13 @@ export const DashboardComponent = {
                         ${isUser ? '<span style="font-size:0.6rem; opacity:0.6;">(YOU)</span>' : ''}
                     </div>
                   </td>
-                  <td style="padding:1rem; text-align:right; color: var(--success); font-weight:900;">${entry.total_questions_answered.toLocaleString()}</td>
+                  <td style="padding:1rem; text-align:right; color: var(--success); font-weight:900;">${(entry.total_score || 0).toLocaleString()}</td>
                 </tr>
               `
             }).join('')}
           </tbody>
         </table>
-        <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600;">Rankings are aggregated all-time.</p>
+        <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600;">Rankings are based on accumulated correct answers.</p>
       </div>
     `
     if (window.lucide) {
@@ -1431,7 +1431,8 @@ export const DashboardComponent = {
                 globalIndicator.textContent = `Score: ${globalData[myGlobalIndex].total_score || 0} (#${myGlobalIndex + 1})`
                 globalIndicator.style.color = 'var(--success)'
             } else {
-                globalIndicator.textContent = "Unranked Overall"
+                globalIndicator.textContent = "Unranked (Outside Top 50)"
+                globalIndicator.style.color = 'var(--text-secondary)'
             }
         }
     } catch (e) {

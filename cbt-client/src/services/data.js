@@ -822,11 +822,12 @@ export const DataService = {
 
   async getLeaderboard() {
     const { data, error } = await supabase.rpc('get_global_leaderboard');
-    if (error || !data) return { data, error };
+    if (error || !data) return { data: data || [], error };
     
     // Map the flat RPC output back into the nested shape the UI expects
     const mappedData = data.map(d => ({
-        total_questions_answered: d.total_questions,
+        total_questions_answered: d.total_questions || 0, // Fallback if RPC updated but this code wasn't
+        total_score: d.total_score || 0,
         users: { 
             username: d.username, 
             daily_questions_count: d.daily_questions_count 
