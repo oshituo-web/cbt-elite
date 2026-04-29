@@ -1818,27 +1818,27 @@ export const DashboardComponent = {
         <div style="display: grid; gap: 0.75rem;">
           ${topTopics.map(t => {
             const priority = MasteryEngine.getPriorityLabel(t.accuracy);
-            return \`
-              <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid \${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'}; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%); border-radius: 16px;">
+            return `
+              <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'}; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%); border-radius: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
                   <div>
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                      <span style="font-size: 0.6rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">\${t.subject}</span>
-                      <span class="badge \${priority.class}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">\${priority.label}</span>
+                      <span style="font-size: 0.6rem; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">${t.subject}</span>
+                      <span class="badge ${priority.class}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">${priority.label}</span>
                     </div>
-                    <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem; line-height: 1.3;">\${t.topic}</div>
+                    <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem; line-height: 1.3;">${t.topic}</div>
                   </div>
                   <div style="text-align: right; white-space: nowrap;">
-                    <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: \${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'};">\${t.accuracy}%</div>
-                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 700;">\${t.attempts} attempts</div>
+                    <div style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: ${priority.class === 'critical' ? 'var(--error)' : 'var(--warning)'};">${t.accuracy}%</div>
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 700;">${t.attempts} attempts</div>
                   </div>
                 </div>
                 
-                <button class="practice-topic-btn btn-primary" data-topic="\${t.topic}" data-subject="\${t.subject}" style="width: 100%; height: 36px; font-size: 0.8rem; font-weight: 800; border-radius: 10px;">
+                <button class="practice-topic-btn btn-primary" data-topic="${t.topic}" data-subject="${t.subject}" style="width: 100%; height: 36px; font-size: 0.8rem; font-weight: 800; border-radius: 10px;">
                   Practice Topic →
                 </button>
               </div>
-            \`;
+            `;
           }).join('')}
         </div>
     `;
@@ -1854,14 +1854,14 @@ export const DashboardComponent = {
                 const subject = btn.dataset.subject;
                 
                 ModalService.closeModal(); // Close the modal
-                ModalService.showToast(\`Loading \${topic} Practice...\`, 'info');
+                ModalService.showToast(`Loading ${topic} Practice...`, 'info');
                 
                 // 1. Fetch Subject Object to get ID
                 const { data: subjects } = await DataService.getSubjects();
                 const subjectObj = subjects.find(s => s.subject_name === subject);
                 
                 if (!subjectObj) {
-                    ModalService.alert("Subject Not Found", \`Could not find subject: \${subject}\`, 'error');
+                    ModalService.alert("Subject Not Found", `Could not find subject: ${subject}`, 'error');
                     return;
                 }
 
@@ -1874,7 +1874,7 @@ export const DashboardComponent = {
                 });
 
                 if (error || !questions || questions.length === 0) {
-                    ModalService.alert("Topic Error", \`No active questions found for \${topic}. Try another topic!\`, 'warning');
+                    ModalService.alert("Topic Error", `No active questions found for ${topic}. Try another topic!`, 'warning');
                     return;
                 }
 
