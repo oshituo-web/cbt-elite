@@ -5,6 +5,24 @@ import { NotificationService } from './src/services/NotificationService'
 import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
 
+// 🚀 PERMANENT CACHE SOLUTION: Version Syncing
+const APP_VERSION = 'v10';
+const savedVersion = localStorage.getItem('cbt_elite_version');
+if (savedVersion && savedVersion !== APP_VERSION) {
+    console.log(`[Version Sync] Updating from ${savedVersion} to ${APP_VERSION}`);
+    localStorage.setItem('cbt_elite_version', APP_VERSION);
+    
+    // Clear all caches and reload
+    if ('caches' in window) {
+        caches.keys().then(names => {
+            for (let name of names) caches.delete(name);
+        });
+    }
+    setTimeout(() => location.reload(true), 500);
+} else {
+    localStorage.setItem('cbt_elite_version', APP_VERSION);
+}
+
 import { TourGuide } from './src/utils/TourGuide'
 import { HelpGuide } from './src/components/HelpGuide'
 

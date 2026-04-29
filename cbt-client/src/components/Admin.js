@@ -69,10 +69,13 @@ export const AdminComponent = {
               </div>
               <div style="display: flex; gap: 0.75rem;">
                 <button id="run-weekly-reset-btn" class="btn-secondary" style="height: 40px; padding: 0 1.25rem; font-weight: 800; border-radius: 10px; border-color: var(--success); color: var(--success);">
-                  <i data-lucide="refresh-ccw" style="width: 16px; margin-right: 0.5rem;"></i> RUN WEEKLY RESET
+                  <i data-lucide="refresh-ccw" style="width: 16px; margin-right: 0.5rem;"></i> WEEKLY RESET
+                </button>
+                <button id="process-clash-promotions-btn" class="btn-secondary" style="height: 40px; padding: 0 1.25rem; font-weight: 800; border-radius: 10px; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                  <i data-lucide="trending-up" style="width: 16px; margin-right: 0.5rem;"></i> PROMOTIONS
                 </button>
                 <button id="generate-clash-seeds-btn" class="btn-primary" style="height: 40px; padding: 0 1.5rem; font-weight: 800; border-radius: 10px; background: var(--accent-gradient);">
-                  <i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS
+                  <i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE SEEDS
                 </button>
               </div>
             </div>
@@ -90,8 +93,8 @@ export const AdminComponent = {
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
                 <div class="glass" style="padding: 1.25rem; border-radius: 12px; border: 1px solid var(--glass-border);">
                    <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Promotions</div>
-                   <div style="font-size: 1.25rem; font-weight: 900; color: var(--success); margin: 0.25rem 0;">Every Sunday</div>
-                   <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Top 3 of every Clan join Super Elite.</p>
+                   <div style="font-size: 1.25rem; font-weight: 900; color: var(--success); margin: 0.25rem 0;">Every Saturday 8PM</div>
+                   <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Top 3 of every Clan Clash promote to Elite League.</p>
                 </div>
                 <div class="glass" style="padding: 1.25rem; border-radius: 12px; border: 1px solid var(--glass-border);">
                    <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Clan Capacity</div>
@@ -2335,8 +2338,31 @@ export const AdminComponent = {
           ModalService.alert('Seed Generation Failed', err.message || 'Unknown error', 'error')
         }
         seedBtn.disabled = false
-        seedBtn.innerHTML = '<i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE WEEKLY SEEDS'
+        seedBtn.innerHTML = '<i data-lucide="sparkles" style="width: 16px; margin-right: 0.5rem;"></i> GENERATE SEEDS'
         if (window.lucide) window.lucide.createIcons({ root: seedBtn })
+      }
+    }
+
+    const promoteBtn = document.getElementById('process-clash-promotions-btn')
+    if (promoteBtn) {
+      promoteBtn.onclick = async () => {
+        const confirmed = await ModalService.confirm('Process Promotions', 'This will identify Top 3 from Saturday Clashes and promote them to Elite. Proceed?')
+        if (!confirmed) return
+        promoteBtn.disabled = true
+        promoteBtn.innerHTML = '<span class="pulse">Promoting...</span>'
+        try {
+          const { data, error } = await DataService.processClashPromotions()
+          if (error) throw error
+          const count = (data && data.length > 0) ? data[0].promoted_count : 0
+          await DataService.logAdminAction(this._adminProfile.email, 'Process Clash Promotions', 'global', `${count} users promoted`)
+          ModalService.showToast(`✅ ${count} users promoted to Elite League!`, 'success')
+          this.loadLeagues()
+        } catch (err) {
+          ModalService.alert('Promotion Failed', err.message || 'Unknown error', 'error')
+        }
+        promoteBtn.disabled = false
+        promoteBtn.innerHTML = '<i data-lucide="trending-up" style="width: 16px; margin-right: 0.5rem;"></i> PROMOTIONS'
+        if (window.lucide) window.lucide.createIcons({ root: promoteBtn })
       }
     }
   },

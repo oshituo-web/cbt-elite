@@ -373,44 +373,36 @@ export const DataService = {
   },
 
   async getWeeklyClash(userId) {
-    // 💡 Fetch synced questions for the Sat/Sun competition
-    const { data: profile } = await this.getProfile(userId)
-    const now = new Date()
-    const isSunday = now.getDay() === 0
-    const type = isSunday ? 'Super' : 'Normal'
-    const department = isSunday ? 'General' : (profile?.department || 'General')
+    const { data, error } = await supabase.rpc('get_weekly_clash', { p_user_id: userId });
     
-    // 🐛 FIX: On Sundays, the clash IS today (Super Sunday). On other days, find this week's Saturday.
-    let weekDate
-    if (isSunday) {
-        weekDate = new Date(now) // TODAY is Super Sunday
-    } else {
-        weekDate = new Date(now)
-        // Move to this week's Saturday: go back to Monday (subtract getDay()-1), then add 5
-        weekDate.setDate(now.getDate() - now.getDay() + 6)
+    if (error) return { data: null, error: error.message };
+    
+    // RPC returns a table/array, pick the first one if it exists
+    const clash = (data && data.length > 0) ? data[0] : null;
+
+    if (!clash) {
+      const now = new Date();
+      const isSunday = now.getDay() === 0;
+      return { 
+        data: null, 
+        error: isSunday ? "Elite League Restricted: Only Top 3 from Saturday can enter." : "No clash active for your department yet." 
+      };
     }
-    const dateStr = weekDate.toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }) // YYYY-MM-DD in WAT
-
-    const { data, error } = await supabase
-        .from('scheduled_clashes')
-        .select('*')
-        .eq('week_date', dateStr)
-        .eq('type', type)
-        .eq('department', department)
-        .maybeSingle()
-
-    if (error || !data) return { data: null, error: error || "No clash found for your department yet." }
     
-    const { data: questions } = await this.getQuestionsByIds(data.questions_json)
+    const { data: questions } = await this.getQuestionsByIds(clash.data);
     return { 
         data: this._formatQuestions(questions || []), 
-        duration: data.duration_minutes,
-        clashId: data.id 
-    }
+        duration: clash.duration || 45,
+        clashId: clash.clash_id 
+    };
   },
 
   async generateWeeklyClashSeeds() {
     return await supabase.rpc('generate_weekly_clash_seeds')
+  },
+
+  async processClashPromotions() {
+    return await supabase.rpc('process_clash_promotions')
   },
 
   // --- CLASH HARDENING & RANKINGS ---

@@ -333,6 +333,9 @@ export const DashboardComponent = {
         badgesHTML,
         isClashWindow,
         isResultsWindow,
+        day,
+        hour,
+        min,
         style,
         history,
         mastery,
@@ -590,7 +593,7 @@ export const DashboardComponent = {
   },
 
   renderCompeteTab() {
-    const { isClashWindow, isResultsWindow, style } = this.state;
+    const { isClashWindow, isResultsWindow, style, day, hour, min } = this.state;
     const clanName = this.leagueData?.clan_name || (this.profile?.department + ' Elites');
     const tier = this.profile?.league_tier || 'Bronze';
     const dept = this.profile?.department || 'General';
@@ -613,10 +616,15 @@ export const DashboardComponent = {
                 <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${clanName}</div>
                 <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; margin-top: 0.25rem;">${dept} • ${tier}</div>
             </div>
-          </div>
-
-          ${isClashWindow ? `
+            
+            ${isClashWindow ? `
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.6rem; color: ${style.color}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                    ${day === 0 ? '<i data-lucide="crown" style="width:10px;"></i> Championship Round' : '<i data-lucide="zap" style="width:10px;"></i> Qualifying Round'}
+                </span>
+            </div>
             <button id="start-clash-btn" class="btn-dominant" style="width: 100%; height: 48px; background: linear-gradient(90deg, ${style.color}, var(--accent-primary)); border-radius: 12px;">START CLASH</button>
+            ${day === 6 ? `<p style="font-size: 0.65rem; color: var(--text-secondary); text-align: center; margin-top: 0.5rem; font-weight: 700;">Top 3 promote to Elite League</p>` : ''}
           ` : isResultsWindow ? `
             <button id="view-clash-results-btn" class="btn-dominant" style="width: 100%; height: 48px; background: linear-gradient(90deg, var(--success), var(--accent-primary)); border-radius: 12px;">LEADERBOARD</button>
           ` : `
@@ -624,7 +632,7 @@ export const DashboardComponent = {
                <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; flex-direction: column;">
                     <span style="font-size: 0.6rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Next Clash</span>
-                    <span style="font-size: 0.85rem; font-weight: 900; color: var(--text-primary);">${tier === 'Elite' ? 'SUN 7PM' : 'SAT 7PM'}</span>
+                    <span style="font-size: 0.85rem; font-weight: 900; color: var(--text-primary);">${ (day === 6 && (hour > 19 || (hour === 19 && min >= 30))) || (day === 0 && hour < 19) ? 'SUN 7PM' : 'SAT 7PM'}</span>
                   </div>
                   <div style="text-align: right;">
                     <span id="league-timer" style="font-size: 0.8rem; font-weight: 900; color: ${style.color};">--:--:--</span>
@@ -632,6 +640,7 @@ export const DashboardComponent = {
                </div>
             </div>
           `}
+          </div>
         </div>
 
         <!-- Rankings Section -->
@@ -988,6 +997,14 @@ export const DashboardComponent = {
                 this.loadLeaderboard(profile);
             }
         },
+        'close-leaderboard': () => {
+            const lbModal = document.getElementById('leaderboard-modal');
+            if (lbModal) lbModal.style.display = 'none';
+        },
+        'close-leaderboard-top': () => {
+            const lbModal = document.getElementById('leaderboard-modal');
+            if (lbModal) lbModal.style.display = 'none';
+        },
         'view-history-btn': () => window.navigateTo('history', profile),
         'repair-mistakes-btn': async () => {
             if (this.unresolvedMistakeIds.length > 0) {
@@ -1016,6 +1033,10 @@ export const DashboardComponent = {
                 openModal(leagueModal);
                 this.loadLeagueModalTable(profile);
             }
+        },
+        'close-league': () => {
+            const leagueModal = document.getElementById('league-table-modal');
+            if (leagueModal) leagueModal.style.display = 'none';
         },
         'start-clash-btn': (e) => {
             e.stopPropagation();
@@ -1246,13 +1267,13 @@ export const DashboardComponent = {
       return
     }
     leaderboardList.innerHTML = `
-      <div style="padding: 0.5rem;">
-        <table class="premium-table" style="width:100%;border-collapse:collapse; background: rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden;">
+      <div style="padding: 0.25rem;">
+        <table class="premium-table" style="width:100%; border-collapse:collapse; background: rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; table-layout: fixed;">
           <thead>
-            <tr style="text-align:left;color:var(--text-secondary);font-size:0.75rem; border-bottom: 1px solid var(--glass-border);">
-              <th style="padding: 1rem;">RANK</th>
-              <th style="padding: 1rem;">STUDENT</th>
-              <th style="padding: 1rem; text-align:right;">TOTAL SCORE</th>
+            <tr style="text-align:left; color:var(--text-secondary); font-size:0.6rem; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; letter-spacing: 0.05em;">
+              <th style="padding: 0.75rem 0.5rem; width: 50px;">RANK</th>
+              <th style="padding: 0.75rem 0.5rem;">STUDENT</th>
+              <th style="padding: 0.75rem 0.5rem; text-align:right; width: 85px;">SCORE</th>
             </tr>
           </thead>
           <tbody>
@@ -1266,21 +1287,21 @@ export const DashboardComponent = {
 
               return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); ${isUser ? 'background: rgba(37,99,235,0.1);' : ''}">
-                  <td style="padding:1rem; font-weight: 900; color: ${i < 3 ? 'var(--warning)' : 'var(--text-secondary)'};">${rankIcon}</td>
-                  <td style="padding:1rem; font-weight:700; color: ${isUser ? 'var(--accent-primary)' : 'var(--text-primary)'};">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <td style="padding:0.75rem 0.5rem; font-weight: 900; font-size: 0.75rem; color: ${i < 3 ? 'var(--warning)' : 'var(--text-secondary)'}; white-space: nowrap;">${rankIcon}</td>
+                  <td style="padding:0.75rem 0.5rem; font-weight:700; font-size: 0.75rem; color: ${isUser ? 'var(--accent-primary)' : 'var(--text-primary)'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <div style="display: flex; align-items: center; gap: 0.35rem;">
                         ${u.username || 'Anon'} 
-                        ${userMilestone ? `<i data-lucide="${userMilestone.icon}" title="${userMilestone.title}" style="width: 14px; height: 14px; color: ${userMilestone.color};"></i>` : ''}
-                        ${isUser ? '<span style="font-size:0.6rem; opacity:0.6;">(YOU)</span>' : ''}
+                        ${userMilestone ? `<i data-lucide="${userMilestone.icon}" title="${userMilestone.title}" style="width: 12px; height: 12px; color: ${userMilestone.color};"></i>` : ''}
+                        ${isUser ? '<span style="font-size:0.55rem; opacity:0.6;">(YOU)</span>' : ''}
                     </div>
                   </td>
-                  <td style="padding:1rem; text-align:right; color: var(--success); font-weight:900;">${(entry.total_score || 0).toLocaleString()}</td>
+                  <td style="padding:0.75rem 0.5rem; text-align:right; color: var(--success); font-weight:900; font-size: 0.75rem;">${(entry.total_score || 0).toLocaleString()}</td>
                 </tr>
               `
             }).join('')}
           </tbody>
         </table>
-        <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600;">Rankings are based on accumulated correct answers.</p>
+        <p style="font-size: 0.65rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-weight: 600; opacity: 0.8;">Rankings are based on accumulated correct answers.</p>
       </div>
     `
     if (window.lucide) {

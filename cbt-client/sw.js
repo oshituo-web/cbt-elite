@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cbt-elite-v9' // Incremented to v9
+const CACHE_NAME = 'cbt-elite-v10' // Incremented to v10
 const ASSETS = [
   '/',
   '/index.html',
