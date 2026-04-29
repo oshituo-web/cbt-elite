@@ -1859,23 +1859,20 @@ export const DashboardComponent = {
     if (!dailyMission || dailyMission.totalCount === 0) return '';
 
     return `
-      <div id="daily-mission-card" class="glass card scale-in mb-lg" style="padding: 1.5rem; border: 2.5px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, var(--surface-color) 100%); border-radius: 24px; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -10px; right: -10px; opacity: 0.15; transform: rotate(15deg);">
-          <i data-lucide="target" style="width: 100px; height: 100px; color: var(--accent-primary);"></i>
+      <div id="daily-mission-card" class="glass card scale-in mb-lg" style="padding: 1.5rem; border: 1px solid rgba(37, 99, 235, 0.4); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%); border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);">
+        
+        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary); box-shadow: 0 0 10px var(--accent-primary);"></div>
+          <span style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">AI Daily Path</span>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <span class="badge" style="background: var(--accent-primary); color: white; font-weight: 900; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 20px;">AI RECOMMENDED</span>
-          <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Today's Path</span>
-        </div>
-        
-        <h2 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0 0 0.5rem; line-height: 1.1;">Start Today's Mission</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1.5rem; max-width: 85%;">
-          Master your weakest areas with a personalized mix of ${dailyMission.totalCount} high-priority questions.
+        <h2 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem; line-height: 1.2;">Today's Mission</h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1.5rem; max-width: 90%; line-height: 1.5;">
+          Master your weakest areas with a personalized mix of <strong style="color: var(--text-primary);">${dailyMission.totalCount} high-priority questions</strong>.
         </p>
         
-        <button id="start-mission-btn" class="btn-dominant" style="width: 100%; height: 56px; font-size: 1.1rem; font-weight: 900; background: linear-gradient(90deg, var(--accent-primary) 0%, #1d4ed8 100%); border-radius: 14px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);">
-          LAUNCH MISSION 🔥
+        <button id="start-mission-btn" class="btn-primary" style="width: 100%; height: 48px; font-size: 0.95rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease;">
+          <i data-lucide="play" style="width: 18px; fill: currentColor;"></i> START MISSION
         </button>
       </div>
     `;
