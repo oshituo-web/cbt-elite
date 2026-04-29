@@ -988,9 +988,25 @@ export const DashboardComponent = {
             }
         },
         'view-history-btn': () => window.navigateTo('history', profile),
-        'repair-mistakes-btn': () => {
+        'repair-mistakes-btn': async () => {
             if (this.unresolvedMistakeIds.length > 0) {
-                this.onStartExam(this.unresolvedMistakeIds, 'repair', 'Repair Center', 'Mastery');
+                ModalService.showToast("Loading Repair Center...", "info");
+                try {
+                    const { data: mq } = await supabase
+                        .from('questions')
+                        .select('*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*)')
+                        .in('id', this.unresolvedMistakeIds);
+                    
+                    if (mq && mq.length > 0) {
+                        const formatted = DataService._formatQuestions(mq);
+                        this.onStartExam(formatted, 'repair', 'Repair Center', 'Mastery');
+                    } else {
+                        ModalService.alert("Repair Center Empty", "No active mistakes to fix right now. Keep practicing!", "info");
+                    }
+                } catch (err) {
+                    console.error("Failed to load repair questions", err);
+                    ModalService.alert("Error", "Could not load your mistakes. Please try again later.", "error");
+                }
             }
         },
         'open-league-btn': () => {
