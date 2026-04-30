@@ -13,7 +13,7 @@ export const AuthComponent = {
           
           <div style="position: relative; z-index: 2;">
              <h1 style="font-family: 'Outfit'; font-size: min(4rem, 6vw); font-weight: 900; line-height: 1.1; margin-bottom: 1rem; color: var(--text-primary);">Master Your<br><span style="color: var(--accent-primary);">Examinations</span></h1>
-             <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 400px; font-weight: 500;">Join thousands of top-performing students scoring 300+ in JAMB, and straight As in WAEC & NECO using AI-driven practice.</p>
+             <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 400px; font-weight: 500;">Join thousands of top-performing students smashing their exam targets using AI-driven practice and elite competition.</p>
           </div>
           
           <div class="testimonial-container" id="auth-testimonials"></div>
@@ -106,7 +106,7 @@ export const AuthComponent = {
       document.getElementById('auth-title').innerHTML = isSignUp 
         ? 'Join <span style="display: flex; align-items: center; gap: 0.4rem; color: var(--accent-primary);"><i data-lucide="graduation-cap" style="width: 2.2rem; height: 2.2rem;"></i> CBT Elite</span>' 
         : 'Welcome to <span style="display: flex; align-items: center; gap: 0.4rem; color: var(--accent-primary);"><i data-lucide="graduation-cap" style="width: 2.2rem; height: 2.2rem;"></i> CBT Elite</span>'
-      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Master JAMB, WAEC & NECO with premium practice tools.' : 'Access your elite study dashboard'
+      document.getElementById('auth-subtitle').textContent = isSignUp ? 'Unlock premium practice tools and master your exams.' : 'Access your elite study dashboard'
       form.querySelector('button[type="submit"]').textContent = isSignUp ? 'Start My Success Journey' : 'Login to Elite'
       toggleBtn.innerHTML = isSignUp ? 'Already have an account? <span style="color: var(--primary); font-weight: 900;">Login</span>' : 'Don\'t have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span>'
       
@@ -251,10 +251,10 @@ export const AuthComponent = {
     
     // Testimonial Engine
     const testimonials = [
-      { text: "CBT Elite boosted my JAMB score from 210 to 315!", author: "Sarah T., Medicine" },
+      { text: "CBT Elite transformed my preparation — my score jumped over 100 points!", author: "Sarah T., Medicine" },
       { text: "The AI explanations are like having a personal tutor 24/7.", author: "David O., Engineering" },
       { text: "I finally understand Physics! Thanks to the Elite Insights.", author: "Michael A., Computer Science" },
-      { text: "Passed my WAEC with straight As using the custom mock exams.", author: "Grace E., Law" }
+      { text: "Passed my exams with straight As using the custom mock tests.", author: "Grace E., Law" }
     ]
     
     const testContainer = document.getElementById('auth-testimonials')

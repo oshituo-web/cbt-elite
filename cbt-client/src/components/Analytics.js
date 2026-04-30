@@ -36,48 +36,107 @@ export const AnalyticsComponent = {
       container.innerHTML = `
         <style>
           .analytics-page-wrapper {
-            padding: 0 1rem 5rem 1rem;
-            animation: fadeIn 0.4s ease;
+            padding: calc(var(--header-height) + 1.5rem) 20px 120px 20px;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
+            min-height: 100vh;
+            overflow-x: hidden;
+            word-break: break-word;
           }
           .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
             width: 100%;
+            align-items: stretch;
+          }
+          .premium-glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem 1.25rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+          .premium-glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 40px -4px rgba(0, 0, 0, 0.2);
           }
           .synthesis-card {
             padding: 2rem;
             margin-bottom: 2.5rem;
-            background: rgba(124, 58, 237, 0.05);
-            border: 1.5px solid var(--accent-secondary);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(37, 99, 235, 0.03) 100%);
+            border: 1.5px solid rgba(124, 58, 237, 0.3);
             position: relative;
             overflow: hidden;
             border-radius: 24px;
             width: 100%;
             box-sizing: border-box;
+            box-shadow: 0 15px 40px -12px rgba(124, 58, 237, 0.15);
           }
-          @media (max-width: 600px) {
-            .analytics-page-wrapper {
-              padding: 0 0.75rem 6rem 0.75rem;
-            }
+          .synthesis-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+          }
+          .stat-value-large {
+            font-size: 2.25rem;
+            font-weight: 900;
+            font-family: 'Outfit';
+            line-height: 1;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+          }
+          .recap-fab {
+            position: fixed;
+            bottom: 110px;
+            right: 20px;
+            z-index: 5000;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+            border-radius: 50px;
+            height: 52px;
+            padding: 0 1.25rem;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideUpFade 0.4s ease;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.1);
+          }
+          @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @media (max-width: 768px) {
             .metrics-grid {
               grid-template-columns: repeat(2, 1fr);
-              gap: 0.75rem;
+              gap: 12px;
             }
-            .synthesis-card {
-              padding: 1.25rem;
-            }
-            .charts-grid {
-               grid-template-columns: 1fr !important;
+            .analytics-page-wrapper {
+              padding: calc(var(--header-height) + 1.25rem) 16px 140px 16px;
             }
           }
         </style>
+        <div class="analytics-bg-glow" style="position: fixed; top: 0; left: 0; right: 0; height: 100vh; background: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 40%); pointer-events: none; z-index: -1;"></div>
         <div class="analytics-page-wrapper">
           ${!canSeeAnalytics ? `
             <div id="analytics-premium-gate" style="position: absolute; top: 120px; left: 0; right: 0; bottom: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); border-radius: 24px; padding: 2rem; text-align: center;">
@@ -90,48 +149,50 @@ export const AnalyticsComponent = {
             </div>
           ` : ''}
 
-          <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; padding: 0 1rem;">
+          <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
             <div>
-              <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: clamp(1.2rem, 4vw, 1.8rem); color: var(--text-primary); margin: 0;">Elite Insights</h1>
-              <p style="color: var(--text-secondary); font-weight: 500; font-size: clamp(0.85rem, 2vw, 1rem); margin-top: 0.25rem;">Advanced Performance Analytics & Mastery</p>
+              <h1 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.75rem; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">Elite Insights</h1>
+              <p style="color: var(--text-secondary); font-weight: 500; font-size: 0.85rem; margin-top: 0.2rem;">Advanced Performance Analytics</p>
             </div>
-            <div style="display: flex; gap: 0.75rem;">
-                <button id="show-recap-btn" class="glass-btn" style="height: 48px; border: 1.5px solid var(--accent-primary); color: var(--accent-primary); padding: 0 1.5rem; font-weight: 700; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; background: rgba(37, 99, 235, 0.05);">
-                    <i data-lucide="bar-chart-2" style="width: 18px;"></i> RECAP
-                </button>
-                <button id="analytics-back-btn" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700;">
-                    <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> DASHBOARD
-                </button>
-            </div>
+            <button id="analytics-back-btn" class="btn-secondary" style="height: 40px; padding: 0 1.25rem; font-weight: 700; border-radius: 10px; display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.05);">
+                <i data-lucide="arrow-left" style="width: 16px;"></i> DASHBOARD
+            </button>
           </header>
 
-          <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''} padding: 0 1rem;">
+          <button id="show-recap-btn" class="recap-fab">
+              <i data-lucide="bar-chart-2" style="width: 20px;"></i>
+              <span>RECAP</span>
+          </button>
+
+          <div style="${!isPremium ? 'filter: blur(8px); pointer-events: none; user-select: none;' : ''}">
             <!-- TOP LEVEL METRICS -->
             <div class="metrics-grid">
-              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--accent-primary); text-align: center;">
-                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Total Answered</div>
-                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${stats.overall.total}</div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--success); font-weight: 600;">\u2191 Progress</div>
-              </div>
-              
-              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--success); text-align: center;">
-                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Global Accuracy</div>
-                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${accuracy}%</div>
-                <div style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 0.75rem; overflow: hidden; width: 80%; margin-left: 10%;">
-                  <div style="width: ${accuracy}%; height: 100%; background: var(--success); border-radius: 3px;"></div>
+              <div class="premium-glass-card" style="border-top: 4px solid var(--accent-primary);">
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Questions</div>
+                <div class="stat-value-large" style="color: var(--text-primary);">${stats.overall.total.toLocaleString()}</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--success); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="trending-up" style="width: 12px;"></i> ${Math.round(stats.overall.total/10)}% Lift
                 </div>
               </div>
- 
-              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid var(--accent-secondary); text-align: center;">
-                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">Study Hours</div>
-                <div style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: var(--text-primary);">${hours}h</div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Efficient Prep</div>
+              
+              <div class="premium-glass-card" style="border-top: 4px solid var(--success);">
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Accuracy</div>
+                <div class="stat-value-large" style="color: var(--success);">${accuracy}%</div>
+                <div style="height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 1rem; overflow: hidden; width: 100%;">
+                  <div style="width: ${accuracy}%; height: 100%; background: linear-gradient(90deg, var(--success), #10b981); border-radius: 3px;"></div>
+                </div>
               </div>
- 
-              <div class="glass card" style="padding: 1.25rem 1rem; border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03); text-align: center;">
-                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem;">JAMB Projection</div>
-                <div id="projected-score-display" style="font-family: 'Outfit'; font-size: clamp(1.1rem, 3.5vw, 1.6rem); font-weight: 900; color: #f59e0b;">...</div>
-                <div style="margin-top: 0.5rem; font-size: 0.65rem; color: var(--text-secondary); font-weight: 500;">Est. Score</div>
+  
+              <div class="premium-glass-card" style="border-top: 4px solid var(--accent-secondary);">
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Study Time</div>
+                <div class="stat-value-large" style="color: var(--text-primary);">${hours}<span style="font-size: 0.8rem; margin-left: 2px;">hrs</span></div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Consistent Prep</div>
+              </div>
+  
+              <div class="premium-glass-card" style="border-top: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.04);">
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">JAMB Prediction</div>
+                <div id="projected-score-display" class="stat-value-large" style="color: #f59e0b; text-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">...</div>
+                <div style="margin-top: 0.75rem; font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">Based on Trajectory</div>
               </div>
             </div>
 
@@ -147,17 +208,17 @@ export const AnalyticsComponent = {
             </div>
 
             <!-- ELITE AI SYNTHESIS -->
-            <div class="glass card synthesis-card">
-              <h3 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em;">
-                <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i> Elite AI Synthesis
+            <div class="glass card synthesis-card" style="padding: 1.5rem;">
+              <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; color: var(--accent-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> Elite AI Synthesis
               </h3>
-              <div id="analytics-ai-synthesis" style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.7; font-weight: 500;">
-                <div style="display:flex; align-items:center; gap:10px;"><div class="loader-spinner" style="width:20px;height:20px;"></div> <span style="color:var(--text-secondary); font-size: 0.85rem;">Analyzing your historical data trajectory...</span></div>
+              <div id="analytics-ai-synthesis" style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.6; font-weight: 500;">
+                <div style="display:flex; align-items:center; gap:10px;"><div class="loader-spinner" style="width:16px;height:16px;"></div> <span style="color:var(--text-secondary); font-size: 0.8rem;">Analyzing your historical data trajectory...</span></div>
               </div>
             </div>
 
             <!-- MIDDLE SECTION: GRAPHS & SUBJECTS -->
-            <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
               <!-- Score Trend Chart -->
               <div class="glass card" style="padding: 1.5rem;">
                 <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">

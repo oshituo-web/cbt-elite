@@ -5,11 +5,24 @@ import { NotificationService } from './src/services/NotificationService'
 import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
 
+// 🚀 FORCE NEW VERSION LOAD (TEMPORARY)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => {
+      console.log('[SW] Force Unregistering old Service Worker:', reg.active?.scriptURL);
+      reg.unregister();
+    });
+  });
+}
+
 // 🚀 PERMANENT CACHE SOLUTION: Version Syncing
-const APP_VERSION = 'v10';
+const APP_VERSION = 'v12';
 const savedVersion = localStorage.getItem('cbt_elite_version');
+
+// One-time clear for testing if version mismatch
 if (savedVersion && savedVersion !== APP_VERSION) {
     console.log(`[Version Sync] Updating from ${savedVersion} to ${APP_VERSION}`);
+    localStorage.clear(); // Clear all local storage for a fresh start
     localStorage.setItem('cbt_elite_version', APP_VERSION);
     
     // Clear all caches and reload
@@ -18,13 +31,15 @@ if (savedVersion && savedVersion !== APP_VERSION) {
             for (let name of names) caches.delete(name);
         });
     }
-    setTimeout(() => location.reload(true), 500);
+    setTimeout(() => location.reload(true), 1000);
 } else {
     localStorage.setItem('cbt_elite_version', APP_VERSION);
 }
 
 import { TourGuide } from './src/utils/TourGuide'
 import { HelpGuide } from './src/components/HelpGuide'
+window.HelpGuide = HelpGuide; // expose globally so Dashboard.js can call it
+window.TourGuide = TourGuide;
 
 // Local Font Imports (Bundled for performance)
 import "@fontsource/inter/index.css"
@@ -103,7 +118,9 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
   // 3. Handle Modular Views
   switch (view) {
     case 'dashboard':
-      await showDashboard(profile);
+      // Support passing specific tab if provided (e.g., from setupNavigation)
+      const tab = profile?.activeTab || 'home';
+      await showDashboard(profile, tab);
       break;
       
     case 'admin':
@@ -579,18 +596,24 @@ function setupGlobalActions(profile) {
 function setupNavigation(profile) {
   currentProfile = profile; 
   window.currentProfile = profile;
-  // Only target elements with data-view to prevent overwriting specific handlers
+  // Only target nav items that have an explicit data-view attribute
+  // (excludes custom-handled buttons like more-help-btn, more-news-btn, more-logout-btn)
   const navItems = document.querySelectorAll('.nav-item[data-view], .bottom-nav-item[data-view], .more-menu-item[data-view], #profile-trigger')
   navItems.forEach(item => {
     item.onclick = (e) => {
       e.preventDefault();
       const view = item.dataset.view || 'profile';
+      const tab = item.dataset.tab;
+      
       if (view) {
         // If it's a more-menu-item, close the drawer first
         if (item.classList.contains('more-menu-item')) {
           toggleMoreDrawer();
         }
-        window.navigateTo(view, profile);
+        
+        // Pass tab state through profile object temporarily for navigateTo
+        const navigationProfile = { ...profile, activeTab: tab };
+        window.navigateTo(view, navigationProfile);
       }
     }
   })
@@ -637,7 +660,7 @@ async function showProfile(profile) {
 
 window.updateHeaderProfile = updateHeaderProfile;
 
-async function showDashboard(profile) {
+async function showDashboard(profile, tab = 'home') {
    if (!profile) return;
    
    // 🔄 REFRESH: Always fetch latest profile data before showing dashboard to ensure coins/streaks are accurate
@@ -646,7 +669,7 @@ async function showDashboard(profile) {
    // 📧 Preserve email from the original profile — it comes from auth.users, not public.users
    if (!activeProfile.email && profile.email) activeProfile.email = profile.email;
    
-   console.log("main.js: showDashboard called for", activeProfile.username);
+   console.log("main.js: showDashboard called for", activeProfile.username, "with tab:", tab);
    currentProfile = activeProfile;
    const dashContainer = document.getElementById('dashboard-container');
    
@@ -662,6 +685,9 @@ async function showDashboard(profile) {
   // 🔄 Update header immediately so streak/coins in topbar are always in sync
   updateHeaderProfile(activeProfile);
 
+  // Set active tab BEFORE render to ensure correct initial state
+  DashboardComponent.activeTab = tab;
+
   DashboardComponent.render(activeProfile, (questions, mode, subject, examType, extraConfig = null) => {
     DashboardComponent.hide()
     const resumeState = extraConfig?.resumeState || null;
@@ -674,86 +700,8 @@ async function showDashboard(profile) {
   }, (article) => {
     showNewsArticle(article, activeProfile)
   })
-  // 📱 Mobile Tab Navigation Initialization
-  updateBottomNavForDashboard(activeProfile);
   
   dashboardLoaded = true
-}
-
-let originalBottomNavContent = null;
-
-function restoreBottomNav() {
-  const bottomNav = document.getElementById('bottom-nav');
-  if (bottomNav && originalBottomNavContent) {
-    bottomNav.innerHTML = originalBottomNavContent;
-    originalBottomNavContent = null;
-    if (window.lucide) window.lucide.createIcons();
-    
-    // Re-wire original listeners if necessary, but setupNavigation usually handles it
-    // Actually, setupNavigation is called in showDashboard and other views, 
-    // so we should rely on the standard view rendering to re-attach listeners.
-  }
-}
-
-/**
- * 📱 Dynamically swaps bottom nav items when on the dashboard
- */
-function updateBottomNavForDashboard(profile) {
-  const bottomNav = document.getElementById('bottom-nav');
-  if (!bottomNav || window.innerWidth > 768) return;
-
-  if (!originalBottomNavContent) {
-    originalBottomNavContent = bottomNav.innerHTML;
-  }
-  
-  const isAdmin = profile && profile.email === 'oshituo@gmail.com';
-  
-  bottomNav.innerHTML = `
-    <button class="bottom-nav-item active" data-tab="home" title="Home">
-      <i data-lucide="home"></i>
-      <span>Home</span>
-    </button>
-    <button class="bottom-nav-item" data-tab="progress" title="Progress">
-      <i data-lucide="bar-chart-2"></i>
-      <span>Progress</span>
-    </button>
-    <button class="bottom-nav-item" data-tab="compete" title="Compete">
-      <i data-lucide="users"></i>
-      <span>Compete</span>
-    </button>
-    ${isAdmin ? `
-    <button class="bottom-nav-item" data-view="admin" title="Admin">
-      <i data-lucide="shield-check"></i>
-      <span>Admin</span>
-    </button>
-    ` : ''}
-    <button class="bottom-nav-item" id="bottom-more-btn" data-view="more" title="More">
-      <i data-lucide="grid-2x2"></i>
-      <span>More</span>
-    </button>
-  `;
-
-  if (window.lucide) window.lucide.createIcons();
-
-  // Tab Listeners (Dashboard specific)
-  bottomNav.querySelectorAll('.bottom-nav-item[data-tab]').forEach(btn => {
-    btn.onclick = (e) => {
-      const tab = btn.dataset.tab;
-      import('./src/components/Dashboard').then(({ DashboardComponent }) => {
-        DashboardComponent.setActiveTab(tab);
-        bottomNav.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    };
-  });
-
-  // Global View Listeners (Admin, More)
-  bottomNav.querySelectorAll('.bottom-nav-item[data-view]').forEach(btn => {
-    btn.onclick = (e) => {
-      const view = btn.dataset.view;
-      window.navigateTo(view, profile);
-    };
-  });
 }
 
 async function showAnalytics(profile) {
@@ -844,11 +792,6 @@ function hideAll(isExam = false, forceHideLayout = false) {
     if (sidebar) sidebar.style.display = 'flex'
     if (bottomNav) bottomNav.style.display = 'flex'
     document.body.classList.remove('in-exam')
-    
-    // 🔄 RESTORE: Revert Dashboard-specific bottom nav to original if we are NOT on the dashboard
-    if (document.getElementById('dashboard-container').style.display === 'none') {
-      restoreBottomNav();
-    }
   }
 }
 

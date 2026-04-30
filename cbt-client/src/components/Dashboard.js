@@ -201,17 +201,57 @@ export const DashboardComponent = {
 
     // Initialize Tour Guide
     TourGuide.init([
-      { title: "Get Started with CBT Elite", text: "Your all-in-one platform to prepare for JAMB, WAEC, and NECO." },
-      { element: "#quick-practice-btn", title: "Practice Mode", text: "Start here. Practice Mode helps you improve topic by topic." },
-      { element: "#quick-exam-btn", title: "Exam Mode", text: "Simulate real exams with timers and scoring." },
-      { element: "#analytics-section", title: "Performance Insights", text: "Track your scores and identify weak subjects." },
-      { element: "#economy-coins-val", title: "Elite Economy", text: "Earn coins by practicing. Spend them in the Store on Power-ups and Streaks!" },
-      { element: "#upgrade-hero-btn", title: "Upgrade Section", text: "Unlock AI explanations and unlimited access with Premium." },
-      { title: "You're all set", text: "You're ready to start your journey. Good luck!" }
+      { 
+        title: "Welcome to CBT Elite", 
+        text: "The most advanced AI-powered exam preparation platform in Nigeria. We combine intelligent practice, competitive leagues, and deep analytics to help you perform at your absolute best."
+      },
+      { 
+        element: "#quick-practice-btn", 
+        title: "Smart Practice", 
+        text: "Start here to build your foundation. Our AI Tutor is always ready to explain difficult concepts step-by-step.",
+        image: "/img/app_tour_ai_tutor.png",
+        onBefore: () => this.setActiveTab('home')
+      },
+      { 
+        element: "#economy-coins-val", 
+        title: "Elite Economy", 
+        text: "Earn coins by hitting your daily targets. Use them in the Store to buy Streak Freezes and Power-ups!",
+        onBefore: () => this.setActiveTab('home')
+      },
+      { 
+        element: ".streak-flame-container", 
+        title: "Consistency is Key", 
+        text: "Build your streak by solving 50+ questions daily. High streaks unlock exclusive badges and massive coin bonuses.",
+        onBefore: () => this.setActiveTab('home')
+      },
+      { 
+        element: "#analytics-section", 
+        title: "Deep Insights", 
+        text: "We track every question you solve to build a detailed map of your strengths and weaknesses.",
+        image: "/img/app_tour_analysis.png",
+        onBefore: () => this.setActiveTab('progress')
+      },
+      { 
+        element: "#open-league-btn", 
+        title: "Competitive Leagues", 
+        text: "Join a clan and compete for the top spot. Perform well to promote to Silver, Gold, and the ultimate Elite tier every Sunday!",
+        onBefore: () => this.setActiveTab('compete')
+      },
+      { 
+        title: "The Mastery Center", 
+        text: "Don't just practice—improve. Revisit every mistake you've ever made and master the concepts behind them. Find it at the bottom of the Progress tab.",
+        onBefore: () => this.setActiveTab('progress')
+      },
+      { 
+        title: "Elite Potential Unlocked", 
+        text: "You're now equipped with the ultimate learning tools. Reach for your dreams—your journey starts now!",
+        onBefore: () => this.setActiveTab('home')
+      }
     ], {
       onFinish: () => {
-        DataService.markTourAsSeen(this.profile.id)
-        sessionStorage.removeItem('isFreshSignup')
+        this.setActiveTab('home');
+        DataService.markTourAsSeen(this.profile.id);
+        sessionStorage.removeItem('isFreshSignup');
       }
     });
     
@@ -352,27 +392,16 @@ export const DashboardComponent = {
     const container = document.getElementById('dashboard-container');
     if (!container) return;
     
-    const isMobile = window.innerWidth <= 768;
-    
-    if (isMobile) {
-        container.innerHTML = `
-          <div id="dashboard-content" class="dashboard-tab-container">
-            <div id="tab-content-area" class="tab-content-scroll">
-                <!-- Tab content injected here -->
-            </div>
-          </div>
-        `;
-        this.renderCurrentTab();
-    } else {
-        container.innerHTML = `
-          <div id="dashboard-content" class="dashboard-scroll-area" style="padding-top: calc(var(--header-height) + 1.25rem);">
-            ${this.renderFullDashboard()}
-          </div>
-        `;
-        this.attachListeners('full');
-        this.renderCharts();
-        if (window.lucide) window.lucide.createIcons();
-    }
+    // 🚀 UNIFIED DASHBOARD: We always use the tabbed structure to keep content organized
+    // Desktop users now use the sidebar for tabs, mobile users use the bottom nav.
+    container.innerHTML = `
+      <div id="dashboard-content" class="dashboard-tab-container">
+        <div id="tab-content-area" class="tab-content-scroll">
+            <!-- Tab content injected here -->
+        </div>
+      </div>
+    `;
+    this.renderCurrentTab();
   },
 
   setActiveTab(tab) {
@@ -644,14 +673,25 @@ export const DashboardComponent = {
         </div>
 
         <!-- Rankings Section -->
-        <div id="open-leaderboard-btn" class="glass card" style="padding: 1.5rem 1rem; border-bottom: 4px solid var(--success); cursor: pointer;">
+        <div id="open-leaderboard-btn" class="glass card mb-md" style="padding: 1.25rem 1rem; border-bottom: 4px solid var(--success); cursor: pointer;">
           <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="background: rgba(16, 185, 129, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success);"><i data-lucide="bar-chart-3" style="width:24px;"></i></div>
+            <div style="background: rgba(16, 185, 129, 0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success);"><i data-lucide="bar-chart-3" style="width:20px;"></i></div>
             <div style="flex: 1;">
-                <h4 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; margin: 0;">Global Rankings</h4>
-                <div id="global-rank-indicator" style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Loading your rank...</div>
+                <h4 style="font-family: 'Outfit'; font-weight: 900; font-size: 1rem; margin: 0;">Global Rankings</h4>
+                <div id="global-rank-indicator" style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Loading your rank...</div>
             </div>
-            <i data-lucide="chevron-right" style="color: var(--text-secondary);"></i>
+            <i data-lucide="chevron-right" style="width: 16px; color: var(--text-secondary);"></i>
+          </div>
+        </div>
+
+        <div id="open-clan-rankings-btn" class="glass card" style="padding: 1.25rem 1rem; border-bottom: 4px solid var(--accent-secondary); cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="background: rgba(139, 92, 246, 0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary);"><i data-lucide="trophy" style="width:20px;"></i></div>
+            <div style="flex: 1;">
+                <h4 style="font-family: 'Outfit'; font-weight: 900; font-size: 1rem; margin: 0;">Clan Rankings</h4>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Last Saturday's Results</div>
+            </div>
+            <i data-lucide="chevron-right" style="width: 16px; color: var(--text-secondary);"></i>
           </div>
         </div>
 
@@ -725,185 +765,6 @@ export const DashboardComponent = {
 
         <!-- Weakness analysis will go here in next version -->
         <div id="weakness-analysis-container"></div>
-    `;
-  },
-
-  renderFullDashboard() {
-    const s = this.state;
-    const { profile, systemConfig, currentDailyCount, currentMilestone, nextMilestone, accuracy, studyTimeHours, examsCompleted, badgesHTML, isClashWindow, isResultsWindow, style } = s;
-
-    return `
-        <!-- DASHBOARD HEADER -->
-        <div style="margin-bottom: 0.75rem;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
-              Hello, ${profile.username || 'Student'} 
-              <i data-lucide="sun" style="width: 20px; height: 20px; color: var(--warning);"></i>
-            </h1>
-            <div id="header-tier" class="tier-mini" title="Your Account Tier" style="display: flex; align-items: center; gap: 0.35rem; background: ${profile.activation_status ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.05)'};">
-              <i data-lucide="award" style="width: 16px; height: 16px;"></i> <span id="tier-text">${profile.activation_status ? 'PREMIUM' : 'FREE'}</span>
-            </div>
-          </div>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; font-weight: 800; letter-spacing: 0.02em;">Let's make today count.</p>
-        </div>
-
-        <!-- ELITE ECONOMY WIDGET -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div id="open-store-btn" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
-            <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
-              <i data-lucide="coins" style="width: 12px;"></i>
-            </div>
-            <div style="overflow: hidden;">
-              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Elite Coins</div>
-              <div id="economy-coins-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.elite_coins || 0}</div>
-            </div>
-          </div>
-          <div id="open-store-btn" class="glass card scale-in" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.08); min-height: 44px; border-radius: 12px;">
-            <div style="width: 20px; height: 20px; background: rgba(139, 92, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
-              <i data-lucide="snowflake" style="width: 12px;"></i>
-            </div>
-            <div style="overflow: hidden;">
-              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Streak Freeze</div>
-              <div id="economy-freeze-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_freeze_count || 0}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- QUICK ACTION SECTION -->
-        <div class="glass card scale-in mb-md" style="text-align: center; padding: 0.85rem 0.75rem; border: 1.5px solid rgba(14, 165, 233, 0.3); background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%;">
-             <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-size: 0.85rem;"><i data-lucide="target" style="width:16px;"></i> Practice</button>
-             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-weight: 800; font-size: 0.85rem;"><i data-lucide="trophy" style="width:16px;"></i> Mock Exam</button>
-          </div>
-        </div>
-
-        <!-- Dynamic Tier-Based UI -->
-        ${(() => {
-          const subState = SubscriptionManager.getUserSubscriptionState(profile, systemConfig.explanations_free_access);
-          if (subState.tier === "premium" && subState.daysRemaining > 5) return '';
-          let title = "Activate Full Access";
-          let subtitle = "Unlock all subjects and AI explanations.";
-          let btnText = `Upgrade – ${systemConfig.pricing_lifetime || '₦1,500'}`;
-          let borderStyle = 'var(--accent-primary)';
-          let btnBg = 'var(--primary)';
-
-          if (subState.tier === 'medium') {
-              title = "Membership Standard";
-              subtitle = `Your Elite subscription expired. You have ${profile.ai_credits || 0} AI credits remaining.`;
-              btnText = "Renew Premium";
-              borderStyle = 'var(--accent-secondary)';
-              btnBg = 'var(--accent-secondary)';
-          } else if (subState.isExpired || (subState.tier === 'premium' && subState.daysRemaining <= 5)) {
-              title = subState.daysRemaining <= 5 ? "Expiring Soon" : "Premium Expired";
-              subtitle = subState.daysRemaining <= 5 ? `Your Elite access ends in ${subState.daysRemaining} days. Renew now.` : "Renew now to restore unlimited sessions.";
-              btnText = "Renew Now";
-              borderStyle = subState.daysRemaining <= 5 ? 'var(--warning)' : 'var(--error)';
-              btnBg = subState.daysRemaining <= 5 ? 'var(--warning)' : 'var(--error)';
-          }
-
-          return `
-            <div class="glass card scale-in mb-md" style="padding: 1rem; border: 1.5px solid ${borderStyle}; background: linear-gradient(90deg, ${borderStyle}05 0%, transparent 100%);">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="flex: 1; min-width: 200px;">
-                  <h4 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem;">${title}</h4>
-                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">${subtitle}</p>
-                </div>
-                <button class="btn-dominant" style="height: 44px; padding: 0 1.25rem; font-size: 0.9rem; min-width: 140px; background: ${btnBg};" onclick="document.getElementById('upgrade-modal').style.display='flex'">${btnText}</button>
-              </div>
-            </div>
-          `;
-        })()}
-
-         <div class="dashboard-responsive-grid mb-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
-            <!-- Streak Card -->
-            <div class="glass card scale-in" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 4px solid var(--warning); border-radius: 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; margin: 0;">Learning Streak</h3>
-                <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.65rem; font-weight: 800;">ACTIVE</span>
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;">
-                <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}">
-                  <i data-lucide="flame" style="width: 32px; height: 32px; color: ${profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'};"></i>
-                </div>
-                <div style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary);">${profile.streak_count || 0}</div>
-                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Day Streak</div>
-              </div>
-              <button id="open-leaderboard-btn" class="glass-btn" style="margin-top: 1rem; font-size: 0.7rem; padding: 0.4rem; border: 1px solid var(--glass-border); width: 100%; border-radius: 8px;">VIEW RANKINGS</button>
-            </div>
-
-            <!-- League Card -->
-            <div id="open-league-btn" class="glass card scale-in" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 3px solid ${style.color}; cursor: pointer;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin: 0;">League Hub</h3>
-                <div style="font-size: 0.65rem; font-weight: 800; color: ${style.color}; display: flex; align-items: center; gap: 0.2rem;"><i data-lucide="users" style="width: 10px;"></i> <span>GRP-20</span></div>
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem;">
-                <div style="width: 44px; height: 44px; background: ${style.color}15; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid ${style.color}40;"><i data-lucide="${style.icon}" style="width: 20px; height: 20px; color: ${style.color};"></i></div>
-                <div style="text-align: center;">
-                    <div style="font-family: 'Outfit'; font-size: 1rem; font-weight: 900; color: var(--text-primary);">${this.leagueData?.clan_name || (profile.department + ' Elites')}</div>
-                    <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">${profile.department} • ${profile.league_tier}</div>
-                </div>
-              </div>
-              <div style="margin-top: 0.75rem; display: flex; gap: 0.35rem; width: 100%;">
-                <button class="glass-btn btn-primary" id="change-clan-btn" style="width: 100%; font-size: 0.65rem; padding: 0.4rem; border-radius: 8px; font-weight: 900; background: var(--accent-primary); color: white;">SELECT DEPT</button>
-              </div>
-            </div>
-
-            <!-- Goal Card -->
-            <div class="glass card" style="padding: 0.75rem 0.85rem; display: flex; flex-direction: column; min-height: 210px; justify-content: space-between; border-top: 3px solid ${currentMilestone ? currentMilestone.color : 'var(--accent-primary)'};">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; margin: 0;">Daily Star Target</h3>
-                <div style="display: flex; gap: 4px;">
-                    ${this.MILESTONES.map(m => `<div style="color: ${currentDailyCount >= m.target ? m.color : 'var(--text-secondary)'}; opacity: ${currentDailyCount >= m.target ? '1' : '0.2'};"><i data-lucide="${m.badge}" style="width: 14px; height: 14px;"></i></div>`).join('')}
-                </div>
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
-                <div style="position: relative; width: 80px; height: 80px;">
-                  <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2.5" />
-                    ${this.MILESTONES.map((m, idx) => {
-                        const milestoneStart = idx === 0 ? 0 : this.MILESTONES[idx-1].target;
-                        const milestoneRange = m.target - milestoneStart;
-                        const progressInMilestone = Math.max(0, Math.min(milestoneRange, currentDailyCount - milestoneStart));
-                        const pct = (progressInMilestone / milestoneRange) * (100 / this.MILESTONES.length);
-                        const offset = (idx * (100 / this.MILESTONES.length));
-                        return `<circle cx="18" cy="18" r="16" fill="none" stroke="${currentDailyCount >= m.target ? m.color : 'rgba(255,255,255,0.05)'}" stroke-width="3" stroke-dasharray="${(currentDailyCount >= m.target ? 100 / this.MILESTONES.length : pct) - 1}, 100" stroke-dashoffset="-${offset}" stroke-linecap="round" />`;
-                    }).join('')}
-                  </svg>
-                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                    <div style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 900; color: var(--text-primary);">${currentDailyCount}</div>
-                    <div style="font-size: 0.5rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;">Solved</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Stats Card -->
-            <div class="glass card study-stats-card" style="display: flex; flex-direction: column; gap: 8px; border-radius: 16px;">
-              <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; margin: 0;">Study Stats</h3>
-              <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="stat-item"><div class="stat-label" style="font-size: 0.55rem;">SOLVED</div><div class="stat-value" style="font-size: 1rem; font-weight: 900;">${currentDailyCount}</div></div>
-                <div class="stat-item"><div class="stat-label" style="font-size: 0.55rem;">ACCURACY</div><div class="stat-value" style="font-size: 1rem; font-weight: 900; color: var(--success);">${accuracy}%</div></div>
-              </div>
-            </div>
-         </div>
-
-
-        <!-- TREND CHART -->
-        <div id="analytics-section" style="margin-top: 1.5rem;">
-          <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">Performance Trend <button id="view-history-btn" class="glass-btn">VIEW HISTORY</button></h2>
-          <div class="glass card scale-in" id="accuracy-trend-card" style="padding: 1rem; min-height: 260px;"><canvas id="score-history-chart"></canvas></div>
-        </div>
-
-        <!-- Help Guide -->
-        <div class="glass card scale-in" style="margin-top: 2.5rem; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); padding: 2rem 1.5rem; text-align: center; color: white;">
-           <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem;">Need a headstart?</h3>
-           <button id="help-guide-btn" class="btn-secondary" style="background: white; color: #3730A3; width: 100%; height: 48px; border-radius: 12px; font-weight: 800;">Launch Tour</button>
-        </div>
-
-        <footer style="margin-top: 4rem; padding: 2rem 1rem; text-align: center; border-top: 1px solid var(--glass-border); opacity: 0.6;">
-          <p style="font-size: 0.75rem; color: var(--text-secondary);">© 2026 CBT Elite Platform</p>
-        </footer>
     `;
   },
 
@@ -983,7 +844,8 @@ export const DashboardComponent = {
     const actions = {
         'quick-practice-btn': () => window.navigateTo('practice', profile),
         'quick-exam-btn': () => window.navigateTo('exams', profile),
-        'help-guide-btn': () => TourGuide.start(),
+        'help-guide-btn': () => { if (window.HelpGuide) window.HelpGuide.show(); else if (window.TourGuide) window.TourGuide.start(); },
+        'goto-improve-tab-btn': () => this.setActiveTab('improve'),
         'open-store-btn': () => {
             EliteStoreComponent.render(profile, (updatedProfile) => {
                 document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
@@ -1048,7 +910,12 @@ export const DashboardComponent = {
         },
         'mastery-center-card': () => this.setActiveTab('improve'),
         'view-history-btn': () => this.showHistory(),
-        'open-mastery-modal-btn': () => this.showMasteryModal()
+        'open-mastery-modal-btn': () => this.showMasteryModal(),
+        'open-clan-rankings-btn': () => this.showClanRankings(),
+        'help-guide-btn': () => {
+            console.log("Tour: Launching from Dashboard CTA");
+            TourGuide.start();
+        }
     };
 
     Object.entries(actions).forEach(([id, handler]) => {
@@ -1291,7 +1158,7 @@ export const DashboardComponent = {
                   <td style="padding:0.75rem 0.5rem; font-weight:700; font-size: 0.75rem; color: ${isUser ? 'var(--accent-primary)' : 'var(--text-primary)'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                     <div style="display: flex; align-items: center; gap: 0.35rem;">
                         ${u.username || 'Anon'} 
-                        ${userMilestone ? `<i data-lucide="${userMilestone.icon}" title="${userMilestone.title}" style="width: 12px; height: 12px; color: ${userMilestone.color};"></i>` : ''}
+                        ${userMilestone ? `<i data-lucide="${userMilestone.badge}" title="${userMilestone.title}" style="width: 12px; height: 12px; color: ${userMilestone.color};"></i>` : ''}
                         ${isUser ? '<span style="font-size:0.55rem; opacity:0.6;">(YOU)</span>' : ''}
                     </div>
                   </td>
@@ -1446,7 +1313,8 @@ export const DashboardComponent = {
     try {
         const { data: globalData } = await DataService.getLeaderboard()
         if (globalIndicator && globalData) {
-            const myGlobalEntry = globalData.find(d => d.username === this.profile.username)
+            // lookup logic was bugged (was looking for d.username which didn't exist at top level)
+            // Fix: We updated DataService to include top-level username
             const myGlobalIndex = globalData.findIndex(d => d.username === this.profile.username)
             if (myGlobalIndex !== -1) {
                 globalIndicator.textContent = `Score: ${globalData[myGlobalIndex].total_score || 0} (#${myGlobalIndex + 1})`
@@ -1621,6 +1489,49 @@ export const DashboardComponent = {
             </div>
         `
     }).join('')
+  },
+
+  async showClanRankings() {
+    ModalService.showToast("Fetching Clan Rankings...", "info");
+    
+    try {
+        const { data, error } = await DataService.getLatestClashLeaderboard(this.profile.id, this.profile.department);
+        
+        if (error || !data || data.length === 0) {
+            ModalService.alert("Clan Rankings", error || "No recent clan clash data found for your department.", "info");
+            return;
+        }
+
+        const content = `
+            <div style="display: grid; gap: 0.75rem;">
+                ${data.map(entry => {
+                    const isMe = entry.is_me;
+                    const isTop3 = entry.rank <= 3;
+                    return `
+                        <div class="glass card scale-in" style="padding: 1rem; border-left: 4px solid ${isTop3 ? 'var(--warning)' : 'var(--glass-border)'}; background: ${isMe ? 'rgba(139, 92, 246, 0.08)' : 'rgba(255,255,255,0.02)'};">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 24px; font-weight: 900; color: ${isTop3 ? 'var(--warning)' : 'var(--text-secondary)'}; font-size: 0.9rem;">#${entry.rank}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 800; color: ${isMe ? 'var(--accent-primary)' : 'var(--text-primary)'}; font-size: 0.95rem;">
+                                        ${entry.username || 'Student'} ${isMe ? '<span style="font-size: 0.65rem; opacity: 0.6; margin-left: 4px;">(YOU)</span>' : ''}
+                                    </div>
+                                    <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700;">${Math.floor(entry.time_taken / 60)}m ${entry.time_taken % 60}s taken</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-family: 'Outfit'; font-weight: 900; color: var(--success); font-size: 1rem;">${entry.score}</div>
+                                    <div style="font-size: 0.6rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase;">SCORE</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        ModalService.alert("Clan Rankings: " + (this.profile.department || 'General'), content);
+    } catch (err) {
+        ModalService.alert("Error", "Could not load rankings. Please try again later.", "error");
+    }
   },
 
   async handleClashStart() {

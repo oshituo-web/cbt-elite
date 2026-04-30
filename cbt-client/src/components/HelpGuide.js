@@ -1,5 +1,6 @@
 import { ModalService } from '../services/ModalService'
 import { AiService } from '../services/aiService'
+import { TourGuide } from '../utils/TourGuide'
 
 export const HelpGuide = {
   chatHistory: [],
@@ -114,16 +115,28 @@ export const HelpGuide = {
 
           <!-- Category Guides -->
           <div id="help-guides-view">
+            <!-- 🎓 INTERACTIVE TOUR CTA (NEW) -->
+            <div class="glass card scale-in" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4338ca; border-radius: 20px; overflow: hidden; color: white;">
+                <div style="height: 120px; width: 100%; overflow: hidden; background: #000;">
+                    <img src="tour_welcome_elite_1777578885056.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+                </div>
+                <div style="padding: 1.5rem;">
+                    <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.2rem; color: white;">Elite Platform Tour</h4>
+                    <p style="margin: 0.5rem 0 1.25rem 0; font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5;">Not sure where to start? Let us walk you through the core features of CBT Elite in 2 minutes.</p>
+                    <button id="help-launch-tour-btn" class="btn-primary" style="background: white; color: #1e1b4b; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 12px; font-size: 0.85rem;">START THE TOUR</button>
+                </div>
+            </div>
+
             <!-- 💎 PREMIUM CTA -->
-            <div class="glass card scale-in" style="margin-bottom: 2rem; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4338ca; padding: 1.5rem; border-radius: 16px; color: white;">
+            <div class="glass card scale-in" style="margin-bottom: 2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: 16px;">
                 <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                    <div style="background: rgba(255,215,0,0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fbbf24; flex-shrink: 0;">
-                        <i data-lucide="crown" style="width: 24px;"></i>
+                    <div style="background: rgba(255,215,0,0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fbbf24; flex-shrink: 0;">
+                        <i data-lucide="crown" style="width: 20px;"></i>
                     </div>
                     <div>
-                        <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.1rem; color: #fbbf24;">Elite Pro Access</h4>
-                        <p style="margin: 0.25rem 0 1rem 0; font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.4;">Unlock unlimited AI explanations, premium mock exams, and deep weakness analysis.</p>
-                        <button onclick="window.navigateTo('settings')" class="btn-primary" style="background: #fbbf24; color: #1e1b4b; border: none; font-size: 0.75rem; padding: 0.5rem 1rem; height: auto;">UPGRADE NOW</button>
+                        <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: #fbbf24;">Elite Pro Access</h4>
+                        <p style="margin: 0.15rem 0 0.75rem 0; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">Unlock unlimited AI explanations and premium mock exams.</p>
+                        <button onclick="window.navigateTo('settings')" class="btn-secondary" style="font-size: 0.7rem; padding: 0.4rem 0.8rem; height: auto;">UPGRADE NOW</button>
                     </div>
                 </div>
             </div>
@@ -201,6 +214,7 @@ export const HelpGuide = {
         const chatView = document.getElementById('help-chat-view');
         const closeChatBtn = document.getElementById('close-chat-btn');
         const contactBtn = document.getElementById('help-contact-btn');
+        const launchTourBtn = document.getElementById('help-launch-tour-btn');
 
         const triggerBot = async () => {
           const query = input.value.trim();
@@ -236,6 +250,13 @@ export const HelpGuide = {
             const contactItem = document.getElementById('more-contact-btn');
             if (contactItem) contactItem.click();
           }
+        }
+
+        if (launchTourBtn) {
+            launchTourBtn.onclick = () => {
+                ModalService.hide();
+                setTimeout(() => TourGuide.start(), 300);
+            };
         }
       }
     });

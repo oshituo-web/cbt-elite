@@ -63,17 +63,21 @@
     <!-- 🗺️ Phase 12: Collapsible Side Navigation (Default: Collapsed) -->
     <aside id="app-sidebar" class="app-sidebar glass collapsed">
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-view="dashboard" title="Home">
-          <i data-lucide="layout-dashboard"></i> <span>Home</span>
+        <button class="nav-item active" data-view="dashboard" data-tab="home" title="Home">
+          <i data-lucide="home"></i> <span>Home</span>
         </button>
-        <button class="nav-item" data-view="exams" title="Exams">
-          <i data-lucide="book-open-check"></i> <span>Exams</span>
+        <button class="nav-item" data-view="dashboard" data-tab="progress" title="My Progress">
+          <i data-lucide="line-chart"></i> <span>Progress</span>
         </button>
-        <button class="nav-item" data-view="practice" title="Practice">
-          <i data-lucide="target"></i> <span>Practice</span>
+        <button class="nav-item" data-view="dashboard" data-tab="compete" title="Elite Leagues">
+          <i data-lucide="users"></i> <span>Compete</span>
         </button>
+        <button class="nav-item" data-view="dashboard" data-tab="improve" title="Mastery Center">
+          <i data-lucide="brain"></i> <span>Improve</span>
+        </button>
+        <div class="nav-divider"></div>
         <button class="nav-item" data-view="analytics" title="Elite Insights">
-          <i data-lucide="bar-chart-2"></i> <span>Insights</span>
+          <i data-lucide="bar-chart-2"></i> <span>Elite Insights</span>
         </button>
         <div class="nav-divider"></div>
         <button id="sidebar-admin-btn" class="nav-item" data-view="admin"
@@ -111,21 +115,21 @@
 
     <!-- 📱 Bottom Navigation (Mobile Only) -->
     <nav id="bottom-nav" class="bottom-nav glass">
-      <button class="bottom-nav-item active" data-view="dashboard" title="Home">
-        <i data-lucide="layout-dashboard"></i>
+      <button class="bottom-nav-item active" data-view="dashboard" data-tab="home" title="Home">
+        <i data-lucide="home"></i>
         <span>Home</span>
       </button>
-      <button class="bottom-nav-item" data-view="exams" title="Exams">
-        <i data-lucide="book-open-check"></i>
-        <span>Exams</span>
+      <button class="bottom-nav-item" data-view="dashboard" data-tab="progress" title="Progress">
+        <i data-lucide="bar-chart-2"></i>
+        <span>Progress</span>
       </button>
-      <button class="bottom-nav-item" data-view="practice" title="Practice">
-        <i data-lucide="target"></i>
-        <span>Practice</span>
+      <button class="bottom-nav-item" data-view="dashboard" data-tab="compete" title="Compete">
+        <i data-lucide="users"></i>
+        <span>Compete</span>
       </button>
       <button class="bottom-nav-item" id="bottom-admin-btn" data-view="admin" style="display: none;"
         title="Admin Panel">
-        <i data-lucide="shield-alert"></i>
+        <i data-lucide="shield-check"></i>
         <span>Admin</span>
       </button>
       <button class="bottom-nav-item" id="bottom-more-btn" data-view="more" title="More Options">
