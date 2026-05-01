@@ -5,27 +5,25 @@ import { NotificationService } from './src/services/NotificationService'
 import { supabase } from './src/utils/supabase'
 import './src/styles/main.css'
 
-// 🚀 FORCE NEW VERSION LOAD (TEMPORARY)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => {
-      console.log('[SW] Force Unregistering old Service Worker:', reg.active?.scriptURL);
-      reg.unregister();
-    });
-  });
-}
+// 🛡️ FIX CRIT-07: SW force-unregister removed. The APP_VERSION cache-bust below
+// handles stale cache invalidation correctly without destroying offline functionality.
 
 // 🚀 PERMANENT CACHE SOLUTION: Version Syncing
 const APP_VERSION = 'v12';
 const savedVersion = localStorage.getItem('cbt_elite_version');
 
-// One-time clear for testing if version mismatch
+// 🛡️ FIX CRIT-08: Version Syncing with surgical key removal (NOT localStorage.clear())
+// localStorage.clear() would destroy: auth tokens, device tokens, referral codes, settings.
 if (savedVersion && savedVersion !== APP_VERSION) {
     console.log(`[Version Sync] Updating from ${savedVersion} to ${APP_VERSION}`);
-    localStorage.clear(); // Clear all local storage for a fresh start
+
+    // Only remove cache-tracking keys — preserve auth, settings, and user state
+    const keysToRemove = ['seen_news_ids', 'cbt_elite_saved_pass'];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     localStorage.setItem('cbt_elite_version', APP_VERSION);
     
-    // Clear all caches and reload
+    // Clear all SW caches and reload
     if ('caches' in window) {
         caches.keys().then(names => {
             for (let name of names) caches.delete(name);
@@ -38,6 +36,7 @@ if (savedVersion && savedVersion !== APP_VERSION) {
 
 import { TourGuide } from './src/utils/TourGuide'
 import { HelpGuide } from './src/components/HelpGuide'
+import { ErrorBoundary } from './src/components/ErrorBoundary'
 window.HelpGuide = HelpGuide; // expose globally so Dashboard.js can call it
 window.TourGuide = TourGuide;
 
@@ -72,11 +71,20 @@ window.currentProfile = null;
 window.navigateTo = async function(view, profile = currentProfile, pushState = true) {
   if (!view || !profile) return;
   
-  // 🔐 Global Admin Authorization Check (Strict: oshituo@gmail.com only)
+  // 🔐 Admin Authorization: Two-layer guard
+  // Layer 1: Client-side fast reject (UI hint only — NOT a security boundary)
+  // Layer 2: Server-side DB verification via is_admin() RPC (authoritative)
   if (view === 'admin') {
-    const isAdmin = profile.email === 'oshituo@gmail.com';
-    if (!isAdmin) {
-      console.warn(`Unauthorized access attempt to ${view} by ${profile.email || profile.username}`);
+    const emailHint = profile.email === 'oshituo@gmail.com';
+    if (!emailHint) {
+      console.warn(`[Auth] Unauthorized admin attempt by ${profile.email || profile.username} — client check failed.`);
+      window.navigateTo('dashboard', profile);
+      return;
+    }
+    // Layer 2: Verify via the database — cannot be bypassed by modifying the profile object in memory
+    const { data: adminCheck, error: adminErr } = await supabase.rpc('is_admin_check');
+    if (adminErr || !adminCheck) {
+      console.error(`[Auth] Server-side admin verification FAILED for ${profile.email}. Access denied.`, adminErr);
       window.navigateTo('dashboard', profile);
       return;
     }
@@ -109,10 +117,38 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
   }
 
   // 2. Update Active State for all navigation elements
+  // We map sub-pages to their logical parent nav icons to keep them highlighted
+  let navView = view;
+  if (view === 'analytics' || view === 'recap') navView = 'progress'; // Or 'dashboard'
+  if (view === 'profile' || view === 'settings') navView = 'more';
+
   const allNavItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .more-menu-item');
-  allNavItems.forEach(item => {
-    item.classList.toggle('active', item.dataset.view === view);
-  });
+  
+  if (view === 'more') {
+    // Just highlighting the 'more' button but preserving the underlying dashboard tab
+    allNavItems.forEach(item => {
+      if (item.dataset.view === 'more') {
+        item.classList.add('active');
+      }
+    });
+  } else {
+    allNavItems.forEach(item => {
+      // If returning to dashboard, we let Dashboard.js handle the specific tab via setActiveTab
+      if (navView === 'dashboard' && item.dataset.view === 'dashboard') {
+         // Don't strip the active class here; let Dashboard.js handle it to prevent flickering
+         return; 
+      }
+      
+      // For sub-pages like analytics, we force highlight the 'progress' tab if it's the dashboard view
+      if (navView === 'progress' && item.dataset.tab === 'progress') {
+          item.classList.add('active');
+      } else if (navView === 'more' && item.dataset.view === 'more') {
+          item.classList.add('active');
+      } else {
+          item.classList.toggle('active', item.dataset.view === navView);
+      }
+    });
+  }
 
 
   // 3. Handle Modular Views
@@ -217,16 +253,37 @@ function toggleMoreDrawer() {
   const drawer = document.getElementById('more-drawer');
   const overlay = document.getElementById('sidebar-overlay');
   if (drawer && overlay) {
-    drawer.classList.toggle('active');
+    const isActive = drawer.classList.toggle('active');
     overlay.classList.toggle('active');
+    
+    if (!isActive) {
+      document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(item => {
+        if (item.dataset.view === 'more') {
+          item.classList.remove('active');
+        }
+      });
+    }
   }
 }
 
 async function initApp() {
-  // 🧭 0. GLOBAL ERROR LOGGING
+  // 🧭 0. GLOBAL ERROR LOGGING & BOUNDARY
   window.onerror = (msg, url, lineNo, columnNo, error) => {
     console.error(`[Global Error] ${msg} at ${lineNo}:${columnNo}`, error);
+    // Ignore cross-origin script errors or harmless extension errors
+    if (msg.toLowerCase().indexOf('script error') > -1) return false;
+    
+    ErrorBoundary.showError(msg, error?.message || '');
     return false;
+  };
+
+  window.onunhandledrejection = (event) => {
+    console.error('[Unhandled Promise Rejection]', event.reason);
+    // Show boundary for critical promise failures, but we might want to skip minor ones
+    if (event.reason && event.reason.message && event.reason.message.includes('fetch')) {
+       // Typically handled by network retries, but if it bubbles up here:
+       ErrorBoundary.showError('Network connectivity issue detected.', event.reason.message);
+    }
   };
 
   try {
@@ -810,13 +867,26 @@ async function checkBroadcast() {
                 if (appRoot) appRoot.prepend(banner)
                 else document.body.prepend(banner)
             }
-            banner.innerHTML = `
-                <div class="banner-content">
-                    <span class="banner-icon">📢</span>
-                    <span class="banner-text">${config.value}</span>
-                    <button class="banner-close" onclick="this.parentElement.parentElement.remove()">✕</button>
-                </div>
-            `
+            // 🛡️ SECURITY: Build banner via DOM API — never inject config.value as innerHTML (XSS risk)
+            const bannerContent = document.createElement('div');
+            bannerContent.className = 'banner-content';
+
+            const icon = document.createElement('span');
+            icon.className = 'banner-icon';
+            icon.textContent = '📢';
+
+            const text = document.createElement('span');
+            text.className = 'banner-text';
+            text.textContent = config.value; // ✅ Safe: textContent never executes scripts
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'banner-close';
+            closeBtn.textContent = '✕';
+            closeBtn.onclick = () => banner.remove();
+
+            bannerContent.append(icon, text, closeBtn);
+            banner.innerHTML = ''; // Clear first
+            banner.appendChild(bannerContent);
         } else if (banner) {
             banner.remove()
         }
@@ -891,6 +961,8 @@ async function syncOfflineData() {
 
         if (successCount > 0) {
             console.log(`[Sync] Successfully uploaded ${successCount} sessions.`)
+            // 🛡️ FIX WARN-05: Purge synced records to prevent IndexedDB growing indefinitely
+            await IndexedDbService.clearSyncedSessions()
         }
     } catch (e) {
         console.warn("[Sync] Background sync failed:", e)

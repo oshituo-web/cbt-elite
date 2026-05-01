@@ -6,15 +6,20 @@
 import { supabase } from '../utils/supabase'
 
 /**
- * Executes a Supabase function with automatic exponential backoff for 429 Rate Limits.
+ * Executes a Supabase function with robust exponential backoff for Rate Limits (429), 
+ * Service Unavailable (503), and temporary Internal Server Errors (500).
+ * @param {string} functionName - The name of the Edge Function to invoke.
+ * @param {Object} options - Options to pass to the function (e.g. body, headers).
+ * @param {number} [maxRetries=4] - Maximum number of retry attempts.
+ * @returns {Promise<{data: any, error: any}>} Response data or error.
  */
-async function invokeWithRetry(functionName, options, maxRetries = 3) {
+async function invokeWithRetry(functionName, options, maxRetries = 4) {
   let attempt = 0;
   while (attempt < maxRetries) {
     const { data, error } = await supabase.functions.invoke(functionName, options);
     
     if (error) {
-      let isRateLimit = false;
+      let shouldRetry = false;
       let diagnosticMessage = error.message;
 
       // Extract details from the response body if available
@@ -22,28 +27,36 @@ async function invokeWithRetry(functionName, options, maxRetries = 3) {
         try {
           const body = typeof error.context.json === 'function' ? await error.context.json() : error.context;
           if (body?.error) {
-              diagnosticMessage = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+              const errObj = body.error;
+              diagnosticMessage = typeof errObj === 'string' ? errObj : (errObj.message || JSON.stringify(errObj));
               if (body.details) diagnosticMessage += ` (${body.details})`;
           }
-          
-          if (diagnosticMessage.includes('429') || diagnosticMessage.toLowerCase().includes('quota')) {
-            isRateLimit = true;
-          }
         } catch (e) {
-           if (error.message.includes('429')) isRateLimit = true;
+           console.warn("[AI Service] Error parsing error context:", e);
         }
       }
 
-      if (isRateLimit && attempt < maxRetries - 1) {
+      const lowerMsg = diagnosticMessage.toLowerCase();
+      const isRateLimit = lowerMsg.includes('429') || lowerMsg.includes('quota') || lowerMsg.includes('too many requests');
+      const isUnavailable = lowerMsg.includes('503') || lowerMsg.includes('unavailable') || lowerMsg.includes('high demand');
+      const isTempError = lowerMsg.includes('500') || lowerMsg.includes('internal error');
+
+      if ((isRateLimit || isUnavailable || isTempError) && attempt < maxRetries - 1) {
+        shouldRetry = true;
+      }
+
+      if (shouldRetry) {
         attempt++;
-        const backoffMs = attempt * 2000;
-        console.warn(`[AI Service] Rate limited or Quota issue. Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxRetries-1})`);
+        // Exponential backoff: 2s, 4s, 8s... + jitter
+        const baseDelay = Math.pow(2, attempt) * 1000;
+        const jitter = Math.random() * 1000;
+        const backoffMs = baseDelay + jitter;
+        
+        console.warn(`[AI Service] ${isUnavailable ? 'Service Busy' : 'Rate Limited'}. Retrying in ${Math.round(backoffMs)}ms... (Attempt ${attempt}/${maxRetries-1})`);
         await new Promise(r => setTimeout(r, backoffMs));
         continue;
       }
       
-      // If we're here, it's either not a rate limit or we're out of retries
-      // We throw a more descriptive error for the UI
       const finalError = new Error(diagnosticMessage);
       finalError.status = error.status;
       return { data: null, error: finalError };
@@ -187,6 +200,10 @@ export const AiService = {
 
   /**
    * Generates a dynamic HTML study guide for a specific topic, tailored by historical weak/strong points.
+   * @param {string} topic - The current topic to generate a guide for.
+   * @param {string} subject - The subject the topic belongs to.
+   * @param {Object} [userAnalytics=null] - Optional user analytics object to tailor the guide tone.
+   * @returns {Promise<string>} The generated HTML content.
    */
   async getTopicDeepDive(topic, subject, userAnalytics = null) {
 
@@ -265,30 +282,34 @@ export const AiService = {
         Do not use markdown backticks. Do not include raw JSON. Maintain an elite, encouraging, and authoritative tone.
      `;
 
-      try {
+       try {
         const { data, error } = await invokeWithRetry('gemini-proxy', {
           body: { prompt: shortVersion ? promptShort : promptLong, temperature: 0.8, maxOutputTokens: shortVersion ? 150 : 800 }
         });
 
-        if (error || !data) {
-            console.error("AI Function Invoke Error:", error);
-            throw error || new Error("API call failed.");
-        }
+        if (error || !data) throw error || new Error("API call failed.");
         let text = data.text || "Strategy synthesis unavailable.";
         return text.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '');
       } catch (err) {
         console.error("AI Performance Error Detail:", err);
         
-        // Attempt to extract the specific error message from the response body
-        if (err.context && typeof err.context.json === 'function') {
-            try {
-                const body = await err.context.json();
-                console.error("AI Function Error Body:", body);
-            } catch (e) { /* ignore */ }
+        // --- SMART FALLBACK LOGIC ---
+        // If AI fails, we provide a rule-based synthesis so the user isn't left with an error.
+        const sortedMastery = [...analytics.mastery].sort((a,b) => a.average - b.average);
+        const weakest = sortedMastery[0];
+        const strongest = sortedMastery[sortedMastery.length - 1];
+
+        if (shortVersion) {
+            return `You're excelling in ${strongest.subject} with ${Math.round(strongest.average)}% accuracy. Consider spending more time on ${weakest.subject} to bring your baseline up!`;
         }
 
-        const fallbackMsg = "Elite AI strategist is currently offline for maintenance.";
-        return shortVersion ? fallbackMsg : `<p style='color:var(--text-secondary); opacity: 0.7;'><em>${fallbackMsg}</em></p>`;
+        return `
+            <div class="fallback-ai-synthesis" style="border-left: 3px solid var(--accent-secondary); padding-left: 1rem;">
+                <p><strong>Elite AI Insights (Smart Fallback):</strong> Our advanced models are currently scaling, but your data tells a clear story.</p>
+                <p>Your dominance in <strong>${strongest.subject}</strong> (${Math.round(strongest.average)}%) is impressive and provides a solid foundation. However, your performance in <strong>${weakest.subject}</strong> (${Math.round(weakest.average)}%) suggests a need for deeper conceptual review.</p>
+                <p>Strategy: Allocate 60% of your next 3 sessions specifically to ${weakest.subject} topics to maximize your global score projection.</p>
+            </div>
+        `;
       }
   },
 
@@ -333,9 +354,9 @@ export const AiService = {
         body: { prompt, temperature: 0.7, maxOutputTokens: 100 }
       });
       if (error || !data) throw error;
-      return data.text || "Focus on your weakest areas today.";
+      return data.text || `Double down on ${weakSubjects[0].subject} today to boost your overall accuracy!`;
     } catch (err) {
-      return "Double down on your weakest subjects today.";
+      return `Target your weakest subject, ${weakSubjects[0].subject}, with a focused 15-minute drill today!`;
     }
   },
 

@@ -97,5 +97,22 @@ export const IndexedDbService = {
                 store.put(data)
             }
         }
+    },
+
+    // 🛡️ FIX WARN-05: Purge synced sessions to prevent indefinite IndexedDB growth
+    async clearSyncedSessions() {
+        const db = await this.getDb()
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORES.OFFLINE_SESSIONS, 'readwrite')
+            const store = tx.objectStore(STORES.OFFLINE_SESSIONS)
+            const request = store.getAll()
+            request.onsuccess = () => {
+                const synced = request.result.filter(s => s.synced)
+                synced.forEach(s => store.delete(s.id))
+                console.log(`[IndexedDB] Cleared ${synced.length} synced session(s) from offline store.`)
+            }
+            tx.oncomplete = () => resolve(true)
+            tx.onerror = () => reject(tx.error)
+        })
     }
 }

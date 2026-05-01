@@ -12,25 +12,28 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/js\.paystack\.co\/.*/i,
             handler: 'NetworkOnly',
           },
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            urlPattern: /.*\.js$/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'supabase-api-cache',
+              cacheName: 'js-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // <== 7 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
               }
             }
-          }
+          },
+          // 🛡️ FIX CRIT-04: Supabase API responses must NEVER be cached.
+          // Caching auth responses can leak premium status, stale user data, or session info.
+          // The sw.js fetch handler already correctly bypasses all supabase.co requests.
         ]
       },
       manifest: {

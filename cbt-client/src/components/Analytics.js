@@ -49,7 +49,7 @@ export const AnalyticsComponent = {
           }
           .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-bottom: 32px;
             width: 100%;
@@ -129,10 +129,33 @@ export const AnalyticsComponent = {
           @media (max-width: 768px) {
             .metrics-grid {
               grid-template-columns: repeat(2, 1fr);
-              gap: 12px;
+              gap: 8px;
+            }
+            .premium-glass-card {
+              padding: 1rem 0.75rem;
+            }
+            .stat-value-large {
+              font-size: 1.25rem;
             }
             .analytics-page-wrapper {
-              padding: calc(var(--header-height) + 1.25rem) 16px 140px 16px;
+              padding: calc(var(--header-height) + 1rem) 12px 100px 12px;
+              width: 100vw;
+              overflow-x: hidden;
+            }
+            header h1 {
+              font-size: 1.4rem !important;
+            }
+            header p {
+              font-size: 0.75rem !important;
+            }
+            .recap-fab {
+              bottom: 90px;
+              height: 44px;
+              padding: 0 1rem;
+              font-size: 0.8rem;
+            }
+            .synthesis-card {
+              padding: 1.25rem;
             }
           }
         </style>
@@ -217,79 +240,69 @@ export const AnalyticsComponent = {
               </div>
             </div>
 
-            <!-- MIDDLE SECTION: GRAPHS & SUBJECTS -->
-            <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-              <!-- Score Trend Chart -->
-              <div class="glass card" style="padding: 1.5rem;">
-                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
-                  <i data-lucide="trending-up" style="color: var(--accent-primary); width: 20px;"></i> Score Progression
-                </h3>
-                <div style="height: 250px; width: 100%;"><canvas id="insights-score-chart"></canvas></div>
-              </div>
-
-              <!-- Subject Performance List -->
-              <div class="glass card" style="padding: 1.5rem;">
-                <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
-                  <i data-lucide="target" style="color: var(--success); width: 20px;"></i> Subject Status
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 1.1rem;">
-                  ${Object.entries(stats.bySubject).sort((a,b) => (b[1].correct/b[1].total) - (a[1].correct/a[1].total)).slice(0, 5).map(([sub, s]) => `
-                    <div>
-                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.85rem;">
-                        <span style="font-weight: 700; color: var(--text-primary);">${sub}</span>
-                        <span style="font-weight: 800; color: var(--success);">${Math.round((s.correct / s.total) * 100)}%</span>
-                      </div>
-                      <div style="height: 5px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
-                        <div style="width: ${(s.correct / s.total) * 100}%; height: 100%; background: var(--accent-primary); transition: width 1s ease;"></div>
-                      </div>
+            <!-- SUBJECT PERFORMANCE LIST -->
+            <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem;">
+              <h3 style="font-family: 'Outfit'; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+                <i data-lucide="target" style="color: var(--success); width: 20px;"></i> Subject Status
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 1.1rem;">
+                ${Object.entries(stats.bySubject).sort((a,b) => (b[1].correct/b[1].total) - (a[1].correct/a[1].total)).slice(0, 5).map(([sub, s]) => `
+                  <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.85rem;">
+                      <span style="font-weight: 700; color: var(--text-primary);">${sub}</span>
+                      <span style="font-weight: 800; color: var(--success);">${Math.round((s.correct / s.total) * 100)}%</span>
                     </div>
-                  `).join('') || '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">No subject data yet.</div>'}
-                </div>
+                    <div style="height: 5px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
+                      <div style="width: ${(s.correct / s.total) * 100}%; height: 100%; background: var(--accent-primary); transition: width 1s ease;"></div>
+                    </div>
+                  </div>
+                `).join('') || '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">No subject data yet.</div>'}
               </div>
             </div>
 
             <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.35rem; margin-bottom: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">
               <i data-lucide="award" style="color: var(--accent-secondary); width: 24px;"></i> Topic Proficiency Rankings
             </h2>
-            <div class="glass card" style="padding: 1.5rem; overflow-x: auto; border-radius: 16px;">
-              <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
-                <thead>
-                  <tr style="text-align: left; border-bottom: 1px solid var(--glass-border);">
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Subject</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Topic</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Proficiency</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${mastery.length > 0 ? mastery.sort((a,b) => b.mastery_percentage - a.mastery_percentage).slice(0, 10).map(m => `
-                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
-                      <td style="padding: 1rem; font-weight: 700; color: var(--text-primary); font-size: 0.9rem;">${m.subject}</td>
-                      <td style="padding: 1rem; color: var(--text-secondary); font-weight: 500; font-size: 0.85rem;">${m.topic}</td>
-                      <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                          <div style="flex: 1; height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; min-width: 60px; overflow: hidden;">
-                            <div style="width: ${m.mastery_percentage}%; height: 100%; background: ${m.mastery_percentage > 70 ? 'var(--success)' : m.mastery_percentage > 40 ? 'var(--accent-primary)' : 'var(--error)'};"></div>
-                          </div>
-                          <span style="font-weight: 800; font-size: 0.85rem; color: var(--text-primary);">${m.mastery_percentage}%</span>
-                        </div>
-                      </td>
-                      <td style="padding: 1rem;">
-                        <button class="topic-dive-trigger btn-secondary" data-topic="${m.topic}" data-subject="${m.subject}" style="padding: 0.4rem 0.75rem; font-size: 0.7rem; font-weight: 800; border-radius: 8px; border-color: var(--accent-secondary); color: var(--accent-secondary);">
-                          DIVE
-                        </button>
-                      </td>
+            <div class="glass card" style="padding: 1rem; overflow-x: auto; border-radius: 16px; width: 100%; max-width: 100%; box-sizing: border-box;">
+              <div style="min-width: 450px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid var(--glass-border);">
+                      <th style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Subject</th>
+                      <th style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Topic</th>
+                      <th style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Proficiency</th>
+                      <th style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Action</th>
                     </tr>
-                  `).join('') : `<tr><td colspan="4" style="text-align:center; padding: 3rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${mastery.length > 0 ? mastery.sort((a,b) => b.mastery_percentage - a.mastery_percentage).slice(0, 10).map(m => `
+                      <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
+                        <td style="padding: 0.75rem; font-weight: 700; color: var(--text-primary); font-size: 0.85rem;">${m.subject}</td>
+                        <td style="padding: 0.75rem; color: var(--text-secondary); font-weight: 500; font-size: 0.8rem;">${m.topic}</td>
+                        <td style="padding: 0.75rem;">
+                          <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="flex: 1; height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; min-width: 40px; overflow: hidden;">
+                              <div style="width: ${m.mastery_percentage}%; height: 100%; background: ${m.mastery_percentage > 70 ? 'var(--success)' : m.mastery_percentage > 40 ? 'var(--accent-primary)' : 'var(--error)'};"></div>
+                            </div>
+                            <span style="font-weight: 800; font-size: 0.8rem; color: var(--text-primary);">${m.mastery_percentage}%</span>
+                          </div>
+                        </td>
+                        <td style="padding: 0.75rem;">
+                          <button class="topic-dive-trigger btn-secondary" data-topic="${m.topic}" data-subject="${m.subject}" style="padding: 0.35rem 0.6rem; font-size: 0.65rem; font-weight: 800; border-radius: 6px; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                            DIVE
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('') : `<tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-secondary);">Continue practicing to unlock topic analysis.</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       `
 
-      // 1. Render Chart
-      if (isPremium) this.renderScoreChart(history)
+      // 1. Chart rendering removed as requested
 
       // 2. Attach Listeners
       document.getElementById('analytics-back-btn').onclick = onBack
@@ -372,51 +385,4 @@ export const AnalyticsComponent = {
     }
   },
 
-  renderScoreChart(history) {
-    const ctx = document.getElementById('insights-score-chart')?.getContext('2d')
-    if (!ctx || !history || history.length === 0) return
-
-    const data = history.slice(-10).reverse()
-    const labels = data.map((_, i) => `Session ${i + 1}`)
-    const scores = data.map(s => s.score_percentage)
-
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    const textColor = isDarkMode ? '#f8fafc' : '#475569';
-    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)';
-
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Score %',
-          data: scores,
-          borderColor: isDarkMode ? '#38bdf8' : '#3b82f6',
-          backgroundColor: isDarkMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 4,
-          pointBackgroundColor: isDarkMode ? '#38bdf8' : '#3b82f6'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { 
-            beginAtZero: true, 
-            max: 100, 
-            grid: { color: gridColor }, 
-            ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } } 
-          },
-          x: { 
-            grid: { display: false }, 
-            ticks: { color: textColor, font: { family: 'Outfit', size: 11, weight: 'bold' } } 
-          }
-        }
-      }
-    })
-  }
 }

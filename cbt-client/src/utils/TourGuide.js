@@ -108,6 +108,35 @@ export const TourGuide = {
     this.bubble.style.transform = 'translate(-50%, -50%)';
   },
 
+  async _captureScreenshot(selector) {
+    if (!selector) return null;
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    
+    try {
+      if (!window.html2canvas) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      
+      const canvas = await window.html2canvas(el, { 
+        backgroundColor: null, 
+        scale: 2,
+        logging: false,
+        useCORS: true
+      });
+      return canvas.toDataURL('image/png');
+    } catch (e) {
+      console.error("TourGuide: html2canvas failed", e);
+      return null;
+    }
+  },
+
   async showStep() {
     const step = this.steps[this.currentStep];
     
@@ -119,67 +148,26 @@ export const TourGuide = {
     }
 
     const target = step.element ? document.querySelector(step.element) : null;
+    let screenshotUrl = null;
 
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       await new Promise(r => setTimeout(r, 400));
       
-      const rect = target.getBoundingClientRect();
-      const padding = 8;
-      this.spotlight.style.opacity = '1';
-      this.spotlight.style.top = `${rect.top - padding}px`;
-      this.spotlight.style.left = `${rect.left - padding}px`;
-      this.spotlight.style.width = `${rect.width + padding * 2}px`;
-      this.spotlight.style.height = `${rect.height + padding * 2}px`;
-      
-      this._positionBubbleNearTarget(rect);
-    } else {
-      // No target — hide spotlight and center the bubble
-      this.spotlight.style.opacity = '0';
-      this.spotlight.style.top = '-9999px';
-      this._centerBubble();
-    }
+      screenshotUrl = await this._captureScreenshot(step.element);
+    } 
 
-    this._renderBubbleContent(step);
+    // Always center the bubble and hide the spotlight
+    this.spotlight.style.opacity = '0';
+    this.spotlight.style.top = '-9999px';
+    this._centerBubble();
+
+    this._renderBubbleContent(step, screenshotUrl);
   },
 
-  _positionBubbleNearTarget(rect) {
-    this._resetBubble();
 
-    const bubbleWidth = Math.min(420, window.innerWidth * 0.92);
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const margin = 16;
 
-    // Horizontal: center over the target, clamped to viewport
-    let leftPos = rect.left + rect.width / 2 - bubbleWidth / 2;
-    leftPos = Math.max(margin, Math.min(leftPos, window.innerWidth - bubbleWidth - margin));
-
-    this.bubble.style.left = `${leftPos}px`;
-
-    if (spaceBelow >= 280 || spaceBelow >= spaceAbove) {
-      this.bubble.style.top = `${rect.bottom + 12}px`;
-      this.bubble.style.bottom = '';
-    } else {
-      this.bubble.style.bottom = `${window.innerHeight - rect.top + 12}px`;
-      this.bubble.style.top = '';
-    }
-
-    // Clamp: ensure it doesn't go off-screen vertically
-    requestAnimationFrame(() => {
-      const br = this.bubble.getBoundingClientRect();
-      if (br.bottom > window.innerHeight - margin) {
-        this.bubble.style.top = '';
-        this.bubble.style.bottom = `${margin}px`;
-      }
-      if (br.top < margin) {
-        this.bubble.style.top = `${margin}px`;
-        this.bubble.style.bottom = '';
-      }
-    });
-  },
-
-  _renderBubbleContent(step) {
+  _renderBubbleContent(step, screenshotUrl) {
     const progress = ((this.currentStep + 1) / this.steps.length) * 100;
     const isLast = this.currentStep === this.steps.length - 1;
     const isFirst = this.currentStep === 0;
@@ -188,11 +176,10 @@ export const TourGuide = {
       <div style="height: 3px; background: rgba(255,255,255,0.06); width: 100%;">
         <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: ${progress}%; transition: width 0.4s ease; border-radius: 0 2px 2px 0;"></div>
       </div>
-      ${step.image ? `
-        <div style="width: 100%; height: 170px; overflow: hidden; background: rgba(0,0,0,0.4); position: relative;">
-          <img src="${step.image}"
-            style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85; display: block;"
-            onerror="this.parentElement.style.display='none'">
+      ${screenshotUrl ? `
+        <div style="width: 100%; height: 170px; overflow: hidden; background: rgba(0,0,0,0.6); position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <img src="${screenshotUrl}"
+            style="max-width: 90%; max-height: 90%; object-fit: contain; display: block; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
         </div>` : ''}
       <div style="padding: 1.5rem 1.75rem 1.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; gap: 1rem;">
@@ -204,9 +191,9 @@ export const TourGuide = {
           <div style="display: flex; gap: 5px; align-items: center;">
             ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '18px' : '6px'}; height: 6px; border-radius: 3px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.15)'}; transition: all 0.3s ease;"></div>`).join('')}
           </div>
-          <div style="display: flex; gap: 0.6rem;">
-            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.78rem; border-radius: 10px; height: auto;">Back</button>' : ''}
-            <button class="tour-next btn-primary" style="padding: 0.45rem 1.25rem; font-size: 0.78rem; font-weight: 800; border-radius: 10px; background: var(--accent-primary); color: white; border: none; height: auto;">${isLast ? 'GET STARTED 🚀' : 'NEXT →'}</button>
+          <div style="display: flex; gap: 0.5rem;">
+            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.65rem; border-radius: 10px; height: auto;">Back</button>' : ''}
+            <button class="tour-next btn-primary" style="padding: 0.4rem 1rem; font-size: 0.65rem; font-weight: 800; border-radius: 10px; background: var(--accent-primary); color: white; border: none; height: auto;">${isLast ? 'GET STARTED 🚀' : 'NEXT →'}</button>
           </div>
         </div>
       </div>

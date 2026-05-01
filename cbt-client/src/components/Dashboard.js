@@ -209,7 +209,6 @@ export const DashboardComponent = {
         element: "#quick-practice-btn", 
         title: "Smart Practice", 
         text: "Start here to build your foundation. Our AI Tutor is always ready to explain difficult concepts step-by-step.",
-        image: "/img/app_tour_ai_tutor.png",
         onBefore: () => this.setActiveTab('home')
       },
       { 
@@ -228,7 +227,6 @@ export const DashboardComponent = {
         element: "#analytics-section", 
         title: "Deep Insights", 
         text: "We track every question you solve to build a detailed map of your strengths and weaknesses.",
-        image: "/img/app_tour_analysis.png",
         onBefore: () => this.setActiveTab('progress')
       },
       { 
@@ -365,6 +363,7 @@ export const DashboardComponent = {
         profile: this.profile,
         systemConfig,
         currentDailyCount,
+        totalSolved: Math.max(v2_totalQuestions, this.profile?.total_questions_answered || 0),
         currentMilestone,
         nextMilestone,
         accuracy,
@@ -582,7 +581,7 @@ export const DashboardComponent = {
           <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="stat-item">
               <div class="stat-label" style="font-size: 0.65rem; color: var(--text-secondary);"><i data-lucide="book-open" style="width: 10px;"></i> SOLVED</div>
-              <div class="stat-value" style="font-size: 1.2rem; font-weight: 900;">${currentDailyCount}</div>
+              <div class="stat-value" style="font-size: 1.2rem; font-weight: 900;">${this.state.totalSolved}</div>
             </div>
             <div class="stat-item">
               <div class="stat-label" style="font-size: 0.65rem; color: var(--text-secondary);"><i data-lucide="target" style="width: 10px;"></i> ACCURACY</div>
@@ -599,6 +598,21 @@ export const DashboardComponent = {
           </div>
           <div style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
               <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">${badgesHTML}</div>
+          </div>
+        </div>
+
+        <!-- ELITE INSIGHTS QUICK LAUNCH -->
+        <div class="glass card scale-in mb-md" style="padding: 1rem; border-left: 4px solid var(--accent-secondary); background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); cursor: pointer;" id="launch-elite-insights-btn">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+             <div>
+                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                   <i data-lucide="sparkles" style="color: var(--accent-secondary); width: 18px;"></i> Elite Insights
+                </h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.2rem 0 0 0; font-weight: 500;">AI Predictions & Mastery Analysis</p>
+             </div>
+             <div style="background: rgba(139, 92, 246, 0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary);">
+                <i data-lucide="chevron-right" style="width: 18px;"></i>
+             </div>
           </div>
         </div>
 
@@ -866,6 +880,11 @@ export const DashboardComponent = {
         'close-leaderboard-top': () => {
             const lbModal = document.getElementById('leaderboard-modal');
             if (lbModal) lbModal.style.display = 'none';
+        },
+        'launch-elite-insights-btn': () => {
+            if (typeof window.navigateTo === 'function') {
+                window.navigateTo('analytics', profile);
+            }
         },
         'view-history-btn': () => window.navigateTo('history', profile),
         'repair-mistakes-btn': async () => {

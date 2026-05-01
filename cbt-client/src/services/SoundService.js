@@ -28,23 +28,8 @@ export const SoundService = {
   },
 
   playWrong() {
-    if (localStorage.getItem('sound_effects') === 'false') return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(220, this.ctx.currentTime); // A3
-    osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.2); // A2
-    
-    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-    
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.4);
+    // User requested to use the "correct" sound for both wrong and correct choices.
+    this.playCorrect();
   },
 
   playClick() {

@@ -90,15 +90,16 @@ export const AuthComponent = {
       window.history.replaceState(null, '', window.location.pathname)
     }
 
-    // Remember Me Engine - Prefill cached credentials
+    // 🛡️ SECURITY FIX: Only remember email — NEVER cache passwords in localStorage.
+    // Supabase handles session persistence automatically via its own secure token storage.
     setTimeout(() => {
       const cachedEmail = localStorage.getItem('cbt_elite_saved_email')
-      const cachedPass = localStorage.getItem('cbt_elite_saved_pass')
-      if (cachedEmail && cachedPass) {
+      if (cachedEmail) {
         document.getElementById('email').value = cachedEmail
-        document.getElementById('password').value = cachedPass
         rememberMeCheck.checked = true
       }
+      // Clean up any legacy plaintext passwords that may have been stored previously
+      localStorage.removeItem('cbt_elite_saved_pass')
     }, 50)
 
     toggleBtn.onclick = () => {
@@ -198,14 +199,14 @@ export const AuthComponent = {
           }, 5000)
         }
       } else {
-        // Cache credentials if Remember Me is active
+        // 🛡️ SECURITY FIX: Only cache email — never store passwords in localStorage
         if (rememberMe) {
           localStorage.setItem('cbt_elite_saved_email', email)
-          localStorage.setItem('cbt_elite_saved_pass', password)
         } else {
           localStorage.removeItem('cbt_elite_saved_email')
-          localStorage.removeItem('cbt_elite_saved_pass')
         }
+        // Always ensure no legacy password is stored
+        localStorage.removeItem('cbt_elite_saved_pass')
 
         // Generate and sync Single Session device token
         if (data && data.user) {

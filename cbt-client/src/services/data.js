@@ -6,16 +6,31 @@ import { RepetitionManager } from '../utils/repetitionManager'
 export const DataService = {
   supabase,
   // --- CORE DATA ---
+  
+  /**
+   * Fetches all available exams from the database.
+   * @returns {Promise<{data: Array<Object>, error: Object|null}>} List of exams ordered by name.
+   */
   async getExams() {
     const { data, error } = await supabase.from('exams').select('*').order('exam_name')
     return { data: data || [], error }
   },
 
+  /**
+   * Fetches all available subjects from the database.
+   * @returns {Promise<{data: Array<Object>, error: Object|null}>} List of subjects ordered by name.
+   */
   async getSubjects() {
     const { data, error } = await supabase.from('subjects').select('*').order('subject_name')
     return { data: data || [], error }
   },
 
+  /**
+   * Fetches unique syllabus topics for a given subject and optional exam.
+   * @param {string|number} subjectId - The ID of the subject.
+   * @param {string|number} [examId] - Optional exam ID to filter topics.
+   * @returns {Promise<{data: Array<string>, error: Object|null}>} Sorted array of unique topic names.
+   */
   async getTopics(subjectId, examId) {
     let query = supabase
       .from('syllabus_topics')
@@ -32,6 +47,23 @@ export const DataService = {
   },
 
   // --- QUESTIONS ---
+  
+  /**
+   * Retrieves a filtered list of questions with their answers and optional relationships.
+   * Implements randomisation, tier-based restrictions, and repetition management logic.
+   * @param {Object} filters - Search and filtering parameters.
+   * @param {string|number} [filters.subject_id] - Filter by subject ID.
+   * @param {string|number} [filters.exam_id] - Filter by exam ID.
+   * @param {string} [filters.topic] - Filter by syllabus topic.
+   * @param {string} [filters.exam_type] - Exam type identifier.
+   * @param {string} [filters.difficulty] - Question difficulty level.
+   * @param {string} [filters.search] - Full-text search string.
+   * @param {boolean} [filters.randomize=false] - Whether to randomise the returned questions.
+   * @param {number} [filters.limit=20] - Max questions to return.
+   * @param {boolean} [filters.include_explanations=true] - Whether to join explanations.
+   * @param {string} [filters.question_type='objective'] - Type of question ('objective' or 'theory').
+   * @returns {Promise<{data: Array<Object>, error: Object|null}>} Formatted question list.
+   */
   async getQuestions(filters = {}) {
     let selectFields = `
         *,
@@ -81,7 +113,15 @@ export const DataService = {
     if (filters.topic) query = query.eq('topic', filters.topic)
     if (filters.exam_type) query = query.eq('exam_type', filters.exam_type)
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
-    if (filters.search) query = query.ilike('question_text', `%${filters.search}%`)
+    // 🛡️ FIX WARN-02: Validate search term length to prevent full-table scans.
+    // A bare '%' or single-char search causes a sequential scan on the questions table.
+    if (filters.search) {
+      const term = String(filters.search).trim().substring(0, 100) // max 100 chars
+      if (term.length >= 3) {
+        query = query.ilike('question_text', `%${term}%`)
+      }
+      // Silently skip searches shorter than 3 chars — UI should enforce this too
+    }
 
     if (filters.randomize) {
       try {
@@ -256,23 +296,8 @@ export const DataService = {
     return { data: data?.value === true || data?.value === 'true', error }
   },
 
-  async buyStreakFreeze(userId) {
-    const cost = 100;
-    const { data, error } = await supabase.rpc('purchase_streak_freeze', { p_user_id: userId, p_cost: cost });
-    
-    if (error) return { error: error.message };
-    if (!data) return { error: "Insufficient Elite Coins." };
-    
-    return { data: true, error: null };
-  },
-
-  async purchaseEliteItem(userId, itemId, price) {
-    if (itemId === 'streak_freeze') {
-      return await this.buyStreakFreeze(userId);
-    }
-    // Phase 17: Other items are UI-only stubs for now until their specific RPCs are built
-    return { error: `The item '${itemId}' is coming in the next update!` };
-  },
+  // NOTE: purchaseEliteItem is defined below (uses atomic_store_purchase RPC).
+  // buyStreakFreeze is handled by the atomic_store_purchase RPC on the DB side.
 
   async updateUser(userId, updates) {
     // Note: Restricted columns (tier, credits) will be blocked by DB trigger
@@ -467,7 +492,7 @@ export const DataService = {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('daily_questions_count, streak_count, last_daily_reset_date, elite_coins, streak_freeze_count, league_tier, has_seen_tour, username, has_league_insurance, last_ai_score_prediction')
+            .select('daily_questions_count, streak_count, last_daily_reset_date, elite_coins, streak_freeze_count, league_tier, has_seen_tour, username, has_league_insurance, last_ai_score_prediction, total_questions_answered')
             .eq('id', userId)
             .single()
         
@@ -511,7 +536,11 @@ export const DataService = {
       .eq('user_id', userId)
 
     const stats = {
-      overall: { total: 0, correct: 0, time: sessions.reduce((acc, s) => acc + (s.time_taken_seconds || 0), 0) },
+      overall: { 
+          total: Math.max(sessions.reduce((acc, s) => acc + (s.answered_questions ?? s.total_questions ?? 0), 0), userProfile.total_questions_answered || 0), 
+          correct: sessions.reduce((acc, s) => acc + (s.correct_answers || 0), 0), 
+          time: sessions.reduce((acc, s) => acc + (s.time_taken_seconds || 0), 0) 
+      },
       bySubject: {},
       byMode: { 'practice': { total: 0, correct: 0 }, 'exam': { total: 0, correct: 0 } }
     }
@@ -528,13 +557,10 @@ export const DataService = {
       average_score_percentage: 0
     }
 
+    // Aggregate subjects from user_responses, but don't override the overall session-based totals
     if (statsData) {
       statsData.forEach(r => {
         const sub = r.questions?.subject || 'General'
-        stats.overall.total++
-        if (r.is_correct) stats.overall.correct++
-        stats.overall.time += (r.time_spent_seconds || 0)
-
         if (!stats.bySubject[sub]) stats.bySubject[sub] = { total: 0, correct: 0 }
         stats.bySubject[sub].total++
         if (r.is_correct) stats.bySubject[sub].correct++
@@ -817,8 +843,10 @@ export const DataService = {
     if (error || !data) return { data: data || [], error };
     
     // Map the flat RPC output back into the nested shape the UI expects
+    // Also include top-level username for easier lookups
     const mappedData = data.map(d => ({
-        total_questions_answered: d.total_questions || 0, // Fallback if RPC updated but this code wasn't
+        username: d.username,
+        total_questions_answered: d.total_questions || 0,
         total_score: d.total_score || 0,
         users: { 
             username: d.username, 
@@ -827,6 +855,28 @@ export const DataService = {
     }));
     
     return { data: mappedData, error: null };
+  },
+
+  async getLatestClashLeaderboard(userId, department) {
+    try {
+        // 1. Find the latest completed clash for this department
+        const { data: clash, error: cErr } = await supabase
+            .from('scheduled_clashes')
+            .select('id')
+            .eq('department', department)
+            .eq('type', 'Normal')
+            .lte('week_date', new Date().toISOString())
+            .order('week_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (cErr || !clash) throw new Error("No recent clan clash found for your department.");
+
+        // 2. Fetch the leaderboard for this clash
+        return await this.getClashLeaderboard(clash.id);
+    } catch (err) {
+        return { data: null, error: err.message };
+    }
   },
 
   async getAuditQuestions(filters = {}) {
@@ -919,13 +969,17 @@ export const DataService = {
   },
 
   async syncOfflinePool() {
-    // Fetch a larger, randomized sample for offline variety (up to 500 questions)
+    // 🛡️ FIX WARN-09: Fetch a truly randomized pool using DB-side RPC
+    const { data: randomIds } = await supabase.rpc('get_random_question_ids', {
+      p_limit: 500
+    });
+
+    if (!randomIds || randomIds.length === 0) return;
+
     const { data } = await supabase
       .from('questions')
       .select('*, question_answers(*)')
-      .eq('is_active', true)
-      .limit(500)
-      .order('id'); // Note: True random sampling in a single query is hard, so we'll pick 500 and shuffle client-side
+      .in('id', randomIds);
     
     if (data) {
       const shuffled = [...data].sort(() => Math.random() - 0.5);
@@ -936,7 +990,11 @@ export const DataService = {
 
   // --- ADMIN: USER MANAGEMENT ---
   async getAllUsers() {
-    const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
+    // 🛡️ FIX WARN-04: Fetch only columns the Admin UI needs — not sensitive internals
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, username, email, tier, role, created_at, is_flagged, flag_reason, league_tier, streak_count, elite_coins, total_questions_answered, activation_status, last_session_date')
+      .order('created_at', { ascending: false })
     return { data: data || [], error }
   },
 
@@ -1093,23 +1151,31 @@ export const DataService = {
 
   // --- ADMIN: ANALYTICS & AUDIT ---
   async getGlobalAnalytics() {
-    const { data: sessions } = await supabase.from('exam_sessions').select('score_percentage')
-    const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true })
-    const { count: questionCount } = await supabase.from('questions').select('*', { count: 'exact', head: true })
-    
-    const avgScore = sessions && sessions.length > 0 
-      ? Math.round(sessions.reduce((acc, s) => acc + (s.score_percentage || 0), 0) / sessions.length)
-      : 0
+    // 🛡️ FIX WARN-06: Use DB-side aggregate RPC instead of fetching all session rows.
+    // The old approach transferred every session to the browser just to compute AVG —
+    // this will timeout at scale. The RPC computes everything server-side in one query.
+    const { data, error } = await supabase.rpc('get_global_analytics');
+
+    if (error || !data) {
+      console.error('getGlobalAnalytics RPC failed:', error);
+      return {
+        stats: { totalUsers: 0, totalQuestions: 0, averagePerformance: 0 },
+        sessions: [],
+        error: error?.message || 'Analytics unavailable'
+      };
+    }
 
     return {
       stats: {
-        totalUsers: userCount || 0,
-        totalQuestions: questionCount || 0,
-        averagePerformance: avgScore
+        totalUsers: data.total_users || 0,
+        totalQuestions: data.total_questions || 0,
+        averagePerformance: data.average_score || 0,
+        totalSessions: data.total_sessions || 0
       },
-      sessions: sessions || [],
+      // score_dist powers the histogram chart — replaces the raw sessions array
+      sessions: (data.score_dist || []).map(b => ({ score_percentage: b.range_label, count: b.count })),
       error: null
-    }
+    };
   },
 
   async getRevenueStats() {

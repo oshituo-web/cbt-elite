@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cbt-elite-v10' // Incremented to v10
+const CACHE_NAME = 'cbt-elite-v12' // Incremented on every deploy
 const ASSETS = [
   '/',
   '/index.html',
@@ -12,32 +12,34 @@ const ASSETS = [
   '/brand-icon.svg'
 ]
 
-// 1. Install - Precaching static assets
+// 1. Install - ENABLE SKIP WAITING (CRITICAL)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Precaching V3 assets')
+      console.log('[SW] Precaching assets for', CACHE_NAME)
       return cache.addAll(ASSETS)
     })
   )
-  self.skipWaiting()
+  self.skipWaiting();
 })
 
-// 2. Activate - Cleanup old caches
+// 2. Activate - FORCE CLIENT CLAIM & CLEAR OLD CACHES
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log('[SW] Removing old cache:', key)
-            return caches.delete(key)
-          }
-        })
-      )
-    })
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cache) => {
+            if (cache !== CACHE_NAME) {
+              console.log('[SW] Clearing old cache:', cache)
+              return caches.delete(cache)
+            }
+          })
+        )
+      })
+    ])
   )
-  self.clients.claim()
 })
 
 // 3. Fetch - Optimized Strategy
