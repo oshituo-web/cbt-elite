@@ -34,7 +34,7 @@ export const AdminComponent = {
                <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 700;">ADMINISTRATOR</div>
                <div style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary);">${profile.username}</div>
             </div>
-            <button id="admin-back-home" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700; border-radius: 12px;">
+            <button id="admin-back-home" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700; border-radius: 12px; white-space: nowrap;">
                <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> EXIT PANEL
             </button>
           </div>

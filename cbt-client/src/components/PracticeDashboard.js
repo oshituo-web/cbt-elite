@@ -28,8 +28,9 @@ export const PracticeDashboardComponent = {
     practiceContainer.innerHTML = `
       <div class="container animate-fadeIn" style="width: 100%; max-width: 1200px; padding: 1.5rem 1rem; box-sizing: border-box;">
         <header style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <button id="practice-back-btn" class="btn-secondary" style="width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button id="practice-back-btn" class="header-icon-btn" title="Go Back" style="display: flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.5rem 0.75rem; border-radius: 12px; background: rgba(0,0,0,0.05);">
+            <i data-lucide="arrow-left" style="width: 20px;"></i>
+            <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em;">EXIT</span>
           </button>
           <div style="flex: 1; min-width: 200px;">
             <h1 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0;">Practice Center</h1>

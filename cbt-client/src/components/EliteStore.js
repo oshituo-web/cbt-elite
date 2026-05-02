@@ -45,8 +45,9 @@ export const EliteStoreComponent = {
         
         modal.innerHTML = `
             <div class="glass card scale-in" style="width:100%; max-width:500px; padding:2.5rem 2rem; border-radius:24px; border:1px solid var(--accent-primary); max-height: none; position: relative; margin: auto;">
-                <button id="close-store-btn" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; z-index: 10;">
-                    <i data-lucide="x"></i>
+                <button id="close-store-btn" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; align-items: center; gap: 0.25rem; width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.1);">
+                    <i data-lucide="x" style="width: 16px;"></i>
+                    <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">EXIT</span>
                 </button>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                     <div>

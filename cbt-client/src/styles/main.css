@@ -1132,6 +1132,7 @@ button:active, .btn:active, .nav-item:active, .bottom-nav-item:active, .more-men
   padding: 0.6rem 1.25rem;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
   border-radius: 12px;
+  white-space: nowrap;
 }
 
 .primary:hover, .btn-primary:hover {
@@ -1149,6 +1150,7 @@ button:active, .btn:active, .nav-item:active, .bottom-nav-item:active, .more-men
   background: #2563EB; /* Solid primary for maximum stability/contrast */
   color: #FFFFFF !important;
   border-radius: 14px;
+  white-space: nowrap;
 }
 
 .btn-dominant:hover {
@@ -1168,6 +1170,7 @@ button:active, .btn:active, .nav-item:active, .bottom-nav-item:active, .more-men
   font-weight: 700;
   padding: 0.6rem 1.25rem;
   backdrop-filter: blur(4px);
+  white-space: nowrap;
 }
 
 .btn-secondary:hover, .glass-btn:hover {

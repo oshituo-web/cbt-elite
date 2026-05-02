@@ -203,47 +203,60 @@ export const DashboardComponent = {
     TourGuide.init([
       { 
         title: "Welcome to CBT Elite", 
-        text: "The most advanced AI-powered exam preparation platform in Nigeria. We combine intelligent practice, competitive leagues, and deep analytics to help you perform at your absolute best."
+        text: "The ultimate AI-powered preparation for JAMB, WAEC, and NECO. We combine smart practice, competitive leagues, and deep analytics to help you excel.",
+        image: "/img/app_tour_exam_setup.png"
       },
       { 
         element: "#quick-practice-btn", 
         title: "Smart Practice", 
-        text: "Start here to build your foundation. Our AI Tutor is always ready to explain difficult concepts step-by-step.",
-        onBefore: () => this.setActiveTab('home')
+        text: "Start here to build your foundation. Our AI Tutor is ready to explain difficult concepts step-by-step.",
+        onBefore: () => this.setActiveTab('home'),
+        image: "/img/app_tour_ai_tutor.png"
       },
       { 
-        element: "#economy-coins-val", 
+        element: "#quick-exam-btn", 
+        title: "Standard Mock Exams", 
+        text: "Simulate real exam conditions with full-length JAMB, WAEC, and NECO mock trials.",
+        onBefore: () => this.setActiveTab('home'),
+        image: "/img/app_tour_exam_setup.png"
+      },
+      { 
+        element: "#open-store-btn", 
         title: "Elite Economy", 
-        text: "Earn coins by hitting your daily targets. Use them in the Store to buy Streak Freezes and Power-ups!",
+        text: "Earn coins by hitting daily targets. Spend them in the Store to buy Streak Freezes and Power-ups!",
         onBefore: () => this.setActiveTab('home')
       },
       { 
         element: ".streak-flame-container", 
         title: "Consistency is Key", 
-        text: "Build your streak by solving 50+ questions daily. High streaks unlock exclusive badges and massive coin bonuses.",
+        text: "Build your streak by solving 50+ questions daily to unlock exclusive badges and bonuses.",
         onBefore: () => this.setActiveTab('home')
       },
       { 
         element: "#analytics-section", 
         title: "Deep Insights", 
-        text: "We track every question you solve to build a detailed map of your strengths and weaknesses.",
-        onBefore: () => this.setActiveTab('progress')
+        text: "Track your progress and identify weak spots. You can find this in the Progress tab at the bottom.",
+        onBefore: () => this.setActiveTab('progress'),
+        image: "/img/app_tour_analysis.png"
       },
       { 
         element: "#open-league-btn", 
         title: "Competitive Leagues", 
-        text: "Join a clan and compete for the top spot. Perform well to promote to Silver, Gold, and the ultimate Elite tier every Sunday!",
+        text: "Join a clan and compete for the top spot. Find the League Hub in the Compete tab at the bottom.",
         onBefore: () => this.setActiveTab('compete')
       },
       { 
+        element: "#mastery-center-section",
         title: "The Mastery Center", 
-        text: "Don't just practice—improve. Revisit every mistake you've ever made and master the concepts behind them. Find it at the bottom of the Progress tab.",
-        onBefore: () => this.setActiveTab('progress')
+        text: "Revisit and master every mistake you've ever made. Located at the bottom of your Progress tab.",
+        onBefore: () => this.setActiveTab('progress'),
+        image: "/img/app_tour_analysis.png"
       },
       { 
         title: "Elite Potential Unlocked", 
-        text: "You're now equipped with the ultimate learning tools. Reach for your dreams—your journey starts now!",
-        onBefore: () => this.setActiveTab('home')
+        text: "You're now equipped with the ultimate tools. Reach for your dreams—your journey starts now!",
+        onBefore: () => this.setActiveTab('home'),
+        image: "/img/app_tour_exam_setup.png"
       }
     ], {
       onFinish: () => {
@@ -408,10 +421,15 @@ export const DashboardComponent = {
     this.activeTab = tab;
     this.renderCurrentTab();
     
-    // Sync Bottom Nav Active State
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-        const isMatch = item.dataset.tab === tab;
-        item.classList.toggle('active', isMatch);
+    // Sync All Navigation Items (Sidebar and Bottom Nav)
+    document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(item => {
+        if (item.dataset.view === 'dashboard') {
+          const isMatch = item.dataset.tab === tab;
+          item.classList.toggle('active', isMatch);
+        } else {
+          // Non-dashboard items should not be active when we are on a dashboard tab
+          item.classList.remove('active');
+        }
     });
   },
 
@@ -431,9 +449,9 @@ export const DashboardComponent = {
         this.renderCharts(this.profile.id, analytics);
     }
     
-    if (this.activeTab === 'compete') {
+    if (this.activeTab === 'compete' || this.activeTab === 'home') {
         this.updateLeagueTimer();
-        this.updateLeagueMiniRank(this.profile.id);
+        if (this.activeTab === 'compete') this.updateLeagueMiniRank(this.profile.id);
     }
   },
 
@@ -492,6 +510,27 @@ export const DashboardComponent = {
              <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-size: 0.85rem;"><i data-lucide="target" style="width:16px;"></i> Practice</button>
              <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-weight: 800; font-size: 0.85rem;"><i data-lucide="trophy" style="width:16px;"></i> Mock Exam</button>
           </div>
+        </div>
+
+        <!-- 🏆 LEAGUE & CLAN ANNOUNCEMENT -->
+        <div class="glass card scale-in mb-md" id="home-league-announcement" style="padding: 1.25rem 1rem; cursor: pointer; border-left: 4px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%); display: flex; align-items: center; gap: 1rem; position: relative; overflow: hidden;">
+            <div style="width: 48px; height: 48px; background: rgba(37, 99, 235, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);">
+                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                   <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                       Clan & League HUB
+                   </h4>
+                   <span id="home-clash-timer" style="font-size: 0.65rem; font-weight: 900; color: var(--accent-primary); background: rgba(37, 99, 235, 0.1); padding: 0.15rem 0.5rem; border-radius: 6px; font-variant-numeric: tabular-nums;">--:--:--</span>
+                </div>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; line-height: 1.4;">
+                   Join the <span style="color: var(--accent-primary); font-weight: 800;">${profile.department || 'General'} Clan</span> Clash every Saturday. Dominate your league to qualify for the <span style="color: var(--accent-primary); font-weight: 800;">Elite Super League</span> championship on Sundays!
+                </p>
+                <div style="margin-top: 0.5rem; font-size: 0.65rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;">
+                   PREPARE FOR THE CLASH <i data-lucide="arrow-right" style="width: 12px; height: 12px;"></i>
+                </div>
+            </div>
         </div>
 
 
@@ -988,6 +1027,11 @@ export const DashboardComponent = {
     if (startFlashcardsBtn) {
         startFlashcardsBtn.onclick = () => this.handleFlashcardsReview();
     }
+
+    const homeLeagueBtn = document.getElementById('home-league-announcement');
+    if (homeLeagueBtn) {
+        homeLeagueBtn.onclick = () => this.setActiveTab('compete');
+    }
   },
 
   showDepartmentPicker(profile) {
@@ -1387,10 +1431,12 @@ export const DashboardComponent = {
     const mins = Math.floor((diff / (1000 * 60)) % 60);
     
     const timerEl = document.getElementById('league-timer')
-    if (timerEl) {
-        if (days > 0) timerEl.textContent = `${days}d ${hours}h left`;
-        else timerEl.textContent = `${hours}h ${mins}m left`;
-    }
+    const homeTimerEl = document.getElementById('home-clash-timer')
+    
+    const timeString = days > 0 ? `${days}d ${hours}h left` : `${hours}h ${mins}m left`;
+    
+    if (timerEl) timerEl.textContent = timeString;
+    if (homeTimerEl) homeTimerEl.textContent = timeString;
     
     const progressEl = document.getElementById('league-week-progress')
     if (progressEl) {

@@ -253,7 +253,7 @@ export class Exam {
               <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.75rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT ISSUE</button>
                 <button id="toggle-bookmark" class="btn-secondary" style="height: 44px; border-radius: var(--radius-md); font-weight: 800; padding: 0 1rem;">💾 SAVE</button>
-                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 44px; padding: 0 1.25rem;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 48px; padding: 0 2rem; background: var(--accent-secondary); font-weight: 900;">FINISH EXAM</button>'}
+                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 44px; padding: 0 1.25rem; white-space: nowrap;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 48px; padding: 0 2rem; background: var(--accent-secondary); font-weight: 900; white-space: nowrap;">FINISH EXAM</button>'}
               </div>
             </div>
           </div>

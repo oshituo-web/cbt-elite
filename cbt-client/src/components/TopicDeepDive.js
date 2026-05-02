@@ -23,7 +23,10 @@ export const TopicDeepDiveComponent = {
     modal.style.display = 'flex';
     modal.innerHTML = `
       <div class="modal-content glass scale-in" style="max-width: 600px; width: 92vw; padding: 2.5rem; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto;">
-        <button id="close-deep-dive" class="btn-secondary" style="position: absolute; top: 1rem; right: 1rem; width: 40px; height: 40px; border-radius: 50%; padding: 0;">&times;</button>
+        <button id="close-deep-dive" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); z-index: 10;">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">EXIT</span>
+        </button>
         
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
           <div style="background: var(--accent-gradient); padding: 0.75rem; border-radius: 12px; color: white;">
@@ -46,8 +49,8 @@ export const TopicDeepDiveComponent = {
            <button id="modal-focus-btn" class="btn-dominant" style="width: 100%; height: 56px; background: var(--accent-gradient);">
              Master this Topic (10 Questions)
            </button>
-           <button id="modal-close-btn" class="btn-secondary" style="width: 100%; height: 50px;">
-             I'll study more later
+           <button id="modal-close-btn" class="btn-secondary" style="width: 100%; height: 50px; font-weight: 800; white-space: nowrap;">
+             EXIT TO RESULTS
            </button>
         </div>
       </div>

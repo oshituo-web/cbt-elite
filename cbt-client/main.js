@@ -119,36 +119,44 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
   // 2. Update Active State for all navigation elements
   // We map sub-pages to their logical parent nav icons to keep them highlighted
   let navView = view;
-  if (view === 'analytics' || view === 'recap') navView = 'progress'; // Or 'dashboard'
+  let activeTab = profile?.activeTab || 'home';
+  
+  if (view === 'analytics' || view === 'recap') navView = 'progress'; 
   if (view === 'profile' || view === 'settings') navView = 'more';
 
   const allNavItems = document.querySelectorAll('.nav-item, .bottom-nav-item, .more-menu-item');
   
-  if (view === 'more') {
-    // Just highlighting the 'more' button but preserving the underlying dashboard tab
-    allNavItems.forEach(item => {
-      if (item.dataset.view === 'more') {
+  allNavItems.forEach(item => {
+    item.classList.remove('active');
+    
+    const itemView = item.dataset.view;
+    const itemTab = item.dataset.tab;
+
+    // 1. Handle "More" view (Drawer)
+    if (view === 'more') {
+      if (itemView === 'more') item.classList.add('active');
+      return;
+    }
+
+    // 2. Handle Dashboard View with Tabs
+    if (view === 'dashboard') {
+      if (itemView === 'dashboard' && itemTab === activeTab) {
         item.classList.add('active');
       }
-    });
-  } else {
-    allNavItems.forEach(item => {
-      // If returning to dashboard, we let Dashboard.js handle the specific tab via setActiveTab
-      if (navView === 'dashboard' && item.dataset.view === 'dashboard') {
-         // Don't strip the active class here; let Dashboard.js handle it to prevent flickering
-         return; 
-      }
-      
-      // For sub-pages like analytics, we force highlight the 'progress' tab if it's the dashboard view
-      if (navView === 'progress' && item.dataset.tab === 'progress') {
-          item.classList.add('active');
-      } else if (navView === 'more' && item.dataset.view === 'more') {
-          item.classList.add('active');
-      } else {
-          item.classList.toggle('active', item.dataset.view === navView);
-      }
-    });
-  }
+      return;
+    }
+
+    // 3. Handle Sub-pages mapping to parent tabs (e.g. Analytics -> Progress)
+    if (navView === 'progress' && itemTab === 'progress') {
+       item.classList.add('active');
+       return;
+    }
+
+    // 4. Handle Direct View Matches
+    if (itemView === navView && !itemTab) {
+      item.classList.add('active');
+    }
+  });
 
 
   // 3. Handle Modular Views

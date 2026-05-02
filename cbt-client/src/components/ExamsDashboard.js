@@ -27,8 +27,9 @@ export const ExamsDashboardComponent = {
     examsContainer.innerHTML = `
       <div class="container animate-fadeIn" style="width: 100%; max-width: 1200px; padding: 1.5rem 1rem; box-sizing: border-box;">
         <header style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <button id="exams-back-btn" class="btn-secondary" style="width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Back">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button id="exams-back-btn" class="header-icon-btn" title="Go Back" style="display: flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.5rem 0.75rem; border-radius: 12px; background: rgba(0,0,0,0.05);">
+            <i data-lucide="arrow-left" style="width: 20px;"></i>
+            <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em;">EXIT</span>
           </button>
           <div style="flex: 1; min-width: 200px;">
             <h1 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0;">Standard Mock Exams</h1>
@@ -70,7 +71,10 @@ export const ExamsDashboardComponent = {
               <h3 id="exam-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.15rem; color: var(--accent-secondary);">Setup Mock Exam</h3>
               <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Select subjects for simulation.</p>
             </div>
-            <button id="close-exam-config" class="btn-secondary" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; min-width: auto;">&times;</button>
+            <button id="close-exam-config" class="header-icon-btn" style="width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border);">
+              <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+              <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">EXIT</span>
+            </button>
           </div>
           
           <div id="jamb-exam-config" style="display: none;">

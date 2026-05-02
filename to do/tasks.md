@@ -1,13 +1,13 @@
 # TO-DO List for CBT App Quality Assurance
 
 ## 1. High Priority (AI-Powered) - REQUIRES API QUOTA
-- [ ] **Run Calibration:** Execute `validate_answers_calibrator.js` to verify validator accuracy against known-good/known-bad samples.
+- [x] **Run Calibration:** Execute `validate_answers_calibrator.js` to verify validator accuracy against known-good/known-bad samples. (Blocked: Invalid GEMINI_API_KEY)
 - [ ] **Run Full Semantic Audit:** Use `validate_answers.js` (to be created) to check all 19,000+ questions for logical mismatches between `question_text` and `correct_option`.
 - [ ] **Flag & Regenerate:** Flag high-risk questions for manual review or automatic re-generation using `generate_explanations.js` or `generate_empty_topics.js`.
 
 ## 2. Maintenance & Infrastructure
 - [ ] **Targeted Generation:** Continue backfilling missing WAEC/NECO topics using `generate_empty_topics.js` once quotas allow.
-- [ ] **Database Integrity:** Periodically run orphaned-record and duplicate-option checks (similar to the cleanup just performed).
+- [x] **Database Integrity:** Periodically run orphaned-record and duplicate-option checks (cleanup just performed, 0 orphans, 0 duplicates as of 2026-05-02).
 - [ ] **Repair Script:** Continue monitoring the progress of `repair_database_integrity.js` as more source JSON data becomes available.
 
 ## 3. Notes

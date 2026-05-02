@@ -37,8 +37,13 @@ async function simulate() {
         // 2. Call the RPC (get_random_question_ids)
         console.log("Calling RPC: get_random_question_ids...");
         const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
-            p_subject_id: filters.subject_id,
-            p_limit: filters.limit
+            p_subject_id: filters.subject_id || null,
+            p_exam_id: filters.exam_id || null,
+            p_exam_type: filters.exam_type || null,
+            p_topic: filters.topic || null,
+            p_question_type: filters.question_type || 'objective',
+            p_limit: filters.limit || 20,
+            p_exclude_ids: []
         });
 
         if (idError) {

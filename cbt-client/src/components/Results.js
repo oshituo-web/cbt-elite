@@ -158,8 +158,9 @@ export const ResultsComponent = {
     container.innerHTML = `
       <div class="results-view-container" style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; box-sizing: border-box;">
         <div class="glass card scale-in" style="padding: 2.5rem 1rem; position: relative; text-align: center; width: 100%; box-sizing: border-box;">
-          <button id="results-back-btn" class="btn-secondary" style="position: absolute; top: 1rem; left: 1rem; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;" title="Go Back">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          <button id="results-back-btn" class="header-icon-btn" title="Go Back" style="position: absolute; top: 1rem; left: 1rem; width: auto; height: 36px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(0,0,0,0.05); gap: 0.35rem;">
+            <i data-lucide="arrow-left" style="width: 16px;"></i>
+            <span style="font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em;">EXIT</span>
           </button>
           
           <div style="margin-bottom: 2rem; padding-top: 1rem;">
@@ -251,9 +252,9 @@ export const ResultsComponent = {
 
           <div class="glass card" style="padding: 2rem 1rem; background: rgba(0,0,0,0.1); border-radius: 20px; width: 100%; box-sizing: border-box;">
              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; width: 100%;">
-               <button class="btn-primary" id="restart-exam" style="flex: 1; min-width: 140px; height: 48px;">Retake</button>
-               <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 140px; height: 48px; border-color: var(--accent-primary);">Review</button>
-               <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 140px; height: 48px;">Dashboard</button>
+               <button class="btn-primary" id="restart-exam" style="flex: 1; min-width: 140px; height: 48px; white-space: nowrap;">Retake</button>
+               <button class="btn-secondary" id="review-exam" style="flex: 1; min-width: 140px; height: 48px; border-color: var(--accent-primary); white-space: nowrap;">Review</button>
+               <button class="btn-secondary" id="back-home" style="flex: 1; min-width: 140px; height: 48px; white-space: nowrap;">EXIT TO DASHBOARD</button>
              </div>
           </div>
 

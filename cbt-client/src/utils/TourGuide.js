@@ -54,18 +54,14 @@ export const TourGuide = {
       position: fixed;
       z-index: 100001;
       width: min(420px, 92vw);
-      background: rgba(10, 16, 30, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: rgba(10, 16, 30, 0.98);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05);
-      transition: top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  left 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity 0.3s ease;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       opacity: 0;
       pointer-events: none;
     `;
@@ -114,6 +110,7 @@ export const TourGuide = {
     if (!el) return null;
     
     try {
+      // Ensure html2canvas is available (using the one from node_modules if possible, fallback to CDN)
       if (!window.html2canvas) {
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
@@ -126,9 +123,11 @@ export const TourGuide = {
       
       const canvas = await window.html2canvas(el, { 
         backgroundColor: null, 
-        scale: 2,
+        scale: 2, // Sharpness
         logging: false,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 0
       });
       return canvas.toDataURL('image/png');
     } catch (e) {
@@ -150,9 +149,11 @@ export const TourGuide = {
     const target = step.element ? document.querySelector(step.element) : null;
     let screenshotUrl = null;
 
-    if (target) {
+    if (step.image) {
+      screenshotUrl = step.image;
+    } else if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 450)); // Wait for scroll and animations
       
       screenshotUrl = await this._captureScreenshot(step.element);
     } 
@@ -173,27 +174,28 @@ export const TourGuide = {
     const isFirst = this.currentStep === 0;
 
     this.bubble.innerHTML = `
-      <div style="height: 3px; background: rgba(255,255,255,0.06); width: 100%;">
+      <div style="height: 4px; background: rgba(255,255,255,0.06); width: 100%;">
         <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: ${progress}%; transition: width 0.4s ease; border-radius: 0 2px 2px 0;"></div>
       </div>
       ${screenshotUrl ? `
-        <div style="width: 100%; height: 170px; overflow: hidden; background: rgba(0,0,0,0.6); position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="width: 100%; height: 220px; overflow: hidden; background: #000; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, transparent 80%);"></div>
           <img src="${screenshotUrl}"
-            style="max-width: 90%; max-height: 90%; object-fit: contain; display: block; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            style="max-width: 95%; max-height: 90%; object-fit: contain; display: block; border-radius: 12px; box-shadow: 0 15px 45px rgba(0,0,0,0.7); filter: brightness(1.02) contrast(1.05);">
         </div>` : ''}
-      <div style="padding: 1.5rem 1.75rem 1.75rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; gap: 1rem;">
-          <h3 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.2rem; color: #ffffff; line-height: 1.2;">${step.title}</h3>
-          <button class="skip-tour" style="background: none; border: none; color: rgba(255,255,255,0.4); font-size: 0.65rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; padding: 0; flex-shrink: 0;">Skip</button>
+      <div style="padding: 1.75rem 2rem 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
+          <h3 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.3rem; color: #ffffff; line-height: 1.2;">${step.title}</h3>
+          <button class="skip-tour" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 0.65rem; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 8px; flex-shrink: 0; transition: all 0.2s;">Skip</button>
         </div>
-        <p style="color: rgba(255,255,255,0.72); font-size: 0.9rem; line-height: 1.65; margin: 0 0 1.5rem 0;">${step.text}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; gap: 5px; align-items: center;">
-            ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '18px' : '6px'}; height: 6px; border-radius: 3px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.15)'}; transition: all 0.3s ease;"></div>`).join('')}
+        <p style="color: rgba(255,255,255,0.75); font-size: 0.95rem; line-height: 1.6; margin: 0 0 2rem 0; font-weight: 500;">${step.text}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
+          <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+            ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '20px' : '8px'}; height: 8px; border-radius: 4px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}; transition: all 0.3s ease;"></div>`).join('')}
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.65rem; border-radius: 10px; height: auto;">Back</button>' : ''}
-            <button class="tour-next btn-primary" style="padding: 0.4rem 1rem; font-size: 0.65rem; font-weight: 800; border-radius: 10px; background: var(--accent-primary); color: white; border: none; height: auto;">${isLast ? 'GET STARTED 🚀' : 'NEXT →'}</button>
+          <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0 1.25rem; font-size: 0.8rem; font-weight: 800; border-radius: 12px; height: 44px; min-width: 90px; color: white; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">BACK</button>' : ''}
+            <button class="tour-next btn-primary" style="padding: 0 1.5rem; font-size: 0.85rem; font-weight: 900; border-radius: 12px; background: var(--accent-primary); color: white; border: none; height: 44px; min-width: 120px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);">${isLast ? 'START NOW 🚀' : 'NEXT →'}</button>
           </div>
         </div>
       </div>

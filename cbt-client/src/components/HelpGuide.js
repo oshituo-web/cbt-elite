@@ -117,13 +117,10 @@ export const HelpGuide = {
           <div id="help-guides-view">
             <!-- 🎓 INTERACTIVE TOUR CTA (NEW) -->
             <div class="glass card scale-in" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4338ca; border-radius: 20px; overflow: hidden; color: white;">
-                <div style="height: 120px; width: 100%; overflow: hidden; background: #000;">
-                    <img src="tour_welcome_elite_1777578885056.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
-                </div>
                 <div style="padding: 1.5rem;">
                     <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.2rem; color: white;">Elite Platform Tour</h4>
                     <p style="margin: 0.5rem 0 1.25rem 0; font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5;">Not sure where to start? Let us walk you through the core features of CBT Elite in 2 minutes.</p>
-                    <button id="help-launch-tour-btn" class="btn-primary" style="background: white; color: #1e1b4b; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 12px; font-size: 0.85rem;">START THE TOUR</button>
+                    <button id="help-launch-tour-btn" class="btn-primary" style="background: white; color: #1e1b4b; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 12px; font-size: 0.85rem;">LAUNCH TOUR</button>
                 </div>
             </div>
 
