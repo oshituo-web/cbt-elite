@@ -54,6 +54,9 @@ export const TourGuide = {
       position: fixed;
       z-index: 100001;
       width: min(420px, 92vw);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
       background: rgba(10, 16, 30, 0.98);
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
@@ -142,8 +145,8 @@ export const TourGuide = {
     // Execute onBefore hook if exists (e.g. to switch tabs)
     if (step.onBefore) {
       await step.onBefore();
-      // Let the DOM settle after a tab switch
-      await new Promise(r => setTimeout(r, 350));
+      // Let the DOM settle after a tab switch - increased for heavy elements like Mock Exam
+      await new Promise(r => setTimeout(r, 600));
     }
 
     const target = step.element ? document.querySelector(step.element) : null;
@@ -178,24 +181,24 @@ export const TourGuide = {
         <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: ${progress}%; transition: width 0.4s ease; border-radius: 0 2px 2px 0;"></div>
       </div>
       ${screenshotUrl ? `
-        <div style="width: 100%; height: 220px; overflow: hidden; background: #000; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+        <div style="width: 100%; height: 180px; overflow: hidden; background: #000; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0;">
           <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, transparent 80%);"></div>
           <img src="${screenshotUrl}"
             style="max-width: 95%; max-height: 90%; object-fit: contain; display: block; border-radius: 12px; box-shadow: 0 15px 45px rgba(0,0,0,0.7); filter: brightness(1.02) contrast(1.05);">
         </div>` : ''}
-      <div style="padding: 1.75rem 2rem 2rem;">
+      <div style="padding: 1.5rem; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
-          <h3 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.3rem; color: #ffffff; line-height: 1.2;">${step.title}</h3>
+          <h3 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.2rem; color: #ffffff; line-height: 1.2;">${step.title}</h3>
           <button class="skip-tour" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 0.65rem; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 8px; flex-shrink: 0; transition: all 0.2s;">Skip</button>
         </div>
-        <p style="color: rgba(255,255,255,0.75); font-size: 0.95rem; line-height: 1.6; margin: 0 0 2rem 0; font-weight: 500;">${step.text}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
-          <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
-            ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '20px' : '8px'}; height: 8px; border-radius: 4px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}; transition: all 0.3s ease;"></div>`).join('')}
+        <p style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin: 0 0 1.5rem 0; font-weight: 500;">${step.text}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+          <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+            ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '16px' : '6px'}; height: 6px; border-radius: 3px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}; transition: all 0.3s ease;"></div>`).join('')}
           </div>
-          <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
-            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0 1.25rem; font-size: 0.8rem; font-weight: 800; border-radius: 12px; height: 44px; min-width: 90px; color: white; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">BACK</button>' : ''}
-            <button class="tour-next btn-primary" style="padding: 0 1.5rem; font-size: 0.85rem; font-weight: 900; border-radius: 12px; background: var(--accent-primary); color: white; border: none; height: 44px; min-width: 120px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);">${isLast ? 'START NOW 🚀' : 'NEXT →'}</button>
+          <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0 1rem; font-size: 0.75rem; font-weight: 800; border-radius: 10px; height: 38px; min-width: 80px; color: white; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">BACK</button>' : ''}
+            <button class="tour-next btn-primary" style="padding: 0 1rem; font-size: 0.75rem; font-weight: 900; border-radius: 10px; background: var(--accent-primary); color: white; border: none; height: 38px; min-width: 100px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);">${isLast ? 'STARTNOW 🚀' : 'NEXT →'}</button>
           </div>
         </div>
       </div>

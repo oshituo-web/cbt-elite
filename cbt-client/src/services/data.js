@@ -385,6 +385,36 @@ export const DataService = {
 
     console.log("DataService: Syncing performance with payload:", payload);
 
+    // 🛡️ STREAK LOGIC: Increment or Reset based on date difference
+    try {
+        const { data: profile } = await supabase.from('users').select('streak_count, last_session_date').eq('id', userId).single();
+        if (profile) {
+            const today = localDate;
+            const lastDate = profile.last_session_date;
+            let newStreak = profile.streak_count || 0;
+            
+            const diffDays = lastDate ? Math.floor((new Date(today) - new Date(lastDate)) / (1000 * 60 * 60 * 24)) : 1;
+            
+            if (diffDays === 1) {
+                newStreak += 1;
+                console.log("Streak Increment:", { today, lastDate, diffDays, newStreak });
+            } else if (diffDays > 1 || !lastDate) {
+                newStreak = 1;
+                console.log("Streak Start/Reset:", { today, lastDate, diffDays, newStreak });
+            } else {
+                console.log("Streak: Already recorded today.");
+            }
+
+            // Persist the verified streak and date
+            await supabase.from('users').update({ 
+                streak_count: newStreak, 
+                last_session_date: today 
+            }).eq('id', userId);
+        }
+    } catch (e) {
+        console.warn("Streak sync failed, continuing performance save:", e);
+    }
+
     return await supabase.rpc('sync_user_performance', payload);
   },
 

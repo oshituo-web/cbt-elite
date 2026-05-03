@@ -383,6 +383,21 @@ async function initApp() {
     if (!profile || !profile.username) {
         showProfileSetup(user);
     } else {
+        // 🛡️ STREAK RESET CHECK ON LOAD
+        const today = new Date().toLocaleString("en-CA", {timeZone: "Africa/Lagos"}).split(",")[0];
+        const lastDate = profile.last_session_date;
+        
+        if (lastDate) {
+            const diffDays = Math.floor((new Date(today) - new Date(lastDate)) / (1000 * 60 * 60 * 24));
+            console.log("Streak Load Check:", { today, lastDate, diffDays });
+            
+            if (diffDays > 1) {
+                console.log("Streak Reset: Day missed.");
+                profile.streak_count = 0;
+                AuthService.updateProfile({ id: profile.id, streak_count: 0 });
+            }
+        }
+
         updateHeaderProfile(profile);
         handleInitialRoute(profile);
     }
@@ -462,29 +477,67 @@ function setupGlobalActions(profile) {
   const newsDrawer = document.getElementById('news-drawer')
   const closeNewsBtn = document.getElementById('close-news-drawer')
 
-  const toggleNewsDrawer = async () => {
+  const toggleNewsDrawer = async (activeTab = 'news') => {
     if (!newsDrawer) return;
     const isActive = newsDrawer.classList.contains('active')
     const overlay = document.getElementById('sidebar-overlay');
     
-    if (isActive) {
+    if (isActive && newsDrawer.dataset.currentTab === activeTab) {
       newsDrawer.classList.remove('active');
       if (overlay) overlay.classList.remove('active');
-    } else {
-      // Specifically close the more drawer if it's open
-      const moreDrawer = document.getElementById('more-drawer');
-      if (moreDrawer) moreDrawer.classList.remove('active');
+      return;
+    }
 
-      // Close other drawers first and cleanup state
-      await window.navigateTo('dashboard', profile);
+    newsDrawer.dataset.currentTab = activeTab;
+
+    // Specifically close the more drawer if it's open
+    const moreDrawer = document.getElementById('more-drawer');
+    if (moreDrawer) moreDrawer.classList.remove('active');
+
+    newsDrawer.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    
+    // Update Header
+    const headerTitle = newsDrawer.querySelector('.drawer-header h3');
+    if (headerTitle) {
+      headerTitle.innerHTML = activeTab === 'news' ? '📢 Exam News & Updates' : '🔔 Your Notifications';
+    }
+
+    // Add Tab Switcher if not exists
+    let tabSwitcher = newsDrawer.querySelector('.drawer-tabs');
+    if (!tabSwitcher) {
+      tabSwitcher = document.createElement('div');
+      tabSwitcher.className = 'drawer-tabs';
+      tabSwitcher.style.cssText = 'display:flex; padding:0 1.5rem; gap:1rem; border-bottom:1px solid var(--glass-border); background:rgba(0,0,0,0.05);';
+      tabSwitcher.innerHTML = `
+        <button class="drawer-tab ${activeTab === 'news' ? 'active' : ''}" data-tab="news" style="padding:0.75rem 0; background:none; border:none; color:var(--text-secondary); font-weight:800; font-size:0.8rem; cursor:pointer; border-bottom:2px solid transparent;">NEWS</button>
+        <button class="drawer-tab ${activeTab === 'notifications' ? 'active' : ''}" data-tab="notifications" style="padding:0.75rem 0; background:none; border:none; color:var(--text-secondary); font-weight:800; font-size:0.8rem; cursor:pointer; border-bottom:2px solid transparent;">ALERTS</button>
+      `;
+      newsDrawer.insertBefore(tabSwitcher, document.getElementById('news-drawer-content'));
       
-      newsDrawer.classList.add('active');
-      if (overlay) overlay.classList.add('active');
+      tabSwitcher.querySelectorAll('.drawer-tab').forEach(tab => {
+        tab.onclick = () => {
+          tabSwitcher.querySelectorAll('.drawer-tab').forEach(t => {
+            t.style.color = 'var(--text-secondary)';
+            t.style.borderBottomColor = 'transparent';
+          });
+          tab.style.color = 'var(--accent-primary)';
+          tab.style.borderBottomColor = 'var(--accent-primary)';
+          renderDrawerContent(tab.dataset.tab);
+        };
+      });
+    }
+
+    // Initial Render
+    renderDrawerContent(activeTab);
+
+    async function renderDrawerContent(tab) {
+      const contentArea = document.getElementById('news-drawer-content');
+      if (!contentArea) return;
       
-      // Fetch and Render News
-      const contentArea = document.getElementById('news-drawer-content')
-      if (contentArea) {
-         contentArea.innerHTML = '<div style="display:flex;justify-content:center;padding:2rem;"><div class="loader-spinner"></div></div>'
+      contentArea.innerHTML = '<div style="display:flex;justify-content:center;padding:2rem;"><div class="loader-spinner"></div></div>';
+      
+      if (tab === 'news') {
          try {
              const { DataService } = await import('./src/services/data')
              const { data: newsItems } = await DataService.getNewsUpdates(15)
@@ -499,50 +552,75 @@ function setupGlobalActions(profile) {
                        <span style="font-size: 0.65rem; color: var(--text-secondary);">${new Date(item.created_at).toLocaleDateString()}</span>
                     </div>
                     <h4 style="font-size: 0.9rem; margin: 0; color: var(--text-primary); line-height: 1.4;">${item.title}</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
                  </div>
                `).join('')
 
                contentArea.querySelectorAll('.news-item-card').forEach(card => {
                  card.onclick = () => {
-                   const nid = card.dataset.newsId
-                   if (nid) {
-                     newsDrawer.classList.remove('active')
-                     if (overlay) overlay.classList.remove('active');
-                      import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
-                        const dash = document.getElementById('dashboard-container')
-                        if (dash) dash.style.display = 'none'
-                        
-                        // Close the drawer so it doesn't stay open behind the article
-                        newsDrawer.classList.remove('active');
-                        const overlay = document.getElementById('sidebar-overlay');
-                        if (overlay) overlay.classList.remove('active');
-
-                        NewsArticleComponent.render(nid, () => {
-                          if (dash) dash.style.display = 'block'
-                        })
-                      })
-                   }
+                    const nid = card.dataset.newsId;
+                    newsDrawer.classList.remove('active');
+                    if (overlay) overlay.classList.remove('active');
+                    import('./src/components/NewsArticle').then(({ NewsArticleComponent }) => {
+                      NewsArticleComponent.render(nid, () => window.navigateTo('dashboard', profile));
+                    });
                  }
-               })
-               
-               const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
-               const newIds = newsItems.map(n => n.id)
-               const updatedSeen = [...new Set([...seenIds, ...newIds])]
-               localStorage.setItem('seen_news_ids', JSON.stringify(updatedSeen))
-               updateBellState(0)
+               });
              }
-         } catch (err) {
-             console.error("News load error:", err)
-             contentArea.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: var(--error);">Failed to load news updates.</p>'
-         }
+         } catch (e) { contentArea.innerHTML = '<p>Error loading news.</p>'; }
+      } else {
+        // Render Smart Notifications
+        const history = NotificationService.getHistory();
+        if (history.length === 0) {
+          contentArea.innerHTML = '<div style="text-align:center; padding:3rem 1.5rem; color:var(--text-secondary);"><i data-lucide="bell-off" style="width:40px; height:40px; margin-bottom:1rem; opacity:0.3;"></i><p>No notifications yet.</p></div>';
+          if (window.lucide) window.lucide.createIcons({ root: contentArea });
+        } else {
+          contentArea.innerHTML = `
+            <div style="padding: 1rem; display: flex; justify-content: flex-end;">
+               <button id="mark-all-read" style="background:none; border:none; color:var(--accent-primary); font-size:0.75rem; font-weight:700; cursor:pointer;">Mark all as read</button>
+            </div>
+            ${history.map(n => `
+              <div class="notif-item glass ${n.read ? '' : 'unread'}" style="margin-bottom:0.75rem; padding:1.25rem; cursor:pointer; position:relative; ${n.read ? 'opacity:0.8' : 'border-left:3px solid var(--error)'}" data-notif-id="${n.id}">
+                 <div style="display:flex; gap:1rem; align-items:flex-start;">
+                    <div style="width:36px; height:36px; border-radius:10px; background:rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                       <i data-lucide="${n.type === 'streak' ? 'flame' : n.type === 'reward' ? 'coins' : n.type === 'competition' ? 'trophy' : 'target'}" style="width:18px; color:var(--accent-primary);"></i>
+                    </div>
+                    <div>
+                       <h4 style="margin:0; font-size:0.9rem; font-weight:900;">${n.title}</h4>
+                       <p style="margin:0.25rem 0 0 0; font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">${n.message}</p>
+                       <span style="display:block; margin-top:0.5rem; font-size:0.65rem; color:var(--text-secondary); opacity:0.7;">${new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                 </div>
+              </div>
+            `).join('')}
+          `;
+          
+          if (window.lucide) window.lucide.createIcons({ root: contentArea });
+
+          contentArea.querySelector('#mark-all-read').onclick = () => {
+            NotificationService.markAllAsRead();
+            renderDrawerContent('notifications');
+          };
+
+          contentArea.querySelectorAll('.notif-item').forEach(card => {
+            card.onclick = () => {
+              const notif = history.find(h => h.id === card.dataset.notifId);
+              if (notif) {
+                NotificationService.markAsRead(notif.id);
+                newsDrawer.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                window.navigateTo(notif.action, profile);
+              }
+            };
+          });
+        }
       }
     }
   }
 
   if (newsBtn && newsDrawer) {
     newsBtn.dataset.init = "true"
-    newsBtn.onclick = toggleNewsDrawer;
+    newsBtn.onclick = () => toggleNewsDrawer('notifications');
   }
 
   if (closeNewsBtn) {
@@ -560,7 +638,7 @@ function setupGlobalActions(profile) {
   
   const moreNewsBtn = document.getElementById('more-news-btn');
   if (moreNewsBtn) {
-    moreNewsBtn.onclick = () => toggleNewsDrawer();
+    moreNewsBtn.onclick = () => toggleNewsDrawer('news');
   }
   // Wire up Logout button in More drawer
   const moreLogoutBtn = document.getElementById('more-logout-btn');
@@ -903,26 +981,8 @@ async function checkBroadcast() {
     }
 }
 async function initNotifications(profile) {
-    if (!profile) return
-    try {
-        const { DataService } = await import('./src/services/data')
-        const { data: newsItems } = await DataService.getNewsUpdates(5)
-        if (!newsItems) return
-
-        const seenIds = JSON.parse(localStorage.getItem('seen_news_ids') || '[]')
-        const unseenItems = newsItems.filter(item => !seenIds.includes(item.id))
-        const unseenCount = unseenItems.length
-        
-        updateBellState(unseenCount)
-
-        // Trigger Push Notification if enabled
-        if (unseenCount > 0 && localStorage.getItem('push_notifications') === 'true') {
-            const latest = unseenItems[0];
-            NotificationService.notify(`New Elite Update: ${latest.title}`, 'Check the News Drawer for the latest exam updates.', 'news');
-        }
-    } catch (e) {
-        console.warn("Notification check failed:", e)
-    }
+    if (!profile) return;
+    NotificationService.init(profile);
 }
 
 function updateBellState(count) {

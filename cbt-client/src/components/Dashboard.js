@@ -203,22 +203,19 @@ export const DashboardComponent = {
     TourGuide.init([
       { 
         title: "Welcome to CBT Elite", 
-        text: "The ultimate AI-powered preparation for JAMB, WAEC, and NECO. We combine smart practice, competitive leagues, and deep analytics to help you excel.",
-        image: "/img/app_tour_exam_setup.png"
+        text: "The ultimate AI-powered preparation for JAMB, WAEC, and NECO. We combine smart practice, competitive leagues, and deep analytics to help you excel."
       },
       { 
         element: "#quick-practice-btn", 
         title: "Smart Practice", 
         text: "Start here to build your foundation. Our AI Tutor is ready to explain difficult concepts step-by-step.",
-        onBefore: () => this.setActiveTab('home'),
-        image: "/img/app_tour_ai_tutor.png"
+        onBefore: () => this.setActiveTab('home')
       },
       { 
         element: "#quick-exam-btn", 
         title: "Standard Mock Exams", 
         text: "Simulate real exam conditions with full-length JAMB, WAEC, and NECO mock trials.",
-        onBefore: () => this.setActiveTab('home'),
-        image: "/img/app_tour_exam_setup.png"
+        onBefore: () => this.setActiveTab('home')
       },
       { 
         element: "#open-store-btn", 
@@ -236,8 +233,7 @@ export const DashboardComponent = {
         element: "#analytics-section", 
         title: "Deep Insights", 
         text: "Track your progress and identify weak spots. You can find this in the Progress tab at the bottom.",
-        onBefore: () => this.setActiveTab('progress'),
-        image: "/img/app_tour_analysis.png"
+        onBefore: () => this.setActiveTab('progress')
       },
       { 
         element: "#open-league-btn", 
@@ -249,14 +245,12 @@ export const DashboardComponent = {
         element: "#mastery-center-section",
         title: "The Mastery Center", 
         text: "Revisit and master every mistake you've ever made. Located at the bottom of your Progress tab.",
-        onBefore: () => this.setActiveTab('progress'),
-        image: "/img/app_tour_analysis.png"
+        onBefore: () => this.setActiveTab('progress')
       },
       { 
         title: "Elite Potential Unlocked", 
         text: "You're now equipped with the ultimate tools. Reach for your dreams—your journey starts now!",
-        onBefore: () => this.setActiveTab('home'),
-        image: "/img/app_tour_exam_setup.png"
+        onBefore: () => this.setActiveTab('home')
       }
     ], {
       onFinish: () => {
@@ -484,7 +478,7 @@ export const DashboardComponent = {
 
         <!-- ELITE ECONOMY WIDGET -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div id="open-store-btn" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
+          <div id="economy-coins-widget" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
             <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
               <i data-lucide="coins" style="width: 12px;"></i>
             </div>
@@ -493,7 +487,7 @@ export const DashboardComponent = {
               <div id="economy-coins-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.elite_coins || 0}</div>
             </div>
           </div>
-          <div id="open-store-btn" class="glass card scale-in" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.08); min-height: 44px; border-radius: 12px;">
+          <div id="economy-freeze-widget" class="glass card scale-in" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.08); min-height: 44px; border-radius: 12px;">
             <div style="width: 20px; height: 20px; background: rgba(139, 92, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
               <i data-lucide="snowflake" style="width: 12px;"></i>
             </div>
@@ -507,10 +501,13 @@ export const DashboardComponent = {
         <!-- QUICK ACTION SECTION -->
         <div class="glass card scale-in mb-md" style="text-align: center; padding: 0.85rem 0.75rem; border: 1.5px solid rgba(14, 165, 233, 0.3); background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, var(--surface-color) 100%);">
           <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%;">
-             <button id="quick-practice-btn" class="btn-primary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-size: 0.85rem;"><i data-lucide="target" style="width:16px;"></i> Practice</button>
-             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0 1rem; flex: 1; height: 40px; min-width: 120px; font-weight: 800; font-size: 0.85rem;"><i data-lucide="trophy" style="width:16px;"></i> Mock Exam</button>
+             <button id="quick-practice-btn" class="btn-primary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-size: 1rem; font-weight: 900; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);"><i data-lucide="target" style="width:20px;"></i> PRACTICE</button>
+             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-weight: 900; font-size: 1rem; border: 2px solid var(--accent-secondary);"><i data-lucide="trophy" style="width:20px;"></i> MOCK EXAM</button>
           </div>
         </div>
+
+        <!-- 🧠 SMART DAILY MISSION (NEW) -->
+        ${this.renderDailyMission()}
 
         <!-- 🏆 LEAGUE & CLAN ANNOUNCEMENT -->
         <div class="glass card scale-in mb-md" id="home-league-announcement" style="padding: 1.25rem 1rem; cursor: pointer; border-left: 4px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%); display: flex; align-items: center; gap: 1rem; position: relative; overflow: hidden;">
@@ -524,35 +521,33 @@ export const DashboardComponent = {
                    </h4>
                    <span id="home-clash-timer" style="font-size: 0.65rem; font-weight: 900; color: var(--accent-primary); background: rgba(37, 99, 235, 0.1); padding: 0.15rem 0.5rem; border-radius: 6px; font-variant-numeric: tabular-nums;">--:--:--</span>
                 </div>
-                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; line-height: 1.4;">
-                   Join the <span style="color: var(--accent-primary); font-weight: 800;">${profile.department || 'General'} Clan</span> Clash every Saturday. Dominate your league to qualify for the <span style="color: var(--accent-primary); font-weight: 800;">Elite Super League</span> championship on Sundays!
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; line-height: 1.4; display: block; width: 100%;">
+                   Join the Clan Competition every Saturday to qualify for the Elite competition on Sunday.
                 </p>
-                <div style="margin-top: 0.5rem; font-size: 0.65rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;">
-                   PREPARE FOR THE CLASH <i data-lucide="arrow-right" style="width: 12px; height: 12px;"></i>
+                <div style="margin-top: 1rem;">
+                   <button class="btn-primary" style="width: 100%; height: 42px; font-size: 0.85rem; font-weight: 900; border-radius: 12px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+                      ENTER LEAGUE HUB
+                   </button>
                 </div>
             </div>
         </div>
 
-
-        <!-- 🧠 SMART DAILY MISSION (NEW) -->
-        ${this.renderDailyMission()}
-
         <!-- Daily Streak Card -->
-        <div class="glass card scale-in mb-md" style="padding: 1.25rem 1rem; display: flex; flex-direction: column; min-height: 200px; justify-content: space-between; border-top: 4px solid var(--warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Learning Streak</h3>
-            <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.65rem; font-weight: 800;">ACTIVE</span>
+        <div class="glass card scale-in" style="padding: 1rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 100px;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+             <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}" style="width: 48px; height: 48px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+               <i data-lucide="flame" style="width: 24px; height: 24px; color: ${profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'};"></i>
+             </div>
+             <div>
+                <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_count || 0} Days</div>
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Current Streak</div>
+             </div>
           </div>
-          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;">
-            <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}">
-              <i data-lucide="flame" style="width: 48px; height: 48px; color: ${profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'}; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));"></i>
-            </div>
-            <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_count || 0}</div>
-            <div style="font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Day Streak</div>
+          <div style="text-align: right;">
+             <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; font-weight: 600; line-height: 1.2;">
+               ${profile.streak_count > 0 ? "You're on fire!" : "Start today!"}
+             </p>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin: 0; font-weight: 500;">
-            ${profile.streak_count > 0 ? "You're on fire! Keep it up." : "Start a session to begin your streak."}
-          </p>
         </div>
 
 
