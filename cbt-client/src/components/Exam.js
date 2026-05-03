@@ -14,9 +14,10 @@ import { SoundService } from '../services/SoundService'
 import renderMathInElement from 'katex/dist/contrib/auto-render.mjs'
 
 export class Exam {
-  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = [], clashId = null) {
+  constructor(questions, user, subject = null, examType = null, mode = 'practice', isReview = false, pastAnswers = {}, intendedSubjects = [], clashId = null, questionSource = 'ai') {
     this.session = new ExamSessionManager(questions, pastAnswers, !isReview, examType === 'JAMB')
     this.clashId = clashId // Phase 2: Competition sync
+    this.questionSource = questionSource; // ai | past
     
     // Phase 4: Keyboard Shortcuts
     this._handleKeyDown = (e) => {
@@ -109,6 +110,7 @@ export class Exam {
           examType: this.examType,
           mode: this.mode,
           activeJambSubject: this.activeJambSubject,
+          questionSource: this.questionSource,
           timestamp: Date.now()
         }
         localStorage.setItem('cbt_active_exam', JSON.stringify(state))
@@ -167,6 +169,7 @@ export class Exam {
       this.session.userAnswers = resumeState.userAnswers || {}
       this.session.currentIndex = resumeState.currentIndex || 0
       this.activeJambSubject = resumeState.activeJambSubject || this.activeJambSubject
+      this.questionSource = resumeState.questionSource || this.questionSource
       this.remainingTime = resumeState.remainingTime || this.initialTime
     } else if (!this.isReviewMode) {
       // Enforcement: Session Limits
@@ -193,7 +196,10 @@ export class Exam {
               <button id="exam-back-btn" class="header-icon-btn" title="Go Back">
                 <i data-lucide="chevron-left"></i>
               </button>
-              <span id="display-exam-type" class="badge-exam">...</span>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span id="display-exam-type" class="badge-exam">...</span>
+                <span id="source-label" style="font-size: 0.6rem; font-weight: 800; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase;">...</span>
+              </div>
               <div id="q-meta" class="q-counter-mini">1 of 0</div>
             </div>
 
@@ -354,6 +360,19 @@ export class Exam {
 
     this.updateUI()
     this.attachListeners(onFinish, onBack)
+    
+    // Set Source Label
+    const sourceLabel = document.getElementById('source-label');
+    if (sourceLabel) {
+        if (this.questionSource === 'past') {
+            sourceLabel.textContent = 'Verified Past Questions';
+            sourceLabel.style.color = 'var(--accent-secondary)';
+        } else {
+            sourceLabel.textContent = 'Elite AI Generated';
+            sourceLabel.style.color = 'var(--accent-primary)';
+        }
+    }
+
     if (window.lucide) window.lucide.createIcons();
   }
 
@@ -621,7 +640,8 @@ export class Exam {
     
     // 🔥 ELITE POWER-UPS: Eliminate 2 (Only in Practice Mode)
     const optionsContainer = document.getElementById('options-container');
-    if (!this.isReviewMode && this.session.mode === 'practice' && optionsContainer) {
+    const isMockExam = this.mode === 'exam' || this.mode === 'mock';
+    if (!this.isReviewMode && !isMockExam && optionsContainer) {
         const powerUpsDiv = document.createElement('div');
         powerUpsDiv.style = "margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; gap: 0.75rem;";
         powerUpsDiv.innerHTML = `
@@ -692,7 +712,8 @@ export class Exam {
             const selectedId = btn.dataset.id;
             
             // Sound Effects Logic
-            if (this.mode === 'practice' && !this.isReviewMode) {
+            const isMock = this.mode === 'exam' || this.mode === 'mock';
+            if (!this.isReviewMode && !isMock) {
               const correctAns = q.answers?.find(a => a.is_correct);
               if (correctAns) {
                 if (selectedId === correctAns.id) SoundService.playCorrect();
@@ -1118,14 +1139,33 @@ export class Exam {
       window.removeEventListener('keydown', this._handleKeyDown)
 
       // Capture session data BEFORE clearing session
-      const userAnswers = this.session ? { ...this.session.userAnswers } : {}
-      const timeTaken = this.session ? this.session.getTimeTaken() : 0
+      const summary = this.session ? this.session.getSummary() : null;
+      const userAnswers = summary ? { ...summary.userAnswers } : {}
+      const timeTaken = summary ? summary.timeTaken : 0
       const actualQuestions = this.session ? [...this.session.questions] : []
       
+      // Save to Database
+      if (!this.isReviewMode && this.profile && summary) {
+        DataService.saveExamSession(
+            this.profile.id, 
+            {
+                total_questions: summary.total,
+                correct_answers: summary.correct,
+                score_percentage: summary.score_percentage,
+                time_taken_seconds: summary.timeTaken,
+                session_type: this.mode,
+                subject_name: this.subject || 'General'
+            },
+            actualQuestions,
+            userAnswers,
+            false,
+            this.questionSource
+        );
+      }
+
       // 🔥 CLASH HARDENING: Submit final results to the competition table
-      if (this.clashId && this.profile?.id) {
-          const stats = this.session.getSummary();
-          const score = stats.correctAnswers;
+      if (this.clashId && this.profile?.id && summary) {
+          const score = summary.correct;
           DataService.submitClashResults(this.clashId, this.profile.id, score, timeTaken)
               .catch(e => console.error("Final Clash Submission Failed:", e));
       }
@@ -1148,8 +1188,8 @@ export class Exam {
 export const ExamComponent = {
   _instance: null,
 
-  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null, intendedSubjects = [], clashId = null) {
-    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers, intendedSubjects, clashId)
+  render(questions, profile, onFinish, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', onBack = null, resumeState = null, intendedSubjects = [], clashId = null, questionSource = 'ai') {
+    this._instance = new Exam(questions, profile, subject, examType, mode, isReview, pastAnswers, intendedSubjects, clashId, questionSource)
     this._instance.render((userAnswers, timeTaken, actualQuestions, cid) => {
         if (onFinish) onFinish(userAnswers, timeTaken, actualQuestions, cid)
     }, onBack, resumeState)

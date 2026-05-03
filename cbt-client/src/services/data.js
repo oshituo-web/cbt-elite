@@ -46,6 +46,26 @@ export const DataService = {
     return { data: uniqueTopics, error: null }
   },
 
+  /**
+   * Fetches unique years available in the Past Questions Archive.
+   */
+  async getArchiveYears(examType, subjectId) {
+    let query = supabase
+      .from('questions')
+      .select('exam_year')
+      .eq('is_past_question', true)
+      .is('is_active', true);
+
+    if (examType) query = query.eq('exam_type', examType);
+    if (subjectId) query = query.eq('subject_id', subjectId);
+
+    const { data, error } = await query;
+    if (error) return { data: [], error };
+
+    const uniqueYears = [...new Set(data.map(q => q.exam_year).filter(Boolean))].sort((a, b) => b - a);
+    return { data: uniqueYears, error: null };
+  },
+
   // --- QUESTIONS ---
   
   /**
@@ -113,6 +133,16 @@ export const DataService = {
     if (filters.topic) query = query.eq('topic', filters.topic)
     if (filters.exam_type) query = query.eq('exam_type', filters.exam_type)
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
+    if (filters.is_past_question !== undefined) query = query.eq('is_past_question', filters.is_past_question)
+    
+    // 🔥 DUAL SYSTEM: Strict source filtering
+    if (filters.question_source === 'past') {
+      query = query.eq('is_past_question', true)
+    } else if (filters.question_source === 'ai') {
+      query = query.eq('is_past_question', false)
+    }
+
+    if (filters.exam_year) query = query.eq('exam_year', filters.exam_year)
     // 🛡️ FIX WARN-02: Validate search term length to prevent full-table scans.
     // A bare '%' or single-char search causes a sequential scan on the questions table.
     if (filters.search) {
@@ -304,9 +334,14 @@ export const DataService = {
     return await supabase.from('users').update(updates).eq('id', userId).select()
   },
 
-  async saveExamSession(userId, sessionData, questions, userAnswers, isSyncing = false) {
+  async saveExamSession(userId, sessionData, questions, userAnswers, isSyncing = false, questionSource = 'ai') {
     try {
-      let payload = { user_id: userId, ...sessionData, completed_at: new Date().toISOString() }
+      let payload = { 
+        user_id: userId, 
+        ...sessionData, 
+        question_source: questionSource,
+        completed_at: new Date().toISOString() 
+      }
       let { data: session, error: sError } = await supabase
         .from('exam_sessions')
         .insert(payload)
@@ -340,7 +375,7 @@ export const DataService = {
       }))
 
       await supabase.from('user_responses').insert(responses)
-      const { error: syncError } = await this.syncPerformanceData(userId, sessionData, questions, userAnswers)
+      const { error: syncError } = await this.syncPerformanceData(userId, sessionData, questions, userAnswers, questionSource)
       
       if (syncError) {
           console.error("Critical Sync Error:", syncError)
@@ -359,7 +394,7 @@ export const DataService = {
     }
   },
 
-  async syncPerformanceData(userId, sessionData, questions, userAnswers) {
+  async syncPerformanceData(userId, sessionData, questions, userAnswers, questionSource = 'ai') {
     const topicsPayload = questions.map((q, i) => ({
         topic: q.topic || 'General',
         subject: q.subject || 'General',
@@ -380,7 +415,8 @@ export const DataService = {
         p_topics: topicsPayload,
         p_answered_questions: parseInt(sessionData.answered_questions || sessionData.total_questions) || 0,
         p_client_date: localDate,
-        p_session_type: (sessionData.session_type || 'practice').toString()
+        p_session_type: (sessionData.session_type || 'practice').toString(),
+        p_question_source: questionSource
     };
 
     console.log("DataService: Syncing performance with payload:", payload);
@@ -688,7 +724,7 @@ export const DataService = {
     return await supabase.rpc('secure_deduct_credit', { p_user_id: userId, p_action: action })
   },
 
-  async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '') {
+  async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '', questionSource = 'ai') {
     let subjectId = undefined;
     let examId = undefined;
 
@@ -740,7 +776,8 @@ export const DataService = {
             topic: topic || undefined,
             limit: limit,
             randomize: true,
-            exam_type: examType || undefined // keep this just in case backend expects the literal string here too
+            exam_type: examType || undefined,
+            question_source: questionSource
         })
     } catch (err) {
         console.error("DataService.getPracticeQuestions Fatal Error:", err);

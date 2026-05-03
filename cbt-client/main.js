@@ -82,7 +82,7 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
       return;
     }
     // Layer 2: Verify via the database — cannot be bypassed by modifying the profile object in memory
-    const { data: adminCheck, error: adminErr } = await supabase.rpc('is_admin_check');
+    const { data: adminCheck, error: adminErr } = await supabase.rpc('is_admin');
     if (adminErr || !adminCheck) {
       console.error(`[Auth] Server-side admin verification FAILED for ${profile.email}. Access denied.`, adminErr);
       window.navigateTo('dashboard', profile);
@@ -831,12 +831,13 @@ async function showDashboard(profile, tab = 'home') {
   // Set active tab BEFORE render to ensure correct initial state
   DashboardComponent.activeTab = tab;
 
-  DashboardComponent.render(activeProfile, (questions, mode, subject, examType, extraConfig = null) => {
+    DashboardComponent.render(activeProfile, (questions, mode, subject, examType, extraConfig = null) => {
     DashboardComponent.hide()
     const resumeState = extraConfig?.resumeState || null;
     const intendedSubjects = extraConfig?.intendedSubjects || [];
     const clashId = extraConfig?.clashId || null;
-    showExam(questions, activeProfile, false, {}, mode, subject, examType, resumeState, intendedSubjects, clashId)
+    const questionSource = extraConfig?.questionSource || 'ai';
+    showExam(questions, activeProfile, false, {}, mode, subject, examType, resumeState, intendedSubjects, clashId, questionSource)
   }, () => {
     DashboardComponent.hide()
     showAdmin(activeProfile)
@@ -853,7 +854,7 @@ async function showAnalytics(profile) {
   const { AnalyticsComponent } = await import('./src/components/Analytics');
   AnalyticsComponent.render(profile, 
     () => window.navigateTo('dashboard', profile),
-    (questions, mode, subject, examType) => showExam(questions, profile, false, {}, mode, subject, examType)
+    (questions, mode, subject, examType, extraConfig = null) => showExam(questions, profile, false, {}, mode, subject, examType, null, [], null, extraConfig?.questionSource || 'ai')
   );
 }
 
@@ -881,22 +882,22 @@ async function showAdmin(profile) {
   document.querySelectorAll('[data-view="admin"]').forEach(v => v.classList.add('active'))
 }
 
-async function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = [], clashId = null) {
+async function showExam(questions, profile, isReview = false, pastAnswers = {}, mode = 'practice', subject = '', examType = '', resumeState = null, intendedSubjects = [], clashId = null, questionSource = 'ai') {
   hideAll(true) // Pass true to hide layout for focus
   const { ExamComponent } = await import('./src/components/Exam');
   ExamComponent.render(questions, profile, (userAnswers, timeTaken, actualQuestions, cid) => {
-    showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken, cid)
-  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects, clashId)
+    showResults(actualQuestions || questions, userAnswers, profile, mode, subject, examType, timeTaken, cid, questionSource)
+  }, isReview, pastAnswers, mode, subject, examType, () => showDashboard(profile), resumeState, intendedSubjects, clashId, questionSource)
 }
 
-async function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0, clashId = null) {
+async function showResults(questions, userAnswers, profile, mode = 'practice', subject = '', examType = '', timeTaken = 0, clashId = null, questionSource = 'ai') {
   hideAll()
   const { ResultsComponent } = await import('./src/components/Results');
   ResultsComponent.render(questions, userAnswers, (newQs, newMode, newSubj, newExam) => {
-    showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType) 
+    showExam(newQs || questions, profile, false, {}, newMode || mode, newSubj || subject, newExam || examType, null, [], null, questionSource) 
   }, () => {
-    showExam(questions, profile, true, userAnswers, mode, subject, examType)
-  }, profile, mode, subject, examType, timeTaken, () => showDashboard(profile))
+    showExam(questions, profile, true, userAnswers, mode, subject, examType, null, [], null, questionSource)
+  }, profile, mode, subject, examType, timeTaken, () => showDashboard(profile), questionSource)
 }
 
 function hideAll(isExam = false, forceHideLayout = false) {
@@ -1018,7 +1019,8 @@ async function syncOfflineData() {
                 session.sessionData, 
                 session.questions, 
                 session.userAnswers,
-                true // isSyncing flag
+                true, // isSyncing flag
+                session.question_source || 'ai'
             )
             
             if (!error) {

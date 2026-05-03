@@ -6,7 +6,7 @@ import { TopicDeepDiveComponent } from './TopicDeepDive'
 import { ModalService } from '../services/ModalService'
 
 export const ResultsComponent = {
-  async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack) {
+  async render(questions, userAnswers, onRestart, onReview, profile, mode, subject, examType, timeTaken, onBack, questionSource = 'ai') {
     const container = document.getElementById('dashboard-container')
     container.style.display = 'block'
     try {
@@ -80,27 +80,9 @@ export const ResultsComponent = {
 
     console.log("[Streak Debug] PRE-SESSION actual:", profile?.streak_count, "| optimistic:", latestStreak, "| last_session_date:", profile?.last_session_date);
 
-    if (profile && profile.id) {
-        // ✅ FIXED: Use try/catch so we properly await the save before refreshing profile
-        try {
-            const { error: saveError } = await DataService.saveExamSession(profile.id, {
-                session_type: mode,
-                subject: subject || 'Various',
-                total_questions: questions.length,
-                answered_questions: answeredCount,
-                correct_answers: correct,
-                time_taken_seconds: timeTaken,
-                score_percentage: scorePercent
-            }, questions, userAnswers);
-
-            if (saveError) {
-                console.error("[Streak Debug] saveExamSession error:", saveError);
-            } else {
-                console.log("[Streak Debug] Session saved OK. Now refreshing profile...");
-            }
-        } catch (err) {
-            console.error("[Streak Debug] Critical save error:", err);
-        }
+        // ✅ NOTE: saveExamSession is now called in Exam.js for consistency
+        // But we still refresh the profile to show updated streaks/coins
+        console.log("[Results] Refreshing profile to sync rewards...");
 
         // 🔄 REFRESH: Get latest profile AFTER save completes
         const { data: refreshed } = await DataService.getProfile(profile.id);
@@ -164,6 +146,9 @@ export const ResultsComponent = {
           </button>
           
           <div style="margin-bottom: 2rem; padding-top: 1rem;">
+            <div style="font-family: 'Outfit'; font-size: 0.75rem; font-weight: 800; color: ${questionSource === 'past' ? 'var(--accent-secondary)' : 'var(--accent-primary)'}; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.2em;">
+              ${questionSource === 'past' ? 'Verified Past Question Results' : 'Elite AI Practice Analysis'}
+            </div>
             <h2 style="font-family: 'Outfit'; font-size: 2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.5rem;">Session Complete</h2>
           </div>
           
@@ -236,19 +221,24 @@ export const ResultsComponent = {
                 </div>
               `).join('')}
             </div>
-          </div>
 
           <!-- AI TUTOR SMART RECOMMENDATION -->
-          ${this._weakestTopic ? `
+          ${this._weakestTopic && questionSource === 'ai' ? `
             <div class="glass card scale-in mb-xl" style="background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); border: none; padding: 2rem 1.5rem; text-align: left; color: #ffffff; width: 100%; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-               <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem; color: #ffffff;">Master "${this._weakestTopic}"</h3>
-               <p style="margin-bottom: 1.5rem; font-size: 1rem; font-weight: 500; color: rgba(255,255,255,0.95); line-height: 1.5;">Reviewing core concepts here could boost your score by up to 15%.</p>
+               <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin-bottom: 0.5rem; color: #ffffff;">AI Insight: Master "${this._weakestTopic}"</h3>
+               <p style="margin-bottom: 1.5rem; font-size: 1rem; font-weight: 500; color: rgba(255,255,255,0.95); line-height: 1.5;">Your performance on this topic was ${sessionStats[0].percent}%. Reviewing core concepts could boost your predicted JAMB score.</p>
                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                 <button id="deep-dive-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Summary</button>
-                 <button id="auto-focus-btn" class="btn-secondary" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Challenge</button>
+                 <button id="deep-dive-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Deep Dive</button>
+                 <button id="auto-focus-btn" class="btn-secondary" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; flex: 1; min-width: 140px; height: 44px; border-radius: 12px;">Drill Topic</button>
                </div>
             </div>
-          ` : ''}
+          ` : (this._weakestTopic && questionSource === 'past' ? `
+             <div class="glass card scale-in mb-xl" style="background: rgba(124, 58, 237, 0.05); border: 2px dashed var(--accent-secondary); padding: 1.5rem; text-align: left; width: 100%; box-sizing: border-box;">
+               <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-secondary);">Archive Analysis</h3>
+               <p style="margin-bottom: 1.25rem; font-size: 0.95rem; font-weight: 500; color: var(--text-secondary); line-height: 1.5;">You struggled with <b>${this._weakestTopic}</b> in this past paper. We recommend an <b>Elite AI Drill</b> to master this topic before your real exam.</p>
+               <button id="drill-weak-btn" class="btn-primary" style="height: 44px; width: 100%; font-weight: 900;">START AI DRILL: ${this._weakestTopic.toUpperCase()}</button>
+            </div>
+          ` : '')}
 
           <div class="glass card" style="padding: 2rem 1rem; background: rgba(0,0,0,0.1); border-radius: 20px; width: 100%; box-sizing: border-box;">
              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; width: 100%;">
@@ -279,17 +269,33 @@ export const ResultsComponent = {
          autoFocusBtn.innerHTML = 'Loading...';
          const { data: questions } = await DataService.getPracticeQuestions(subject, this._weakestTopic, 10);
          if (questions && questions.length > 0) {
-            onRestart(questions, 'practice', subject, examType); 
+            onRestart(questions, 'practice', subject, examType, { questionSource: 'ai' }); 
          } else {
              await ModalService.alert("No Questions", "We couldn't find enough questions for this topic yet. Try another one!", 'info');
             autoFocusBtn.disabled = false;
-            autoFocusBtn.innerHTML = 'Challenge';
+            autoFocusBtn.innerHTML = 'Drill Topic';
          }
       }
     }
 
+    const drillWeakBtn = document.getElementById('drill-weak-btn');
+    if (drillWeakBtn) {
+        drillWeakBtn.onclick = async () => {
+            drillWeakBtn.disabled = true;
+            drillWeakBtn.textContent = 'PREPARING AI DRILL...';
+            const { data: questions } = await DataService.getPracticeQuestions(subject, this._weakestTopic, 10);
+            if (questions && questions.length > 0) {
+                onRestart(questions, 'practice', subject, examType, { questionSource: 'ai' });
+            } else {
+                ModalService.alert("AI Unavailable", "Could not generate drill questions for this topic. Try another subject!", "info");
+                drillWeakBtn.disabled = false;
+                drillWeakBtn.textContent = `START AI DRILL: ${this._weakestTopic.toUpperCase()}`;
+            }
+        };
+    }
+
     const restartBtn = document.getElementById('restart-exam')
-    if (restartBtn) restartBtn.onclick = () => onRestart(questions, mode, subject, examType)
+    if (restartBtn) restartBtn.onclick = () => onRestart(questions, mode, subject, examType, { questionSource })
 
     const reviewBtn = document.getElementById('review-exam')
     if (reviewBtn) reviewBtn.onclick = () => onReview(questions, userAnswers)

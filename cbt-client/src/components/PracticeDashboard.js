@@ -38,6 +38,22 @@ export const PracticeDashboardComponent = {
           </div>
         </header>
 
+        <!-- DUAL SOURCE SELECTOR -->
+        <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; background: rgba(124, 58, 237, 0.03); border: 1.5px solid var(--glass-border);">
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">Question Source</h3>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Choose between AI-generated or Real Past Questions.</p>
+            </div>
+            <div style="display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <button id="source-ai-btn" class="source-toggle-btn active" style="padding: 0.6rem 1.25rem; border-radius: 9px; font-size: 0.75rem; font-weight: 900; border: none; cursor: pointer; transition: all 0.2s;">
+                    ELITE AI
+                </button>
+                <button id="source-past-btn" class="source-toggle-btn" style="padding: 0.6rem 1.25rem; border-radius: 9px; font-size: 0.75rem; font-weight: 900; border: none; cursor: pointer; transition: all 0.2s;">
+                    PAST QUESTIONS
+                </button>
+            </div>
+        </div>
+
         <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; width: 100%;">
           ${ExamCard({
             title: 'JAMB Practice',
@@ -108,9 +124,33 @@ export const PracticeDashboardComponent = {
     const pTopic = document.getElementById('p-topic')
     const startBtn = document.getElementById('p-start-btn')
     const backBtn = document.getElementById('practice-back-btn')
-    const titleElement = document.getElementById('practice-title')
-    
     let selectedPracticeType = ''
+    let selectedSource = 'ai'
+
+    const aiToggle = document.getElementById('source-ai-btn')
+    const pastToggle = document.getElementById('source-past-btn')
+
+    const updateToggleUI = () => {
+        if (selectedSource === 'ai') {
+            aiToggle.classList.add('active');
+            pastToggle.classList.remove('active');
+            aiToggle.style.background = 'var(--accent-primary)';
+            aiToggle.style.color = 'white';
+            pastToggle.style.background = 'transparent';
+            pastToggle.style.color = 'var(--text-secondary)';
+        } else {
+            pastToggle.classList.add('active');
+            aiToggle.classList.remove('active');
+            pastToggle.style.background = 'var(--accent-secondary)';
+            pastToggle.style.color = 'white';
+            aiToggle.style.background = 'transparent';
+            aiToggle.style.color = 'var(--text-secondary)';
+        }
+    }
+    updateToggleUI();
+
+    aiToggle.onclick = () => { selectedSource = 'ai'; updateToggleUI(); }
+    pastToggle.onclick = () => { selectedSource = 'past'; updateToggleUI(); }
 
     practiceContainer.querySelectorAll('.practice-tier').forEach(tier => {
       tier.onclick = async () => {
@@ -172,11 +212,11 @@ export const PracticeDashboardComponent = {
         }
 
         startBtn.innerHTML = 'Finding Questions...'; 
-        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType)
+        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType, selectedSource)
         
         if (questions && questions.length > 0) {
           // Pass the selected practice type backwards to be accessible in session metadata
-          this.onStartPractice(questions, 'practice', subject, selectedPracticeType)
+          this.onStartPractice(questions, 'practice', subject, selectedPracticeType, { questionSource: selectedSource })
         } else {
           ModalService.alert("No Questions", `No questions found for ${selectedPracticeType} ${subject}.`, 'info');
           startBtn.innerHTML = 'Start Session'; startBtn.disabled = false

@@ -37,6 +37,22 @@ export const ExamsDashboardComponent = {
           </div>
         </header>
 
+        <!-- DUAL SOURCE SELECTOR -->
+        <div class="glass card scale-in" style="margin-bottom: 2rem; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; background: rgba(59, 130, 246, 0.03); border: 1.5px solid var(--glass-border);">
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="font-family: 'Outfit'; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">Exam Source</h3>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Choose between AI-Curated or Real Archive Questions.</p>
+            </div>
+            <div style="display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <button id="exam-source-ai-btn" class="source-toggle-btn active" style="padding: 0.6rem 1.25rem; border-radius: 9px; font-size: 0.75rem; font-weight: 900; border: none; cursor: pointer; transition: all 0.2s;">
+                    ELITE AI
+                </button>
+                <button id="exam-source-past-btn" class="source-toggle-btn" style="padding: 0.6rem 1.25rem; border-radius: 9px; font-size: 0.75rem; font-weight: 900; border: none; cursor: pointer; transition: all 0.2s;">
+                    ARCHIVE
+                </button>
+            </div>
+        </div>
+
         <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; width: 100%;">
           ${ExamCard({
             title: 'JAMB Mock',
@@ -145,6 +161,33 @@ export const ExamsDashboardComponent = {
     const eSub = document.getElementById('e-subject')
     
     let selectedExam = ''
+    let selectedSource = 'ai'
+
+    const aiToggle = document.getElementById('exam-source-ai-btn')
+    const pastToggle = document.getElementById('exam-source-past-btn')
+
+    const updateToggleUI = () => {
+        if (selectedSource === 'ai') {
+            aiToggle.classList.add('active');
+            pastToggle.classList.remove('active');
+            aiToggle.style.background = 'var(--accent-primary)';
+            aiToggle.style.color = 'white';
+            pastToggle.style.background = 'transparent';
+            pastToggle.style.color = 'var(--text-secondary)';
+        } else {
+            pastToggle.classList.add('active');
+            aiToggle.classList.remove('active');
+            pastToggle.style.background = 'var(--accent-secondary)';
+            pastToggle.style.color = 'white';
+            aiToggle.style.background = 'transparent';
+            aiToggle.style.color = 'var(--text-secondary)';
+        }
+    }
+    if (aiToggle && pastToggle) {
+        updateToggleUI();
+        aiToggle.onclick = () => { selectedSource = 'ai'; updateToggleUI(); }
+        pastToggle.onclick = () => { selectedSource = 'past'; updateToggleUI(); }
+    }
 
     examsContainer.querySelectorAll('.exam-tier').forEach(tier => {
       tier.onclick = async () => {
@@ -261,7 +304,7 @@ export const ExamsDashboardComponent = {
           startBtn.innerHTML = 'Loading Mocks...';
           for (const s of fullLoad) {
             const limit = s === 'Use of English' ? 60 : 40
-            const { data, error } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB')
+            const { data, error } = await DataService.getPracticeQuestions(s, '', limit, 'JAMB', selectedSource)
             if (error) throw new Error(error);
             if (data) allQuestions.push(...data)
           }
@@ -270,17 +313,17 @@ export const ExamsDashboardComponent = {
             throw new Error("No questions found for the selected subjects");
           }
 
-          this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB', fullLoad)
+          this.onStartExam(allQuestions, 'exam', 'Full Mock', 'JAMB', { questionSource: selectedSource, intendedSubjects: fullLoad })
         } else {
           const subject = eSub.value
-          const { data: questions, error } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam)
+          const { data: questions, error } = await DataService.getPracticeQuestions(subject, '', selectedExam === 'WAEC' ? 50 : 60, selectedExam, selectedSource)
           if (error) throw new Error(error);
           
           if (!questions || questions.length === 0) {
             throw new Error(`No ${selectedExam} questions found for ${subject}`);
           }
 
-          this.onStartExam(questions, 'exam', subject, selectedExam)
+          this.onStartExam(questions, 'exam', subject, selectedExam, { questionSource: selectedSource })
         }
       } catch (err) {
         console.error("Exam Load Failed:", err)

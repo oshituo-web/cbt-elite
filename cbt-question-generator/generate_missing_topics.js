@@ -6,7 +6,8 @@ const { createClient } = require('@supabase/supabase-js');
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL.trim(), process.env.SUPABASE_SERVICE_ROLE_KEY.trim());
 
-const BATCH_SIZE = 5; // Generate 5 questions per topic
+const BATCH_SIZE = 10; // Increased for faster population
+const MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-1.5-flash-8b'];
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const questionSchema = {
@@ -40,64 +41,84 @@ async function log(message) {
 }
 
 async function generateQuestions(exam, subject, topic) {
-    await log(`Generating for ${exam} > ${subject} > ${topic}...`);
+    await log(`[AI] Starting generation for ${exam} > ${subject} > ${topic}...`);
     
     const prompt = `Generate ${BATCH_SIZE} high-quality ${exam} multiple-choice questions for ${subject}, topic: ${topic}.
-Include clear explanation and 4 options (A, B, C, D) with one correct answer.`;
+Include clear explanation and 4 options (A, B, C, D) with one correct answer. Use LaTeX for any mathematical formulas.`;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: questionSchema,
-                temperature: 0.7,
-            }
-        });
+    let success = false;
+    for (const modelName of MODELS) {
+        if (success) break;
+        try {
+            await log(`[Model] Trying ${modelName}...`);
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: questionSchema,
+                    temperature: 0.7,
+                }
+            });
 
-        const questions = JSON.parse(response.text);
-        
-        for (const q of questions) {
-            const { data: qData, error: qErr } = await supabase
-                .from('questions')
-                .insert({
-                    exam_type: exam,
-                    subject: subject,
-                    topic: topic,
-                    question_text: q.question_text,
-                    explanation: q.explanation,
-                    difficulty: 'Medium'
-                })
-                .select()
-                .single();
+            const questions = JSON.parse(response.text);
+            await log(`[AI] Received ${questions.length} questions from ${modelName}. Inserting to DB...`);
             
-            if (qErr) {
-                await log(`Error inserting question for ${topic}: ${qErr.message}`);
+            for (const q of questions) {
+                const { data: qData, error: qErr } = await supabase
+                    .from('questions')
+                    .insert({
+                        exam_type: exam,
+                        subject: subject,
+                        topic: topic,
+                        question_text: q.question_text,
+                        explanation: q.explanation,
+                        difficulty: 'Medium'
+                    })
+                    .select()
+                    .single();
+                
+                if (qErr) {
+                    await log(`[Error] DB Insert Failed: ${qErr.message}`);
+                    continue;
+                }
+
+                const { error: aErr } = await supabase.from('answers').insert(q.options.map(opt => ({
+                    question_id: qData.id,
+                    option_letter: opt.letter,
+                    option_text: opt.text,
+                    is_correct: opt.is_correct
+                })));
+                
+                if (aErr) await log(`[Error] Answers Insert Failed: ${aErr.message}`);
+            }
+            await log(`[Success] Completed ${topic} using ${modelName}.`);
+            success = true;
+        } catch (error) {
+            if (error.message.includes('429') || error.message.includes('Quota')) {
+                await log(`[Quota] ${modelName} exhausted. Falling back...`);
                 continue;
             }
-
-            const { error: aErr } = await supabase.from('answers').insert(q.options.map(opt => ({
-                question_id: qData.id,
-                option_letter: opt.letter,
-                option_text: opt.text,
-                is_correct: opt.is_correct
-            })));
-            
-            if (aErr) await log(`Error inserting answers for ${topic}: ${aErr.message}`);
+            await log(`[Critical] Error with ${modelName}: ${error.message}`);
         }
-        await log(`Successfully added ${questions.length} questions for ${topic}.`);
-    } catch (error) {
-        await log(`Error generating for ${topic}: ${error.message}`);
+    }
+    
+    if (!success) {
+        await log(`[Failed] All models exhausted for topic: ${topic}.`);
     }
 }
 
 async function main() {
     const missingTopics = JSON.parse(fs.readFileSync('missing_topics.json', 'utf8'));
-    for (const { exam, subject, topic } of missingTopics) {
+    await log(`[Start] Processing ${missingTopics.length} missing topics.`);
+    
+    for (let i = 0; i < missingTopics.length; i++) {
+        const { exam, subject, topic } = missingTopics[i];
+        await log(`[Progress] ${i + 1}/${missingTopics.length}`);
         await generateQuestions(exam, subject, topic);
-        await delay(5000); // Respect rate limits
+        await delay(5000); // Guard against spam blocks
     }
+    await log(`[End] Finished generation run.`);
 }
 
 main().catch(console.error);

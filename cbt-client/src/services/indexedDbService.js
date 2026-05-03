@@ -64,6 +64,7 @@ export const IndexedDbService = {
             const store = tx.objectStore(STORES.OFFLINE_SESSIONS)
             store.add({
                 ...sessionData,
+                question_source: sessionData.question_source || 'ai',
                 timestamp: new Date().toISOString(),
                 synced: false
             })

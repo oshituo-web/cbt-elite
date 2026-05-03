@@ -253,6 +253,14 @@ export const AdminComponent = {
                    <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Topic</label>
                    <select id="filter-topic" class="glass-select" style="width: 100%; height: 44px;"><option value="">All Topics</option></select>
                 </div>
+                <div>
+                   <label style="font-size: 0.7rem; color: var(--accent-primary); text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Source</label>
+                   <select id="filter-source" class="glass-select" style="width: 100%; height: 44px;">
+                     <option value="">All Sources</option>
+                     <option value="past">Archive (Past Questions)</option>
+                     <option value="ai">Elite AI Generated</option>
+                   </select>
+                </div>
               </div>
             </div>
 
@@ -604,6 +612,7 @@ export const AdminComponent = {
     const exFilt = document.getElementById('filter-exam')
     const subFilt = document.getElementById('filter-subject')
     const topFilt = document.getElementById('filter-topic')
+    const srcFilt = document.getElementById('filter-source')
 
     const updateTopics = async () => {
       if (!topFilt) return // Safety check
@@ -644,7 +653,8 @@ export const AdminComponent = {
         search: search.value || undefined,
         exam_type: exFilt.value || undefined,
         subject: subFilt.value || undefined,
-        topic: topFilt.value || undefined
+        topic: topFilt.value || undefined,
+        question_source: srcFilt ? (srcFilt.value || undefined) : undefined
       })
     }
 
@@ -658,6 +668,7 @@ export const AdminComponent = {
       triggerFilter()
     }
     topFilt.onchange = triggerFilter
+    if (srcFilt) srcFilt.onchange = triggerFilter
 
     // Staff Events
     const assignBtn = document.getElementById('assign-staff-btn')
@@ -1097,7 +1108,11 @@ export const AdminComponent = {
               ${(q.question_text || '').replace(/<[^>]*>?/gm, '').substring(0, 100)}...
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <span style="font-size: 0.65rem; background: var(--accent-gradient); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${q.exam_type}</span>
+              ${q.is_past_question 
+                  ? `<span style="font-size: 0.65rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">VERIFIED PAST QUESTION</span>`
+                  : `<span style="font-size: 0.65rem; background: var(--accent-gradient); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">ELITE AI QUESTION</span>`
+              }
+              <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${q.exam_type}</span>
               <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--accent-secondary); border: 1px solid rgba(124, 58, 237, 0.2); padding: 2px 8px; border-radius: 4px; font-weight: 700;">${q.subject}</span>
               ${q.topic ? `<span style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 500;">• ${q.topic}</span>` : ''}
             </div>

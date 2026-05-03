@@ -8,3 +8,6 @@ questions.json
 theory_questions.json
 bad_questions.json
 incomplete.json
+*bulk_importer.js
+scratch_*.js
+scratch_*.cjs

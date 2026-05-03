@@ -455,6 +455,7 @@ export const DashboardComponent = {
         case 'progress': return this.renderProgressTab();
         case 'compete': return this.renderCompeteTab();
         case 'improve': return this.renderImproveTab();
+        case 'archive': return this.renderArchiveTab();
         default: return this.renderHomeTab();
     }
   },
@@ -496,6 +497,23 @@ export const DashboardComponent = {
               <div id="economy-freeze-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_freeze_count || 0}</div>
             </div>
           </div>
+        </div>
+
+        <!-- PAST QUESTIONS ARCHIVE (BOOSTER) -->
+        <div id="open-archive-btn" class="glass card scale-in mb-sm" style="margin-bottom: 0.75rem; padding: 0.65rem 0.85rem; cursor: pointer; border: 1.5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, var(--surface-color) 100%); display: flex; align-items: center; gap: 0.75rem; position: relative; overflow: hidden; border-radius: 12px;">
+            <div style="width: 32px; height: 32px; background: rgba(124, 58, 237, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
+                <i data-lucide="library" style="width: 16px; height: 16px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                    Past Questions Archive
+                    <span style="font-size: 0.5rem; background: var(--accent-secondary); color: white; padding: 1px 5px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">Real Exams</span>
+                </h4>
+                <p style="margin: 0; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; line-height: 1.2;">
+                   Practice with official papers from 2010 till date.
+                </p>
+            </div>
+            <i data-lucide="chevron-right" style="width: 14px; color: var(--accent-secondary); opacity: 0.5;"></i>
         </div>
 
         <!-- QUICK ACTION SECTION -->
@@ -559,6 +577,72 @@ export const DashboardComponent = {
               <button id="help-guide-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 10px;">Launch Tour</button>
            </div>
         </div>
+    `;
+  },
+
+  renderArchiveTab() {
+    return `
+      <div style="padding-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+          <button onclick="DashboardComponent.setActiveTab('home')" style="background: rgba(255,255,255,0.05); border: none; color: var(--text-primary); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="arrow-left" style="width: 18px;"></i>
+          </button>
+          <div>
+            <h2 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.4rem;">Real Past Questions</h2>
+            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">Select your exam and subject to begin.</p>
+          </div>
+        </div>
+
+        <!-- SELECTION FLOW -->
+        <div id="archive-selection-container">
+           ${this.renderArchiveSelection()}
+        </div>
+      </div>
+    `;
+  },
+
+  renderArchiveSelection() {
+    const exams = [
+      { id: 'JAMB', name: 'JAMB (UTME)', icon: 'award' },
+      { id: 'WAEC', name: 'WAEC (WASSCE)', icon: 'book-open' },
+      { id: 'NECO', name: 'NECO (SSCE)', icon: 'scroll' }
+    ];
+
+    return `
+      <div style="display: grid; gap: 1.5rem;">
+        <!-- STEP 1: EXAM TYPE -->
+        <section>
+          <label style="font-size: 0.7rem; font-weight: 900; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Step 1: Choose Exam Body</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem;">
+            ${exams.map(e => `
+              <div class="archive-exam-opt glass card" data-id="${e.id}" style="padding: 1.25rem 0.5rem; text-align: center; cursor: pointer; border: 1.5px solid transparent; transition: all 0.2s;">
+                <i data-lucide="${e.icon}" style="width: 24px; height: 24px; margin-bottom: 0.5rem; color: var(--text-secondary);"></i>
+                <div style="font-size: 0.75rem; font-weight: 800; font-family: 'Outfit';">${e.id}</div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+
+        <!-- STEP 2: SUBJECT -->
+        <section id="archive-subject-section" style="opacity: 0.4; pointer-events: none;">
+          <label style="font-size: 0.7rem; font-weight: 900; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Step 2: Choose Subject</label>
+          <select id="archive-subject-select" class="glass-select" style="width: 100%; height: 52px; font-weight: 800;">
+            <option value="">Select Subject...</option>
+          </select>
+        </section>
+
+        <!-- STEP 3: YEAR -->
+        <section id="archive-year-section" style="opacity: 0.4; pointer-events: none;">
+          <label style="font-size: 0.7rem; font-weight: 900; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Step 3: Choose Year</label>
+          <div id="archive-years-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 0.5rem;">
+            <!-- Years injected here -->
+          </div>
+        </section>
+
+        <button id="start-archive-session" class="btn-primary" style="width: 100%; height: 56px; margin-top: 1rem; opacity: 0.3; pointer-events: none; font-weight: 900; font-family: 'Outfit'; font-size: 1.1rem; border-radius: 14px;">
+          START ARCHIVE SESSION
+        </button>
+      </div>
     `;
   },
 
@@ -823,13 +907,6 @@ export const DashboardComponent = {
 
   attachListeners(scope) {
     const { profile, systemConfig } = this.state;
-    // ... rest of the listeners ...
-  },
-
-
-
-  attachListeners(scope) {
-    const { profile, systemConfig } = this.state;
 
     // Helper: open modal with scroll reset
     const openModal = (el) => {
@@ -1026,6 +1103,109 @@ export const DashboardComponent = {
     const homeLeagueBtn = document.getElementById('home-league-announcement');
     if (homeLeagueBtn) {
         homeLeagueBtn.onclick = () => this.setActiveTab('compete');
+    }
+
+    const openArchiveBtn = document.getElementById('open-archive-btn');
+    if (openArchiveBtn) {
+        openArchiveBtn.onclick = () => this.setActiveTab('archive');
+    }
+
+    // --- ARCHIVE LISTENERS ---
+    if (scope === 'archive') {
+        const examOpts = document.querySelectorAll('.archive-exam-opt');
+        const subSelect = document.getElementById('archive-subject-select');
+        const startBtn = document.getElementById('start-archive-session');
+        
+        let selectedExam = null;
+        let selectedSubject = null;
+        let selectedYear = null;
+
+        examOpts.forEach(opt => {
+            opt.onclick = async () => {
+                examOpts.forEach(o => {
+                    o.style.borderColor = 'transparent';
+                    o.style.background = 'rgba(255,255,255,0.02)';
+                });
+                opt.style.borderColor = 'var(--accent-secondary)';
+                opt.style.background = 'rgba(124, 58, 237, 0.1)';
+                selectedExam = opt.dataset.id;
+                
+                // Unlock subjects
+                const subSection = document.getElementById('archive-subject-section');
+                subSection.style.opacity = '1';
+                subSection.style.pointerEvents = 'auto';
+                
+                // Load Subjects
+                subSelect.innerHTML = '<option value="">Loading Subjects...</option>';
+                const { data: subjects } = await DataService.getSubjects();
+                subSelect.innerHTML = '<option value="">Select Subject...</option>' + 
+                    subjects.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join('');
+            };
+        });
+
+        subSelect.onchange = async () => {
+            selectedSubject = subSelect.value;
+            if (!selectedSubject) return;
+
+            const yearSection = document.getElementById('archive-year-section');
+            const yearsGrid = document.getElementById('archive-years-grid');
+            yearSection.style.opacity = '1';
+            yearSection.style.pointerEvents = 'auto';
+            
+            yearsGrid.innerHTML = '<div style="font-size: 0.7rem; color: var(--text-secondary);">Loading years...</div>';
+            const { data: years } = await DataService.getArchiveYears(selectedExam, selectedSubject);
+            
+            if (years && years.length > 0) {
+                yearsGrid.innerHTML = `
+                  <div class="archive-year-opt glass-btn" data-year="all" style="padding: 0.5rem; font-size: 0.7rem; font-weight: 800; text-align: center; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer;">ALL</div>
+                ` + years.map(y => `
+                  <div class="archive-year-opt glass-btn" data-year="${y}" style="padding: 0.5rem; font-size: 0.7rem; font-weight: 800; text-align: center; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer;">${y}</div>
+                `).join('');
+
+                yearsGrid.querySelectorAll('.archive-year-opt').forEach(opt => {
+                    opt.onclick = () => {
+                        yearsGrid.querySelectorAll('.archive-year-opt').forEach(o => {
+                            o.style.background = 'transparent';
+                            o.style.borderColor = 'var(--glass-border)';
+                        });
+                        opt.style.background = 'var(--accent-secondary)';
+                        opt.style.borderColor = 'var(--accent-secondary)';
+                        selectedYear = opt.dataset.year;
+                        
+                        startBtn.style.opacity = '1';
+                        startBtn.style.pointerEvents = 'auto';
+                    };
+                });
+            } else {
+                yearsGrid.innerHTML = '<div style="grid-column: 1/-1; padding: 1rem; background: rgba(239, 68, 68, 0.05); color: #ef4444; font-size: 0.75rem; font-weight: 700; text-align: center; border-radius: 12px;">No past questions found for this combination.</div>';
+            }
+        };
+
+        startBtn.onclick = async () => {
+            startBtn.disabled = true;
+            startBtn.textContent = '🚀 PREPARING ARCHIVE...';
+            
+            const filters = {
+                exam_type: selectedExam,
+                subject_id: selectedSubject,
+                is_past_question: true,
+                randomize: true,
+                limit: 50
+            };
+            if (selectedYear !== 'all') filters.exam_year = parseInt(selectedYear);
+
+            const { data: questions, error } = await DataService.getQuestions(filters);
+            if (error || !questions || questions.length === 0) {
+                ModalService.alert("Archive Empty", "No questions found for this selection yet. We are currently backfilling the archive!", "info");
+                startBtn.disabled = false;
+                startBtn.textContent = 'START ARCHIVE SESSION';
+                return;
+            }
+
+            const subName = subSelect.options[subSelect.selectedIndex].text;
+            const title = `${selectedExam} ${selectedYear === 'all' ? 'Archive' : selectedYear}`;
+            this.onStartExam(questions, 'exam', subName, title, { questionSource: 'past' });
+        };
     }
   },
 
