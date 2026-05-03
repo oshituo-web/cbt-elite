@@ -232,8 +232,8 @@ async function showExamsDashboard(profile) {
    currentProfile = profile;
    hideAll();
    const { ExamsDashboardComponent } = await import('./src/components/ExamsDashboard');
-   ExamsDashboardComponent.render(profile, (questions, mode, subject, examType, intendedSubjects = []) => {
-     showExam(questions, profile, false, {}, mode, subject, examType, null, intendedSubjects);
+   ExamsDashboardComponent.render(profile, (questions, mode, subject, examType, extraConfig = null) => {
+     showExam(questions, profile, false, {}, mode, subject, examType, null, extraConfig?.intendedSubjects || [], null, extraConfig?.questionSource || 'ai');
    });
 }
 
@@ -241,8 +241,8 @@ async function showPracticeDashboard(profile) {
   currentProfile = profile;
   hideAll();
   const { PracticeDashboardComponent } = await import('./src/components/PracticeDashboard');
-  PracticeDashboardComponent.render(profile, (questions, mode, subject, examType) => {
-    showExam(questions, profile, false, {}, mode, subject, examType);
+  PracticeDashboardComponent.render(profile, (questions, mode, subject, examType, extraConfig = null) => {
+    showExam(questions, profile, false, {}, mode, subject, examType, null, [], null, extraConfig?.questionSource || 'ai');
   });
 }
 
