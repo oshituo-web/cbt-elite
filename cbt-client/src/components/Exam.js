@@ -1154,7 +1154,7 @@ export class Exam {
                 score_percentage: summary.score_percentage,
                 time_taken_seconds: summary.timeTaken,
                 session_type: this.mode,
-                subject_name: this.subject || 'General'
+                session_data: { subject: this.subject || 'General' }
             },
             actualQuestions,
             userAnswers,
