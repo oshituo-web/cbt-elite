@@ -518,10 +518,13 @@ export const DashboardComponent = {
 
         <!-- QUICK ACTION SECTION -->
         <div class="glass card scale-in mb-md" style="text-align: center; padding: 0.85rem 0.75rem; border: 1.5px solid rgba(14, 165, 233, 0.3); background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%;">
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%; margin-bottom: 0.5rem;">
              <button id="quick-practice-btn" class="btn-primary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-size: 1rem; font-weight: 900; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);"><i data-lucide="target" style="width:20px;"></i> PRACTICE</button>
              <button id="quick-exam-btn" class="btn-secondary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-weight: 900; font-size: 1rem; border: 2px solid var(--accent-secondary);"><i data-lucide="trophy" style="width:20px;"></i> MOCK EXAM</button>
           </div>
+          <button id="quick-challenge-btn" class="btn-dominant" style="width: 100%; height: 48px; font-size: 1.05rem; font-weight: 900; background: var(--accent-gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);">
+             ⚔️ MULTIPLAYER CHALLENGE
+          </button>
         </div>
 
         <!-- 🧠 SMART DAILY MISSION (NEW) -->
@@ -969,6 +972,7 @@ export const DashboardComponent = {
     const actions = {
         'quick-practice-btn': () => window.navigateTo('practice', profile),
         'quick-exam-btn': () => window.navigateTo('exams', profile),
+        'quick-challenge-btn': () => window.navigateTo('challenge', profile),
         'help-guide-btn': () => { if (window.HelpGuide) window.HelpGuide.show(); else if (window.TourGuide) window.TourGuide.start(); },
         'goto-improve-tab-btn': () => this.setActiveTab('improve'),
         'open-store-btn': () => {

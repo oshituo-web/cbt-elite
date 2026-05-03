@@ -98,7 +98,8 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
     'admin': '/admin',
     'settings': '/settings',
     'profile': '/profile',
-    'analytics': '/analytics'
+    'analytics': '/analytics',
+    'challenge': '/challenge'
   };
 
   const path = pathMap[view] || '/dashboard';
@@ -197,6 +198,10 @@ window.navigateTo = async function(view, profile = currentProfile, pushState = t
       
     case 'more':
       toggleMoreDrawer();
+      break;
+
+    case 'challenge':
+      await showChallengeDashboard(profile);
       break;
       
     case 'logout':
@@ -856,6 +861,23 @@ async function showAnalytics(profile) {
     () => window.navigateTo('dashboard', profile),
     (questions, mode, subject, examType, extraConfig = null) => showExam(questions, profile, false, {}, mode, subject, examType, null, [], null, extraConfig?.questionSource || 'ai')
   );
+}
+
+async function showChallengeDashboard(profile) {
+  currentProfile = profile;
+  hideAll();
+  // Ensure the challenge container exists
+  let container = document.getElementById('challenge-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'challenge-container';
+    document.getElementById('app')?.appendChild(container) || document.body.appendChild(container);
+  }
+  container.style.display = 'block';
+  // Temporarily repurpose dashboard-container since ChallengeDashboard uses it
+  document.getElementById('dashboard-container').style.display = 'block';
+  const { ChallengeDashboard } = await import('./src/components/ChallengeDashboard');
+  ChallengeDashboard.render(profile, () => window.navigateTo('dashboard', profile));
 }
 
 async function showWeeklyRecap(profile) {
