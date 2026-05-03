@@ -124,6 +124,7 @@ export const PracticeDashboardComponent = {
     const pTopic = document.getElementById('p-topic')
     const startBtn = document.getElementById('p-start-btn')
     const backBtn = document.getElementById('practice-back-btn')
+    const titleElement = document.getElementById('practice-title')
     let selectedPracticeType = ''
     let selectedSource = 'ai'
 

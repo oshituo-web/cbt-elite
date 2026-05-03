@@ -796,7 +796,6 @@ export const DataService = {
 
         return await this.getQuestions({
             subject_id: subjectId,
-            exam_id: examId,
             topic: topic || undefined,
             limit: limit,
             randomize: true,

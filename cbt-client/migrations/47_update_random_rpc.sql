@@ -1,7 +1,14 @@
 -- Migration 47: Update get_random_question_ids to support question source
--- This fixes the bug where AI mode returns only 2 questions and Past mode returns 0
--- by pushing the is_past_question filter down into the random selection RPC.
+-- Corrected version: questions.id is actually a UUID, not an INT.
+-- This also cleans up overloaded versions of the function to prevent PGRST203 errors.
 
+-- 1. Cleanup existing overloaded functions to ensure a clean slate
+DROP FUNCTION IF EXISTS public.get_random_question_ids(uuid, uuid, text, text, text, integer);
+DROP FUNCTION IF EXISTS public.get_random_question_ids(uuid, uuid, text, text, text, integer, uuid[]);
+DROP FUNCTION IF EXISTS public.get_random_question_ids(uuid, uuid, text, text, text, integer, int[]);
+DROP FUNCTION IF EXISTS public.get_random_question_ids(uuid, uuid, text, text, text, integer, int[], boolean);
+
+-- 2. Create the final version with UUID support and Question Source filtering
 CREATE OR REPLACE FUNCTION get_random_question_ids(
     p_subject_id UUID DEFAULT NULL,
     p_exam_id UUID DEFAULT NULL,
@@ -9,10 +16,10 @@ CREATE OR REPLACE FUNCTION get_random_question_ids(
     p_topic TEXT DEFAULT NULL,
     p_question_type TEXT DEFAULT 'objective',
     p_limit INT DEFAULT 20,
-    p_exclude_ids INT[] DEFAULT '{}',
+    p_exclude_ids UUID[] DEFAULT '{}',
     p_is_past_question BOOLEAN DEFAULT NULL
 )
-RETURNS TABLE (id INT)
+RETURNS TABLE (id UUID)
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
