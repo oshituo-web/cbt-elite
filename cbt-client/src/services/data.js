@@ -188,6 +188,8 @@ export const DataService = {
         const seenIds = RepetitionManager.getSeenIds();
         const combinedExclude = [...new Set([...excludeIds, ...seenIds])];
         
+        const isPastReq = filters.question_source === 'past' ? true : (filters.question_source === 'ai' ? false : (filters.is_past_question ?? null));
+        
         const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
           p_subject_id: filters.subject_id || null,
           p_exam_id: filters.exam_id || null,
@@ -195,7 +197,8 @@ export const DataService = {
           p_topic: filters.topic || null,
           p_question_type: filters.question_type || 'objective',
           p_limit: filters.limit || 20,
-          p_exclude_ids: combinedExclude
+          p_exclude_ids: combinedExclude,
+          p_is_past_question: isPastReq
         })
         
         if (idError) throw idError
