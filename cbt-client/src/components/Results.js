@@ -103,7 +103,6 @@ export const ResultsComponent = {
         } else {
             console.warn("[Streak Debug] Profile refresh returned null.");
         }
-    }
 
     const isJambMock = mode === 'exam' && examType === 'JAMB'
     
