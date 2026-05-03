@@ -22,35 +22,52 @@ export const TopicDeepDiveComponent = {
     
     modal.style.display = 'flex';
     modal.innerHTML = `
-      <div class="modal-content glass scale-in" style="max-width: 600px; width: 92vw; padding: 2.5rem; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto;">
-        <button id="close-deep-dive" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); z-index: 10;">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-          <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">EXIT</span>
-        </button>
+      <div class="modal-content glass scale-in" style="max-width: 620px; width: 92vw; padding: 0; border-radius: 24px; position: relative; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
         
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-          <div style="background: var(--accent-gradient); padding: 0.75rem; border-radius: 12px; color: white;">
-            <i data-lucide="book-open"></i>
-          </div>
-          <div>
-            <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.1em;">Elite Study Guide</span>
-            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.5rem; margin: 0; color: var(--text-primary);">${topic}</h2>
+        <!-- Sticky Header -->
+        <div style="padding: 1.75rem 2rem 1.25rem; border-bottom: 1px solid var(--glass-border); flex-shrink: 0;">
+          <button id="close-deep-dive" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); z-index: 10;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">CLOSE</span>
+          </button>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--accent-gradient); padding: 0.75rem; border-radius: 14px; color: white; flex-shrink: 0;">
+              <i data-lucide="book-open"></i>
+            </div>
+            <div>
+              <span style="font-size: 0.65rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.12em;">Elite Study Guide</span>
+              <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.4rem; margin: 0.15rem 0 0; color: var(--text-primary);">${topic}</h2>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">${subject}</span>
+            </div>
           </div>
         </div>
-
-        <div class="study-card-content" style="text-align: left; color: var(--text-primary); line-height: 1.6;">
-          ${content}
+        
+        <!-- Scrollable Content -->
+        <div class="study-card-content" style="text-align: left; color: var(--text-primary); line-height: 1.6; overflow-y: auto; flex: 1; padding: 1.75rem 2rem;">
+          <!-- Skeleton Loader -->
+          <div id="deep-dive-skeleton">
+            <div style="height: 14px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 0.75rem; width: 90%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 14px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 2rem; width: 70%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 14px; background: rgba(37, 99, 235, 0.15); border-radius: 8px; margin-bottom: 0.75rem; width: 40%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 14px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 0.5rem; width: 95%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 14px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 2rem; width: 80%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 14px; background: rgba(245, 158, 11, 0.2); border-radius: 8px; margin-bottom: 0.75rem; width: 45%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 60px; background: rgba(245,158,11,0.06); border-radius: 12px; margin-bottom: 2rem; animation: pulse 1.5s infinite; border-left: 4px solid rgba(245,158,11,0.3);"></div>
+            <div style="height: 14px; background: rgba(16, 185, 129, 0.2); border-radius: 8px; margin-bottom: 0.75rem; width: 40%; animation: pulse 1.5s infinite;"></div>
+            <div style="height: 44px; background: rgba(16,185,129,0.06); border-radius: 12px; animation: pulse 1.5s infinite; border-left: 4px solid rgba(16,185,129,0.3);"></div>
+          </div>
         </div>
-
-        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 1rem;">
-           <button id="modal-tutor-btn" class="btn-secondary" style="width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-color: #f59e0b; color: #f59e0b;">
-             <i data-lucide="bot" style="width: 18px;"></i> Chat with AI Tutor
+        
+        <!-- Sticky Footer Actions -->
+        <div style="padding: 1.25rem 2rem; border-top: 1px solid var(--glass-border); flex-shrink: 0; display: flex; flex-direction: column; gap: 0.75rem; background: rgba(0,0,0,0.1);">
+           <button id="modal-tutor-btn" class="btn-secondary" style="width: 100%; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-color: #f59e0b; color: #f59e0b; font-weight: 800;">
+             <i data-lucide="bot" style="width: 18px;"></i> Chat with AI Tutor about "${topic}"
            </button>
-           <button id="modal-focus-btn" class="btn-dominant" style="width: 100%; height: 56px; background: var(--accent-gradient);">
-             Master this Topic (10 Questions)
+           <button id="modal-focus-btn" class="btn-dominant" style="width: 100%; height: 52px; background: var(--accent-gradient); font-weight: 900; font-size: 1rem;">
+             🎯 Drill This Topic — 10 Questions
            </button>
-           <button id="modal-close-btn" class="btn-secondary" style="width: 100%; height: 50px; font-weight: 800; white-space: nowrap;">
-             EXIT TO RESULTS
+           <button id="modal-close-btn" class="btn-secondary" style="width: 100%; height: 44px; font-weight: 700; opacity: 0.7;">
+             Exit Study Guide
            </button>
         </div>
       </div>

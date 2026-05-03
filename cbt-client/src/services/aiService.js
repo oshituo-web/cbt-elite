@@ -536,6 +536,88 @@ export const AiService = {
   },
 
   /**
+   * Generates a rich, personalized HTML study guide for a weak topic.
+   * Called by the TopicDeepDive modal. Uses the user's analytics to tailor depth.
+   * @param {string} topic - The specific topic to study (e.g., "Acids and Bases").
+   * @param {string} subject - The parent subject (e.g., "Chemistry").
+   * @param {Object} analytics - The user's full analytics object { history, mastery, stats }.
+   * @returns {Promise<string>} - An HTML string of the study guide.
+   */
+  async getTopicDeepDive(topic, subject, analytics) {
+    // Derive contextual accuracy to tailor difficulty
+    const subjectStats = analytics?.stats?.bySubject?.[subject];
+    const accuracy = subjectStats && subjectStats.total > 0
+        ? Math.round((subjectStats.correct / subjectStats.total) * 100)
+        : 50;
+    
+    const level = accuracy < 40 ? 'beginner (explain from first principles)'
+                : accuracy < 70 ? 'intermediate (assume basic knowledge, push deeper)'
+                : 'advanced (focus on edge cases and tricky exam traps)';
+
+    const prompt = `
+      You are an "Elite Nigerian WAEC/JAMB Exam Professor" writing a concise, exam-focused study guide.
+      
+      STUDENT CONTEXT:
+      - Subject: ${subject}
+      - Weak Topic: "${topic}"
+      - Current accuracy on ${subject}: ${accuracy}% → Teach at ${level} level.
+      
+      YOUR TASK:
+      Write a 3-minute crash course for this topic. The output MUST be clean HTML (no markdown).
+      
+      USE THIS EXACT HTML STRUCTURE:
+      <div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.7;">
+          [One compelling sentence about why this topic matters for WAEC/JAMB.]
+        </p>
+        
+        <h4 style="font-family: 'Outfit'; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.75rem; font-size: 1rem;">🎯 Core Concept</h4>
+        <p style="margin-bottom: 1.5rem; color: var(--text-primary); line-height: 1.6;">[Clear 2-3 sentence explanation of the core idea.]</p>
+        
+        <h4 style="font-family: 'Outfit'; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.75rem; font-size: 1rem;">📌 The 3 Rules You Must Know</h4>
+        <ul style="padding-left: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; color: var(--text-primary);">
+          <li><strong>[Rule 1 title]:</strong> [Explanation]</li>
+          <li><strong>[Rule 2 title]:</strong> [Explanation]</li>
+          <li><strong>[Rule 3 title]:</strong> [Explanation]</li>
+        </ul>
+        
+        <h4 style="font-family: 'Outfit'; font-weight: 800; color: #f59e0b; margin-bottom: 0.75rem; font-size: 1rem;">⚠️ Classic Exam Gotcha</h4>
+        <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem; color: var(--text-primary); font-weight: 500; line-height: 1.6;">
+          [Describe the single most common mistake students make on exam questions about this topic, and how to avoid it.]
+        </div>
+        
+        <h4 style="font-family: 'Outfit'; font-weight: 800; color: var(--success); margin-bottom: 0.75rem; font-size: 1rem;">✅ Quick Recall</h4>
+        <p style="background: rgba(16, 185, 129, 0.07); border-left: 4px solid var(--success); padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; color: var(--text-primary); font-weight: 700; line-height: 1.6;">
+          [A one-line memorable mnemonic, rhyme, or formula summary to lock this in.]
+        </p>
+      </div>
+      
+      STRICT RULES:
+      - Output ONLY the HTML block above. No markdown fences. No extra text before or after.
+      - Keep math notation readable: use proper Unicode or simple notation, not LaTeX.
+      - Use Nigerian curriculum context (WAEC/JAMB syllabus) for all examples.
+    `;
+
+    try {
+      const { data, error } = await invokeWithRetry('gemini-proxy', {
+        body: { prompt, temperature: 0.6, maxOutputTokens: 1500 }
+      });
+
+      if (error || !data || !data.text) throw error || new Error("AI Study Guide unavailable");
+
+      // Strip any accidental markdown fences the AI might add
+      let html = data.text.trim();
+      if (html.startsWith('```html')) html = html.replace(/^```html/, '').replace(/```$/, '').trim();
+      else if (html.startsWith('```')) html = html.replace(/^```/, '').replace(/```$/, '').trim();
+
+      return html;
+    } catch (err) {
+      console.error("getTopicDeepDive Error:", err);
+      throw new Error(`Couldn't generate the study guide for "${topic}". Please try again.`);
+    }
+  },
+
+  /**
    * Platform-specific Help Bot.
    */
   async askHelpBot(query, history = []) {
