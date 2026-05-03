@@ -1,6 +1,7 @@
 import { AuthService } from '../services/auth'
 import { ModalService } from '../services/ModalService'
 import { SoundService } from '../services/SoundService'
+import { NotificationService } from '../services/NotificationService'
 
 export const SettingsComponent = {
   profile: null,
@@ -237,6 +238,9 @@ export const SettingsComponent = {
         }
         const permission = await Notification.requestPermission()
         if (permission === 'granted') {
+          // Subscribe to Web Push via VAPID
+          await NotificationService.subscribeToPush(this.profile?.id);
+
           localStorage.setItem('push_notifications', 'true')
           pushToggle.classList.add('active')
           if (notifStatus) notifStatus.innerHTML = '✅ Push alerts enabled. You\'ll be notified about streaks, clashes, and exam news.'

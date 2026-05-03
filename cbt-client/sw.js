@@ -88,3 +88,52 @@ self.addEventListener('sync', (event) => {
     // Logic to be triggered via IndexedDbService from main thread
   }
 })
+
+// 5. Push Notifications - Receiving the background push event
+self.addEventListener('push', (event) => {
+  let pushData = {}
+  try {
+    if (event.data) {
+      pushData = event.data.json()
+    }
+  } catch (e) {
+    pushData = { title: 'New Update!', body: event.data.text() }
+  }
+
+  const title = pushData.title || 'CBT Elite';
+  const options = {
+    body: pushData.body || 'You have a new message.',
+    icon: '/pwa-icon.svg',
+    badge: '/pwa-icon.svg',
+    data: pushData.data || { url: '/' },
+    vibrate: [100, 50, 100],
+    tag: pushData.tag || 'elite-notification',
+    requireInteraction: pushData.requireInteraction || false
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 6. Notification Click - Handling when the user taps the push notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Check if there is already a window/tab open with the target URL
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        // If so, just focus it.
+        if (client.url.includes(urlToOpen) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If not, then open the target URL in a new window/tab.
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

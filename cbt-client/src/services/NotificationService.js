@@ -237,5 +237,58 @@ export const NotificationService = {
                 badge: '/pwa-icon.svg'
             });
         } catch (e) { console.warn("System Notification failed", e); }
+    },
+
+    /**
+     * Subscribe to Web Push Notifications (FCM / VAPID)
+     */
+    async subscribeToPush(profileId) {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('Push notifications are not supported by this browser.');
+            return false;
+        }
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.warn('Push permission denied.');
+                return false;
+            }
+
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Generate or fetch VAPID public key
+            const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuB-5-uM2OvcHkP9P8LzZqj_8c';
+            
+            // Helper function to convert base64 to Uint8Array
+            const urlB64ToUint8Array = (base64String) => {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/\-/g, '+')
+                    .replace(/_/g, '/');
+
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            };
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array(vapidPublicKey)
+            });
+
+            console.log('[Push] User is subscribed.', subscription);
+
+            // Save to database
+            const saved = await DataService.savePushToken(profileId, subscription);
+            return saved;
+        } catch (err) {
+            console.error('Failed to subscribe to push notifications', err);
+            return false;
+        }
     }
 };

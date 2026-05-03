@@ -5,6 +5,27 @@ import { RepetitionManager } from '../utils/repetitionManager'
 
 export const DataService = {
   supabase,
+
+  // --- PUSH NOTIFICATIONS ---
+  async savePushToken(userId, subscription) {
+    try {
+      const { endpoint, keys } = subscription.toJSON();
+      const { error } = await supabase.from('user_push_tokens').upsert({
+        user_id: userId,
+        endpoint: endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'endpoint' });
+      
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("DataService: Failed to save push token", e);
+      return false;
+    }
+  },
+
   // --- CORE DATA ---
   
   /**
