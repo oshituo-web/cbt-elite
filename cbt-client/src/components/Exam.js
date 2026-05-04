@@ -191,38 +191,36 @@ export class Exam {
         <!-- Persistent Top Bar -->
         <!-- 🏷️ Phase 12: New Dual-Layer Organized Header -->
         <div class="exam-header-wrapper glass">
-          <div class="exam-header-primary">
-            <div class="header-left">
-              <button id="exam-back-btn" class="header-icon-btn" title="Go Back">
-                <i data-lucide="chevron-left"></i>
-              </button>
-              <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span id="display-exam-type" class="badge-exam">...</span>
-                <span id="source-label" style="font-size: 0.6rem; font-weight: 800; color: var(--accent-primary); letter-spacing: 0.05em; text-transform: uppercase;">...</span>
+          <div class="exam-header-primary" style="display: flex; flex-direction: column; gap: 0.3rem; padding: 0.2rem 0.5rem 0.6rem 0.5rem; align-items: stretch; height: auto;">
+            <!-- Line 1: Source, Exam Type, Calc, Timer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <button id="exam-back-btn" class="header-icon-btn" title="Go Back" style="padding: 0; width: 24px; height: 24px;">
+                  <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <span id="source-label" style="font-size: 0.65rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;">...</span>
+                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.55rem !important;">...</span>
               </div>
-              <div id="q-meta" class="q-counter-mini">1 of 0</div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: auto; height: auto;">
+                  <i data-lucide="calculator" style="width: 14px; height: 14px; color: var(--text-secondary);"></i>
+                </button>
+                <div id="timer" class="timer-mini" style="color: var(--success); font-size: 0.7rem; background: #ffffff; padding: 0.15rem 0.4rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">00:00</div>
+                <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.2rem;">
+                  <i data-lucide="bot" style="width: 16px; height: 16px;"></i>
+                </button>
+              </div>
             </div>
 
-            <div class="header-right">
-              <button id="mobile-map-toggle" class="header-icon-btn" title="Question Navigator">
-                <i data-lucide="layout-grid"></i>
-              </button>
-              <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'};">
-                <i data-lucide="bot"></i>
-              </button>
-              <button id="toggle-calc" class="header-icon-btn" title="Open Calculator">
-                <i data-lucide="calculator"></i>
-              </button>
-              <div id="timer" class="timer-mini">00:00</div>
+            <!-- Line 2: Subject, Count, Topic -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-left: 28px; font-size: 0.65rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary); font-weight: 700;">
+                <span id="display-subject" class="meta-subject">...</span>
+                <span style="opacity: 0.5;">•</span>
+                <div id="q-meta" class="q-counter-mini" style="font-size: 0.65rem; background: transparent; padding: 0; border: none; box-shadow: none;">1 of 0</div>
+              </div>
+              <span id="display-topic" class="meta-topic" style="color: var(--text-secondary); font-weight: 700; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;">...</span>
             </div>
-          </div>
-
-          <div class="exam-header-meta">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-               <i data-lucide="book-open" style="width: 14px; height: 14px; opacity: 0.7;"></i>
-               <span id="display-subject" class="meta-subject">...</span>
-            </div>
-            <span id="display-topic" class="meta-topic">...</span>
           </div>
         </div>
 
@@ -335,13 +333,13 @@ export class Exam {
               timerDiv.classList.add('pulse-timer');
           }
           
-          if (time <= 120) {
+          if (time <= 300) {
               timerDiv.style.color = 'var(--error)'
               timerDiv.classList.add('pulse-timer-fast');
-          } else if (time <= 300) {
+          } else if (time <= 600) {
               timerDiv.style.color = '#F59E0B' // Amber
           } else {
-              timerDiv.style.color = 'var(--text-primary)'
+              timerDiv.style.color = 'var(--success)'
           }
           
           // Save state every 30 seconds to persist timer
@@ -365,11 +363,12 @@ export class Exam {
     const sourceLabel = document.getElementById('source-label');
     if (sourceLabel) {
         if (this.questionSource === 'past') {
-            sourceLabel.textContent = 'Verified Past Questions';
+            sourceLabel.textContent = 'Past Questions';
             sourceLabel.style.color = 'var(--accent-secondary)';
         } else {
-            sourceLabel.textContent = 'Elite AI Generated';
+            sourceLabel.textContent = 'Elite AI';
             sourceLabel.style.color = 'var(--accent-primary)';
+            sourceLabel.style.fontSize = '0.55rem';
         }
     }
 
@@ -520,8 +519,19 @@ export class Exam {
     if (!q) return
 
     // Meta Info
-    document.getElementById('display-subject').textContent = q.subject || this.subject || "CBT Practice"
-    document.getElementById('display-exam-type').textContent = q.exam_type || this.examType || "Elite Assessment"
+    const examTypeBadge = document.getElementById('display-exam-type')
+    const subjectBadge = document.getElementById('display-subject')
+    
+    if (this.questionSource === 'past') {
+        const year = q.exam_year || q.year;
+        const yearSuffix = year ? ` (${year})` : '';
+        examTypeBadge.textContent = `${q.exam_type || this.examType || "CBT"}${yearSuffix}`;
+        subjectBadge.textContent = q.subject || this.subject || "Practice";
+    } else {
+        examTypeBadge.textContent = q.exam_type || this.examType || "Elite Assessment"
+        subjectBadge.textContent = q.subject || this.subject || "AI Practice"
+    }
+
     const topicBadge = document.getElementById('display-topic')
     if (topicBadge) {
         topicBadge.textContent = q.topic || "General"

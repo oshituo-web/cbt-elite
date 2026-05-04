@@ -50,7 +50,7 @@ export const DashboardComponent = {
     if (!container) return
     container.style.display = 'block'
     container.innerHTML = `
-      <div class="dashboard-scroll-area" style="padding-top: calc(var(--header-height) + 1.25rem);">
+      <div class="dashboard-scroll-area" style="padding-top: calc(var(--header-height) + 1.25rem); padding-bottom: 140px;">
         <div style="margin-bottom: 2rem;">
             <div class="skeleton-box" style="width: 200px; height: 1.8rem; margin-bottom: 0.5rem;"></div>
             <div class="skeleton-box" style="width: 150px; height: 0.8rem;"></div>

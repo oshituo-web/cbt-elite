@@ -1005,7 +1005,11 @@ async function checkBroadcast() {
 }
 async function initNotifications(profile) {
     if (!profile) return;
-    NotificationService.init(profile);
+    try {
+        NotificationService.init(profile);
+    } catch (err) {
+        console.warn("Notification system failed to initialize:", err);
+    }
 }
 
 function updateBellState(count) {

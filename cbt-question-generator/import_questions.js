@@ -2,152 +2,140 @@ require('dotenv').config();
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
-/**
- * DEFINITIVE CBT IMPORT ENGINE (Standardized)
- * Supports:
- * - Questions table (Metadata & Text)
- * - Answers table (Normalized 1:M)
- * - Question_Answers table (Denormalized for frontend compatibility)
- */
+const supabaseUrl = process.env.SUPABASE_URL.trim();
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY.trim();
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const BATCH_SIZE = 50; 
 const INPUT_FILE = 'questions.json';
+const CONCURRENCY = 10; // Number of parallel requests
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-async function withRetry(operation, maxRetries = 3) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+async function withRetry(fn, retries = 3) {
+    for (let i = 0; i < retries; i++) {
         try {
-            const { data, error } = await operation();
-            if (error) throw error;
-            return { data, error: null };
+            return await fn();
         } catch (err) {
-            if (attempt === maxRetries) return { data: null, error: err };
-            const delay = Math.pow(2, attempt) * 1000;
-            await new Promise(res => setTimeout(res, delay));
+            if (i === retries - 1) throw err;
+            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
         }
     }
 }
 
-async function runImport() {
-    console.log("🚀 Starting Standardized Import Engine...");
-
+async function startImport() {
+    console.log("🚀 STARTING PARALLEL BULK IMPORT...");
+    
     if (!fs.existsSync(INPUT_FILE)) {
-        console.error("Missing questions.json!");
+        console.error(`Error: ${INPUT_FILE} not found!`);
         return;
     }
 
-    const questions = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf8'));
-    console.log(`Loaded ${questions.length} questions from local file.`);
+    const data = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf8'));
+    console.log(`Loaded ${data.length} records from ${INPUT_FILE}`);
 
-    // 1. Fetch Mappings
-    const { data: exams } = await supabase.from('exams').select('id, exam_name');
-    const { data: subjects } = await supabase.from('subjects').select('id, subject_name');
-    const examMap = Object.fromEntries(exams.map(e => [e.exam_name, e.id]));
-    const subjectMap = Object.fromEntries(subjects.map(s => [s.subject_name, s.id]));
+    // Pre-fetch Subjects and Exams
+    const { data: dbSubjects } = await supabase.from('subjects').select('id, subject_name');
+    const { data: dbExams } = await supabase.from('exams').select('id, exam_name');
+    
+    const subjectMap = {};
+    dbSubjects.forEach(s => subjectMap[s.subject_name.toLowerCase()] = s.id);
+    
+    const examMap = {};
+    dbExams.forEach(e => examMap[e.exam_name.toUpperCase()] = e.id);
 
-    // 2. Load Existing questions to avoid duplicates
-    console.log("Loading existing question cache...");
-    const existingTexts = new Set();
-    let offset = 0;
-    while(true) {
-        const { data } = await supabase.from('questions').select('question_text').range(offset, offset + 999);
-        if (!data || data.length === 0) break;
-        data.forEach(q => existingTexts.add(q.question_text));
-        offset += 1000;
-    }
-    console.log(`Cache ready: ${existingTexts.size} existing questions.`);
-
-    // 3. Process in batches
     let successCount = 0;
     let skipCount = 0;
+    let errorCount = 0;
 
-    for (let i = 0; i < questions.length; i += BATCH_SIZE) {
-        const batch = questions.slice(i, i + BATCH_SIZE);
-        const toInsert = [];
+    async function processQuestion(q) {
+        try {
+            const subName = (q.subject || "").toLowerCase();
+            const examName = (q.exam_type || q.exam || "").toUpperCase();
+            const subjectId = subjectMap[subName];
+            const examId = examMap[examName];
 
-        for (const q of batch) {
-            const text = (q.question || q.question_text).trim();
-            if (existingTexts.has(text)) {
-                skipCount++;
-                continue;
+            if (!subjectId) {
+                return { status: 'skip', reason: 'subject_not_found' };
             }
 
-            const examId = examMap[q.exam_type || q.exam];
-            const subjectId = subjectMap[q.subject];
+            const qType = q.question_type || 'objective';
+            const text = (q.question_text || q.question || "").trim();
 
-            if (!examId || !subjectId) {
-                console.warn(`Skipping (Mapping missing): ${q.subject} / ${q.exam_type}`);
-                continue;
+            if (qType === 'objective') {
+                const optA = (q.option_a || (q.options && q.options.A) || "").trim();
+                if (!text || !optA) return { status: 'skip', reason: 'incomplete' };
+            } else {
+                if (!text || !q.model_answer) return { status: 'skip', reason: 'incomplete' };
             }
 
-            toInsert.push({
-                question: q, // Keep original for second phase
-                dbRow: {
-                    exam_id: examId,
-                    subject_id: subjectId,
-                    subject: q.subject,
-                    topic: q.topic,
-                    subtopic: q.subtopic,
-                    exam_type: q.exam_type || q.exam,
-                    question_text: text,
-                    explanation: q.explanation || "",
-                    difficulty: q.difficulty || "Medium",
-                    tags: q.tags || [],
-                    is_active: true
-                }
-            });
+            const { data: insQ, error: qErr } = await withRetry(() => supabase.from('questions').insert({
+                subject_id: subjectId,
+                exam_id: examId,
+                subject: q.subject,
+                topic: q.topic || 'General',
+                exam_type: q.exam_type || q.exam,
+                exam_year: q.exam_year || null,
+                question_text: text,
+                explanation: q.explanation || "",
+                difficulty: q.difficulty || "Medium",
+                tags: q.tags || [],
+                is_active: true,
+                is_past_question: false,
+                question_type: qType
+            }).select().single());
+
+            if (qErr) {
+                if (qErr.code === '23505') return { status: 'skip', reason: 'duplicate' };
+                throw qErr;
+            }
+
+            if (qType === 'objective') {
+                const { error: aErr } = await withRetry(() => supabase.from('question_answers').insert({
+                    question_id: insQ.id,
+                    option_a: q.option_a || q.options?.A || q.options?.a || '',
+                    option_b: q.option_b || q.options?.B || q.options?.b || '',
+                    option_c: q.option_c || q.options?.C || q.options?.c || '',
+                    option_d: q.option_d || q.options?.D || q.options?.d || '',
+                    correct_option: (q.correct_option || q.answer || "A").toUpperCase(),
+                    explanation: q.explanation || ""
+                }));
+                if (aErr) throw aErr;
+            } else {
+                const { error: dErr } = await withRetry(() => supabase.from('theory_details').insert({
+                    question_id: insQ.id,
+                    model_answer: q.model_answer || '',
+                    key_points: q.key_points || [],
+                    max_score: q.max_score || 5
+                }));
+                if (dErr) throw dErr;
+            }
+
+            return { status: 'success' };
+        } catch (err) {
+            return { status: 'error', message: err.message };
         }
-
-        if (toInsert.length === 0) {
-            process.stdout.write(".");
-            continue;
-        }
-
-        // Phase 1: Insert Questions
-        const { data: insertedQs, error: qErr } = await withRetry(() => 
-            supabase.from('questions').insert(toInsert.map(item => item.dbRow)).select()
-        );
-
-        if (qErr) {
-            console.error(`\nBatch Error:`, qErr.message);
-            continue;
-        }
-
-        // Phase 2: Insert Answers (Normalized)
-        const answerInserts = [];
-
-        insertedQs.forEach(insQ => {
-            const original = toInsert.find(item => item.dbRow.question_text === insQ.question_text).question;
-            const optA = original.option_a || original.options?.A || original.options?.a;
-            const optB = original.option_b || original.options?.B || original.options?.b;
-            const optC = original.option_c || original.options?.C || original.options?.c;
-            const optD = original.option_d || original.options?.D || original.options?.d;
-            let correct = (original.correct_option || original.answer || "A").trim().toUpperCase().charAt(0);
-
-            // Normalized (answers table)
-            answerInserts.push(
-                { question_id: insQ.id, option_letter: 'A', option_text: optA, is_correct: correct === 'A' },
-                { question_id: insQ.id, option_letter: 'B', option_text: optB, is_correct: correct === 'B' },
-                { question_id: insQ.id, option_letter: 'C', option_text: optC, is_correct: correct === 'C' },
-                { question_id: insQ.id, option_letter: 'D', option_text: optD, is_correct: correct === 'D' }
-            );
-        });
-
-        const { error: aErr } = await withRetry(() => supabase.from('answers').insert(answerInserts));
-
-        if (aErr) {
-            console.error("\nAnswer insertion error:", aErr.message);
-        } else {
-            successCount += insertedQs.length;
-        }
-
-        process.stdout.write(`\rImported: ${successCount} | Skipped: ${skipCount} | Total: ${i + batch.length}`);
     }
 
-    console.log(`\n\n✅ Import Process Finished!`);
-    console.log(`New Questions Added: ${successCount}`);
-    console.log(`Duplicates Skipped: ${skipCount}`);
+    for (let i = 0; i < data.length; i += CONCURRENCY) {
+        const batch = data.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(processQuestion));
+
+        results.forEach(res => {
+            if (res.status === 'success') successCount++;
+            else if (res.status === 'skip') skipCount++;
+            else {
+                errorCount++;
+                console.error("   ❌ Error:", res.message);
+            }
+        });
+
+        if (i % 100 === 0) {
+            process.stdout.write(`\rProgress: ${i}/${data.length} | ✅ ${successCount} | ⏭️ ${skipCount} | ❌ ${errorCount}`);
+        }
+    }
+
+    console.log("\n\n🎉 IMPORT FINISHED.");
+    console.log(`✅ Success: ${successCount}`);
+    console.log(`⏭️ Skipped/Duplicates: ${skipCount}`);
+    console.log(`❌ Errors: ${errorCount}`);
 }
 
-runImport().catch(console.error);
+startImport().catch(console.error);

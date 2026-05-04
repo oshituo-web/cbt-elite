@@ -59,7 +59,7 @@ export const AdminComponent = {
             ` : ''}
           </nav>
           
-          <main id="admin-main">
+          <main id="admin-main" style="padding-bottom: 120px;">
           <!-- Leagues & Clans Tab -->
           <div id="admin-leagues-tab" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
