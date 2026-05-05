@@ -336,7 +336,11 @@ async function initApp() {
 
     // 🔐 2. START AUTH & DATA FLOW (Parallelized)
     console.log("main.js: Initializing Parallel Boot...")
-    const user = await AuthService.getCurrentUser();
+    
+    // Check for session in URL (Supabase OAuth)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    const user = session?.user || await AuthService.getCurrentUser();
     
     if (!user || !user.id) {
       console.log("main.js: No user found, showing Auth")
