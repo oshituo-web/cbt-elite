@@ -67,7 +67,9 @@ export const AuthService = {
       if (error) throw error
       return user
     } catch (e) {
-      console.error("AuthService.getCurrentUser failure:", e)
+      if (e.message !== 'Auth session missing!') {
+        console.error("AuthService.getCurrentUser failure:", e)
+      }
       return null
     }
   },
