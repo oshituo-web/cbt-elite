@@ -445,30 +445,52 @@ export const DataService = {
 
     console.log("DataService: Syncing performance with payload:", payload);
 
-    // 🛡️ STREAK LOGIC: Increment or Reset based on date difference
+    // 🛡️ STREAK & COINS LOGIC: Increment or Reset based on date difference
     try {
-        const { data: profile } = await supabase.from('users').select('streak_count, last_session_date').eq('id', userId).single();
+        const { data: profile } = await supabase.from('users').select('streak_count, last_session_date, elite_coins').eq('id', userId).single();
         if (profile) {
-            const today = localDate;
-            const lastDate = profile.last_session_date;
-            let newStreak = profile.streak_count || 0;
+            const todayStr = localDate; // YYYY-MM-DD
             
-            const diffDays = lastDate ? Math.floor((new Date(today) - new Date(lastDate)) / (1000 * 60 * 60 * 24)) : 1;
+            // Normalize dates to UTC midnight to avoid timezone math bugs
+            const todayObj = new Date(todayStr + "T00:00:00.000Z");
+            let lastDateObj = null;
+            if (profile.last_session_date) {
+                const lastStr = profile.last_session_date.substring(0, 10);
+                lastDateObj = new Date(lastStr + "T00:00:00.000Z");
+            }
+            
+            const diffDays = lastDateObj ? Math.round((todayObj - lastDateObj) / (1000 * 60 * 60 * 24)) : 1;
+            
+            let newStreak = profile.streak_count || 0;
             
             if (diffDays === 1) {
                 newStreak += 1;
-                console.log("Streak Increment:", { today, lastDate, diffDays, newStreak });
-            } else if (diffDays > 1 || !lastDate) {
+                console.log("Streak Increment:", { todayStr, lastStr: profile.last_session_date, diffDays, newStreak });
+            } else if (diffDays > 1 || !lastDateObj) {
                 newStreak = 1;
-                console.log("Streak Start/Reset:", { today, lastDate, diffDays, newStreak });
+                console.log("Streak Reset:", { todayStr, lastStr: profile.last_session_date, diffDays, newStreak });
             } else {
                 console.log("Streak: Already recorded today.");
             }
 
-            // Persist the verified streak and date
+            // Calculate Elite Coins
+            const scorePercent = parseInt(sessionData.score_percentage) || 0;
+            const totalQs = parseInt(sessionData.total_questions) || 0;
+            const earnedCoins = Math.ceil((totalQs * (scorePercent / 100)) / 2);
+            
+            // 🔥 CLASH SUPER BONUS (Handled manually here if needed, or rely on existing clash logic, but session rewards are baseline)
+            const isClash = sessionData.session_type === 'clash';
+            const day = new Date().getDay();
+            const isSunday = day === 0;
+            const bonusCoins = (isClash && scorePercent >= 80) ? (isSunday ? 200 : 100) : 0;
+            
+            const newCoins = (profile.elite_coins || 0) + earnedCoins + bonusCoins;
+
+            // Persist the verified streak, date, and coins
             await supabase.from('users').update({ 
                 streak_count: newStreak, 
-                last_session_date: today 
+                last_session_date: todayStr,
+                elite_coins: newCoins
             }).eq('id', userId);
         }
     } catch (e) {

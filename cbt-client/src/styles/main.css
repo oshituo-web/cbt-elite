@@ -3563,3 +3563,97 @@ button { min-height: clamp(40px, 6vw, 52px) !important; padding: clamp(8px, 2.5v
         padding: 0.2rem 0.4rem;
     }
 }
+
+/* Small Mobile Screen Adjustments for Exam Topbar */
+@media (max-width: 360px) {
+    .exam-header-primary {
+        justify-content: flex-start !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.8rem !important;
+    }
+}
+
+/* 📝 ALOC English Target Words Formatting */
+.question-text u {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 2px !important;
+    font-weight: 900 !important;
+    color: var(--accent-primary) !important;
+    text-transform: uppercase !important;
+}
+
+.question-text i {
+    font-style: italic !important;
+    font-weight: 900 !important;
+    color: var(--accent-primary) !important;
+    text-transform: uppercase !important;
+}
+
+/* 🏆 Premium Dashboard System UI Refactor */
+.premium-dashboard-card {
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    margin-bottom: 20px; /* consistent vertical spacing 20px */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Dominant styling for AI Daily Path */
+.premium-dashboard-card.ai-focus {
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    border-left: 3px solid rgba(59, 130, 246, 0.8) !important;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15) !important;
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.04), rgba(255,255,255,0.01)) !important;
+}
+
+/* Unified Buttons */
+.btn-premium-primary {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #3730A3 100%) !important;
+    border-radius: 14px !important;
+    font-weight: 900 !important;
+    border: none !important;
+    color: white !important;
+    padding: 0 1rem !important;
+    height: 48px !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease !important;
+    font-family: 'Outfit', sans-serif;
+}
+
+.btn-premium-primary:hover {
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4) !important;
+    transform: translateY(-2px);
+}
+
+.btn-premium-secondary {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1.5px solid var(--glass-border) !important;
+    border-radius: 14px !important;
+    font-weight: 800 !important;
+    color: var(--text-primary) !important;
+    padding: 0 1rem !important;
+    height: 48px !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease !important;
+    font-family: 'Outfit', sans-serif;
+}
+
+.btn-premium-secondary:hover {
+    background: rgba(255,255,255,0.08) !important;
+}

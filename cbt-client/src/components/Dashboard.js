@@ -464,7 +464,7 @@ export const DashboardComponent = {
     const { profile, systemConfig } = this.state;
     return `
         <!-- DASHBOARD HEADER -->
-        <div style="margin-bottom: 0.75rem;">
+        <div style="margin-bottom: 20px;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
               Hello, ${profile.username || 'Student'} 
@@ -478,91 +478,100 @@ export const DashboardComponent = {
         </div>
 
         <!-- ELITE ECONOMY WIDGET -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div id="economy-coins-widget" class="glass card" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); min-height: 44px; border-radius: 12px;">
-            <div style="width: 20px; height: 20px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
-              <i data-lucide="coins" style="width: 12px;"></i>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 20px;">
+          <div id="economy-coins-widget" class="premium-dashboard-card" style="padding: 0.5rem 0.75rem !important; margin-bottom: 0; display: flex; flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer; border-left: 3px solid #f59e0b !important;">
+            <div style="width: 24px; height: 24px; background: rgba(245, 158, 11, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; flex-shrink: 0;">
+              <i data-lucide="coins" style="width: 14px;"></i>
             </div>
             <div style="overflow: hidden;">
-              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Elite Coins</div>
-              <div id="economy-coins-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.elite_coins || 0}</div>
+              <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Elite Coins</div>
+              <div id="economy-coins-val" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.elite_coins || 0}</div>
             </div>
           </div>
-          <div id="economy-freeze-widget" class="glass card scale-in" style="padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-left: 2px solid var(--accent-secondary); background: rgba(139, 92, 246, 0.08); min-height: 44px; border-radius: 12px;">
-            <div style="width: 20px; height: 20px; background: rgba(139, 92, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
-              <i data-lucide="snowflake" style="width: 12px;"></i>
+          <div id="economy-freeze-widget" class="premium-dashboard-card scale-in" style="padding: 0.5rem 0.75rem !important; margin-bottom: 0; display: flex; flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer; border-left: 3px solid var(--accent-secondary) !important;">
+            <div style="width: 24px; height: 24px; background: rgba(139, 92, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
+              <i data-lucide="snowflake" style="width: 14px;"></i>
             </div>
             <div style="overflow: hidden;">
-              <div style="font-size: 0.5rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Streak Freeze</div>
-              <div id="economy-freeze-val" style="font-family: 'Outfit'; font-size: 0.9rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_freeze_count || 0}</div>
+              <div style="font-size: 0.55rem; color: var(--text-secondary); font-weight: 900; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.05em;">Streak Freeze</div>
+              <div id="economy-freeze-val" style="font-family: 'Outfit'; font-size: 1rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_freeze_count || 0}</div>
             </div>
           </div>
         </div>
 
-        <!-- PAST QUESTIONS ARCHIVE (BOOSTER) -->
-        <div id="open-archive-btn" class="glass card scale-in mb-sm" style="margin-bottom: 0.75rem; padding: 0.65rem 0.85rem; cursor: pointer; border: 1.5px solid var(--accent-secondary); background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, var(--surface-color) 100%); display: flex; align-items: center; gap: 0.75rem; position: relative; overflow: hidden; border-radius: 12px;">
-            <div style="width: 32px; height: 32px; background: rgba(124, 58, 237, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
-                <i data-lucide="library" style="width: 16px; height: 16px;"></i>
-            </div>
-            <div style="flex: 1;">
-                <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
-                    Past Questions Archive
-                    <span style="font-size: 0.5rem; background: var(--accent-secondary); color: white; padding: 1px 5px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">Real Exams</span>
-                </h4>
-                <p style="margin: 0; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; line-height: 1.2;">
-                   Practice with official papers from 2010 till date.
-                </p>
-            </div>
-            <i data-lucide="chevron-right" style="width: 14px; color: var(--accent-secondary); opacity: 0.5;"></i>
-        </div>
-
-        <!-- QUICK ACTION SECTION -->
-        <div class="glass card scale-in mb-md" style="text-align: center; padding: 0.85rem 0.75rem; border: 1.5px solid rgba(14, 165, 233, 0.3); background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, var(--surface-color) 100%);">
-          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; width: 100%; margin-bottom: 0.5rem;">
-             <button id="quick-practice-btn" class="btn-primary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-size: 1rem; font-weight: 900; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);"><i data-lucide="target" style="width:20px;"></i> PRACTICE</button>
-             <button id="quick-exam-btn" class="btn-secondary" style="padding: 0; flex: 1; height: 44px; min-width: 120px; font-weight: 900; font-size: 1rem; border: 2px solid var(--accent-secondary);"><i data-lucide="trophy" style="width:20px;"></i> MOCK EXAM</button>
+        <!-- QUICK ACTION SECTION: PRACTICE & MOCK EXAM -->
+        <div class="premium-dashboard-card scale-in" style="border-left: 3px solid rgba(14, 165, 233, 0.8) !important;">
+          <div style="display: flex; gap: 0.75rem; width: 100%;">
+             <button id="quick-practice-btn" class="btn-premium-primary" style="flex: 1;"><i data-lucide="target" style="width:18px;"></i> PRACTICE</button>
+             <button id="quick-exam-btn" class="btn-premium-secondary" style="flex: 1;"><i data-lucide="trophy" style="width:18px;"></i> MOCK EXAM</button>
           </div>
-          <button id="quick-challenge-btn" class="btn-dominant" style="width: 100%; height: 48px; font-size: 1.05rem; font-weight: 900; background: var(--accent-gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);">
-             ⚔️ MULTIPLAYER CHALLENGE
-          </button>
         </div>
 
-        <!-- 🧠 SMART DAILY MISSION (NEW) -->
+        <!-- 🧠 SMART DAILY MISSION (DOMINANT FOCUS) -->
         ${this.renderDailyMission()}
 
-        <!-- 🏆 LEAGUE & CLAN ANNOUNCEMENT -->
-        <div class="glass card scale-in mb-md" id="home-league-announcement" style="padding: 1.25rem 1rem; cursor: pointer; border-left: 4px solid var(--accent-primary); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%); display: flex; align-items: center; gap: 1rem; position: relative; overflow: hidden;">
-            <div style="width: 48px; height: 48px; background: rgba(37, 99, 235, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);">
+        <!-- PAST QUESTIONS ARCHIVE -->
+        <div id="open-archive-btn" class="premium-dashboard-card scale-in" style="cursor: pointer; flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid var(--accent-secondary) !important;">
+            <div style="width: 48px; height: 48px; background: rgba(124, 58, 237, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); flex-shrink: 0;">
+                <i data-lucide="library" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                    Past Questions
+                    <span style="font-size: 0.5rem; background: var(--accent-secondary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">Real Exams</span>
+                </h4>
+                <p style="margin: 0.2rem 0 0 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
+                   Official papers from 2010 till date.
+                </p>
+            </div>
+            <i data-lucide="chevron-right" style="width: 18px; color: var(--accent-secondary); opacity: 0.7;"></i>
+        </div>
+
+        <!-- 🏆 CLAN HUB -->
+        <div class="premium-dashboard-card scale-in" id="home-league-announcement" style="cursor: pointer; flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid var(--accent-primary) !important;">
+            <div style="width: 48px; height: 48px; background: rgba(37, 99, 235, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0;">
                 <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
             </div>
             <div style="flex: 1;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
-                   <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
+                   <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary);">
                        Clan & League HUB
                    </h4>
-                   <span id="home-clash-timer" style="font-size: 0.65rem; font-weight: 900; color: var(--accent-primary); background: rgba(37, 99, 235, 0.1); padding: 0.15rem 0.5rem; border-radius: 6px; font-variant-numeric: tabular-nums;">--:--:--</span>
+                   <span id="home-clash-timer" style="font-size: 0.65rem; font-weight: 900; color: var(--accent-primary); background: rgba(37, 99, 235, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px; font-variant-numeric: tabular-nums;">--:--:--</span>
                 </div>
-                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; line-height: 1.4; display: block; width: 100%;">
-                   Join the Clan Competition every Saturday to qualify for the Elite competition on Sunday.
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
+                   Compete with elite students platform-wide.
                 </p>
-                <div style="margin-top: 1rem;">
-                   <button class="btn-primary" style="width: 100%; height: 42px; font-size: 0.85rem; font-weight: 900; border-radius: 12px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
-                      ENTER LEAGUE HUB
-                   </button>
-                </div>
+            </div>
+            <i data-lucide="chevron-right" style="width: 18px; color: var(--accent-primary); opacity: 0.7;"></i>
+        </div>
+
+        <!-- ⚔️ MULTIPLAYER CHALLENGE -->
+        <div class="premium-dashboard-card scale-in" style="flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid #f43f5e !important;">
+            <div style="width: 48px; height: 48px; background: rgba(244, 63, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f43f5e; flex-shrink: 0;">
+                <i data-lucide="swords" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 0.2rem 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary);">
+                    Multiplayer Challenge
+                </h4>
+                <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
+                   Invite and compete with your friends.
+                </p>
+                <button id="quick-challenge-btn" class="btn-premium-secondary" style="height: 40px !important; font-size: 0.8rem !important; width: auto !important; padding: 0 1rem !important;">
+                   START CHALLENGE
+                </button>
             </div>
         </div>
 
-        <!-- Daily Streak Card -->
-        <div class="glass card scale-in" style="padding: 1rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-color) 100%); border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 100px;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-             <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}" style="width: 48px; height: 48px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-               <i data-lucide="flame" style="width: 24px; height: 24px; color: ${profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'};"></i>
-             </div>
-             <div>
-                <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_count || 0} Days</div>
-                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Current Streak</div>
-             </div>
+        <!-- LEARNING STREAK CARD -->
+        <div class="premium-dashboard-card scale-in" style="flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid var(--warning) !important;">
+          <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}" style="width: 48px; height: 48px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="flame" style="width: 24px; height: 24px; color: ${profile.streak_count > 0 ? 'var(--warning)' : 'var(--text-secondary)'};"></i>
+          </div>
+          <div style="flex: 1;">
+            <div id="streak-count-val" style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1;">${profile.streak_count || 0} Days</div>
+            <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem;">Current Streak</div>
           </div>
           <div style="text-align: right;">
              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; font-weight: 600; line-height: 1.2;">
@@ -571,14 +580,11 @@ export const DashboardComponent = {
           </div>
         </div>
 
-
         <!-- Help Guide CTA -->
-        <div class="glass card scale-in" style="margin-top: 1rem; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%); border: none; padding: 1.5rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1rem; text-align: center;">
-           <div style="color: #ffffff;">
-              <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.25rem; margin-bottom: 0.25rem; color: #ffffff;">Need a headstart?</h3>
-              <p style="font-size: 0.9rem; color: rgba(255,255,255,0.9); margin-bottom: 1rem;">Unleash the full power of CBT Elite.</p>
-              <button id="help-guide-btn" class="btn-secondary" style="background: white; color: #3730A3; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 10px;">Launch Tour</button>
-           </div>
+        <div class="premium-dashboard-card scale-in" style="margin-top: 0; border: none !important; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%) !important; text-align: center; justify-content: center; align-items: center; gap: 0.75rem;">
+           <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.15rem; margin: 0; color: #ffffff;">Need a headstart?</h3>
+           <p style="font-size: 0.8rem; color: rgba(255,255,255,0.9); margin: 0;">Unleash the full power of CBT Elite.</p>
+           <button id="help-guide-btn" style="margin-top: 0.5rem; height: 40px; background: white; color: #3730A3; border: none; font-weight: 800; border-radius: 14px; padding: 0 1.25rem; cursor: pointer; transition: all 0.2s ease;">Launch Interactive Tour</button>
         </div>
     `;
   },
@@ -2085,7 +2091,7 @@ export const DashboardComponent = {
     if (!dailyMission || dailyMission.totalCount === 0) return '';
 
     return `
-      <div id="daily-mission-card" class="glass card scale-in mb-lg" style="padding: 1.5rem; border: 1px solid rgba(37, 99, 235, 0.4); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, var(--surface-color) 100%); border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);">
+      <div id="daily-mission-card" class="premium-dashboard-card ai-focus scale-in" style="position: relative; overflow: hidden;">
         
         <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
           <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary); box-shadow: 0 0 10px var(--accent-primary);"></div>
@@ -2097,7 +2103,7 @@ export const DashboardComponent = {
           Master your weakest areas with a personalized mix of <strong style="color: var(--text-primary);">${dailyMission.totalCount} high-priority questions.</strong>
         </p>
         
-        <button id="start-mission-btn" class="btn-primary" style="width: 100%; height: 48px; font-size: 0.95rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease;">
+        <button id="start-mission-btn" class="btn-premium-primary" style="margin-top: 0.5rem;">
           <i data-lucide="play" style="width: 18px; fill: currentColor;"></i> START MISSION
         </button>
       </div>
