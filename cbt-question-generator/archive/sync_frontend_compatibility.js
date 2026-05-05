@@ -65,7 +65,7 @@ async function syncQuestionAnswers() {
         
         const inserts = await Promise.all(chunk.map(async (q) => {
             const { data: answers, error } = await supabase
-                .from('answers')
+                .from('question_answers')
                 .select('option_letter, option_text, is_correct')
                 .eq('question_id', q.id);
 

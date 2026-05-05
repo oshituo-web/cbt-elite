@@ -83,12 +83,15 @@ Include clear explanation and 4 options (A, B, C, D) with one correct answer. Us
                     continue;
                 }
 
-                const { error: aErr } = await supabase.from('answers').insert(q.options.map(opt => ({
+                const { error: aErr } = await supabase.from('question_answers').insert({
                     question_id: qData.id,
-                    option_letter: opt.letter,
-                    option_text: opt.text,
-                    is_correct: opt.is_correct
-                })));
+                    option_a: q.options.find(o => o.letter === 'A')?.text || '',
+                    option_b: q.options.find(o => o.letter === 'B')?.text || '',
+                    option_c: q.options.find(o => o.letter === 'C')?.text || '',
+                    option_d: q.options.find(o => o.letter === 'D')?.text || '',
+                    correct_option: q.options.find(o => o.is_correct)?.letter || 'A',
+                    explanation: q.explanation
+                });
                 
                 if (aErr) await log(`[Error] Answers Insert Failed: ${aErr.message}`);
             }

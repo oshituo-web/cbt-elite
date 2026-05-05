@@ -42,7 +42,7 @@ async function repair() {
         for (let j = 0; j < batch.length; j += chunkSize) {
             const chunk = batch.slice(j, j + chunkSize);
             const { data: answerCounts, error: countErr } = await supabase
-                .from('answers')
+                .from('question_answers')
                 .select('question_id')
                 .in('question_id', chunk.map(q => q.id));
 
@@ -99,7 +99,7 @@ async function repair() {
             }
 
             // B. Insert Answers (only if missing)
-            const { data: existing } = await supabase.from('answers').select('id').eq('question_id', dbQ.id).limit(1);
+            const { data: existing } = await supabase.from('question_answers').select('id').eq('question_id', dbQ.id).limit(1);
             if (!existing || existing.length === 0) {
                 const answerInserts = [
                     { question_id: dbQ.id, option_letter: 'A', option_text: optA, is_correct: correctOpt === 'A' },
@@ -107,7 +107,7 @@ async function repair() {
                     { question_id: dbQ.id, option_letter: 'C', option_text: optC, is_correct: correctOpt === 'C' },
                     { question_id: dbQ.id, option_letter: 'D', option_text: optD, is_correct: correctOpt === 'D' }
                 ];
-                const { error: insErr } = await supabase.from('answers').insert(answerInserts);
+                const { error: insErr } = await supabase.from('question_answers').insert(answerInserts);
                 if (insErr) {
                     console.error(`Error inserting answers for ${dbQ.id}:`, insErr.message);
                 } else {

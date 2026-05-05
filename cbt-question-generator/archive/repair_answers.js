@@ -62,8 +62,8 @@ async function repairAnswers() {
                 { question_id: badQ.id, option_letter: 'D', option_text: optD, is_correct: correctOpt === 'D' }
             ];
 
-            await supabase.from('answers').delete().eq('question_id', badQ.id);
-            const { error: insertErr } = await supabase.from('answers').insert(answersData);
+            await supabase.from('question_answers').delete().eq('question_id', badQ.id);
+            const { error: insertErr } = await supabase.from('question_answers').insert(answersData);
             
             if (!insertErr) {
                 repairedCount++;

@@ -8,7 +8,7 @@ async function checkEmptyOptions() {
     
     // Fetch all answers with empty option_text
     const { data: emptyAnswers, error: err1 } = await supabase
-        .from('answers')
+        .from('question_answers')
         .select('question_id, option_text')
         .or('option_text.eq.,option_text.is.null'); // check for empty or null
         

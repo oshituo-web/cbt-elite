@@ -18,7 +18,7 @@ async function checkIntegrity() {
             .select(`
                 id,
                 question_text,
-                answers (
+                question_answers (
                     option_text,
                     option_letter
                 )
@@ -32,7 +32,7 @@ async function checkIntegrity() {
         if (!questions || questions.length === 0) break;
 
         for (const q of questions) {
-            const answers = q.answers || [];
+            const answers = q.question_answers || [];
             
             // 1. Check for Orphans / Incomplete
             if (answers.length === 0) {

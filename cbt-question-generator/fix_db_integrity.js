@@ -8,7 +8,7 @@ async function fixOrphanedQuestions() {
 
     // 1. Fetch all question_ids that have associated answers
     const { data: answeredQuestionIds, error: fetchError } = await supabase
-        .from('answers')
+        .from('question_answers')
         .select('question_id');
 
     if (fetchError) {
@@ -114,7 +114,7 @@ async function fixOrphanedQuestions() {
 
             if (idsToDelete.length > 0) {
                 console.log(`Fixing duplicates for Question ${q.id}: Deleting ${idsToDelete.length} duplicate options.`);
-                const { error: deleteError } = await supabase.from('answers').delete().in('id', idsToDelete);
+                const { error: deleteError } = await supabase.from('question_answers').delete().in('id', idsToDelete);
                 if (deleteError) {
                     console.error(`Error deleting duplicate options for ${q.id}:`, deleteError.message);
                 } else {

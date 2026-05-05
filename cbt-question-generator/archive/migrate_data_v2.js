@@ -76,7 +76,7 @@ async function migrate() {
             // Fetch answers for this question (still needs individual fetch due to structure, but we can parallelize)
             // For now, let's just do them one by one but in the batch loop
             const { data: answers } = await supabase
-                .from('answers')
+                .from('question_answers')
                 .select('*')
                 .eq('question_id', q.id)
                 .order('option_letter', { ascending: true });

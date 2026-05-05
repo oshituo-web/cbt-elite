@@ -145,7 +145,7 @@ async function saveToDatabase(items) {
             }
         });
         
-        await withDBRetry(() => supabase.from('answers').insert(ansInserts));
+        await withDBRetry(() => supabase.from('question_answers').insert(ansInserts));
         successCount += insertedQs.length;
     }
     return successCount;

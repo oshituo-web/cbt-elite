@@ -23,7 +23,7 @@ async function auditQuestions() {
     const questionIds = batch.map(q => q.id);
 
     const { data: answers, error: aError } = await supabase
-      .from('answers')
+      .from('question_answers')
       .select('question_id, option_letter, option_text, is_correct')
       .in('question_id', questionIds);
 

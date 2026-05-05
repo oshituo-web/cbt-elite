@@ -87,7 +87,7 @@ async function recover() {
                         { question_id: qId, option_letter: 'C', option_text: r.option_c, is_correct: r.correct_option === 'C' },
                         { question_id: qId, option_letter: 'D', option_text: r.option_d, is_correct: r.correct_option === 'D' }
                     ];
-                    await supabase.from('answers').insert(answerInserts);
+                    await supabase.from('question_answers').insert(answerInserts);
 // Skipping insert to view 'question_answers' - handled by database logic.
                         explanation: r.explanation
                     });

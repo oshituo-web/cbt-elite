@@ -222,10 +222,26 @@ export const AuthComponent = {
 
     // Google Sign In
     googleBtn.onclick = async () => {
-      const { error } = await AuthService.signInWithGoogle()
-      if (error) {
-        errorDiv.textContent = error.message
+      const { data: authData, error: authError } = await AuthService.signInWithGoogle()
+      
+      if (authError) {
+        errorDiv.textContent = authError.message
         errorDiv.style.display = 'block'
+        return
+      }
+
+      // Check if user has a profile
+      const user = await AuthService.getCurrentUser()
+      if (user) {
+        const { data: profile } = await AuthService.getProfile(user.id)
+        if (!profile) {
+            // New user, redirect to profile setup
+            import('./ProfileSetup').then(({ ProfileSetupComponent }) => {
+                ProfileSetupComponent.render(user, (p) => onAuthSuccess(p))
+            })
+        } else {
+            onAuthSuccess(user)
+        }
       }
     }
 
