@@ -9,7 +9,8 @@ import './src/styles/main.css'
 // handles stale cache invalidation correctly without destroying offline functionality.
 
 // 🚀 PERMANENT CACHE SOLUTION: Version Syncing
-const APP_VERSION = 'v12';
+const APP_VERSION = 'v13';
+console.log(`[System] App version ${APP_VERSION} starting...`);
 const savedVersion = localStorage.getItem('cbt_elite_version');
 
 // 🛡️ FIX CRIT-08: Version Syncing with surgical key removal (NOT localStorage.clear())
@@ -334,19 +335,36 @@ async function initApp() {
     // Register event listeners immediately
     setupGlobalActions({ id: 'anon', username: 'Student' });
 
-    // 🔐 2. START AUTH & DATA FLOW (Parallelized)
-    console.log("main.js: Initializing Parallel Boot...")
-    
-    // Check for session in URL (Supabase OAuth)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    const user = session?.user || await AuthService.getCurrentUser();
+    // 🔐 2. START AUTH & DATA FLOW (Robust OAuth detection)
+    console.log("main.js: Initializing Auth Flow...");
+
+    // Create a promise that resolves when we get a session OR a timeout occurs
+    const sessionPromise = new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+            console.log("main.js: Auth timeout reached, checking current session...");
+            supabase.auth.getSession().then(({ data }) => resolve(data.session));
+        }, 2000); // 2 second window for OAuth processing
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log(`[Auth] State Change: ${event}`);
+            if (session) {
+                clearTimeout(timeout);
+                subscription.unsubscribe();
+                resolve(session);
+            }
+        });
+    });
+
+    const session = await sessionPromise;
+    const user = session?.user;
     
     if (!user || !user.id) {
-      console.log("main.js: No user found, showing Auth")
+      console.log("main.js: No user session confirmed, showing Auth component.");
       showAuth();
       return;
     }
+
+    console.log(`[Auth] Session active for ${user.email} (${user.id})`);
 
     // ⚡ Parallel Fetch: Profile, Offline Sync, and Initial Route
     const [profileResult] = await Promise.all([
@@ -357,7 +375,12 @@ async function initApp() {
 
     const profile = profileResult?.data;
     if (profile && user.email) profile.email = user.email;
-    console.log("main.js: Profile retrieved:", profile ? profile.username : "Incomplete")
+    
+    if (profile) {
+      console.log(`[Auth] Profile confirmed for @${profile.username}`);
+    } else {
+      console.log("[Auth] No profile found for authenticated user. Moving to Setup.");
+    }
 
     // 🔐 SINGLE DEVICE ENFORCEMENT CHECK
     if (profile && profile.current_session_token) {
@@ -388,9 +411,21 @@ async function initApp() {
 
     // Update UI with real data
     setupGlobalActions(profile || { id: user.id, username: 'Student', email: user.email });
-
+    
+    // 🚀 NEW USER FLOW: Check-then-Create (Auto-registration)
     if (!profile || !profile.username) {
-        showProfileSetup(user);
+        console.log("[Auth] New user detected. Triggering auto-registration...");
+        const newProfile = await AuthService.autoRegister(user);
+        
+        if (newProfile) {
+            console.log(`[Auth] Auto-registration successful for @${newProfile.username}`);
+            currentProfile = newProfile;
+            updateHeaderProfile(newProfile);
+            handleInitialRoute(newProfile);
+        } else {
+            console.warn("[Auth] Auto-registration failed. Falling back to manual setup.");
+            showProfileSetup(user);
+        }
     } else {
         // 🛡️ STREAK RESET CHECK ON LOAD
         const today = new Date().toLocaleString("en-CA", {timeZone: "Africa/Lagos"}).split(",")[0];

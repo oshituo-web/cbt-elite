@@ -99,6 +99,38 @@ export const AuthService = {
     return { data, error }
   },
 
+  async autoRegister(user) {
+    if (!user || !user.email) return null;
+    
+    // Generate a unique-ish username from email
+    const baseName = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const username = `${baseName}${randomSuffix}`;
+
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      username: username,
+      full_name: user.user_metadata?.full_name || baseName,
+      role: 'student',
+      tier: 'free',
+      is_activated: false,
+      ai_credits: 0,
+      elite_coins: 0,
+      streak_count: 0
+    };
+
+    console.log(`[Auth] Auto-registering user: ${username}`);
+    const { data, error } = await this.updateProfile(profileData);
+    
+    if (error) {
+      console.error("[Auth] Auto-registration failed:", error);
+      return null;
+    }
+    
+    return data?.[0] || null;
+  },
+
   async isUsernameAvailable(username) {
     const { data, error } = await supabase
       .from('users')

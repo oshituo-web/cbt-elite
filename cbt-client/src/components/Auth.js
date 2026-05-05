@@ -32,13 +32,13 @@ export const AuthComponent = {
             <form id="auth-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
               <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                 <label for="email" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit';">Email Address</label>
-                <input type="email" id="email" placeholder="name@example.com" required class="glass-input" style="height: 52px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; transition: all 0.3s;">
+                <input type="email" id="email" placeholder="name@example.com" required autocomplete="email" class="glass-input" style="height: 52px; border-radius: 12px; font-weight: 700; font-family: 'Outfit'; border-width: 2px; transition: all 0.3s;">
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                 <label for="password" style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Outfit';">Password</label>
                 <div style="position: relative;">
-                  <input type="password" id="password" placeholder="••••••••" required class="glass-input" style="height: 52px; border-radius: 12px; padding-right: 4rem; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%; transition: border-color 0.3s; box-sizing: border-box;">
+                  <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" class="glass-input" style="height: 52px; border-radius: 12px; padding-right: 4rem; font-weight: 700; font-family: 'Outfit'; border-width: 2px; width: 100%; transition: border-color 0.3s; box-sizing: border-box;">
                   <button type="button" id="toggle-password" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.7rem; font-weight: 900; font-family: 'Outfit';">SHOW</button>
                 </div>
               </div>
@@ -222,26 +222,14 @@ export const AuthComponent = {
 
     // Google Sign In
     googleBtn.onclick = async () => {
-      const { data: authData, error: authError } = await AuthService.signInWithGoogle()
+      // 🧭 OAuth triggers a page redirect. Code below this line will NOT execute 
+      // in the same session once the redirect begins. The post-login flow 
+      // (checking profiles, showing setup) is handled in main.js/initApp().
+      const { error: authError } = await AuthService.signInWithGoogle()
       
       if (authError) {
         errorDiv.textContent = authError.message
         errorDiv.style.display = 'block'
-        return
-      }
-
-      // Check if user has a profile
-      const user = await AuthService.getCurrentUser()
-      if (user) {
-        const { data: profile } = await AuthService.getProfile(user.id)
-        if (!profile) {
-            // New user, redirect to profile setup
-            import('./ProfileSetup').then(({ ProfileSetupComponent }) => {
-                ProfileSetupComponent.render(user, (p) => onAuthSuccess(p))
-            })
-        } else {
-            onAuthSuccess(user)
-        }
       }
     }
 
