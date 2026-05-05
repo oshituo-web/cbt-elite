@@ -260,6 +260,14 @@ export const DashboardComponent = {
       }
     });
     
+    // 🔥 AUTOMATIC TOUR TRIGGER FOR NEW USERS
+    if (sessionStorage.getItem('isFreshSignup') === 'true' && !this.profile.has_seen_tour) {
+        console.log("Dashboard: Fresh signup detected, auto-starting tour.");
+        setTimeout(() => {
+            if (typeof TourGuide.start === 'function') TourGuide.start();
+        }, 1500); // Wait for animations to settle
+    }
+    
     console.log("DASH_TRACE_1: Starting XP calculation")
     // Calculate Progress and Daily Goal
     const watNow = DataService.getWATDate()

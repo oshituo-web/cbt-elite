@@ -120,11 +120,16 @@ export const AuthService = {
       streak_count: 0
     };
 
-    console.log(`[Auth] Auto-registering user: ${username}`);
+    console.log(`[Auth] Attempting auto-registration for user ID: ${user.id}`);
     const { data, error } = await this.updateProfile(profileData);
     
     if (error) {
-      console.error("[Auth] Auto-registration failed:", error);
+      console.error("[Auth] Auto-registration FAILED details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       return null;
     }
     

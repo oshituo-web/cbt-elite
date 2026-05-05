@@ -1102,12 +1102,16 @@ export const DataService = {
 
   // --- ADMIN: USER MANAGEMENT ---
   async getAllUsers() {
-    // 🛡️ FIX WARN-04: Fetch only columns the Admin UI needs — not sensitive internals
+    // 🛡️ FIX: Fetch all necessary columns for Tier Resolution and UI
     const { data, error } = await supabase
       .from('users')
-      .select('id, username, email, tier, role, created_at, is_flagged, flag_reason, league_tier, streak_count, elite_coins, total_questions_answered, activation_status, last_session_date')
+      .select('id, username, email, tier, role, created_at, is_flagged, flag_reason, league_tier, streak_count, elite_coins, total_questions_answered, activation_status, last_session_date, premium_until, ai_credits, ai_daily_usage')
       .order('created_at', { ascending: false })
     return { data: data || [], error }
+  },
+
+  async updateUser(userId, updates) {
+    return await supabase.from('users').update(updates).eq('id', userId)
   },
 
   async updateUserRole(email, role) {
@@ -1261,6 +1265,15 @@ export const DataService = {
     }
   },
 
+  async getSystemConfig(key = null) {
+    let query = supabase.from('system_config').select('*')
+    if (key) {
+      const { data, error } = await query.eq('key', key).maybeSingle()
+      return { data, error }
+    }
+    return await query
+  },
+
   // --- ADMIN: ANALYTICS & AUDIT ---
   async getGlobalAnalytics() {
     // 🛡️ FIX WARN-06: Use DB-side aggregate RPC instead of fetching all session rows.
@@ -1353,6 +1366,39 @@ export const DataService = {
 
   async runWeeklyLeagueReset() {
     return await supabase.rpc('run_weekly_league_reset')
+  },
+
+  async generateWeeklyClashSeeds() {
+    return await supabase.rpc('generate_weekly_clash_seeds')
+  },
+
+  async processClashPromotions() {
+    return await supabase.rpc('process_clash_promotions')
+  },
+
+  // --- ADMIN: NEWS ---
+  async getNewsUpdates(limit = 10) {
+    return await supabase.from('news_updates').select('*').order('created_at', { ascending: false }).limit(limit)
+  },
+
+  async adminCreateNews(news) {
+    return await supabase.from('news_updates').insert(news)
+  },
+
+  async adminUpdateNews(id, news) {
+    return await supabase.from('news_updates').update(news).eq('id', id)
+  },
+
+  async adminDeleteNews(id) {
+    return await supabase.from('news_updates').delete().eq('id', id)
+  },
+
+  async adminUploadNewsAttachment(file) {
+    const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`
+    const { data, error } = await supabase.storage.from('news_attachments').upload(fileName, file)
+    if (error) return { error }
+    const { data: { publicUrl } } = supabase.storage.from('news_attachments').getPublicUrl(fileName)
+    return { url: publicUrl, error: null }
   },
 
   async useAICredit(userId, action = 'tutor_chat') {

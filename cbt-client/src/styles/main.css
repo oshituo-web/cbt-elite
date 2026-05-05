@@ -32,6 +32,7 @@ html {
   --surface-color: var(--card-bg);
   --glass-border: var(--border-color);
   --accent-primary: var(--primary);
+  --accent-primary-rgb: 3, 105, 161;
   --accent-secondary: #6366F1;
   --font-main: 'Outfit', 'Inter', system-ui, sans-serif;
   

@@ -336,7 +336,7 @@ async function initApp() {
     setupGlobalActions({ id: 'anon', username: 'Student' });
 
     // 🔐 2. START AUTH & DATA FLOW (Robust OAuth detection)
-    console.log("main.js: Initializing Auth Flow...");
+    console.log(`main.js: Initializing Auth Flow... (URL: ${window.location.href.split('#')[0]}${window.location.hash ? '#[FRAGMENT PRESENT]' : ''})`);
 
     // Create a promise that resolves when we get a session OR a timeout occurs
     const sessionPromise = new Promise((resolve) => {
@@ -419,6 +419,7 @@ async function initApp() {
         
         if (newProfile) {
             console.log(`[Auth] Auto-registration successful for @${newProfile.username}`);
+            sessionStorage.setItem('isFreshSignup', 'true'); // Trigger the onboarding tour
             currentProfile = newProfile;
             updateHeaderProfile(newProfile);
             handleInitialRoute(newProfile);
@@ -626,8 +627,15 @@ function setupGlobalActions(profile) {
             ${history.map(n => `
               <div class="notif-item glass ${n.read ? '' : 'unread'}" style="margin-bottom:0.75rem; padding:1.25rem; cursor:pointer; position:relative; ${n.read ? 'opacity:0.8' : 'border-left:3px solid var(--error)'}" data-notif-id="${n.id}">
                  <div style="display:flex; gap:1rem; align-items:flex-start;">
-                    <div style="width:36px; height:36px; border-radius:10px; background:rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                       <i data-lucide="${n.type === 'streak' ? 'flame' : n.type === 'reward' ? 'coins' : n.type === 'competition' ? 'trophy' : 'target'}" style="width:18px; color:var(--accent-primary);"></i>
+                    <div style="width:36px; height:36px; border-radius:10px; background:rgba(var(--accent-primary-rgb), 0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                       <i data-lucide="${
+                         n.type === 'streak' ? 'flame' : 
+                         n.type === 'reward' ? 'coins' : 
+                         n.type === 'competition' ? 'trophy' : 
+                         n.type === 'performance' ? 'brain' : 
+                         n.type === 'progression' ? 'target' : 
+                         'bell'
+                       }" style="width:18px; color:var(--accent-primary);"></i>
                     </div>
                     <div>
                        <h4 style="margin:0; font-size:0.9rem; font-weight:900;">${n.title}</h4>

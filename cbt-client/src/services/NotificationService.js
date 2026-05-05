@@ -13,6 +13,7 @@ export const NotificationService = {
      */
     init(profile) {
         if (!profile) return;
+        this._updateBadge();
         this._checkDataDrivenNotifications(profile);
     },
 
@@ -29,32 +30,51 @@ export const NotificationService = {
         localStorage.setItem('last_notif_check', now.toISOString());
 
         try {
+            const createdAt = profile.created_at ? new Date(profile.created_at) : now;
+            const isNewUser = (now - createdAt) < 86400000; // Account less than 24h old
+
+            // 0. WELCOME MESSAGE (Onboarding)
+            if (!localStorage.getItem('welcome_notif_sent')) {
+                notifications.push({
+                    type: 'system',
+                    title: 'Welcome to CBT Elite! 🎓',
+                    message: `Hey ${profile.username || 'Student'}, we're thrilled to have you! Explore your dashboard and start your first practice session to begin your journey to excellence.`,
+                    action: 'home'
+                });
+                localStorage.setItem('welcome_notif_sent', 'true');
+            }
+
             // Fetch analytics for performance-based triggers
             const analytics = await DataService.getUserAnalytics(profile.id);
 
-            // 1. STREAK ALERTS (Retention)
-            const lastSessionDate = profile.last_session_date ? new Date(profile.last_session_date) : null;
-            const isSameDay = lastSessionDate && lastSessionDate.toDateString() === now.toDateString();
-            if (!isSameDay && profile.streak_count > 0) {
-                notifications.push({
-                    type: 'streak',
-                    title: 'Keep it going! 🔥',
-                    message: `You're on a ${profile.streak_count}-day streak. Don't let it break!`,
-                    action: 'practice'
-                });
+            // 1. STREAK ALERTS (Retention) - Only for veterans with existing streaks
+            if (!isNewUser && profile.streak_count > 0) {
+                const lastSessionDate = profile.last_session_date ? new Date(profile.last_session_date) : null;
+                const isSameDay = lastSessionDate && lastSessionDate.toDateString() === now.toDateString();
+                
+                if (!isSameDay) {
+                    notifications.push({
+                        type: 'streak',
+                        title: 'Elite Streak Alert! 🔥',
+                        message: `Your ${profile.streak_count}-day practice streak is at risk. Solve 50 questions now to keep it alive!`,
+                        action: 'practice'
+                    });
+                }
             }
 
             // 2. COMPETITION & LEAGUE PROMOTION (Clash Status)
             const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+            const tier = profile.league_tier || 'Bronze';
+
             if (day === 0) { // Sunday: Elite League Day
-                if (profile.league_tier === 'elite' || profile.league_tier === 'Elite') {
+                if (tier === 'elite' || tier === 'Elite') {
                     notifications.push({
                         type: 'competition',
                         title: 'Elite League Promotion! 💎',
-                        message: `Congratulations! You've qualified for today's Elite League Championship. Enter now!`,
+                        message: `Congratulations! You've qualified for today's Elite League Championship. Enter the arena and claim your glory!`,
                         action: 'compete'
                     });
-                } else {
+                } else if (!isNewUser) {
                     // Check if they were in top 3 on Saturday (Rankings)
                     const { data: clanLeaderboard } = await DataService.getLatestClashLeaderboard(profile.id, profile.department);
                     if (clanLeaderboard) {
@@ -63,7 +83,7 @@ export const NotificationService = {
                             notifications.push({
                                 type: 'competition',
                                 title: 'Elite Promotion Earned 🏅',
-                                message: `You finished #${myRank} in yesterday's clash. You are officially promoted to the Elite League!`,
+                                message: `Amazing work! You finished #${myRank} in yesterday's clash. You've been promoted to the ${tier} League!`,
                                 action: 'compete'
                             });
                         }
@@ -72,43 +92,42 @@ export const NotificationService = {
             } else if (day === 6) { // Saturday: Clan Clash Day
                 notifications.push({
                     type: 'competition',
-                    title: 'Clan Clash is LIVE! ⚔️',
-                    message: `Join your clan today. Finish in the Top 3 to qualify for tomorrow's Elite League!`,
+                    title: 'The Clan Clash is LIVE! ⚔️',
+                    message: `Your clan needs you! Compete today to climb the rankings and secure a promotion to the next tier.`,
                     action: 'compete'
                 });
             }
 
-            // 3. PERFORMANCE & WEAK AREAS (Learning optimization)
-            if (analytics && analytics.mastery) {
-                const weakTopics = analytics.mastery.filter(m => m.mastery_percentage < 40 && m.total_attempted > 5);
+            // 3. PERFORMANCE & WEAK AREAS (Only for users with significant data)
+            if (!isNewUser && analytics && analytics.mastery) {
+                const weakTopics = analytics.mastery.filter(m => m.mastery_percentage < 40 && m.total_attempted > 10);
                 if (weakTopics.length > 0) {
                     const topic = weakTopics[0];
                     notifications.push({
                         type: 'performance',
-                        title: 'Weak Spot Detected 🧠',
-                        message: `You struggled with "${topic.topic}" in ${topic.subject}. Spend 5 minutes reviewing it today.`,
+                        title: 'Focused Study Needed 🧠',
+                        message: `We've noticed you're struggling with "${topic.topic}" in ${topic.subject}. Spending 5 minutes on this today will boost your score!`,
                         action: 'practice'
                     });
                 }
             }
 
-            // 4. PROGRESSION & UPDATED DAILY TARGETS (Daily Habit)
+            // 4. PROGRESSION & UPDATED DAILY TARGETS
             const dailyProgress = profile.daily_questions_count || 0;
-            const targets = [50, 100, 150];
-            const nextTarget = targets.find(t => dailyProgress < t) || 150;
+            const target = parseInt(localStorage.getItem('elite_daily_goal') || '50');
             
-            if (dailyProgress > 0 && dailyProgress < nextTarget) {
+            if (dailyProgress > 0 && dailyProgress < target) {
                 notifications.push({
                     type: 'progression',
                     title: 'Daily Goal Progress 🎯',
-                    message: `You've answered ${dailyProgress} questions today. Only ${nextTarget - dailyProgress} more to hit your ${nextTarget} target!`,
+                    message: `You're doing great! Answer ${target - dailyProgress} more questions today to hit your daily target of ${target}.`,
                     action: 'practice'
                 });
             } else if (dailyProgress === 0) {
                 notifications.push({
                     type: 'progression',
-                    title: 'Start your day 🌅',
-                    message: `Set the pace! Your first daily target is 50 questions. Ready to start?`,
+                    title: 'Set the Pace 🌅',
+                    message: `Ready to conquer your goals? Start your first session now. Your daily target is 50 questions!`,
                     action: 'practice'
                 });
             }
@@ -116,10 +135,11 @@ export const NotificationService = {
             // 5. REWARD ALERTS (Positive Reinforcement)
             const lastCoins = parseInt(localStorage.getItem('notif_last_coins') || profile.elite_coins || 0);
             if (profile.elite_coins > lastCoins) {
+                const earned = profile.elite_coins - lastCoins;
                 notifications.push({
                     type: 'reward',
                     title: 'Elite Coins Earned! 🪙',
-                    message: `You've earned ${profile.elite_coins - lastCoins} coins. Check the store for power-ups!`,
+                    message: `Ka-ching! You just earned ${earned} Elite Coins. Head to the store to see what you can unlock!`,
                     action: 'dashboard'
                 });
                 localStorage.setItem('notif_last_coins', profile.elite_coins);

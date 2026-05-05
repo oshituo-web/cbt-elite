@@ -1388,7 +1388,7 @@ export const AdminComponent = {
     list.innerHTML = users.map(u => {
       const tier = SubscriptionService.resolveUserTier(u);
       const tierColor = tier === 'premium' ? 'var(--accent-secondary)' : (tier === 'medium' ? 'var(--accent-primary)' : '#666');
-      const lastSeen = u.last_seen ? new Date(u.last_seen).toLocaleDateString() : 'N/A';
+      const lastSeen = u.last_session_date ? new Date(u.last_session_date).toLocaleDateString() : 'N/A';
       
       return `
         <div class="glass card user-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; border-top: 3px solid ${tierColor}; border-radius: 16px; transition: transform 0.2s; position: relative; overflow: hidden;">
@@ -1410,7 +1410,7 @@ export const AdminComponent = {
 
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <span style="font-size: 0.6rem; background: ${tierColor}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">${tier}</span>
-            ${u.is_activated ? '<span style="font-size: 0.6rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">LIFETIME</span>' : ''}
+            ${u.activation_status ? '<span style="font-size: 0.6rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">LIFETIME</span>' : ''}
             <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">${u.role || 'user'}</span>
           </div>
 
@@ -1444,7 +1444,7 @@ export const AdminComponent = {
   },
 
   openUserEditModal(user) {
-    const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleDateString() : 'Never';
+    const lastSeen = user.last_session_date ? new Date(user.last_session_date).toLocaleDateString() : 'Never';
     const modalHtml = `
       <div id="user-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
         <div class="glass card scale-in" style="width: 100%; max-width: 550px; padding: 0; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden;">
@@ -1486,7 +1486,7 @@ export const AdminComponent = {
               <div>
                 <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Account Status</label>
                 <div style="display: flex; align-items: center; gap: 0.75rem; height: 44px;">
-                   <input type="checkbox" id="edit-user-activated" ${user.is_activated ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--success);">
+                   <input type="checkbox" id="edit-user-activated" ${user.activation_status ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--success);">
                    <label for="edit-user-activated" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer; font-weight: 600;">Lifetime Paid</label>
                 </div>
               </div>
@@ -1495,7 +1495,7 @@ export const AdminComponent = {
             <div>
               <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Manual Expiry Override</label>
               <div style="position: relative;">
-                <input type="datetime-local" id="edit-user-expiry" class="glass-input" value="${user.subscription_expiry ? new Date(user.subscription_expiry).toISOString().slice(0, 16) : ''}" style="width: 100%; padding-left: 1rem;">
+                <input type="datetime-local" id="edit-user-expiry" class="glass-input" value="${(user.premium_until || user.subscription_expiry) ? new Date(user.premium_until || user.subscription_expiry).toISOString().slice(0, 16) : ''}" style="width: 100%; padding-left: 1rem;">
               </div>
               <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem;">Select "Premium" above to auto-set 30 days, or override here.</p>
             </div>
@@ -1548,10 +1548,12 @@ export const AdminComponent = {
     }
 
     document.getElementById('save-user-edit').onclick = async () => {
+      const isActivated = document.getElementById('edit-user-activated').checked
+      const expiryInput = document.getElementById('edit-user-expiry')
+      
       const updates = {
-        tier: tierSelect.value,
-        activation_status: tierSelect.value !== 'freemium',
-        subscription_expiry: expiryInput.value || null,
+        activation_status: isActivated,
+        premium_until: expiryInput.value || null,
         ai_credits: parseInt(document.getElementById('edit-user-credits').value) || 0,
         ai_daily_usage: parseInt(document.getElementById('edit-user-ai-usage').value) || 0
       }
@@ -1567,7 +1569,7 @@ export const AdminComponent = {
         saveBtn.disabled = false
       } else {
         // Log Action
-        await DataService.logAdminAction(this._adminProfile.email, 'Update User', user.id, `Tier: ${updates.tier}, Credits: ${updates.ai_credits}`)
+        await DataService.logAdminAction(this._adminProfile.email, 'Update User', user.id, `Active: ${updates.activation_status}, Credits: ${updates.ai_credits}`)
         document.getElementById('user-edit-overlay').remove()
         this.loadUsers()
       }
@@ -2098,12 +2100,14 @@ export const AdminComponent = {
         
         // Group users by creation date (YYYY-MM-DD)
         const signupsByDate = {}
-        users.forEach(u => {
-            if (u.created_at) {
-               const dateStr = new Date(u.created_at).toISOString().split('T')[0]
-               signupsByDate[dateStr] = (signupsByDate[dateStr] || 0) + 1
-            }
-        })
+        if (users && Array.isArray(users)) {
+            users.forEach(u => {
+                if (u.created_at) {
+                   const dateStr = new Date(u.created_at).toISOString().split('T')[0]
+                   signupsByDate[dateStr] = (signupsByDate[dateStr] || 0) + 1
+                }
+            })
+        }
         
         // Sort dates chronologically
         const sortedDates = Object.keys(signupsByDate).sort()
