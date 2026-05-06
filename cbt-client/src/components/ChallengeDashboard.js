@@ -89,8 +89,8 @@ export const ChallengeDashboard = {
                     <h1 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.75rem; color: var(--text-primary); margin: 0;">⚔️ Challenge Mode</h1>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">Compete live against friends in real time</p>
                 </div>
-                <button id="challenge-back-btn" class="btn-secondary" style="height: 40px; padding: 0 1.25rem; font-weight: 700; border-radius: 10px; display: flex; align-items: center; gap: 0.4rem;">
-                    <i data-lucide="arrow-left" style="width: 16px;"></i> BACK
+                <button id="challenge-back-btn" class="header-icon-btn" title="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                    <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
                 </button>
             </div>
 

@@ -393,18 +393,31 @@ async function initApp() {
         return
       }
       
-      // Start Session Heartbeat to enforce single-device rules continuously
+      // Start Session Heartbeat to enforce single-device rules and track activity
       setInterval(async () => {
         try {
+          // 0. Session Health Check
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return; // Stop if user is logged out
+
+          // 1. Single Device Check
           const { data: latestProfile } = await AuthService.getProfile(user.id);
           if (latestProfile && latestProfile.current_session_token !== localToken) {
             console.warn('Session override detected via heartbeat. Logging out local device.')
             await AuthService.signOut()
             window.location.hash = 'session-overlap'
             window.location.reload()
+            return
           }
+
+          // 2. Activity Tracking (Updates every 60s while tab is open)
+          await DataService.updateUser(user.id, { last_active_at: new Date().toISOString() });
+          
         } catch (e) {
-          console.warn("Heartbeat check failed:", e)
+          // Graceful failure: don't alert the student if internet flickers
+          if (e.message !== 'Failed to fetch') {
+            console.warn("Heartbeat background sync paused:", e.message)
+          }
         }
       }, 60000); // Check every 60 seconds
     }

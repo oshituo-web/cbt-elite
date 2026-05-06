@@ -437,7 +437,7 @@ export const DataService = {
         p_score_percentage: parseInt(sessionData.score_percentage) || 0,
         p_time_taken: parseInt(sessionData.time_taken_seconds) || 0,
         p_topics: topicsPayload,
-        p_answered_questions: parseInt(sessionData.answered_questions || sessionData.total_questions) || 0,
+        p_answered_questions: parseInt(sessionData.answered_questions) || 0,
         p_client_date: localDate,
         p_session_type: (sessionData.session_type || 'practice').toString(),
         p_question_source: questionSource
@@ -462,13 +462,22 @@ export const DataService = {
             const diffDays = lastDateObj ? Math.round((todayObj - lastDateObj) / (1000 * 60 * 60 * 24)) : 1;
             
             let newStreak = profile.streak_count || 0;
+            let finalFreezes = profile.streak_freeze_count || 0;
             
             if (diffDays === 1) {
                 newStreak += 1;
                 console.log("Streak Increment:", { todayStr, lastStr: profile.last_session_date, diffDays, newStreak });
-            } else if (diffDays > 1 || !lastDateObj) {
+            } else if (diffDays > 1) {
+                // MISSING DAY: Check for Freeze
+                if (finalFreezes > 0) {
+                    finalFreezes -= 1;
+                    console.log("Streak FROZEN:", { todayStr, lastStr: profile.last_session_date, diffDays, remainingFreezes: finalFreezes });
+                } else {
+                    newStreak = 1;
+                    console.log("Streak Reset:", { todayStr, lastStr: profile.last_session_date, diffDays, newStreak });
+                }
+            } else if (!lastDateObj) {
                 newStreak = 1;
-                console.log("Streak Reset:", { todayStr, lastStr: profile.last_session_date, diffDays, newStreak });
             } else {
                 console.log("Streak: Already recorded today.");
             }
@@ -490,7 +499,8 @@ export const DataService = {
             await supabase.from('users').update({ 
                 streak_count: newStreak, 
                 last_session_date: todayStr,
-                elite_coins: newCoins
+                elite_coins: newCoins,
+                streak_freeze_count: finalFreezes
             }).eq('id', userId);
         }
     } catch (e) {
@@ -1105,7 +1115,7 @@ export const DataService = {
     // 🛡️ FIX: Fetch all necessary columns for Tier Resolution and UI
     const { data, error } = await supabase
       .from('users')
-      .select('id, username, email, tier, role, created_at, is_flagged, flag_reason, league_tier, streak_count, elite_coins, total_questions_answered, activation_status, last_session_date, premium_until, ai_credits, ai_daily_usage')
+      .select('id, username, email, tier, role, created_at, is_flagged, flag_reason, league_tier, streak_count, elite_coins, total_questions_answered, activation_status, last_session_date, premium_until, ai_credits, ai_daily_usage, last_active_at')
       .order('created_at', { ascending: false })
     return { data: data || [], error }
   },
@@ -1295,7 +1305,8 @@ export const DataService = {
         totalUsers: data.total_users || 0,
         totalQuestions: data.total_questions || 0,
         averagePerformance: data.average_score || 0,
-        totalSessions: data.total_sessions || 0
+        totalSessions: data.total_sessions || 0,
+        online_users: data.online_users || 0
       },
       // score_dist powers the histogram chart — replaces the raw sessions array
       sessions: (data.score_dist || []).map(b => ({ score_percentage: b.range_label, count: b.count })),

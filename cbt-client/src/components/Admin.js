@@ -34,8 +34,8 @@ export const AdminComponent = {
                <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 700;">ADMINISTRATOR</div>
                <div style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary);">${profile.username}</div>
             </div>
-            <button id="admin-back-home" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 700; border-radius: 12px; white-space: nowrap;">
-               <i data-lucide="arrow-left" style="width: 18px; margin-right: 0.5rem;"></i> EXIT PANEL
+            <button id="admin-back-home" class="header-icon-btn" title="Exit Panel" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+               <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
             </button>
           </div>
         </header>
@@ -296,10 +296,36 @@ export const AdminComponent = {
 
           <!-- Users Tab -->
           <div id="admin-users-tab" style="display: none;">
-            <div style="margin-bottom: 2.5rem;">
-              <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">User Management</h2>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Monitor accounts, subscriptions, and system access</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--text-primary); margin: 0; font-size: 1.75rem;">User Management</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Monitor accounts, subscriptions, and system access</p>
+              </div>
+              <div style="display: flex; gap: 0.75rem;">
+                <button id="bulk-reminder-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; background: var(--accent-gradient);">
+                   <i data-lucide="bell" style="width: 18px;"></i> BULK REMINDERS
+                </button>
+              </div>
             </div>
+
+            <!-- Quick Stats & Filters -->
+            <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem; border-radius: 16px; display: flex; gap: 2rem; align-items: center; border-left: 4px solid var(--accent-primary);">
+               <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+                  <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary);">Online Now: <span id="users-online-count">0</span></span>
+               </div>
+               <div style="height: 20px; width: 1px; background: var(--glass-border);"></div>
+               <div style="display: flex; align-items: center; gap: 1rem;">
+                  <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Filter:</label>
+                  <select id="user-filter-status" class="glass-select" style="height: 38px; font-size: 0.8rem; padding: 0 1rem;">
+                     <option value="all">All Users</option>
+                     <option value="active">Active (Last 24h)</option>
+                     <option value="inactive">Inactive (> 7 days)</option>
+                     <option value="premium">Premium Only</option>
+                  </select>
+               </div>
+            </div>
+
             <div id="users-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
                <div class="loader-spinner" style="margin: 3rem auto;"></div>
             </div>
@@ -1372,6 +1398,11 @@ export const AdminComponent = {
 
   async loadUsers() {
     const list = document.getElementById('users-list')
+    const onlineCounter = document.getElementById('users-online-count')
+    const filterSelect = document.getElementById('user-filter-status')
+    const bulkBtn = document.getElementById('bulk-reminder-btn')
+    
+    if (!list) return;
     list.innerHTML = 'Loading users...'
     const { data: users, error } = await DataService.getAllUsers()
     
@@ -1380,67 +1411,188 @@ export const AdminComponent = {
       return
     }
     
-    if (!users || users.length === 0) {
-      list.innerHTML = '<div style="color: var(--text-primary);">No users found.</div>'
-      return
+    const now = new Date()
+    const onlineThreshold = 5 * 60 * 1000 // 5 minutes
+    const inactiveThreshold = 7 * 24 * 60 * 60 * 1000 // 7 days
+    const activeThreshold = 24 * 60 * 60 * 1000 // 24 hours
+
+    const render = (filteredUsers) => {
+      if (!filteredUsers || filteredUsers.length === 0) {
+        list.innerHTML = '<div style="color: var(--text-primary); text-align: center; padding: 2rem; width: 100%; grid-column: 1/-1;">No matching users found.</div>'
+        return
+      }
+
+      list.innerHTML = filteredUsers.map(u => {
+        const tier = SubscriptionService.resolveUserTier(u);
+        const tierColor = tier === 'premium' ? 'var(--accent-secondary)' : (tier === 'medium' ? 'var(--accent-primary)' : '#666');
+        
+        const lastActiveTime = u.last_active_at ? new Date(u.last_active_at) : null;
+        const isOnline = lastActiveTime && (now - lastActiveTime) < onlineThreshold;
+        const lastSeenStr = lastActiveTime ? lastActiveTime.toLocaleString() : 'Never';
+        const isInactive = lastActiveTime && (now - lastActiveTime) > inactiveThreshold;
+
+        return `
+          <div class="glass card user-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; border-top: 3px solid ${tierColor}; border-radius: 16px; transition: transform 0.2s; position: relative; overflow: hidden;">
+            
+            ${isOnline ? `
+              <div style="position: absolute; top: 1rem; right: 1rem; display: flex; align-items: center; gap: 0.4rem; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                 <div style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 5px #10b981;"></div>
+                 <span style="font-size: 0.6rem; font-weight: 800; color: #10b981; text-transform: uppercase;">Online</span>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                 <div style="width: 40px; height: 40px; border-radius: 10px; background: ${tierColor}20; color: ${tierColor}; display: flex; align-items: center; justify-content: center;">
+                   <i data-lucide="user" style="width: 20px;"></i>
+                 </div>
+                 <div>
+                   <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1rem; line-height: 1.2;">${u.username || 'Unknown'}</div>
+                   <div style="font-size: 0.75rem; color: var(--text-secondary);">${u.email}</div>
+                 </div>
+              </div>
+              <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
+                 <i data-lucide="settings" style="width: 12px;"></i> EDIT
+              </button>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span style="font-size: 0.6rem; background: ${tierColor}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">${tier}</span>
+              ${u.activation_status ? '<span style="font-size: 0.6rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">LIFETIME</span>' : ''}
+              <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">${u.role || 'user'}</span>
+              ${isInactive ? '<span style="font-size: 0.6rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 4px; font-weight: 900; letter-spacing: 0.05em;">INACTIVE</span>' : ''}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border);">
+              <div>
+                <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">AI Credits</div>
+                <div style="font-family: 'Outfit'; font-weight: 800; color: var(--accent-primary); font-size: 1.1rem;">${u.ai_credits || 0}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Activity</div>
+                <div style="font-family: 'Outfit'; font-weight: 700; color: ${isOnline ? '#10b981' : 'var(--text-primary)'}; font-size: 0.8rem;">${isOnline ? 'Online Now' : lastSeenStr}</div>
+              </div>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="calendar" style="width: 12px;"></i>
+              Joined ${new Date(u.created_at).toLocaleDateString()}
+            </div>
+          </div>
+        `;
+      }).join('')
+
+      document.querySelectorAll('.edit-user-btn').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-id')
+          const user = users.find(u => u.id === id)
+          if (user) this.openUserEditModal(user)
+        }
+      })
+      if (window.lucide) window.lucide.createIcons({ root: list })
     }
 
-    list.innerHTML = users.map(u => {
-      const tier = SubscriptionService.resolveUserTier(u);
-      const tierColor = tier === 'premium' ? 'var(--accent-secondary)' : (tier === 'medium' ? 'var(--accent-primary)' : '#666');
-      const lastSeen = u.last_session_date ? new Date(u.last_session_date).toLocaleDateString() : 'N/A';
-      
-      return `
-        <div class="glass card user-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; border-top: 3px solid ${tierColor}; border-radius: 16px; transition: transform 0.2s; position: relative; overflow: hidden;">
-          
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-               <div style="width: 40px; height: 40px; border-radius: 10px; background: ${tierColor}20; color: ${tierColor}; display: flex; align-items: center; justify-content: center;">
-                 <i data-lucide="user" style="width: 20px;"></i>
-               </div>
-               <div>
-                 <div style="font-family: 'Outfit'; font-weight: 800; color: var(--text-primary); font-size: 1rem; line-height: 1.2;">${u.username || 'Unknown'}</div>
-                 <div style="font-size: 0.75rem; color: var(--text-secondary);">${u.email}</div>
-               </div>
-            </div>
-            <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
-               <i data-lucide="settings" style="width: 12px;"></i> EDIT USER
-            </button>
-          </div>
+    const onlineCount = users.filter(u => u.last_active_at && (now - new Date(u.last_active_at)) < onlineThreshold).length
+    if (onlineCounter) onlineCounter.textContent = onlineCount
 
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <span style="font-size: 0.6rem; background: ${tierColor}; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">${tier}</span>
-            ${u.activation_status ? '<span style="font-size: 0.6rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 900; text-transform: uppercase;">LIFETIME</span>' : ''}
-            <span style="font-size: 0.65rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">${u.role || 'user'}</span>
-          </div>
+    const applyFilter = () => {
+      if (!filterSelect) return
+      const val = filterSelect.value
+      let filtered = [...users]
+      if (val === 'active') filtered = users.filter(u => u.last_active_at && (now - new Date(u.last_active_at)) < activeThreshold)
+      else if (val === 'inactive') filtered = users.filter(u => !u.last_active_at || (now - new Date(u.last_active_at)) > inactiveThreshold)
+      else if (val === 'premium') filtered = users.filter(u => SubscriptionService.resolveUserTier(u) === 'premium')
+      render(filtered)
+    }
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--glass-border);">
-            <div>
-              <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">AI Credits</div>
-              <div style="font-family: 'Outfit'; font-weight: 800; color: var(--accent-primary); font-size: 1.1rem;">${u.ai_credits || 0}</div>
-            </div>
-            <div>
-              <div style="font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;">Last Seen</div>
-              <div style="font-family: 'Outfit'; font-weight: 700; color: var(--text-primary); font-size: 0.9rem;">${lastSeen}</div>
-            </div>
-          </div>
+    if (filterSelect) filterSelect.onchange = applyFilter
+    applyFilter()
 
-          <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem;">
-            <i data-lucide="calendar" style="width: 12px;"></i>
-            Joined ${new Date(u.created_at).toLocaleDateString()}
+    if (bulkBtn) bulkBtn.onclick = () => this.openBulkReminderModal(users)
+  },
+
+  openBulkReminderModal(users) {
+    const now = new Date()
+    const inactiveThreshold = 7 * 24 * 60 * 60 * 1000
+    const inactiveUsers = users.filter(u => !u.last_active_at || (now - new Date(u.last_active_at)) > inactiveThreshold)
+
+    const modalHtml = `
+      <div id="bulk-reminder-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; padding:1.5rem; backdrop-filter: blur(8px);">
+        <div class="glass card scale-in" style="width: 100%; max-width: 600px; padding: 0; border: 1.5px solid var(--accent-primary); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden;">
+          <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+             <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-primary); color: white; display: flex; align-items: center; justify-content: center;">
+                  <i data-lucide="bell" style="width: 18px;"></i>
+                </div>
+                <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.2rem;">Bulk Reminders</h3>
+             </div>
+             <button id="close-bulk-reminder" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(255,255,255,0.05);">
+                <i data-lucide="x" style="width: 18px;"></i>
+             </button>
+          </div>
+          <div style="padding: 2.5rem;">
+             <div class="glass" style="padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
+                <div style="font-weight: 800; color: #ef4444; font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
+                   <i data-lucide="alert-circle" style="width: 16px;"></i>
+                   Inactive Students Detected
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;"><strong>${inactiveUsers.length} users</strong> have not logged any activity on the platform in over 7 days.</div>
+             </div>
+
+             <div style="margin-bottom: 2.5rem;">
+                <label style="font-size: 0.7rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Option 1: Push Dashboard Broadcast</label>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1.25rem;">This message will appear at the top of their dashboard when they next log in.</p>
+                <textarea id="reminder-broadcast-msg" class="glass-input" style="width: 100%; min-height: 100px; padding: 1rem; font-size: 0.9rem;" placeholder="e.g. We miss you! Come back and practice today to maintain your streak."></textarea>
+                <button id="send-reminder-broadcast" class="btn-primary" style="width: 100%; margin-top: 1rem; height: 50px; font-weight: 900; font-family: 'Outfit';">PUSH BROADCAST TO ALL</button>
+             </div>
+
+             <div>
+                <label style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 1rem; letter-spacing: 0.05em;">Option 2: External Email Campaign</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                   <button id="copy-inactive-emails" class="btn-secondary" style="height: 48px; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 12px;">
+                      <i data-lucide="copy" style="width: 16px;"></i> COPY EMAILS
+                   </button>
+                   <button id="open-mail-client" class="btn-secondary" style="height: 48px; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 12px;">
+                      <i data-lucide="mail" style="width: 16px;"></i> OPEN MAIL APP
+                   </button>
+                </div>
+             </div>
           </div>
         </div>
-      `;
-    }).join('')
+      </div>
+    `
+    document.body.insertAdjacentHTML('beforeend', modalHtml)
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('bulk-reminder-overlay') })
 
-    // Attach User Edit Listeners
-    document.querySelectorAll('.edit-user-btn').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-id')
-        const user = users.find(u => u.id === id)
-        if (user) this.openUserEditModal(user)
-      }
-    })
+    document.getElementById('close-bulk-reminder').onclick = () => document.getElementById('bulk-reminder-overlay').remove()
+    
+    document.getElementById('copy-inactive-emails').onclick = () => {
+       navigator.clipboard.writeText(inactiveUsers.map(u => u.email).join('; '))
+       ModalService.showToast('📋 Inactive email list copied!', 'success')
+    }
+
+    document.getElementById('open-mail-client').onclick = () => {
+       const subject = encodeURIComponent("CBT Elite: We Miss You!")
+       const body = encodeURIComponent("Hello! We noticed you haven't practiced on CBT Elite for a while. Come back today to continue your preparation!")
+       window.location.href = `mailto:?bcc=${inactiveUsers.map(u => u.email).join(',')}&subject=${subject}&body=${body}`
+    }
+
+    document.getElementById('send-reminder-broadcast').onclick = async () => {
+       const msg = document.getElementById('reminder-broadcast-msg').value.trim()
+       if (!msg) return ModalService.alert('Message Required', 'Enter a message to broadcast.', 'warning')
+       
+       const btn = document.getElementById('send-reminder-broadcast')
+       btn.disabled = true
+       btn.textContent = 'Pushing...'
+       
+       const { error } = await DataService.updateSystemConfig('broadcast_message', msg)
+       if (error) ModalService.alert('Broadcast Failed', error.message, 'error')
+       else {
+          await DataService.logAdminAction(this._adminProfile.email, 'Bulk Reminder Broadcast', 'global', `Sent to ${inactiveUsers.length} inactive users: ${msg.substring(0, 50)}...`)
+          ModalService.showToast('📡 Reminder broadcast pushed!', 'success')
+          document.getElementById('bulk-reminder-overlay').remove()
+       }
+    }
   },
 
   openUserEditModal(user) {
@@ -2016,6 +2168,16 @@ export const AdminComponent = {
     }
 
     summary.innerHTML = `
+      <div class="glass card stat-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; border-top: 4px solid #10b981; border-radius: 16px; transition: transform 0.2s;">
+        <div style="background: rgba(16, 185, 129, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+          <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Online Now</div>
+          <div style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 900; color: #10b981; line-height: 1;">${stats.online_users || 0}</div>
+        </div>
+      </div>
+
       <div class="glass card stat-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; border-top: 4px solid var(--accent-primary); border-radius: 16px; transition: transform 0.2s;">
         <div style="background: rgba(124, 58, 237, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); border: 1px solid rgba(124, 58, 237, 0.2);">
           <i data-lucide="users" style="width: 24px;"></i>

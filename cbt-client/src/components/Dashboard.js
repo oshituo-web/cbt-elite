@@ -248,6 +248,18 @@ export const DashboardComponent = {
         onBefore: () => this.setActiveTab('progress')
       },
       { 
+        element: "#open-archive-btn", 
+        title: "Real Past Questions Archive", 
+        text: "Access official JAMB, WAEC, and NECO papers from 2010 till date. Perfect for final-stage revision.",
+        onBefore: () => this.setActiveTab('home')
+      },
+      { 
+        element: "#quick-challenge-btn", 
+        title: "Multiplayer Challenge", 
+        text: "Don't study alone! Invite your friends or challenge random elites to a real-time battle for coins and glory.",
+        onBefore: () => this.setActiveTab('home')
+      },
+      { 
         title: "Elite Potential Unlocked", 
         text: "You're now equipped with the ultimate tools. Reach for your dreams—your journey starts now!",
         onBefore: () => this.setActiveTab('home')
@@ -291,7 +303,8 @@ export const DashboardComponent = {
                     
                     // Convert session UTC time to WAT for comparison
                     const sDate = new Date(sUTC.toLocaleString("en-US", {timeZone: "Africa/Lagos"}))
-                    const sessionCount = s.answered_questions ?? s.total_questions ?? 0
+                    // 🔥 FIX: Use answered_questions exclusively for Daily Goal calculation
+                    const sessionCount = s.answered_questions || 0
                     if (sDate.toDateString() === today) {
                         v2_todayQuestions += sessionCount
                         v2_todayCorrect += (s.correct_answers || 0)
@@ -511,7 +524,7 @@ export const DashboardComponent = {
         <div class="premium-dashboard-card scale-in" style="border-left: 3px solid rgba(14, 165, 233, 0.8) !important;">
           <div style="display: flex; gap: 0.75rem; width: 100%;">
              <button id="quick-practice-btn" class="btn-premium-primary" style="flex: 1;"><i data-lucide="target" style="width:18px;"></i> PRACTICE</button>
-             <button id="quick-exam-btn" class="btn-premium-secondary" style="flex: 1;"><i data-lucide="trophy" style="width:18px;"></i> MOCK EXAM</button>
+             <button id="quick-exam-btn" class="btn-premium-amber" style="flex: 1; white-space: nowrap; color: #ffffff !important;"><i data-lucide="trophy" style="width:18px; flex-shrink:0; color: #ffffff;"></i> MOCK EXAM</button>
           </div>
         </div>
 
@@ -994,6 +1007,14 @@ export const DashboardComponent = {
                 document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
                 document.querySelectorAll('#economy-freeze-val').forEach(el => el.innerText = updatedProfile.streak_freeze_count || 0);
             });
+        },
+        'economy-coins-widget': () => {
+            const btn = document.getElementById('open-store-btn');
+            if (btn) btn.click();
+        },
+        'economy-freeze-widget': () => {
+            const btn = document.getElementById('open-store-btn');
+            if (btn) btn.click();
         },
         'open-leaderboard-btn': () => {
             const lbModal = document.getElementById('leaderboard-modal');

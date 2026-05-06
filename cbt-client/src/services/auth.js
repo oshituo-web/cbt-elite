@@ -57,7 +57,27 @@ export const AuthService = {
   },
 
   async signOut() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        // Immediately mark as offline by resetting last_active_at to epoch
+        await supabase.from('users').update({ last_active_at: new Date(0).toISOString() }).eq('id', user.id)
+      }
+    } catch (e) {
+      console.warn("SignOut activity reset failed:", e)
+    }
+
     const { error } = await supabase.auth.signOut()
+    if (!error) {
+        // 🔥 CRITICAL: Clear all user-specific data to prevent stale state (Demotions, Alerts, etc.)
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('elite_') || key.includes('notif') || key.includes('tour') || key.includes('welcome')) {
+                localStorage.removeItem(key);
+            }
+        });
+        // Clear session specific triggers
+        sessionStorage.clear();
+    }
     return { error }
   },
 

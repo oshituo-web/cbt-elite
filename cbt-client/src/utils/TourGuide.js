@@ -192,13 +192,16 @@ export const TourGuide = {
           <button class="skip-tour" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 0.65rem; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 8px; flex-shrink: 0; transition: all 0.2s;">Skip</button>
         </div>
         <p style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin: 0 0 1.5rem 0; font-weight: 500;">${step.text}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-          <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1.25rem;">
+          <!-- PROGRESS DOTS -->
+          <div style="display: flex; gap: 6px; align-items: center; justify-content: center;">
             ${this.steps.map((_, i) => `<div style="width: ${i === this.currentStep ? '16px' : '6px'}; height: 6px; border-radius: 3px; background: ${i === this.currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}; transition: all 0.3s ease;"></div>`).join('')}
           </div>
-          <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-            ${!isFirst ? '<button class="tour-prev btn-secondary" style="padding: 0 1rem; font-size: 0.75rem; font-weight: 800; border-radius: 10px; height: 38px; min-width: 80px; color: white; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">BACK</button>' : ''}
-            <button class="tour-next btn-primary" style="padding: 0 1rem; font-size: 0.75rem; font-weight: 900; border-radius: 10px; background: var(--accent-primary); color: white; border: none; height: 38px; min-width: 100px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);">${isLast ? 'STARTNOW 🚀' : 'NEXT →'}</button>
+          
+          <!-- NAVIGATION BUTTONS -->
+          <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center;">
+            ${!isFirst ? '<button class="tour-prev btn-secondary" style="flex: 1; max-width: 120px; padding: 0 1rem; font-size: 0.75rem; font-weight: 800; border-radius: 12px; height: 42px; color: white; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">BACK</button>' : ''}
+            <button class="tour-next btn-primary" style="flex: 1; max-width: ${isFirst ? '100%' : '140px'}; padding: 0 1rem; font-size: 0.75rem; font-weight: 900; border-radius: 12px; background: var(--accent-primary); color: white; border: none; height: 42px; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);">${isLast ? 'START NOW 🚀' : 'NEXT →'}</button>
           </div>
         </div>
       </div>

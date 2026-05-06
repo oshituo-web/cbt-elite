@@ -2884,9 +2884,15 @@ body.light-mode .option-btn .option-holder {
   }
   
   .exam-header-primary {
-      height: 40px !important; 
-      padding: 0 0.4rem !important;
-      gap: 0.2rem !important;
+      height: auto !important; 
+      padding: 0.35rem 0.4rem 0.45rem 0.4rem !important;
+      gap: 0.15rem !important;
+  }
+
+  .exam-header-secondary {
+      justify-content: center !important;
+      padding-left: 0 !important;
+      gap: 0.8rem !important;
   }
   
   .exam-header-primary .header-left, 
@@ -3655,6 +3661,31 @@ button { min-height: clamp(40px, 6vw, 52px) !important; padding: clamp(8px, 2.5v
     font-family: 'Outfit', sans-serif;
 }
 
+
 .btn-premium-secondary:hover {
     background: rgba(255,255,255,0.08) !important;
+}
+
+.btn-premium-amber {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+    border-radius: 14px !important;
+    font-weight: 900 !important;
+    border: none !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    padding: 0 1rem !important;
+    height: 48px !important;
+    width: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.2s ease !important;
+    font-family: 'Outfit', sans-serif;
+}
+
+.btn-premium-amber:hover {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45) !important;
+    transform: translateY(-2px);
 }

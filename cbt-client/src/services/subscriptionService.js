@@ -26,6 +26,24 @@ export const SubscriptionService = {
       updates.daily_sessions = 0
       updates.daily_questions_count = 0
       updates.last_daily_reset_date = todayStr
+
+      // 🔥 PROACTIVE STREAK AUDIT: Reset or Freeze streak as soon as the day changes
+      if (user.last_session_date) {
+        const lastDateStr = user.last_session_date.substring(0, 10);
+        const lastDate = new Date(lastDateStr + "T00:00:00.000Z");
+        const todayDate = new Date(todayStr + "T00:00:00.000Z");
+        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 1) {
+          if (user.streak_freeze_count > 0) {
+            updates.streak_freeze_count = user.streak_freeze_count - 1;
+            console.log("SubscriptionService: Proactive Streak FROZEN", { diffDays });
+          } else {
+            updates.streak_count = 0;
+            console.log("SubscriptionService: Proactive Streak RESET", { diffDays });
+          }
+        }
+      }
     }
 
 

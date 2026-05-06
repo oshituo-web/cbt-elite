@@ -191,7 +191,7 @@ export class Exam {
         <!-- Persistent Top Bar -->
         <!-- 🏷️ Phase 12: New Dual-Layer Organized Header -->
         <div class="exam-header-wrapper glass">
-          <div class="exam-header-primary" style="display: flex; flex-direction: column; gap: 0.3rem; padding: 0.2rem 0.5rem 0.6rem 0.5rem; align-items: stretch; height: auto;">
+          <div class="exam-header-primary" style="display: flex; flex-direction: column; gap: 0.2rem; padding: 0.35rem 0.5rem; align-items: stretch; height: auto;">
             <!-- Line 1: Source, Exam Type, Calc, Timer -->
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
               <div style="display: flex; align-items: center; gap: 0.4rem;">
@@ -213,7 +213,7 @@ export class Exam {
             </div>
 
             <!-- Line 2: Subject, Count, Topic -->
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-left: 28px; font-size: 0.65rem;">
+            <div class="exam-header-secondary" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-left: 28px; font-size: 0.65rem;">
               <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary); font-weight: 700;">
                 <span id="display-subject" class="meta-subject">...</span>
                 <span style="opacity: 0.5;">•</span>
@@ -1160,6 +1160,7 @@ export class Exam {
             this.profile.id, 
             {
                 total_questions: summary.total,
+                answered_questions: summary.answered_questions,
                 correct_answers: summary.correct,
                 score_percentage: summary.score_percentage,
                 time_taken_seconds: summary.timeTaken,

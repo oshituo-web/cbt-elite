@@ -36,9 +36,8 @@ export const ProfileComponent = {
              <h1 style="font-family: 'Outfit'; font-size: 2.25rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.25rem;">My Profile</h1>
              <p style="color: var(--text-secondary); font-weight: 500;">Manage your identity and preferences.</p>
            </div>
-           <button id="profile-back-btn" class="header-icon-btn" title="Go Back" style="display: flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.5rem 0.75rem; border-radius: 12px; background: rgba(0,0,0,0.05);">
-              <i data-lucide="arrow-left" style="width: 20px;"></i>
-              <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em;">EXIT</span>
+           <button id="profile-back-btn" class="header-icon-btn" title="Exit" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+              <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
            </button>
         </header>
 

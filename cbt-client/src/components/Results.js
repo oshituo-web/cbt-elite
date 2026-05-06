@@ -139,9 +139,8 @@ export const ResultsComponent = {
     container.innerHTML = `
       <div class="results-view-container" style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; box-sizing: border-box;">
         <div class="glass card scale-in" style="padding: 2.5rem 1rem; position: relative; text-align: center; width: 100%; box-sizing: border-box;">
-          <button id="results-back-btn" class="header-icon-btn" title="Go Back" style="position: absolute; top: 1rem; left: 1rem; width: auto; height: 36px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(0,0,0,0.05); gap: 0.35rem;">
-            <i data-lucide="arrow-left" style="width: 16px;"></i>
-            <span style="font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em;">EXIT</span>
+          <button id="results-back-btn" class="header-icon-btn" title="Exit" style="position: absolute; top: 1rem; left: 1rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+            <i data-lucide="arrow-left" style="width: 20px; stroke-width: 3px;"></i>
           </button>
           
           <div style="margin-bottom: 2rem; padding-top: 1rem;">
