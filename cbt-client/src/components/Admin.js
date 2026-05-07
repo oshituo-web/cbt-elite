@@ -3162,7 +3162,6 @@ export const AdminComponent = {
             if (data) el.value = data.value || ''
         }
     }
-    }
   },
 
   async loadDrafts() {
