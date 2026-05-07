@@ -52,6 +52,7 @@ export const AdminComponent = {
             <button class="nav-tab" data-tab="analytics" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-primary);"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</button>
             <button class="nav-tab" data-tab="quality-audit" style="display: flex; align-items: center; gap: 0.75rem; color: var(--success);"><i data-lucide="list-checks" style="width: 18px;"></i> Quality Audit</button>
             <button class="nav-tab" data-tab="lab" style="display: flex; align-items: center; gap: 0.75rem; color: var(--accent-secondary);"><i data-lucide="beaker" style="width: 18px;"></i> AI Question Lab</button>
+            <button class="nav-tab" data-tab="drafts" style="display: flex; align-items: center; gap: 0.75rem; color: var(--warning);"><i data-lucide="file-edit" style="width: 18px;"></i> AI Drafts & Staging</button>
             <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
             ${(profile.role === 'admin' || profile.role === 'super-admin') ? `
               <button class="nav-tab" data-tab="audit" style="display: flex; align-items: center; gap: 0.75rem;"><i data-lucide="scroll-text" style="width: 18px;"></i> Audit Logs</button>
@@ -211,6 +212,28 @@ export const AdminComponent = {
             <div id="lab-empty-state" style="text-align: center; padding: 5rem 2rem; color: var(--text-secondary); background: rgba(255,255,255,0.01); border-radius: 24px; border: 1px dashed var(--glass-border);">
                <i data-lucide="beaker" style="width: 48px; height: 48px; margin-bottom: 1.5rem; opacity: 0.3;"></i>
                <p style="font-weight: 600;">The lab is empty. Select a subject and topic to begin autonomous generation.</p>
+            </div>
+          </div>
+
+          <!-- AI Drafts Tab -->
+          <div id="admin-drafts-tab" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
+              <div>
+                <h2 style="font-family: 'Outfit'; font-weight: 900; color: var(--warning); margin: 0; font-size: 1.75rem;">AI Drafts & Staging</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Review extracted PDF questions before making them live</p>
+              </div>
+              <div style="display: flex; gap: 0.75rem;">
+                <button id="approve-all-drafts-btn" class="btn-primary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; background: var(--success-gradient);">
+                   <i data-lucide="check-check" style="width: 18px;"></i> APPROVE ALL
+                </button>
+                <button id="refresh-drafts-btn" class="btn-secondary" style="height: 48px; padding: 0 1.5rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem;">
+                   <i data-lucide="refresh-cw" style="width: 18px;"></i> REFRESH
+                </button>
+              </div>
+            </div>
+
+            <div id="drafts-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
+               <div class="loader-spinner" style="margin: 4rem auto;"></div>
             </div>
           </div>
 
@@ -609,6 +632,9 @@ export const AdminComponent = {
         if (document.getElementById('admin-lab-tab')) {
           document.getElementById('admin-lab-tab').style.display = target === 'lab' ? 'block' : 'none'
         }
+        if (document.getElementById('admin-drafts-tab')) {
+          document.getElementById('admin-drafts-tab').style.display = target === 'drafts' ? 'block' : 'none'
+        }
 
         // Trigger Data Loads
         if (target === 'questions') this.loadQuestions()
@@ -623,6 +649,7 @@ export const AdminComponent = {
         else if (target === 'staff') this.loadStaff()
         else if (target === 'leagues') this.loadLeagues()
         else if (target === 'lab') this.loadLab()
+        else if (target === 'drafts') this.loadDrafts()
 
         if (window.lucide) window.lucide.createIcons()
       }
@@ -631,6 +658,29 @@ export const AdminComponent = {
     document.getElementById('audit-refresh').onclick = () => this.loadQualityAudit()
 
     document.getElementById('analytics-refresh').onclick = () => this.loadGlobalAnalytics()
+
+    const refreshDraftsBtn = document.getElementById('refresh-drafts-btn');
+    if (refreshDraftsBtn) refreshDraftsBtn.onclick = () => this.loadDrafts();
+
+    const approveAllDraftsBtn = document.getElementById('approve-all-drafts-btn');
+    if (approveAllDraftsBtn) {
+      approveAllDraftsBtn.onclick = async () => {
+        const confirmed = await ModalService.confirm('Approve All?', 'This will publish all drafted questions currently in the staging area. Continue?');
+        if (!confirmed) return;
+        approveAllDraftsBtn.innerHTML = 'Approving...';
+        approveAllDraftsBtn.disabled = true;
+        const { error } = await supabase.from('questions').update({ is_active: true }).eq('is_active', false);
+        if (error) {
+          ModalService.alert('Error', error.message, 'error');
+        } else {
+          ModalService.showToast('All drafts approved and published!', 'success');
+          this.loadDrafts();
+        }
+        approveAllDraftsBtn.innerHTML = '<i data-lucide="check-check" style="width: 18px; margin-right: 0.5rem;"></i> APPROVE ALL';
+        approveAllDraftsBtn.disabled = false;
+        if (window.lucide) window.lucide.createIcons({ root: approveAllDraftsBtn });
+      };
+    }
 
 
     // Question Filters
@@ -1279,8 +1329,8 @@ export const AdminComponent = {
                </div>
                <h3 style="margin: 0; font-family: 'Outfit'; font-weight: 800; font-size: 1.4rem;">Edit Question</h3>
             </div>
-            <button id="cancel-q-edit-x" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-               <i data-lucide="x" style="width: 20px;"></i>
+            <button id="cancel-q-edit-x" style="background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.2); color: #ef4444; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+               <i data-lucide="x" style="width: 24px; stroke-width: 3px;"></i>
             </button>
           </div>
           
@@ -1333,7 +1383,7 @@ export const AdminComponent = {
             <button id="save-q-edit" class="btn-primary" style="flex:2; height: 54px; font-weight: 900; font-family: 'Outfit'; font-size: 1.1rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
                <i data-lucide="save" style="width: 20px;"></i> PERSIST CHANGES
             </button>
-            <button id="cancel-q-edit-btn" class="btn-secondary" style="flex:1; height: 54px; font-weight: 800; border-radius: 12px;">Discard</button>
+            <button id="cancel-q-edit-btn" class="btn-dominant" style="flex:1; height: 54px; font-weight: 900; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border);">DISCARD</button>
           </div>
         </div>
       </div>
@@ -1666,7 +1716,7 @@ export const AdminComponent = {
             <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
                <div style="display: flex; gap: 1rem;">
                  <button id="save-user-edit" class="btn-primary" style="flex:2; height: 50px; font-weight: 800; font-family: 'Outfit';">COMMIT UPDATES</button>
-                 <button id="cancel-user-edit" class="btn-secondary" style="flex:1; height: 50px; font-weight: 700;">CANCEL</button>
+                 <button id="cancel-user-edit" class="btn-dominant" style="flex:1; height: 50px; font-weight: 900; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border);">CANCEL</button>
                </div>
                <button id="flag-user-btn" style="width: 100%; height: 44px; background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 10px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s;">
                   <i data-lucide="flag" style="width: 14px;"></i> FLAG FOR SUSPICIOUS ACTIVITY
@@ -2869,7 +2919,7 @@ export const AdminComponent = {
 
           <!-- Modal Footer (Sticky) -->
           <div style="padding: 1.5rem 2rem; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); display: flex; gap: 1.25rem;">
-            <button id="cancel-news-edit" class="btn-secondary" style="flex:1; height: 54px; font-weight: 800; font-family: 'Outfit'; cursor: pointer; border-radius: 12px; font-size: 1rem;">Cancel</button>
+            <button id="cancel-news-edit" class="btn-dominant" style="flex:1; height: 54px; font-weight: 900; font-family: 'Outfit'; cursor: pointer; border-radius: 12px; font-size: 1rem; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border);">CANCEL</button>
             <button id="save-news-edit" class="btn-primary" style="flex:2; height: 54px; font-weight: 900; font-family: 'Outfit'; cursor: pointer; border: none; background: var(--accent-gradient); color: white !important; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s;">
               ${isEditing ? 'Save Changes' : 'Publish Article'}
             </button>
@@ -3112,6 +3162,115 @@ export const AdminComponent = {
             if (data) el.value = data.value || ''
         }
     }
+    }
+  },
+
+  async loadDrafts() {
+    const list = document.getElementById('drafts-list');
+    if (!list) return;
+
+    list.innerHTML = '<div class="loader-spinner" style="margin: 4rem auto;"></div>';
+
+    try {
+      // Fetch drafted questions (is_active = false)
+      const { data, error } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          subjects (subject_name),
+          question_answers (*)
+        `)
+        .eq('is_active', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; padding: 4rem 2rem; color: var(--text-secondary); background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--glass-border);">
+             <i data-lucide="check-circle" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5; color: var(--success);"></i>
+             <h3 style="font-family: 'Outfit'; margin: 0 0 0.5rem 0; color: var(--text-primary);">All Caught Up!</h3>
+             <p style="margin: 0;">No drafted questions waiting for review.</p>
+          </div>
+        `;
+        if (window.lucide) window.lucide.createIcons({ root: list });
+        return;
+      }
+
+      list.innerHTML = data.map(q => {
+        const answers = Array.isArray(q.question_answers) ? q.question_answers : [];
+        const optA = answers.find(a => a.option_letter === 'A') || {};
+        const optB = answers.find(a => a.option_letter === 'B') || {};
+        const optC = answers.find(a => a.option_letter === 'C') || {};
+        const optD = answers.find(a => a.option_letter === 'D') || {};
+        const isCorrectA = optA.is_correct ? 'color: var(--success); font-weight: bold;' : '';
+        const isCorrectB = optB.is_correct ? 'color: var(--success); font-weight: bold;' : '';
+        const isCorrectC = optC.is_correct ? 'color: var(--success); font-weight: bold;' : '';
+        const isCorrectD = optD.is_correct ? 'color: var(--success); font-weight: bold;' : '';
+
+        return `
+          <div class="glass card draft-card" data-id="${q.id}" style="padding: 1.5rem; border-radius: 16px; border-left: 4px solid var(--warning); margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
+               <div>
+                  <div style="font-size: 0.7rem; font-weight: 800; color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 0.5rem;">
+                     ${q.exam_type} &bull; ${q.subjects?.subject_name || q.subject} &bull; ${q.topic}
+                  </div>
+                  <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); line-height: 1.5;">${q.question_text}</div>
+               </div>
+               <div style="display: flex; gap: 0.5rem; flex-shrink: 0; align-items: flex-start;">
+                  <button class="approve-draft-btn btn-secondary" data-id="${q.id}" title="Approve & Publish" style="height: 38px; width: 38px; padding: 0; border-radius: 10px; color: var(--success); border-color: rgba(34, 197, 94, 0.3);">
+                     <i data-lucide="check" style="width: 18px;"></i>
+                  </button>
+                  <button class="reject-draft-btn btn-secondary" data-id="${q.id}" title="Delete Draft" style="height: 38px; width: 38px; padding: 0; border-radius: 10px; color: var(--error); border-color: rgba(239, 68, 68, 0.3);">
+                     <i data-lucide="trash-2" style="width: 18px;"></i>
+                  </button>
+               </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+               <div style="${isCorrectA}">A. ${optA.option_text || ''}</div>
+               <div style="${isCorrectB}">B. ${optB.option_text || ''}</div>
+               <div style="${isCorrectC}">C. ${optC.option_text || ''}</div>
+               <div style="${isCorrectD}">D. ${optD.option_text || ''}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Events
+      list.querySelectorAll('.approve-draft-btn').forEach(btn => {
+        btn.onclick = async () => {
+          btn.innerHTML = '...';
+          btn.disabled = true;
+          const { error } = await supabase.from('questions').update({ is_active: true }).eq('id', btn.dataset.id);
+          if (error) {
+             ModalService.alert('Error', error.message, 'error');
+             btn.disabled = false;
+             btn.innerHTML = '<i data-lucide="check" style="width: 18px;"></i>';
+             if (window.lucide) window.lucide.createIcons({ root: btn });
+          } else {
+             ModalService.showToast('Question published successfully!', 'success');
+             this.loadDrafts();
+          }
+        };
+      });
+
+      list.querySelectorAll('.reject-draft-btn').forEach(btn => {
+        btn.onclick = async () => {
+          const confirmed = await ModalService.confirm('Delete Draft?', 'This will permanently remove this drafted question.');
+          if (!confirmed) return;
+          btn.innerHTML = '...';
+          btn.disabled = true;
+          await supabase.from('questions').delete().eq('id', btn.dataset.id);
+          ModalService.showToast('Draft deleted.', 'success');
+          this.loadDrafts();
+        };
+      });
+
+      if (window.lucide) window.lucide.createIcons({ root: list });
+
+    } catch (err) {
+      list.innerHTML = `<div style="color: var(--error); text-align: center; padding: 2rem;">Error: ${err.message}</div>`;
+    }
   }
 }
-

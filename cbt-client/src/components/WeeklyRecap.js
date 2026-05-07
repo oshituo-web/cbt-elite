@@ -51,9 +51,8 @@ export const WeeklyRecapComponent = {
 
     modal.innerHTML = `
       <div class="modal-content glass scale-in" style="max-width: 800px; width: 95%; padding: 2.5rem; background: var(--bg-color); border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; margin: auto; border: 1.5px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-        <button id="close-recap" class="header-icon-btn" style="position: absolute; top: 1.25rem; right: 1.25rem; width: auto; height: 36px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); z-index: 10;">
-          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-          <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">EXIT</span>
+        <button id="close-recap" class="header-icon-btn" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary); z-index: 10;">
+          <i data-lucide="x" style="width: 22px; stroke-width: 3px;"></i>
         </button>
         
         <div style="text-align: center; margin-bottom: 2.5rem;">
@@ -155,7 +154,7 @@ export const WeeklyRecapComponent = {
         </div>
 
         <div style="text-align: center; padding-top: 1rem;">
-          <button id="recap-back-btn" class="btn-dominant" style="padding: 0 4rem; height: 56px; font-weight: 900; font-size: 1rem; border-radius: 16px; white-space: nowrap;">EXIT INSIGHTS</button>
+          <button id="recap-back-btn" class="btn-dominant" style="padding: 0 4rem; height: 56px; font-weight: 900; font-size: 1.1rem; border-radius: 16px; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border);">EXIT RECAP</button>
         </div>
       </div>
     `

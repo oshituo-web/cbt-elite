@@ -33,8 +33,8 @@ export const SessionsHistoryComponent = {
                 <h1 style="font-family: 'Outfit'; font-weight: 900; margin: 0; font-size: 1.75rem; color: var(--text-primary);">Session History</h1>
                 <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.9rem;">Review your past performance and growth.</p>
             </div>
-            <button id="close-history-btn" class="header-icon-btn" title="Exit" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
-                <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
+            <button id="close-history-btn" class="header-icon-btn" title="Exit" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                <i data-lucide="arrow-left" style="width: 24px; stroke-width: 3px;"></i>
             </button>
         </div>
 

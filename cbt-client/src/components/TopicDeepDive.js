@@ -26,9 +26,8 @@ export const TopicDeepDiveComponent = {
         
         <!-- Sticky Header -->
         <div style="padding: 1.75rem 2rem 1.25rem; border-bottom: 1px solid var(--glass-border); flex-shrink: 0;">
-          <button id="close-deep-dive" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem; width: auto; height: 32px; padding: 0 0.6rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); z-index: 10;">
-            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-            <span style="font-weight: 800; font-size: 0.65rem; letter-spacing: 0.05em;">CLOSE</span>
+          <button id="close-deep-dive" class="header-icon-btn" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary); z-index: 10;">
+            <i data-lucide="x" style="width: 22px; stroke-width: 3px;"></i>
           </button>
           <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="background: var(--accent-gradient); padding: 0.75rem; border-radius: 14px; color: white; flex-shrink: 0;">
@@ -66,9 +65,7 @@ export const TopicDeepDiveComponent = {
            <button id="modal-focus-btn" class="btn-dominant" style="width: 100%; height: 52px; background: var(--accent-gradient); font-weight: 900; font-size: 1rem;">
              🎯 Drill This Topic — 10 Questions
            </button>
-           <button id="modal-close-btn" class="btn-secondary" style="width: 100%; height: 44px; font-weight: 700; opacity: 0.7;">
-             Exit Study Guide
-           </button>
+           <button id="modal-close-btn" class="btn-dominant" style="width: 100%; height: 50px; font-weight: 900; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border);">EXIT STUDY GUIDE</button>
         </div>
       </div>
     `;

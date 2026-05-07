@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.gstatic.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.paystack.co https://generativelanguage.googleapis.com https://api.paystack.co wss://*.supabase.co; worker-src 'self' blob:; frame-ancestors 'none';">
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/pwa-icon.svg" />
   <link rel="apple-touch-icon" href="/pwa-icon.svg" />
@@ -9,9 +10,7 @@
   <title>CBT Practice - Elite Learning Platform</title>
   <meta name="description"
     content="The ultimate CBT practice platform for JAMB, WAEC, and NECO. Thousands of AI-generated questions, instant results, and detailed performance analytics." />
-
   <meta name="theme-color" content="#0F172A">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.paystack.co;">
   <!-- Paystack loaded lazily on demand via Dashboard.js -->
   <!-- Celebration effects handled via modular imports in main.js -->
 </head>
@@ -25,96 +24,85 @@
           <button id="sidebar-toggle" class="header-icon-btn" title="Toggle Sidebar">
             <i data-lucide="menu"></i>
           </button>
-          <div class="branding-logo" style="display: flex; align-items: center; gap: 0.65rem;">
-            <img src="/brand-icon.png" alt="CBT Elite Logo" style="width: 42px; height: 42px; object-fit: contain; transform: scale(1.15);">
-            <span class="logo-text" style="font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em;">CBT<span
-                class="accent" style="font-size: 0.9em; margin-left: 1px;">Elite</span></span>
-          </div>
-        </div>
-
-        <div class="header-center" style="position: absolute; left: 50%; transform: translateX(-50%); z-index: 10;">
-          <!-- Global Stats Integrated into Top Bar -->
-          <div id="global-stats-bar" style="display: flex; align-items: center; gap: 1rem;">
-            <div id="header-streak" class="streak-mini" title="Your Streak"
-              style="display: flex; align-items: center; justify-content: center; gap: 0.35rem; min-width: 65px; padding: 0.2rem 0.5rem;">
-              <i data-lucide="flame" style="width: 16px; height: 16px; flex-shrink: 0;"></i> <span id="streak-text" style="font-size: 0.8rem; font-weight: 800; text-align: center; line-height: 1;">0</span>
+          <div class="branding-logo">
+            <i data-lucide="graduation-cap" style="color: var(--accent-primary); width: 2.2rem; height: 2.2rem;"></i>
+            <div class="logo-text">
+              <span class="elite">ELITE</span>
+              <span class="cbt">CBT</span>
             </div>
           </div>
         </div>
 
-        <div class="header-actions">
-          <button id="global-news-btn" class="header-icon-btn" title="Exam News & Updates" style="position: relative;">
-            <i data-lucide="bell"></i>
-            <span id="notification-badge" class="notification-count">0</span>
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <div class="header-stats-group">
+            <div class="header-stat glass" id="header-streak" title="Daily Streak">
+              <i data-lucide="flame" style="color: #f97316;"></i>
+              <span id="streak-text">0</span>
+            </div>
+            <div class="header-stat glass" id="header-tier" title="Subscription Status">
+              <i data-lucide="shield-check" style="color: var(--accent-primary);"></i>
+              <span id="tier-text" style="font-size: 0.65rem;">FREE</span>
+            </div>
+          </div>
+          
+          <div class="header-divider"></div>
+          
+          <button id="global-theme-toggle" class="header-icon-btn" title="Toggle Theme">
+            <i data-lucide="sun"></i>
           </button>
-          <button id="global-help-btn" class="header-icon-btn" title="Help Guide"><i
-              data-lucide="help-circle"></i></button>
-          <button id="global-theme-toggle" class="header-icon-btn" title="Toggle Theme"><i
-              data-lucide="sun"></i></button>
-          <div style="width: 1px; height: 24px; background: var(--glass-border); margin: 0 0.5rem;"></div>
-          <div id="profile-trigger" class="user-profile-badge" title="Your Profile">
-            <div class="profile-avatar" id="header-avatar" style="display: none;"></div>
-            <i data-lucide="user-circle" style="color: var(--accent-primary); width: 32px; height: 32px;"></i>
-            <span class="profile-name mobile-hide" id="header-username">Student</span>
+          
+          <div class="profile-trigger glass" id="profile-trigger">
+            <div class="avatar-small" id="header-avatar">S</div>
+            <i data-lucide="user-circle" style="width: 24px; color: var(--accent-primary);"></i>
+            <span class="username-text" id="header-username">Student</span>
+            <i data-lucide="chevron-down" style="width: 16px; opacity: 0.5;"></i>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- 🗺️ Phase 12: Collapsible Side Navigation (Default: Collapsed) -->
-    <aside id="app-sidebar" class="app-sidebar glass collapsed">
+    <!-- 🧭 Phase 12: Premium Sidebar Navigation (Desktop) -->
+    <aside id="app-sidebar" class="sidebar glass">
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-view="dashboard" data-tab="home" title="Home">
-          <i data-lucide="home"></i> <span>Home</span>
+        <button class="nav-item active" data-view="dashboard" data-tab="home">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
         </button>
-        <button class="nav-item" data-view="dashboard" data-tab="progress" title="My Progress">
-          <i data-lucide="line-chart"></i> <span>Progress</span>
+        <button class="nav-item" data-view="exams">
+          <i data-lucide="file-text"></i>
+          <span>Exams</span>
         </button>
-        <button class="nav-item" data-view="dashboard" data-tab="compete" title="Elite Leagues">
-          <i data-lucide="users"></i> <span>Compete</span>
+        <button class="nav-item" data-view="practice">
+          <i data-lucide="book-open"></i>
+          <span>Practice</span>
         </button>
-        <button class="nav-item" data-view="dashboard" data-tab="improve" title="Mastery Center">
-          <i data-lucide="brain"></i> <span>Improve</span>
+        <button class="nav-item" data-view="dashboard" data-tab="progress">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analytics</span>
         </button>
-        <div class="nav-divider"></div>
-        <button class="nav-item" data-view="analytics" title="Elite Insights">
-          <i data-lucide="bar-chart-2"></i> <span>Elite Insights</span>
+        <button class="nav-item" data-view="challenge">
+          <i data-lucide="swords"></i>
+          <span>Challenge</span>
         </button>
-        <div class="nav-divider"></div>
-        <button id="sidebar-admin-btn" class="nav-item" data-view="admin"
-          style="display: none; color: var(--accent-primary);" title="Admin Panel">
-          <i data-lucide="shield-alert"></i> <span>Admin Panel</span>
-        </button>
-        <button id="sidebar-more-btn" class="nav-item" data-view="more" title="More Options">
-          <i data-lucide="more-horizontal"></i> <span>More</span>
+        <button class="nav-item" id="sidebar-admin-btn" data-view="admin" style="display: none;">
+          <i data-lucide="shield-alert"></i>
+          <span>Admin</span>
         </button>
       </nav>
-      <div class="sidebar-footer">
-        <button id="logout-btn" class="nav-item logout" title="Sign Out">
-          <i data-lucide="log-out"></i> <span>Sign Out</span>
-        </button>
 
-        <!-- Legal Disclaimer -->
-        <div class="sidebar-legal mobile-hide"
-          style="font-size: 0.6rem; color: var(--text-secondary); margin-top: auto; padding: 1.5rem 0.5rem 0.5rem; text-align: center; opacity: 0.8; line-height: 1.4;">
-          CBT Elite is an independent educational platform and is not affiliated with JAMB, WAEC, or NECO.
-        </div>
+      <div class="sidebar-footer">
+        <button class="nav-item" id="global-help-btn">
+          <i data-lucide="help-circle"></i>
+          <span>Help Center</span>
+        </button>
+        <button class="nav-item logout" id="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
       </div>
     </aside>
 
-    <!-- 📢 Phase 12: Global News Drawer Container -->
-    <div id="news-drawer" class="news-drawer glass">
-
-      <div class="drawer-header">
-        <h3>📢 Exam News & Updates</h3>
-        <button id="close-news-drawer" class="close-btn">&times;</button>
-      </div>
-      <div id="news-drawer-content" class="drawer-body">
-        <div class="loader-spinner"></div>
-      </div>
-    </div>
-
-    <!-- 📱 Bottom Navigation (Mobile Only) -->
+    <!-- 📱 Phase 12: Bottom Navigation (Mobile) -->
     <nav id="bottom-nav" class="bottom-nav glass">
       <button class="bottom-nav-item active" data-view="dashboard" data-tab="home" title="Home">
         <i data-lucide="home"></i>
@@ -139,214 +127,74 @@
       </button>
     </nav>
 
-    <!-- 🖼️ Phase 10: Main Content Container -->
-    <main id="main-view" class="main-content-area container">
-      <div id="global-loader"
-        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50vh; gap: 1rem;">
+    <!-- 🏗️ Phase 12: Unified Main Content Area -->
+    <main id="main-view" class="main-content-area">
+      <div id="global-loader" class="global-loader">
         <div class="loader-spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
         <p style="color: var(--text-secondary); font-family: 'Outfit'; font-weight: 500;">Initializing platform...</p>
       </div>
-      <div id="auth-container" style="display: none;"></div>
+
       <div id="dashboard-container" style="display: none;"></div>
       <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>
       <div id="admin-container" style="display: none;"></div>
       <div id="settings-container" style="display: none;"></div>
+      <div id="news-article-container" style="display: none;"></div>
+      <div id="practice-container" style="display: none;"></div>
+      <div id="exams-container" style="display: none;"></div>
       <div id="analytics-container" style="display: none;"></div>
       <div id="profile-container" style="display: none;"></div>
-      <div id="news-article-container" style="display: none;"></div>
+      <div id="challenge-container" style="display: none;"></div>
+
+      <!-- ✨ Elite Global Modals (Moved outside main-content-area to prevent fixed-position scrolling bugs caused by contain: paint) ✨ -->
     </main>
 
-    <!-- ✨ Elite Global Modals (Moved outside main-content-area to prevent fixed-position scrolling bugs caused by contain: paint) ✨ -->
     <div id="elite-modals-container">
-      <!-- 🎉 Phase 13: Elite Celebration Modals -->
-      <div id="celebration-modal" class="glass-modal scale-in"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100000; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
-        <div class="glass card"
-          style="width: 100%; max-width: 450px; text-align: center; padding: 3rem 2rem; border: 2px solid var(--accent-primary); box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);">
-          <div id="celebration-icon-container" style="margin-bottom: 1.5rem;">
-            <div
-              style="width: 80px; height: 80px; background: rgba(139, 92, 246, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-              <i id="celebration-icon" data-lucide="award"
-                style="width: 40px; height: 40px; color: var(--accent-primary);"></i>
-            </div>
-          </div>
-          <h1 id="celebration-title"
-            style="font-family: 'Outfit'; font-weight: 900; font-size: 2.2rem; color: var(--text-primary); margin: 0;">
-            MILESTONE! 🎉</h1>
-          <h3 id="celebration-name"
-            style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 700; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 2px;">
-          </h3>
-          <div id="celebration-stars" style="font-size: 1.8rem; margin: 0.5rem 0; color: #f59e0b; letter-spacing: 4px;">
-          </div>
-          <p id="celebration-text" style="color: var(--text-secondary); margin-top: 1rem; line-height: 1.6;"></p>
-          <button id="close-celebration-btn" class="btn-primary"
-            style="margin-top: 2rem; width: 100%; height: 50px; font-size: 1rem; border-radius: 12px; font-weight: 800;">CONTINUE
-            JOURNEY</button>
-        </div>
-      </div>
+      <!-- Weekly Recap, Onboarding, and Special Alerts render here -->
+    </div>
 
-      <!-- 🏆 Elite League Weekly Table Modal -->
-      <div id="league-table-modal" class="glass-modal scale-in"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-        <div class="glass card"
-          style="width: 100%; max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1.5px solid var(--accent-primary);">
-          <div id="league-modal-header"
-            style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(139, 92, 246, 0.05);">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <div id="league-modal-icon-container"
-                style="width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--accent-primary); display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
-                <i id="league-modal-icon" data-lucide="shield" style="width: 24px;"></i>
-              </div>
-              <div>
-                <h2 id="league-modal-title" style="font-family: 'Outfit'; font-weight: 900; margin: 0; line-height: 1;">
-                  League Standings</h2>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.2rem 0 0 0;">Top 10 promote • Ends
-                  in <span id="league-week-timer">--:--:--</span></p>
-              </div>
-            </div>
-            <button id="close-league" class="header-icon-btn"><i data-lucide="x"></i></button>
-          </div>
-          <div id="league-modal-list" style="flex: 1; overflow-y: auto;">
-            <!-- Ranked list injected here -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 🛒 Elite Store Modal -->
-      <div id="elite-store-modal" class="glass-modal scale-in"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: flex-start; justify-content: center; backdrop-filter: blur(8px); padding: max(2rem, env(safe-area-inset-top, 2rem)) 1rem 2rem; overflow-y: auto;">
-        <div class="glass card"
-          style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; position: relative; margin: auto;">
-          <button id="close-store-top" class="header-icon-btn" style="position: absolute; top: 1rem; right: 1rem;"><i
-              data-lucide="x"></i></button>
-          <div style="margin-bottom: 2rem;">
-            <div
-              style="width: 80px; height: 80px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #f59e0b;">
-              <i data-lucide="shopping-bag" style="width: 40px; color: #f59e0b;"></i>
-            </div>
-            <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.8rem; margin: 1rem 0 0.2rem 0;">Elite Store
-            </h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Spend coins to maintain your edge.</p>
-          </div>
-
-          <div class="glass card store-item-card">
-            <div
-              style="width: 48px; height: 48px; color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-              <i data-lucide="snowflake" style="width: 24px;"></i>
-            </div>
-            <div style="flex: 1;">
-              <h4 style="font-family: 'Outfit'; font-weight: 800; margin: 0;">Streak Freeze</h4>
-              <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0.2rem 0 0.5rem 0;">Protects your
-                streak for 24 hours.</p>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 900; color: #f59e0b;">🪙 100 Coins</span>
-                <button id="buy-freeze-btn" class="btn-primary"
-                  style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">PURCHASE</button>
-              </div>
-            </div>
-          </div>
-
-          <button id="close-store" class="btn-secondary" style="margin-top: 2rem; width: 100%;">BACK TO
-            DASHBOARD</button>
-        </div>
-      </div>
-
-      <!-- 🚀 Upgrade Modal -->
-      <div id="upgrade-modal" class="glass-modal scale-in"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100000; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
-        <div class="glass card"
-          style="max-width: 480px; width: 92%; position: relative; padding: 2rem 1rem; text-align: center; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
-          <button id="close-upgrade" class="btn-secondary"
-            style="position: absolute; top: 0.75rem; right: 0.75rem; width: 32px; height: 32px; padding: 0; min-width: auto; border-radius: 50%;"><i
-              data-lucide="x" style="width: 16px;"></i></button>
-          <h2
-            style="font-family: 'Outfit'; margin-bottom: 0.5rem; font-weight: 900; color: var(--text-primary); font-size: 1.5rem;">
-            CBT Elite Pro</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Unlock AI-powered learning.
-          </p>
-
-          <div style="margin-bottom: 1.5rem;">
-            <div style="display: flex; gap: 0.5rem;">
-              <input type="text" id="promo-code-input" class="glass-input" placeholder="Promo Code"
-                style="flex: 1; text-transform: uppercase;">
-              <button id="apply-promo-btn" class="btn-secondary">Apply</button>
-            </div>
-            <p id="promo-msg" style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--success); display: none;"></p>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="glass card pricing-card-lifetime">
-              <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">LIFETIME ACCESS</h4>
-              <div id="lifetime-price-display"
-                style="font-size: 2rem; font-weight: 900; color: var(--accent-primary); margin: 0.4rem 0;">...</div>
-              <button id="pay-lifetime-btn" class="btn-dominant" style="width: 100%; height: 48px;">ACTIVATE
-                NOW</button>
-            </div>
-            <div class="glass card pricing-card-monthly">
-              <h4 style="font-weight: 800; font-size: 0.85rem; text-transform: uppercase;">MONTHLY RENEWAL</h4>
-              <div id="monthly-price-display"
-                style="font-size: 2rem; font-weight: 900; color: var(--accent-secondary); margin: 0.4rem 0;">...</div>
-              <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Unlimited AI &
-                Unlimited Sessions</p>
-              <button id="pay-monthly-btn" class="btn-dominant"
-                style="width: 100%; height: 48px; background: var(--accent-secondary);">RENEW NOW</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🏆 Weekly Leaderboard Modal (Fallback) -->
-      <div id="leaderboard-modal" class="glass-modal scale-in"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: flex-start; justify-content: center; backdrop-filter: blur(8px); padding: max(2rem, env(safe-area-inset-top, 2rem)) 1rem 2rem; overflow-y: auto;">
-        <div class="glass card"
-          style="width: 100%; max-width: 500px; padding: 2.5rem; text-align: center; max-height: none; display: flex; flex-direction: column; position: relative; margin: auto;">
-          <button id="close-leaderboard-top" class="header-icon-btn"
-            style="position: absolute; top: 1rem; right: 1rem;"><i data-lucide="x"></i></button>
-          <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.8rem; margin: 0;">Global Top 50</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem;">Elite performers across the platform.</p>
-          <div id="leaderboard-list" style="overflow-y: auto; max-height: 60vh; padding-right: 0.5rem; flex: 1;"></div>
-          <button id="close-leaderboard" class="btn-secondary"
-            style="margin-top: 2rem; width: 100%; flex-shrink: 0;">CLOSE</button>
-        </div>
-      </div>
-    </div> <!-- End of elite-modals-container -->
-
-    <!-- More Options Drawer (Bottom sheet on mobile / Fly-out on desktop) -->
-    <div id="more-drawer" class="more-drawer">
+    <!-- 📢 System Drawers (News & Alerts) -->
+    <div id="news-drawer" class="news-drawer glass card">
       <div class="drawer-header">
-        <h3><i data-lucide="grid-2x2"></i> More</h3>
-        <button id="close-more-drawer" class="close-btn">&times;</button>
+        <h3>Exam News & Updates</h3>
+        <button id="close-news-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
       </div>
-      <div class="drawer-body">
-        <div class="more-menu-list">
-          <button class="more-menu-item" data-view="profile">
-            <i data-lucide="user-circle"></i>
-            <span>My Profile</span>
-          </button>
-          <button class="more-menu-item" data-view="analytics">
-            <i data-lucide="bar-chart-2"></i>
-            <span>Elite Insights</span>
-          </button>
-          <button class="more-menu-item" data-view="settings">
-            <i data-lucide="settings"></i>
-            <span>App Settings</span>
-          </button>
-          <button class="more-menu-item" id="more-news-btn" style="position: relative;">
-            <i data-lucide="bell"></i>
-            <span>News & Updates</span>
-            <span id="more-notification-badge" class="notification-count" style="display: none; position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);">0</span>
-          </button>
-          <button class="more-menu-item" id="more-help-btn">
-            <i data-lucide="help-circle"></i>
-            <span>Help & Guide</span>
+      <div id="news-drawer-content" class="drawer-content">
+        <!-- News items render here via DataService -->
+      </div>
+    </div>
+
+    <div id="more-drawer" class="news-drawer glass card">
+      <div class="drawer-header">
+        <h3 style="font-family: 'Outfit'; font-weight: 900;">Elite Menu</h3>
+        <button id="close-more-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer-content" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <button class="more-menu-item" data-view="profile">
+          <i data-lucide="user-circle"></i>
+          <span>My Profile</span>
+        </button>
+        <button class="more-menu-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </button>
+        <div class="menu-divider"></div>
+        <button class="more-menu-item" id="more-news-btn">
+          <i data-lucide="megaphone"></i>
+          <span>Exam News</span>
+        </button>
+        <button class="more-menu-item" id="more-help-btn">
+          <i data-lucide="help-circle"></i>
+          <span>Help Guide</span>
+        </button>
+        <div class="menu-divider"></div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+          <button class="more-menu-item" id="more-about-btn">
+            <i data-lucide="info"></i>
+            <span>About Us</span>
           </button>
           <button class="more-menu-item" id="more-contact-btn">
             <i data-lucide="mail"></i>
-            <span>Contact Us</span>
-          </button>
-          <button class="more-menu-item" id="more-about-btn">
-            <i data-lucide="info"></i>
-            <span>About CBT Elite</span>
+            <span>Contact Support</span>
           </button>
           <div class="menu-divider"></div>
           <button class="more-menu-item logout" id="more-logout-btn">
@@ -359,6 +207,7 @@
 
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
   </div>
+  <div id="auth-container" style="display: none;"></div>
   <script type="module" src="/main.js?v=13"></script>
 </body>
 

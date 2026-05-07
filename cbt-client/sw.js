@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cbt-elite-v13' // Incremented on every deploy
+const CACHE_NAME = 'cbt-elite-v14' // Incremented on every deploy
 
 const ASSETS = [
   '/',

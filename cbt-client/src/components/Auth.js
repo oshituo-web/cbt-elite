@@ -4,6 +4,7 @@ export const AuthComponent = {
   render(onAuthSuccess) {
     const container = document.getElementById('auth-container')
     container.style.display = 'block'
+    document.body.style.overflow = 'hidden'
     container.innerHTML = `
       <div class="auth-split-wrapper" style="animation: fadeIn 0.4s ease;">
         <div class="auth-hero">
@@ -28,6 +29,17 @@ export const AuthComponent = {
             
             <div id="auth-error" class="glass" style="color: var(--error); font-size: 0.95rem; font-weight: 700; text-align: center; margin-bottom: 2rem; padding: 1.25rem; background: rgba(239, 68, 68, 0.08); border-radius: 12px; display: none; line-height: 1.5; border: 1px solid rgba(239, 68, 68, 0.2); font-family: 'Outfit';"></div>
             <div id="auth-success" class="glass" style="color: var(--success); font-size: 0.95rem; font-weight: 700; text-align: center; margin-bottom: 2rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.08); border-radius: 12px; display: none; line-height: 1.5; border: 1px solid rgba(16, 185, 129, 0.2); font-family: 'Outfit';"></div>
+
+            <button id="google-signin" class="glass card" style="width: 100%; height: 52px; display: flex; align-items: center; justify-content: center; gap: 1rem; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 2px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin: 0; padding: 0;">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px;">
+              <span style="font-weight: 800; font-family: 'Outfit'; font-size: 0.95rem;">Continue with Google</span>
+            </button>
+
+            <div style="margin: 2rem 0; display: flex; align-items: center; gap: 16px;">
+              <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+              <span style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.2em; font-family: 'Outfit';">OR LOGIN WITH EMAIL</span>
+              <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+            </div>
 
             <form id="auth-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
               <div style="display: flex; flex-direction: column; gap: 0.6rem;">
@@ -58,17 +70,6 @@ export const AuthComponent = {
               
               <button type="button" id="toggle-auth" style="background: none; color: var(--text-primary); font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; border: none; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; font-family: 'Outfit';">Don't have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span></button>
             </form>
-
-            <div style="margin: 2.5rem 0 2rem 0; display: flex; align-items: center; gap: 16px;">
-              <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
-              <span style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.2em; font-family: 'Outfit';">OR LOGIN WITH</span>
-              <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
-            </div>
-
-            <button id="google-signin" class="glass card" style="width: 100%; height: 52px; display: flex; align-items: center; justify-content: center; gap: 1rem; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 2px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin: 0; padding: 0;">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px;">
-              <span style="font-weight: 800; font-family: 'Outfit'; font-size: 0.95rem;">Google Account</span>
-            </button>
           </div>
         </div>
       </div>
@@ -297,6 +298,7 @@ export const AuthComponent = {
     if (this._testimonialTimer) {
       clearInterval(this._testimonialTimer);
     }
+    document.body.style.overflow = ''
     document.getElementById('auth-container').style.display = 'none'
   }
 }

@@ -63,8 +63,8 @@ export const AITutorSidebar = {
                         <div class="tutor-status">${topic ? 'Topic Expert' : 'Online & Ready'}</div>
                     </div>
                 </div>
-                <button id="close-tutor-btn" class="icon-btn">
-                    <i data-lucide="x"></i>
+                <button id="close-tutor-btn" class="header-icon-btn" style="width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x" style="width: 20px; stroke-width: 3px;"></i>
                 </button>
             </div>
 

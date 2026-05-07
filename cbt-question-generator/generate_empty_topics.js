@@ -9,7 +9,7 @@ const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1;
 
 // TARGET FOCUS
-const TARGET_EXAMS = ['WAEC', 'NECO'];
+const TARGET_EXAMS = ['WAEC'];
 const TARGET_SUBJECTS = []; 
 const COVERAGE_THRESHOLD = 5;
 
@@ -70,6 +70,9 @@ async function withDBRetry(operation, maxRetries = 3) {
             if (error) throw error;
             return { data, error: null };
         } catch (err) {
+            if (err.code === '23505' || (err.message && err.message.includes('unique constraint'))) {
+                return { data: null, error: err };
+            }
             console.error(`[DB Retry Error] Attempt ${attempt}:`, err.message);
             if (attempt === maxRetries) return { data: null, error: err };
             await delay(Math.pow(2, attempt) * 500);
@@ -121,13 +124,24 @@ async function saveToDatabase(items) {
 
         if (qsToInsert.length === 0) continue;
 
-        const { data: insertedQs, error: qErr } = await withDBRetry(() => supabase.from('questions').insert(qsToInsert).select());
-        if (qErr) continue;
+        let insertedQs = [];
+        let validOriginals = [];
+        for (let i = 0; i < qsToInsert.length; i++) {
+             const { data: qData, error: qErr } = await withDBRetry(() => supabase.from('questions').insert(qsToInsert[i]).select());
+             if (!qErr && qData && qData.length > 0) {
+                 insertedQs.push(qData[0]);
+                 validOriginals.push(originals[i]);
+             } else {
+                 console.log(`[GENERATOR] Skipping question (duplicate or error).`);
+             }
+        }
+
+        if (insertedQs.length === 0) continue;
 
         // Phase 2: Insert Answers (Normalized)
         const ansInserts = [];
         insertedQs.forEach((insQ, idx) => {
-            const orig = originals[idx];
+            const orig = validOriginals[idx];
             ['A', 'B', 'C', 'D'].forEach(letter => {
                 ansInserts.push({ 
                     question_id: insQ.id, 
@@ -145,7 +159,7 @@ async function saveToDatabase(items) {
             }
         });
         
-        await withDBRetry(() => supabase.from('question_answers').insert(ansInserts));
+        await withDBRetry(() => supabase.from('answers').insert(ansInserts));
         successCount += insertedQs.length;
     }
     return successCount;

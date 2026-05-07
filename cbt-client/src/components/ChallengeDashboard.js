@@ -465,7 +465,7 @@ export const ChallengeDashboard = {
                     `).join('')}
                 </div>
                 <button id="challenge-play-again-btn" class="btn-primary" style="width: 100%; height: 52px; font-weight: 900; background: var(--accent-gradient); margin-bottom: 0.75rem;">PLAY AGAIN</button>
-                <button id="challenge-exit-btn" class="btn-secondary" style="width: 100%; height: 44px; font-weight: 700;">Exit to Dashboard</button>
+                <button id="challenge-exit-btn" class="btn-dominant" style="width: 100%; height: 52px; font-weight: 900; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);">EXIT TO DASHBOARD</button>
             </div>
         `;
 

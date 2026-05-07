@@ -136,8 +136,8 @@ export const ModalService = {
     
     overlay.innerHTML = `
       <div class="glass card scale-in" style="width:100%; max-width:${options.maxWidth || '500px'}; max-height: 90vh; overflow-y: ${allowScroll ? 'auto' : 'hidden'}; border-radius:24px; border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,0.6); position: relative; display: flex; flex-direction: column;">
-        <button id="elite-modal-close" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;">
-          <i data-lucide="x" style="width: 18px;"></i>
+        <button id="elite-modal-close" class="header-icon-btn" style="position: absolute; top: 1.25rem; right: 1.25rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary); z-index: 100;">
+          <i data-lucide="x" style="width: 22px; stroke-width: 3px;"></i>
         </button>
         ${html}
       </div>

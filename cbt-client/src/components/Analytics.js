@@ -177,8 +177,8 @@ export const AnalyticsComponent = {
               <h1 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.75rem; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">Elite Insights</h1>
               <p style="color: var(--text-secondary); font-weight: 500; font-size: 0.85rem; margin-top: 0.2rem;">Advanced Performance Analytics</p>
             </div>
-            <button id="analytics-back-btn" class="header-icon-btn" title="Dashboard" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
-                <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
+            <button id="analytics-back-btn" class="header-icon-btn" title="Dashboard" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                <i data-lucide="arrow-left" style="width: 24px; stroke-width: 3px;"></i>
             </button>
           </header>
 

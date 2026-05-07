@@ -22,8 +22,8 @@ export const SettingsComponent = {
     container.innerHTML = `
       <div class="container animate-fadeIn" style="max-width: 860px; padding-bottom: 4rem;">
         <header style="margin-top: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
-          <button id="settings-back-btn" class="header-icon-btn" title="Exit" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
-            <i data-lucide="arrow-left" style="width: 22px; stroke-width: 3px;"></i>
+          <button id="settings-back-btn" class="header-icon-btn" title="Exit" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+            <i data-lucide="arrow-left" style="width: 24px; stroke-width: 3px;"></i>
           </button>
           <div>
             <h1 style="font-family: 'Outfit'; font-size: 1.85rem; font-weight: 900; color: var(--text-primary); margin: 0;">App Settings</h1>

@@ -257,7 +257,7 @@ export const DashboardComponent = {
         element: "#quick-challenge-btn", 
         title: "Multiplayer Challenge", 
         text: "Don't study alone! Invite your friends or challenge random elites to a real-time battle for coins and glory.",
-        onBefore: () => this.setActiveTab('home')
+        onBefore: () => this.setActiveTab('compete')
       },
       { 
         title: "Elite Potential Unlocked", 
@@ -548,43 +548,6 @@ export const DashboardComponent = {
             <i data-lucide="chevron-right" style="width: 18px; color: var(--accent-secondary); opacity: 0.7;"></i>
         </div>
 
-        <!-- 🏆 CLAN HUB -->
-        <div class="premium-dashboard-card scale-in" id="home-league-announcement" style="cursor: pointer; flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid var(--accent-primary) !important;">
-            <div style="width: 48px; height: 48px; background: rgba(37, 99, 235, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0;">
-                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
-            </div>
-            <div style="flex: 1;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
-                   <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary);">
-                       Clan & League HUB
-                   </h4>
-                   <span id="home-clash-timer" style="font-size: 0.65rem; font-weight: 900; color: var(--accent-primary); background: rgba(37, 99, 235, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px; font-variant-numeric: tabular-nums;">--:--:--</span>
-                </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
-                   Compete with elite students platform-wide.
-                </p>
-            </div>
-            <i data-lucide="chevron-right" style="width: 18px; color: var(--accent-primary); opacity: 0.7;"></i>
-        </div>
-
-        <!-- ⚔️ MULTIPLAYER CHALLENGE -->
-        <div class="premium-dashboard-card scale-in" style="flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid #f43f5e !important;">
-            <div style="width: 48px; height: 48px; background: rgba(244, 63, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f43f5e; flex-shrink: 0;">
-                <i data-lucide="swords" style="width: 24px; height: 24px;"></i>
-            </div>
-            <div style="flex: 1;">
-                <h4 style="margin: 0 0 0.2rem 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary);">
-                    Multiplayer Challenge
-                </h4>
-                <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
-                   Invite and compete with your friends.
-                </p>
-                <button id="quick-challenge-btn" class="btn-premium-secondary" style="height: 40px !important; font-size: 0.8rem !important; width: auto !important; padding: 0 1rem !important;">
-                   START CHALLENGE
-                </button>
-            </div>
-        </div>
-
         <!-- LEARNING STREAK CARD -->
         <div class="premium-dashboard-card scale-in" style="flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid var(--warning) !important;">
           <div class="streak-flame-container ${profile.streak_count > 0 ? 'active' : ''}" style="width: 48px; height: 48px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -833,6 +796,24 @@ export const DashboardComponent = {
           `}
           </div>
         </div>
+        
+        <!-- ⚔️ MULTIPLAYER CHALLENGE -->
+        <div class="premium-dashboard-card scale-in" style="flex-direction: row; align-items: center; gap: 1rem; border-left: 3px solid #f43f5e !important; margin-bottom: 1.25rem;">
+            <div style="width: 48px; height: 48px; background: rgba(244, 63, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f43f5e; flex-shrink: 0;">
+                <i data-lucide="swords" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 0.2rem 0; font-family: 'Outfit'; font-weight: 900; font-size: 1rem; color: var(--text-primary);">
+                    Multiplayer Challenge
+                </h4>
+                <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; line-height: 1.3;">
+                   Invite and compete with your friends.
+                </p>
+                <button id="quick-challenge-btn" class="btn-premium-secondary" style="height: 40px !important; font-size: 0.8rem !important; width: auto !important; padding: 0 1rem !important;">
+                   START CHALLENGE
+                </button>
+            </div>
+        </div>
 
         <!-- Rankings Section -->
         <div id="open-leaderboard-btn" class="glass card mb-md" style="padding: 1.25rem 1rem; border-bottom: 4px solid var(--success); cursor: pointer;">
@@ -1009,27 +990,27 @@ export const DashboardComponent = {
             });
         },
         'economy-coins-widget': () => {
-            const btn = document.getElementById('open-store-btn');
-            if (btn) btn.click();
+            EliteStoreComponent.render(profile, (updatedProfile) => {
+                document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
+                document.querySelectorAll('#economy-freeze-val').forEach(el => el.innerText = updatedProfile.streak_freeze_count || 0);
+            });
         },
         'economy-freeze-widget': () => {
-            const btn = document.getElementById('open-store-btn');
-            if (btn) btn.click();
+            EliteStoreComponent.render(profile, (updatedProfile) => {
+                document.querySelectorAll('#economy-coins-val').forEach(el => el.innerText = updatedProfile.elite_coins);
+                document.querySelectorAll('#economy-freeze-val').forEach(el => el.innerText = updatedProfile.streak_freeze_count || 0);
+            });
         },
         'open-leaderboard-btn': () => {
-            const lbModal = document.getElementById('leaderboard-modal');
-            if (lbModal) {
-                openModal(lbModal);
-                this.loadLeaderboard(profile);
-            }
+            this._openLeaderboardModal(profile);
         },
         'close-leaderboard': () => {
             const lbModal = document.getElementById('leaderboard-modal');
-            if (lbModal) lbModal.style.display = 'none';
+            if (lbModal) lbModal.remove();
         },
         'close-leaderboard-top': () => {
             const lbModal = document.getElementById('leaderboard-modal');
-            if (lbModal) lbModal.style.display = 'none';
+            if (lbModal) lbModal.remove();
         },
         'launch-elite-insights-btn': () => {
             if (typeof window.navigateTo === 'function') {
@@ -1059,19 +1040,19 @@ export const DashboardComponent = {
             }
         },
         'open-league-btn': () => {
-            const leagueModal = document.getElementById('league-table-modal');
-            if (leagueModal) {
-                openModal(leagueModal);
-                this.loadLeagueModalTable(profile);
-            }
+            this._openLeagueModal(profile, 'table');
         },
         'close-league': () => {
             const leagueModal = document.getElementById('league-table-modal');
-            if (leagueModal) leagueModal.style.display = 'none';
+            if (leagueModal) leagueModal.remove();
         },
         'start-clash-btn': (e) => {
             e.stopPropagation();
             this.handleClashStart();
+        },
+        'view-clash-results-btn': (e) => {
+            e.stopPropagation();
+            this._openLeagueModal(profile, 'clash');
         },
         'change-clan-btn': (e) => {
             e.stopPropagation();

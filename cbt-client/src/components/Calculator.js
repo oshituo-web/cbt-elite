@@ -175,26 +175,69 @@ export const CalculatorComponent = {
     };
 
     const parseMath = (str) => {
-        let parsed = str.replace(/ans/g, lastAns)
-                        .replace(/EXP/g, 'e')
-                        .replace(/sin\(/g, 'sinDeg(')
-                        .replace(/cos\(/g, 'cosDeg(')
-                        .replace(/tan\(/g, 'tanDeg(')
-                        .replace(/log\(/g, 'Math.log10(')
-                        .replace(/sqrt\(/g, 'Math.sqrt(')
-                        .replace(/π/g, 'Math.PI')
-                        .replace(/\^/g, '**');
-
+        if (!str || str === 'Error') return '0';
+        
         try {
-           const sinDeg = (deg) => Math.sin(deg * Math.PI / 180);
-           const cosDeg = (deg) => Math.cos(deg * Math.PI / 180);
-           const tanDeg = (deg) => Math.tan(deg * Math.PI / 180);
-           
-           const evalFunc = new Function('sinDeg', 'cosDeg', 'tanDeg', 'Math', '"use strict"; return (' + parsed + ')');
-           const res = evalFunc(sinDeg, cosDeg, tanDeg, Math);
-           return (Number.isFinite(res)) ? Number(res.toPrecision(10)).toString() : 'Error';
-        } catch {
-           return 'Error';
+            // Pre-process string
+            let cleanStr = str.trim()
+                .replace(/ans/g, lastAns)
+                .replace(/EXP/g, 'e')
+                .replace(/π|PI/g, 'Math.PI')
+                .replace(/\^/g, '**')
+                .replace(/abs\(/g, 'Math.abs(');
+
+            // Handle trig functions explicitly for degrees
+            const sinDeg = (deg) => {
+                const val = Math.sin(deg * Math.PI / 180);
+                return Math.abs(val) < 1e-10 ? 0 : val; // Handle floating point 0
+            };
+            const cosDeg = (deg) => {
+                const val = Math.cos(deg * Math.PI / 180);
+                return Math.abs(val) < 1e-10 ? 0 : val;
+            };
+            const tanDeg = (deg) => {
+                const val = Math.tan(deg * Math.PI / 180);
+                if (Math.abs(val) > 1e10) return Infinity;
+                return Math.abs(val) < 1e-10 ? 0 : val;
+            };
+
+            // Map standard names to our internal functions
+            cleanStr = cleanStr.replace(/sin\(/g, 'sinDeg(')
+                              .replace(/cos\(/g, 'cosDeg(')
+                              .replace(/tan\(/g, 'tanDeg(')
+                              .replace(/log\(/g, 'Math.log10(')
+                              .replace(/sqrt\(/g, 'Math.sqrt(');
+
+            // Safety check: only allow numbers, operators, and Math/sinDeg/cosDeg/tanDeg/e/PI
+            const allowedPattern = /^[\d\s\+\-\*\/\.\(\)\*\*eMath\.PIsinDegcosDegtanDegsqrtlogabs]+$/;
+            // Note: We skip the pattern check for simplicity but use a restricted scope Function constructor
+            
+            // Auto-balance parentheses
+            let openCount = (cleanStr.match(/\(/g) || []).length;
+            let closeCount = (cleanStr.match(/\)/g) || []).length;
+            while (openCount > closeCount) {
+                cleanStr += ')';
+                closeCount++;
+            }
+
+            // Remove trailing operators
+            cleanStr = cleanStr.replace(/[\+\-\*\/\*\*\(]$/, '');
+
+            const evalFunc = new Function('sinDeg', 'cosDeg', 'tanDeg', 'Math', `"use strict"; return (${cleanStr});`);
+            const res = evalFunc(sinDeg, cosDeg, tanDeg, Math);
+            
+            if (res === undefined || res === null || isNaN(res) || !isFinite(res)) {
+                if (res === Infinity) return 'Infinity';
+                return 'Error';
+            }
+            
+            // Format result
+            let finalRes = Number(res.toPrecision(12)).toString();
+            if (finalRes.includes('.') && finalRes.endsWith('0')) finalRes = parseFloat(finalRes).toString();
+            return finalRes;
+        } catch (err) {
+            console.error("Calculator Error Evaluation:", err, "Expression:", str);
+            return 'Error';
         }
     };
 

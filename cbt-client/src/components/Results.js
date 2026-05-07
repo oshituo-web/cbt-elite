@@ -139,8 +139,8 @@ export const ResultsComponent = {
     container.innerHTML = `
       <div class="results-view-container" style="width: 100%; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; box-sizing: border-box;">
         <div class="glass card scale-in" style="padding: 2.5rem 1rem; position: relative; text-align: center; width: 100%; box-sizing: border-box;">
-          <button id="results-back-btn" class="header-icon-btn" title="Exit" style="position: absolute; top: 1rem; left: 1rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
-            <i data-lucide="arrow-left" style="width: 20px; stroke-width: 3px;"></i>
+          <button id="results-back-btn" class="header-icon-btn" title="Exit" style="position: absolute; top: 1.5rem; left: 1.5rem; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+            <i data-lucide="arrow-left" style="width: 24px; stroke-width: 3px;"></i>
           </button>
           
           <div style="margin-bottom: 2rem; padding-top: 1rem;">

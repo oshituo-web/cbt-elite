@@ -71,7 +71,9 @@ export class Exam {
     let initialTime = 0
     const isTheory = questions.some(q => q.question_type === 'theory')
 
-    if (this.mode === 'exam') {
+    if (questions.length === 50) {
+      initialTime = 45 * 60
+    } else if (this.mode === 'exam') {
       if (this.examType === 'JAMB') {
         initialTime = 120 * 60 // 2 hours
       } else {
@@ -85,6 +87,14 @@ export class Exam {
 
     this.initialTime = initialTime
     this.remainingTime = initialTime
+
+    this._handleBeforeUnload = (e) => {
+      if (!this.isReviewMode) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    }
+    window.addEventListener('beforeunload', this._handleBeforeUnload);
 
     // Fetch granular config for feature unlocks
     this.systemConfig = {
@@ -199,13 +209,13 @@ export class Exam {
                   <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
                 </button>
                 <span id="source-label" style="font-size: 0.65rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;">...</span>
-                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.55rem !important;">...</span>
+                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.65rem !important; padding: 0.2rem 0.6rem; min-width: 80px; text-align: center;">...</span>
               </div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: auto; height: auto;">
-                  <i data-lucide="calculator" style="width: 14px; height: 14px; color: var(--text-secondary);"></i>
+                  <i data-lucide="calculator" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
                 </button>
-                <div id="timer" class="timer-mini" style="color: var(--success); font-size: 0.7rem; background: #ffffff; padding: 0.15rem 0.4rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);">00:00</div>
+                <div id="timer" class="timer-mini" style="color: #10B981; font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); font-family: 'Monaco', monospace; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 60px; text-align: center;">00:00</div>
                 <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.2rem;">
                   <i data-lucide="bot" style="width: 16px; height: 16px;"></i>
                 </button>
@@ -219,7 +229,7 @@ export class Exam {
                 <span style="opacity: 0.5;">•</span>
                 <div id="q-meta" class="q-counter-mini" style="font-size: 0.65rem; background: transparent; padding: 0; border: none; box-shadow: none;">1 of 0</div>
               </div>
-              <span id="display-topic" class="meta-topic" style="color: var(--text-secondary); font-weight: 700; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;">...</span>
+              <span id="display-topic" class="meta-topic" style="background: #2563EB; color: #FFFFFF !important; font-weight: 800; font-size: 0.45rem; padding: 0.15rem 0.5rem; border-radius: 4px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">...</span>
             </div>
           </div>
         </div>
@@ -388,6 +398,7 @@ export class Exam {
         // Stop timer and clean up
         TimerService.stop()
         window.removeEventListener('keydown', this._handleKeyDown)
+        window.removeEventListener('beforeunload', this._handleBeforeUnload)
         document.getElementById('exam-container').style.display = 'none'
         
         if (onBack) {
@@ -1147,6 +1158,7 @@ export class Exam {
     if (force) {
       TimerService.stop()
       window.removeEventListener('keydown', this._handleKeyDown)
+      window.removeEventListener('beforeunload', this._handleBeforeUnload)
 
       // Capture session data BEFORE clearing session
       const summary = this.session ? this.session.getSummary() : null;

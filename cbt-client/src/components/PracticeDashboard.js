@@ -28,9 +28,8 @@ export const PracticeDashboardComponent = {
     practiceContainer.innerHTML = `
       <div class="container animate-fadeIn" style="width: 100%; max-width: 1200px; padding: 1.5rem 1rem; box-sizing: border-box;">
         <header style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <button id="practice-back-btn" class="header-icon-btn" title="Go Back" style="display: flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.5rem 0.75rem; border-radius: 12px; background: rgba(0,0,0,0.05);">
-            <i data-lucide="arrow-left" style="width: 20px;"></i>
-            <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em;">EXIT</span>
+          <button id="practice-back-btn" class="header-icon-btn" title="Go Back" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1.5px solid var(--glass-border); color: var(--text-primary);">
+            <i data-lucide="arrow-left" style="width: 24px; stroke-width: 3px;"></i>
           </button>
           <div style="flex: 1; min-width: 200px;">
             <h1 style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0;">Practice Center</h1>
@@ -88,7 +87,9 @@ export const PracticeDashboardComponent = {
               <h3 id="practice-title" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.15rem; color: var(--accent-primary);">Configure Session</h3>
               <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Select subject and topic to begin.</p>
             </div>
-            <button id="close-practice-config" class="btn-secondary" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; min-width: auto;">&times;</button>
+            <button id="close-practice-config" class="header-icon-btn" style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-primary);">
+              <i data-lucide="x" style="width: 20px; stroke-width: 3px;"></i>
+            </button>
           </div>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
