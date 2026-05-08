@@ -506,19 +506,50 @@ export class Exam {
       }
     }
 
-    const mapToggle = document.getElementById('mobile-map-toggle')
     const sidebar = document.getElementById('exam-sidebar')
     const overlay = document.getElementById('exam-drawer-overlay')
-    if (mapToggle && sidebar && overlay) {
-      mapToggle.onclick = () => {
-        sidebar.classList.add('drawer-open')
-        overlay.classList.add('drawer-open')
-      }
+
+    if (sidebar && overlay) {
+      // Open when tap on the peek handle area (top 64px when collapsed)
+      sidebar.addEventListener('click', (e) => {
+        if (!sidebar.classList.contains('drawer-open')) {
+          sidebar.classList.add('drawer-open')
+          overlay.classList.add('drawer-open')
+        }
+      })
+
+      // Close via overlay tap
       overlay.onclick = () => {
         sidebar.classList.remove('drawer-open')
         overlay.classList.remove('drawer-open')
       }
+
+      // Touch swipe: swipe up = open, swipe down = close
+      let touchStartY = 0
+      let touchStartX = 0
+      sidebar.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY
+        touchStartX = e.touches[0].clientX
+      }, { passive: true })
+
+      sidebar.addEventListener('touchend', (e) => {
+        const deltaY = touchStartY - e.changedTouches[0].clientY
+        const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX)
+        // Only register vertical swipes (deltaX < 50 avoids horizontal scroll conflicts)
+        if (deltaX < 50) {
+          if (deltaY > 40 && !sidebar.classList.contains('drawer-open')) {
+            // Swipe up → open
+            sidebar.classList.add('drawer-open')
+            overlay.classList.add('drawer-open')
+          } else if (deltaY < -40 && sidebar.classList.contains('drawer-open')) {
+            // Swipe down → close
+            sidebar.classList.remove('drawer-open')
+            overlay.classList.remove('drawer-open')
+          }
+        }
+      }, { passive: true })
     }
+
 
     if (window.lucide) {
       window.lucide.createIcons();

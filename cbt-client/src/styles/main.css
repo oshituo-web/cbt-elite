@@ -372,16 +372,11 @@ body::before {
   gap: 16px;
 }
 
-@media (max-width: 1023px) {
-  #sidebar-toggle {
-      display: none !important;
-  }
-}
 
 @media (max-width: 480px) {
   .branding-header {
-      height: 60px !important;
-      padding: 0 0.85rem !important;
+      height: 56px !important;
+      padding: 0 0.65rem !important;
   }
   .branding-header .header-content {
       padding: 0;
@@ -390,56 +385,65 @@ body::before {
       gap: 0;
   }
 
+  /* Left side: hamburger + logo — keep compact */
+  .branding-header > .header-content > div:first-child {
+      gap: 0.4rem !important;
+      flex-shrink: 0;
+  }
+
+  /* Right side: tighten gaps */
+  .branding-header > .header-content > div:last-child {
+      gap: 0.4rem !important;
+  }
+
   .header-actions {
       gap: 0.25rem;
   }
-  
-  /* Left align logo area and enlarge brand name */
-  .logo-area {
-      margin-right: auto;
-      display: flex;
-      align-items: center;
-  }
 
   .logo-text {
-      font-size: 2.1rem !important;
-      font-weight: 700 !important;
-  }
-  
-  .logo-text .accent {
-      font-size: 1.2rem !important;
-      font-weight: 900 !important; /* 'Elite' part made bolder */
-      color: var(--accent-secondary); /* Give 'Elite' a distinct color accent */
+      font-size: 1.3rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.02em !important;
   }
 
+  .logo-text .accent {
+      font-size: 0.9rem !important;
+      font-weight: 900 !important;
+      color: var(--accent-secondary);
+  }
+
+
+
   .header-icon-btn {
-      padding: 0.75rem !important; /* Larger touch target */
+      width: 34px !important;
+      height: 34px !important;
+      padding: 6px !important;
   }
 
   .header-icon-btn .lucide {
-      width: 24px !important;
-      height: 24px !important;
-  }
-  
-  .streak-mini .lucide {
-      width: 1.25rem !important;
-      height: 1.25rem !important;
+      width: 20px !important;
+      height: 20px !important;
   }
 
-  .header-actions a span, 
+  /* Hide the header divider */
+  .header-divider {
+      display: none !important;
+  }
+
+  .streak-mini .lucide {
+      width: 1.1rem !important;
+      height: 1.1rem !important;
+  }
+
+  .header-actions a span,
   .header-actions div span,
   .logo-area span span {
       display: none !important;
   }
-  
-  .header-center {
-      transform: none; /* removed scaling */
-      margin: 0 !important;
 
-  }
-  
-  #header-tier {
-      display: flex !important;
+  .header-center {
+      transform: none;
+      margin: 0 !important;
   }
 }
 
@@ -469,6 +473,37 @@ body::before {
       width: 32px !important;
       height: 32px !important;
   }
+}
+
+.header-stat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0 0.4rem !important;
+  height: 28px !important;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  min-width: 48px; /* Always wide enough to show number */
+  white-space: nowrap; /* Never wrap streak digits */
+}
+
+#header-streak i {
+  flex-shrink: 0;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+#streak-text {
+  display: inline !important; /* Force visible on all screen sizes */
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+body.dark-mode #help-guide-btn {
+  color: #3730A3 !important; /* Prevent text from disappearing into white background */
 }
 
 .header-icon-btn {
@@ -629,17 +664,18 @@ body::before {
 }
 
 .app-sidebar {
+  position: fixed; /* Always fixed — desktop as a rail, mobile as an overlay */
   top: var(--header-height);
   left: 0;
   bottom: 0;
   width: var(--sidebar-width);
   background: var(--surface-color);
   border-right: 1px solid var(--glass-border);
-  display: flex;
+  display: none; /* Hidden by default; shown by desktop media query or mobile-open class */
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1500;
   border-radius: 0;
 }
@@ -788,12 +824,29 @@ body::before {
   .elite-layout {
     flex-direction: column;
   }
-  .app-sidebar {
+  /* Sidebar hidden by default on mobile — shown as overlay via .mobile-open class */
+  .app-sidebar, .sidebar {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    width: min(280px, 80vw);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 5000;
+    box-shadow: 4px 0 30px rgba(0,0,0,0.3);
+  }
+  .app-sidebar.mobile-open, .sidebar.mobile-open {
+    display: flex; /* Override base display:none when opened on mobile */
+    transform: translateX(0);
+    z-index: 5000;
+  }
+  
+  /* Hide the hamburger menu button on mobile since we use Bottom Nav */
+  #sidebar-toggle {
     display: none !important;
   }
-  #sidebar-toggle {
-    display: none !important; 
-  }
+  
   .bottom-nav {
     display: flex !important;
     height: var(--bottom-nav-height) !important;
@@ -2348,18 +2401,11 @@ body.light-mode .option-btn .option-holder {
 }
 
 @media (max-width: 1024px) {
-  .app-sidebar {
-    transform: translateX(-100%);
-  }
+  /* Ensure sidebar-overlay is visible when active on mobile */
   .sidebar-overlay.active {
     display: block;
   }
-  .app-sidebar.active {
-    transform: translateX(0);
-  }
-  .main-content {
-    margin-left: 0 !important;
-  }
+  /* If someone clicks overlay, sidebar closes */
 }
 
 /* Empty State / CTA styling */
@@ -2812,44 +2858,77 @@ body.light-mode .option-btn .option-holder {
   overflow-y: auto;
 }
 
-/* Mobile specific overrides for bottom sheet */
+/* Mobile specific overrides for persistent peek bottom sheet */
 @media (max-width: 900px) {
   .exam-content-wrapper {
     grid-template-columns: 1fr;
   }
 
+  /* The exam-main needs bottom padding so content isn't hidden behind the peek */
+  .exam-main {
+    padding: 1.5rem;
+    padding-bottom: calc(1.5rem + 64px) !important;
+  }
+
   .exam-sidebar {
     position: fixed;
-    bottom: 0; /* Anchored to bottom */
-    transform: translateY(100%); /* Hidden below bottom edge */
+    bottom: 0;
+    /* Peek: translateY(calc(100% - 64px)) always shows 64px handle */
+    transform: translateY(calc(100% - 64px));
     left: 0;
     right: 0;
     width: 100%;
-    height: 70vh; /* Premium bottom sheet height */
+    height: 75vh;
     z-index: 10000;
     border-left: none;
     border-top: 2px solid var(--accent-primary);
-    border-radius: 32px 32px 0 0;
+    border-radius: 28px 28px 0 0;
     transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
-    padding: 3.5rem 1.5rem 1.5rem; /* Increased top padding to fix hidden lines */
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.35);
+    /* Top padding: handle (30px) + label (34px) */
+    padding: 3.5rem 1.5rem 1.5rem;
+    visibility: visible;
+    pointer-events: auto;
   }
 
-  /* Handle for the bottom sheet */
-  .exam-sidebar::after {
+  /* Drag handle pill */
+  .exam-sidebar::before {
     content: '';
     position: absolute;
-    top: 12px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 40px;
+    width: 44px;
     height: 5px;
     background: var(--glass-border);
     border-radius: 10px;
   }
 
+  /* Peek label shown when collapsed */
+  .exam-sidebar::after {
+    content: '📋 Question Map';
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-family: 'Outfit', sans-serif;
+    transition: opacity 0.2s ease;
+  }
+
+  /* When fully open, fade out the after-label */
+  .exam-sidebar.drawer-open::after {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .exam-sidebar.drawer-open {
-    transform: translateY(0); /* Slide up to be visible */
+    transform: translateY(0);
   }
 
   .drawer-overlay {
@@ -2858,7 +2937,7 @@ body.light-mode .option-btn .option-holder {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.6);
     backdrop-filter: blur(4px);
     z-index: 9999;
     opacity: 0;
@@ -2869,10 +2948,6 @@ body.light-mode .option-btn .option-holder {
   .drawer-overlay.drawer-open {
     opacity: 1;
     pointer-events: auto;
-  }
-
-  .exam-main {
-    padding: 1.5rem;
   }
 }
 

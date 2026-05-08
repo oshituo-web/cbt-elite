@@ -113,11 +113,20 @@ export const TourGuide = {
     if (!el) return null;
     
     try {
-      // Ensure html2canvas is available (using the one from node_modules if possible, fallback to CDN)
+      // Load html2canvas from jsdelivr.net (already in CSP whitelist)
       if (!window.html2canvas) {
         await new Promise((resolve, reject) => {
+          // Check if a load is already in progress to avoid duplicate script tags
+          if (document.querySelector('script[data-html2canvas]')) {
+            // Wait for existing load to finish
+            const wait = setInterval(() => {
+              if (window.html2canvas) { clearInterval(wait); resolve(); }
+            }, 100);
+            return;
+          }
           const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+          script.setAttribute('data-html2canvas', '1');
           script.onload = resolve;
           script.onerror = reject;
           document.head.appendChild(script);
@@ -126,7 +135,7 @@ export const TourGuide = {
       
       const canvas = await window.html2canvas(el, { 
         backgroundColor: null, 
-        scale: 2, // Sharpness
+        scale: 2,
         logging: false,
         useCORS: true,
         allowTaint: true,
@@ -134,10 +143,11 @@ export const TourGuide = {
       });
       return canvas.toDataURL('image/png');
     } catch (e) {
-      console.error("TourGuide: html2canvas failed", e);
+      console.warn("TourGuide: html2canvas unavailable, skipping screenshot", e);
       return null;
     }
   },
+
 
   async showStep() {
     const step = this.steps[this.currentStep];

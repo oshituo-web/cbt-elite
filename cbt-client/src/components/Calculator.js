@@ -186,10 +186,9 @@ export const CalculatorComponent = {
                 .replace(/\^/g, '**')
                 .replace(/abs\(/g, 'Math.abs(');
 
-            // Handle trig functions explicitly for degrees
             const sinDeg = (deg) => {
                 const val = Math.sin(deg * Math.PI / 180);
-                return Math.abs(val) < 1e-10 ? 0 : val; // Handle floating point 0
+                return Math.abs(val) < 1e-10 ? 0 : val;
             };
             const cosDeg = (deg) => {
                 const val = Math.cos(deg * Math.PI / 180);
@@ -201,17 +200,20 @@ export const CalculatorComponent = {
                 return Math.abs(val) < 1e-10 ? 0 : val;
             };
 
-            // Map standard names to our internal functions
             cleanStr = cleanStr.replace(/sin\(/g, 'sinDeg(')
                               .replace(/cos\(/g, 'cosDeg(')
                               .replace(/tan\(/g, 'tanDeg(')
                               .replace(/log\(/g, 'Math.log10(')
                               .replace(/sqrt\(/g, 'Math.sqrt(');
 
-            // Safety check: only allow numbers, operators, and Math/sinDeg/cosDeg/tanDeg/e/PI
-            const allowedPattern = /^[\d\s\+\-\*\/\.\(\)\*\*eMath\.PIsinDegcosDegtanDegsqrtlogabs]+$/;
-            // Note: We skip the pattern check for simplicity but use a restricted scope Function constructor
-            
+            // Repeatedly remove trailing operators, decimal points, or open parentheses before auto-balancing
+            while (/[\+\-\*\/\(\.]$/.test(cleanStr)) {
+                cleanStr = cleanStr.slice(0, -1);
+            }
+            // Remove double operators like ** if trailing
+            if (cleanStr.endsWith('**')) cleanStr = cleanStr.slice(0, -2);
+            if (cleanStr.endsWith('e')) cleanStr = cleanStr.slice(0, -1);
+
             // Auto-balance parentheses
             let openCount = (cleanStr.match(/\(/g) || []).length;
             let closeCount = (cleanStr.match(/\)/g) || []).length;
@@ -219,9 +221,15 @@ export const CalculatorComponent = {
                 cleanStr += ')';
                 closeCount++;
             }
+            
+            // Clean empty parens that cause syntax errors like 8*()
+            cleanStr = cleanStr.replace(/\(\)/g, '');
+            // Repeatedly remove trailing operators again if any were left exposed
+            while (/[\+\-\*\/\(\.]$/.test(cleanStr)) {
+                cleanStr = cleanStr.slice(0, -1);
+            }
 
-            // Remove trailing operators
-            cleanStr = cleanStr.replace(/[\+\-\*\/\*\*\(]$/, '');
+            if (!cleanStr) return '0';
 
             const evalFunc = new Function('sinDeg', 'cosDeg', 'tanDeg', 'Math', `"use strict"; return (${cleanStr});`);
             const res = evalFunc(sinDeg, cosDeg, tanDeg, Math);

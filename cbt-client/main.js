@@ -9,7 +9,7 @@ import './src/styles/main.css'
 // handles stale cache invalidation correctly without destroying offline functionality.
 
 // 🚀 PERMANENT CACHE SOLUTION: Version Syncing
-const APP_VERSION = 'v13';
+const APP_VERSION = 'v14';
 console.log(`[System] App version ${APP_VERSION} starting...`);
 const savedVersion = localStorage.getItem('cbt_elite_version');
 
@@ -320,7 +320,10 @@ async function initApp() {
     const bottomNav = document.getElementById('bottom-nav');
     
     if (header) header.style.display = 'flex';
-    if (sidebar) sidebar.style.display = 'flex';
+    // Sidebar visibility is controlled by CSS media queries:
+    // - Desktop (>=1024px): display:flex via @media (min-width: 1024px)
+    // - Mobile (<1024px): display:none — do NOT set inline style here
+    if (sidebar) sidebar.removeAttribute('style'); // Clear any lingering inline styles
     if (bottomNav) bottomNav.style.display = 'flex';
 
     // Global Theme Initialization (Corrected for .dark-mode architecture)
@@ -758,14 +761,15 @@ function setupGlobalActions(profile) {
     }
   });
 
-  // Sidebar overlay (click to close all)
+  // Sidebar overlay (click to close all drawers & mobile sidebar)
   const sidebarOverlay = document.getElementById('sidebar-overlay');
   if (sidebarOverlay) {
     sidebarOverlay.onclick = () => {
       newsDrawer?.classList.remove('active');
       moreDrawer?.classList.remove('active');
       sidebarOverlay.classList.remove('active');
-      document.getElementById('app-sidebar')?.classList.remove('active');
+      // Close mobile sidebar overlay
+      document.getElementById('app-sidebar')?.classList.remove('active', 'mobile-open');
     };
   }
 
@@ -773,7 +777,22 @@ function setupGlobalActions(profile) {
   if (sidebarToggle && sidebar && !sidebarToggle.dataset.init) {
     sidebarToggle.dataset.init = "true"
     sidebarToggle.onclick = () => {
-      sidebar.classList.toggle('collapsed')
+      const isMobile = window.innerWidth < 1024;
+      if (isMobile) {
+        // On mobile: toggle as a slide-in overlay
+        const isActive = sidebar.classList.toggle('mobile-open');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (overlay) overlay.classList.toggle('active', isActive);
+      } else {
+        // On desktop: collapse/expand
+        sidebar.classList.toggle('collapsed');
+        const mainArea = document.querySelector('.main-content-area');
+        if (mainArea) {
+          mainArea.style.marginLeft = sidebar.classList.contains('collapsed')
+            ? 'var(--sidebar-collapsed-width)'
+            : 'var(--sidebar-width)';
+        }
+      }
     }
   }
 
@@ -792,11 +811,22 @@ function setupGlobalActions(profile) {
   }
 
   // 3. Global Help Guide
-  const helpBtn = document.getElementById('global-help-btn')
-  if (helpBtn && !helpBtn.dataset.init) {
-    helpBtn.dataset.init = "true"
-    helpBtn.onclick = () => {
-      HelpGuide.show()
+  const helpBtns = [document.getElementById('global-help-btn'), document.getElementById('header-help-btn')]
+  helpBtns.forEach(btn => {
+    if (btn && !btn.dataset.init) {
+      btn.dataset.init = "true"
+      btn.onclick = () => {
+        HelpGuide.show()
+      }
+    }
+  })
+
+  // 4. Header Notification Button
+  const headerNotifBtn = document.getElementById('header-notification-btn')
+  if (headerNotifBtn && !headerNotifBtn.dataset.init) {
+    headerNotifBtn.dataset.init = "true"
+    headerNotifBtn.onclick = () => {
+      toggleNewsDrawer('notifications')
     }
   }
 }
@@ -1010,13 +1040,18 @@ function hideAll(isExam = false, forceHideLayout = false) {
   
   if (isExam || isAuth) {
     if (header) header.style.display = 'none'
+    // Force-hide sidebar with inline style in exam/auth mode
     if (sidebar) sidebar.style.display = 'none'
     if (bottomNav) bottomNav.style.display = 'none'
     document.body.classList.add('in-exam')
   } else {
     if (header) header.style.display = 'flex'
-    if (sidebar) sidebar.style.display = 'flex'
-    if (bottomNav) bottomNav.style.display = 'flex'
+    // Let CSS media queries control sidebar: visible on desktop, hidden on mobile.
+    // Removing the inline style allows the CSS @media (min-width: 1024px) rule
+    // (display: flex !important) and the mobile default (display: none) to take effect.
+    if (sidebar) sidebar.removeAttribute('style')
+    // Bottom nav: show normally (CSS !important on mobile handles this correctly)
+    if (bottomNav) bottomNav.style.removeProperty('display')
     document.body.classList.remove('in-exam')
   }
 }
@@ -1138,35 +1173,75 @@ function showAboutModal() {
   modal.style.zIndex = '10000';
 
   modal.innerHTML = `
-    <div class="modal-content glass" style="width: min(600px, 92vw); max-height: 85vh; overflow-y: auto; padding: 0; border-radius: 24px;">
-      <div style="background: var(--primary); padding: 2rem; color: white; position: relative;">
-        <h2 style="font-family: 'Outfit'; font-weight: 900; margin-bottom: 0.5rem;">About CBT Elite</h2>
-        <p style="opacity: 0.9; font-weight: 500;">The Future of Exam Preparation</p>
+    <div class="modal-content glass" style="width: min(600px, 92vw); max-height: 90vh; overflow-y: auto; padding: 0; border-radius: 24px;">
+      <div style="background: linear-gradient(135deg, #1e40af 0%, #5b21b6 100%); padding: 2rem; color: white; position: relative;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <img src="/brand-icon.png" alt="CBT Elite" style="width: 36px; height: 36px; border-radius: 8px;">
+          <h2 style="font-family: 'Outfit'; font-weight: 900; margin: 0;">CBT Elite</h2>
+        </div>
+        <p style="opacity: 0.9; font-weight: 500; margin: 0;">Nigeria's Most Advanced Exam Prep Platform</p>
         <button id="close-about-modal" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">&times;</button>
       </div>
-      <div style="padding: 2.5rem; color: var(--text-primary);">
-        <div style="margin-bottom: 2rem;">
-          <h3 style="color: var(--accent-primary); font-family: 'Outfit'; margin-bottom: 1rem;">Our Mission</h3>
-          <p style="line-height: 1.7; font-size: 1.05rem; color: var(--text-secondary);">CBT Elite is Nigeria's most advanced examination preparation platform. We specialize in providing high-quality, AI-powered study tools for JAMB, WAEC, and NECO candidates. Our mission is to empower students with the technology they need to excel in their academic pursuits through realistic simulations and deep analytics.</p>
+
+      <div style="padding: 2rem; color: var(--text-primary);">
+        <!-- Mission -->
+        <div style="margin-bottom: 1.75rem;">
+          <h3 style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 800; margin-bottom: 0.75rem; font-size: 1rem;">🎯 Our Mission</h3>
+          <p style="line-height: 1.7; font-size: 0.95rem; color: var(--text-secondary);">CBT Elite is built to transform how Nigerian students prepare for JAMB, WAEC, and NECO. We combine AI-powered question generation, real exam simulations, deep performance analytics, and a competitive league system — all in one sleek, mobile-first platform designed to give every student a real shot at excellence.</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-          <div class="glass card" style="padding: 1.25rem; border: 1px solid var(--glass-border);">
-            <h4 style="margin-bottom: 0.5rem; color: var(--primary);">AI-Powered</h4>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Personalized explanations and performance tracking driven by advanced AI.</p>
+        <!-- Feature Grid -->
+        <h3 style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 800; margin-bottom: 1rem; font-size: 1rem;">✨ Platform Features</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">🧠</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">AI Practice Engine</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">AI-generated questions tailored to your weak areas and target exams.</p>
           </div>
-          <div class="glass card" style="padding: 1.25rem; border: 1px solid var(--glass-border);">
-            <h4 style="margin-bottom: 0.5rem; color: var(--primary);">Realistic</h4>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Exam interfaces designed to mimic actual JAMB and WAEC software perfectly.</p>
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">📚</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">Past Questions Bank</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Thousands of verified JAMB, WAEC & NECO past questions with expert explanations.</p>
+          </div>
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">🏆</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">Competitive Leagues</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Join clans, climb league tables, and clash with friends in live competitions.</p>
+          </div>
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">📊</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">Deep Analytics</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Track subject mastery, daily streaks, weak topics, and accuracy trends.</p>
+          </div>
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">🔬</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">Topic Deep Dives</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Master every topic with AI-guided deep dives, notes, and micro-sessions.</p>
+          </div>
+          <div class="glass card" style="padding: 1rem; border: 1px solid var(--glass-border);">
+            <div style="font-size: 1.4rem; margin-bottom: 0.4rem;">🌙</div>
+            <h4 style="margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.9rem;">Mobile-First Design</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Dark mode, bottom navigation, and a premium app-like experience on any device.</p>
           </div>
         </div>
 
-        <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
-          <p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">
-            Version 2.1.2 - Built for Excellence.
-            <a href="#" id="force-update-link" style="color: var(--accent-primary); margin-left: 10px; font-weight: 700; text-decoration: underline; cursor: pointer;">(Force Update)</a>
+        <!-- Legal Links -->
+        <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem; margin-bottom: 1.25rem;">
+          <h3 style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 800; margin-bottom: 0.75rem; font-size: 1rem;">📜 Legal</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            <a href="/terms" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Terms of Use</a>
+            <a href="/privacy" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Privacy Policy</a>
+            <a href="mailto:cbtellite@gmail.com" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Contact Support</a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top: 1px solid var(--glass-border); padding-top: 1.25rem;">
+          <p style="font-size: 0.82rem; color: var(--text-secondary);">
+            Version 3.0.0 &mdash; Built for Excellence.
+            <a href="#" id="force-update-link" style="color: var(--accent-primary); margin-left: 8px; font-weight: 700; text-decoration: underline; cursor: pointer;">Force Update</a>
             <br>
-            &copy; 2026 CBT Elite Learning Systems.
+            &copy; 2026 CBT Elite Learning Systems. All rights reserved.
           </p>
         </div>
       </div>

@@ -24,45 +24,39 @@
           <button id="sidebar-toggle" class="header-icon-btn" title="Toggle Sidebar">
             <i data-lucide="menu"></i>
           </button>
-          <div class="branding-logo">
-            <i data-lucide="graduation-cap" style="color: var(--accent-primary); width: 2.2rem; height: 2.2rem;"></i>
+          <div class="branding-logo" style="display: flex; align-items: center; gap: 0.5rem;">
+            <img src="/brand-icon.png" alt="CBT Elite" style="width: 2.2rem; height: 2.2rem; object-fit: contain;">
             <div class="logo-text">
-              <span class="elite">ELITE</span>
               <span class="cbt">CBT</span>
+              <span class="elite">ELITE</span>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1.25rem;">
-          <div class="header-stats-group">
-            <div class="header-stat glass" id="header-streak" title="Daily Streak">
-              <i data-lucide="flame" style="color: #f97316;"></i>
-              <span id="streak-text">0</span>
-            </div>
-            <div class="header-stat glass" id="header-tier" title="Subscription Status">
-              <i data-lucide="shield-check" style="color: var(--accent-primary);"></i>
-              <span id="tier-text" style="font-size: 0.65rem;">FREE</span>
-            </div>
+        <div class="header-actions">
+          <div class="header-stat glass" id="header-streak" title="Daily Streak" style="margin-right: 0.25rem;">
+            <i data-lucide="flame" style="color: #f97316;"></i>
+            <span id="streak-text">0</span>
           </div>
           
-          <div class="header-divider"></div>
-          
+          <button id="header-notification-btn" class="header-icon-btn" title="Notifications" style="position: relative;">
+            <i data-lucide="bell"></i>
+            <span id="notification-badge" class="badge" style="position: absolute; top: 0px; right: 0px; background: var(--danger); color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; display: none; align-items: center; justify-content: center; min-width: 14px; height: 14px;"></span>
+          </button>
+
+          <button id="header-help-btn" class="header-icon-btn" title="Help Center">
+            <i data-lucide="help-circle"></i>
+          </button>
+
           <button id="global-theme-toggle" class="header-icon-btn" title="Toggle Theme">
             <i data-lucide="sun"></i>
           </button>
-          
-          <div class="profile-trigger glass" id="profile-trigger">
-            <div class="avatar-small" id="header-avatar">S</div>
-            <i data-lucide="user-circle" style="width: 24px; color: var(--accent-primary);"></i>
-            <span class="username-text" id="header-username">Student</span>
-            <i data-lucide="chevron-down" style="width: 16px; opacity: 0.5;"></i>
-          </div>
         </div>
       </div>
     </header>
 
     <!-- 🧭 Phase 12: Premium Sidebar Navigation (Desktop) -->
-    <aside id="app-sidebar" class="sidebar glass">
+    <aside id="app-sidebar" class="app-sidebar glass">
       <nav class="sidebar-nav">
         <button class="nav-item active" data-view="dashboard" data-tab="home">
           <i data-lucide="layout-dashboard"></i>
@@ -91,6 +85,14 @@
       </nav>
 
       <div class="sidebar-footer">
+        <button class="nav-item" data-view="profile">
+          <i data-lucide="user-circle"></i>
+          <span>My Profile</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </button>
         <button class="nav-item" id="global-help-btn">
           <i data-lucide="help-circle"></i>
           <span>Help Center</span>
@@ -135,7 +137,6 @@
       </div>
 
       <div id="dashboard-container" style="display: none;"></div>
-      <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>
       <div id="admin-container" style="display: none;"></div>
       <div id="settings-container" style="display: none;"></div>
       <div id="news-article-container" style="display: none;"></div>
@@ -144,9 +145,10 @@
       <div id="analytics-container" style="display: none;"></div>
       <div id="profile-container" style="display: none;"></div>
       <div id="challenge-container" style="display: none;"></div>
-
-      <!-- ✨ Elite Global Modals (Moved outside main-content-area to prevent fixed-position scrolling bugs caused by contain: paint) ✨ -->
     </main>
+
+    <!-- 🚀 Exam & Fixed Layouts (Outside main-view to prevent contain: paint bugs) -->
+    <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>
 
     <div id="elite-modals-container">
       <!-- Weekly Recap, Onboarding, and Special Alerts render here -->
@@ -208,7 +210,7 @@
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
   </div>
   <div id="auth-container" style="display: none;"></div>
-  <script type="module" src="/main.js?v=13"></script>
+  <script type="module" src="/main.js?v=14"></script>
 </body>
 
 </html>
