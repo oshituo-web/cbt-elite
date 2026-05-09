@@ -314,7 +314,7 @@ export const SettingsComponent = {
         'This will permanently erase your performance history and analytics. This action cannot be undone.'
       )
       if (confirmed) {
-        ModalService.alert('Account Security', 'Data deletion for your account tier must be requested via the Support channel to prevent accidental loss. Contact us at support@cbtelite.com.', 'info')
+        ModalService.alert('Account Security', 'Data deletion for your account tier must be requested via the Support channel to prevent accidental loss. Contact us at cbtellite@gmail.com.', 'info')
       }
     })
   }

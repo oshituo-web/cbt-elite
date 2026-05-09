@@ -489,7 +489,7 @@ export const DashboardComponent = {
         <div style="margin-bottom: 20px;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <h1 style="font-family: 'Outfit'; margin: 0; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 1.6rem; line-height: 1.1;">
-              Hello, ${profile.username || 'Student'} 
+              Hello, ${sanitizeContent(profile.username || 'Student')} 
               <i data-lucide="sun" style="width: 20px; height: 20px; color: var(--warning);"></i>
             </h1>
             <div id="header-tier" class="tier-mini" title="Your Account Tier" style="display: flex; align-items: center; gap: 0.35rem; background: ${profile.activation_status ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.05)'};">
@@ -780,8 +780,8 @@ export const DashboardComponent = {
                 <i data-lucide="${style.icon}" style="width: 28px; height: 28px; color: ${style.color};"></i>
             </div>
             <div style="text-align: center;">
-                <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${clanName}</div>
-                <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; margin-top: 0.25rem;">${dept} • ${tier}</div>
+                <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 900; color: var(--text-primary); line-height: 1.1;">${sanitizeContent(clanName)}</div>
+                <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 800; text-transform: uppercase; margin-top: 0.25rem;">${sanitizeContent(dept)} • ${sanitizeContent(tier)}</div>
             </div>
             
             ${isClashWindow ? `

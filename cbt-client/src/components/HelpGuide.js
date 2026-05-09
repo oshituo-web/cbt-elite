@@ -176,18 +176,18 @@ export const HelpGuide = {
 
             <!-- Community / Social -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem;">
-                <a href="https://chat.whatsapp.com/..." target="_blank" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #25d36630;">
-                    <i data-lucide="users" style="color: #25d366;"></i>
+                <a href="mailto:cbtellite@gmail.com?subject=Support%20Request" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #25d36630;">
+                    <i data-lucide="mail" style="color: #25d366;"></i>
                     <div>
-                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Elite Community</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Join WhatsApp</div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Email Support</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">cbtellite@gmail.com</div>
                     </div>
                 </a>
-                <a href="https://twitter.com/..." target="_blank" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #1da1f230;">
-                    <i data-lucide="twitter" style="color: #1da1f2;"></i>
+                <a href="mailto:cbtellite@gmail.com?subject=Feedback" class="glass card" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; text-decoration: none; border: 1px solid #1da1f230;">
+                    <i data-lucide="message-circle" style="color: #1da1f2;"></i>
                     <div>
-                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Updates</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Follow Elite</div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">Send Feedback</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Help us improve</div>
                     </div>
                 </a>
             </div>
