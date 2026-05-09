@@ -1,6 +1,7 @@
 import { AuthService } from '../services/auth'
 import { DataService } from '../services/data'
 import { ModalService } from '../services/ModalService'
+import { sanitizeContent } from '../utils/sanitize'
 
 export const ProfileComponent = {
   profile: null,
@@ -55,7 +56,7 @@ export const ProfileComponent = {
                 </label>
              </div>
              <div>
-                <h3 id="display-username" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.5rem; margin: 0;">${profile.username}</h3>
+                <h3 id="display-username" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.5rem; margin: 0;">${sanitizeContent(profile.username)}</h3>
                 <span style="font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em; color: var(--accent-secondary); text-transform: uppercase; background: rgba(59, 130, 246, 0.1); padding: 4px 10px; border-radius: 20px; margin-top: 0.5rem; display: inline-block;">
                    ${(profile.is_activated ? 'Premium Pro' : (profile.tier || 'Free Tier')).toUpperCase()}
                 </span>
@@ -171,13 +172,15 @@ export const ProfileComponent = {
 
     if (saveBtn) {
       saveBtn.onclick = async () => {
-        const newFullName = document.getElementById('profile-full-name').value
-        const newUsername = document.getElementById('profile-username').value
+        const newFullName = document.getElementById('profile-full-name').value.trim().replace(/<[^>]*>?/gm, '').substring(0, 50)
+        const newUsername = document.getElementById('profile-username').value.trim().toLowerCase()
         const newDept = document.getElementById('profile-department').value
         const newExamType = document.getElementById('profile-exam-type').value
 
-        if (!newUsername) {
-            ModalService.alert("Missing Info", "Username is required.", 'warning')
+        // 🔐 SECURITY HARDENING: Validation
+        const usernameRegex = /^[a-z0-9_]{3,20}$/
+        if (!usernameRegex.test(newUsername)) {
+            ModalService.alert("Invalid Username", "Username must be 3-20 characters and contain only letters, numbers, and underscores.", 'warning')
             return
         }
 

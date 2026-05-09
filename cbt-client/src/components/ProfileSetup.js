@@ -101,14 +101,26 @@ export const ProfileSetupComponent = {
 
     form.onsubmit = async (e) => {
       e.preventDefault()
+      
       const username = usernameInput.value.trim().toLowerCase()
       const full_name = document.getElementById('full_name').value.trim()
       const department = document.getElementById('department').value
 
+      // 🔐 SECURITY HARDENING: Validation & Sanitization
+      const usernameRegex = /^[a-z0-9_]{3,20}$/
+      if (!usernameRegex.test(username)) {
+        errorDiv.textContent = "Username must be 3-20 characters and contain only letters, numbers, and underscores."
+        errorDiv.style.display = 'block'
+        return
+      }
+
+      // Simple HTML stripping for names
+      const cleanName = full_name.replace(/<[^>]*>?/gm, '').substring(0, 50)
+
       const { data, error } = await AuthService.updateProfile({
         id: user.id,
         username,
-        full_name,
+        full_name: cleanName,
         department,
         email: user.email,
         role: 'student',

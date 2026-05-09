@@ -1,6 +1,7 @@
 import { DataService } from '../services/data'
 import { supabase } from '../utils/supabase'
 import { AuthService } from '../services/auth'
+import { sanitizeContent } from '../utils/sanitize'
 import { WeeklyRecapComponent } from './WeeklyRecap'
 import { EliteStoreComponent } from './EliteStore'
 import { SessionsHistoryComponent } from './SessionsHistory'
@@ -1427,7 +1428,7 @@ export const DashboardComponent = {
                   <td style="padding:0.75rem 0.5rem; font-weight: 900; font-size: 0.75rem; color: ${i < 3 ? 'var(--warning)' : 'var(--text-secondary)'}; white-space: nowrap;">${rankIcon}</td>
                   <td style="padding:0.75rem 0.5rem; font-weight:700; font-size: 0.75rem; color: ${isUser ? 'var(--accent-primary)' : 'var(--text-primary)'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                     <div style="display: flex; align-items: center; gap: 0.35rem;">
-                        ${u.username || 'Anon'} 
+                        ${sanitizeContent(u.username || 'Anon')} 
                         ${userMilestone ? `<i data-lucide="${userMilestone.badge}" title="${userMilestone.title}" style="width: 12px; height: 12px; color: ${userMilestone.color};"></i>` : ''}
                         ${isUser ? '<span style="font-size:0.55rem; opacity:0.6;">(YOU)</span>' : ''}
                     </div>
