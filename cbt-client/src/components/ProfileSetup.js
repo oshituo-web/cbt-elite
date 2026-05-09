@@ -38,6 +38,15 @@ export const ProfileSetupComponent = {
             <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 600;">This determines your Elite Clan & Saturday competition subjects.</p>
           </div>
 
+          <div style="margin-top: 0.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--glass-border);">
+            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <input type="checkbox" id="consent-check" required style="width: 20px; height: 20px; margin-top: 0.2rem; cursor: pointer; accent-color: var(--accent-primary);">
+              <label for="consent-check" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; cursor: pointer; font-weight: 600;">
+                I have read and agree to the <a href="/terms.html" target="_blank" style="color: var(--accent-primary); font-weight: 800; text-decoration: underline;">Terms of Use</a> and <a href="/privacy.html" target="_blank" style="color: var(--accent-primary); font-weight: 800; text-decoration: underline;">Privacy Policy</a>.
+              </label>
+            </div>
+          </div>
+
           <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
             <button type="submit" class="btn-primary" id="save-profile" disabled style="height: 60px; font-size: 1.1rem; font-weight: 900; font-family: 'Outfit';">Complete Setup</button>
             <button type="button" class="btn-secondary" id="back-to-login" style="height: 52px; font-size: 0.95rem; font-weight: 800; font-family: 'Outfit'; border-style: dashed; border-width: 2px;">Back to Login</button>
@@ -48,9 +57,19 @@ export const ProfileSetupComponent = {
 
     const form = document.getElementById('setup-form')
     const usernameInput = document.getElementById('username')
+    const consentCheck = document.getElementById('consent-check')
     const availabilityDiv = document.getElementById('availability-check')
     const saveBtn = document.getElementById('save-profile')
     const errorDiv = document.getElementById('setup-error')
+
+    const validateForm = () => {
+      const username = usernameInput.value.trim().toLowerCase()
+      const department = document.getElementById('department').value
+      const isConsentChecked = consentCheck.checked
+      
+      const isUsernameValid = username.length >= 3 && availabilityDiv.textContent.includes('Available')
+      saveBtn.disabled = !(isUsernameValid && department && isConsentChecked)
+    }
 
     let timeout = null
     usernameInput.oninput = () => {
@@ -69,13 +88,16 @@ export const ProfileSetupComponent = {
         if (available) {
           availabilityDiv.textContent = '✅ Available'
           availabilityDiv.style.color = 'var(--success)'
-          saveBtn.disabled = false
+          validateForm()
         } else {
           availabilityDiv.textContent = '❌ Taken'
           availabilityDiv.style.color = 'var(--error)'
         }
       }, 500)
     }
+
+    document.getElementById('department').onchange = validateForm
+    consentCheck.onchange = validateForm
 
     form.onsubmit = async (e) => {
       e.preventDefault()
@@ -90,7 +112,9 @@ export const ProfileSetupComponent = {
         department,
         email: user.email,
         role: 'student',
-        referred_by: localStorage.getItem('elite_referral_code') || null
+        referred_by: localStorage.getItem('elite_referral_code') || null,
+        privacy_policy_accepted_at: new Date().toISOString(),
+        terms_of_use_accepted_at: new Date().toISOString()
       })
 
       if (!error && data && data.length > 0) {

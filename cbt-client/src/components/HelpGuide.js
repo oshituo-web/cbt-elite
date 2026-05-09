@@ -120,7 +120,10 @@ export const HelpGuide = {
                 <div style="padding: 1.5rem;">
                     <h4 style="margin: 0; font-family: 'Outfit'; font-weight: 900; font-size: 1.2rem; color: white;">Elite Platform Tour</h4>
                     <p style="margin: 0.5rem 0 1.25rem 0; font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5;">Not sure where to start? Let us walk you through the core features of CBT Elite in 2 minutes.</p>
-                    <button id="help-launch-tour-btn" class="btn-primary" style="background: white; color: #1e1b4b; border: none; font-weight: 800; width: 100%; height: 44px; border-radius: 12px; font-size: 0.85rem;">LAUNCH TOUR</button>
+                    <button id="help-launch-tour-btn" style="background: #3b82f6; color: white; border: none; font-weight: 800; width: 100%; height: 46px; border-radius: 12px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
+                        LAUNCH INTERACTIVE TOUR
+                    </button>
                 </div>
             </div>
 
@@ -194,6 +197,12 @@ export const HelpGuide = {
               <p style="font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">Still have questions?</p>
               <button id="help-contact-btn" class="btn-dominant" style="width: 100%; max-width: 250px; height: 48px;">MESSAGE SUPPORT</button>
               <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 1rem; opacity: 0.7;">Typical response time: < 2 hours</p>
+              
+              <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--glass-border); opacity: 0.5;">
+                 <p style="font-size: 0.6rem; color: var(--text-secondary); line-height: 1.4; font-weight: 600; margin: 0;">
+                   CBT Elite is an independent educational tool. We are not affiliated with or endorsed by JAMB, WAEC, or NECO.
+                 </p>
+              </div>
             </div>
           </div>
         </div>

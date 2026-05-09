@@ -124,7 +124,7 @@ export const ExamsDashboardComponent = {
               </div>
           </div>
 
-          <button id="e-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--accent-gradient); font-weight: 900; letter-spacing: 0.05em;">BLAST!</button>
+          <button id="e-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--accent-gradient); font-weight: 900; letter-spacing: 0.05em;">BEGIN MOCK EXAM</button>
           
           <div class="mobile-only" style="height: 80px; display: none;"></div>
         </div>
@@ -284,14 +284,14 @@ export const ExamsDashboardComponent = {
         }
 
         if (!SubscriptionService.canStartSession(this.profile, 'exam', systemConfig)) {
-          startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+          startBtn.innerHTML = 'BEGIN MOCK EXAM'; startBtn.disabled = false
           return alert("Daily exam limit reached. Upgrade to Premium for unlimited mock exams!")
         }
 
         if (selectedExam === 'JAMB') {
           const selected = Array.from(subList.querySelectorAll('input:checked')).map(i => i.value)
           if (selected.length !== 3) {
-            startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+            startBtn.innerHTML = 'BEGIN MOCK EXAM'; startBtn.disabled = false
             return alert('Select exactly 3 subjects.')
           }
           
@@ -326,7 +326,7 @@ export const ExamsDashboardComponent = {
       } catch (err) {
         console.error("Exam Load Failed:", err)
         alert(`Error loading questions: ${err.message || 'Connection failed'}. Please check your internet and try again.`)
-        startBtn.innerHTML = 'Begin Mock Exam'; startBtn.disabled = false
+        startBtn.innerHTML = 'BEGIN MOCK EXAM'; startBtn.disabled = false
       }
     }
 

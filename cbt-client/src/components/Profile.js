@@ -92,6 +92,16 @@ export const ProfileComponent = {
                    <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem;">This syncs with your weekly clan competitions.</p>
                 </div>
 
+                <div style="grid-column: span 2;">
+                   <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem;">Target Exam</label>
+                   <select id="profile-exam-type" style="width: 100%; padding: 0.8rem 1rem; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); outline: none; cursor: pointer;">
+                      <option value="JAMB" ${profile.preferred_exam_type === 'JAMB' ? 'selected' : ''}>JAMB (UTME)</option>
+                      <option value="WAEC" ${profile.preferred_exam_type === 'WAEC' ? 'selected' : ''}>WAEC (WASSCE)</option>
+                      <option value="NECO" ${profile.preferred_exam_type === 'NECO' ? 'selected' : ''}>NECO (SSCE)</option>
+                   </select>
+                   <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem;">Determines your AI Daily Missions and Mastery path.</p>
+                </div>
+
              </div>
 
              <div style="margin-top: 2.5rem; display: flex; gap: 1rem;">
@@ -164,6 +174,7 @@ export const ProfileComponent = {
         const newFullName = document.getElementById('profile-full-name').value
         const newUsername = document.getElementById('profile-username').value
         const newDept = document.getElementById('profile-department').value
+        const newExamType = document.getElementById('profile-exam-type').value
 
         if (!newUsername) {
             ModalService.alert("Missing Info", "Username is required.", 'warning')
@@ -179,6 +190,7 @@ export const ProfileComponent = {
                 full_name: newFullName,
                 username: newUsername,
                 department: newDept,
+                preferred_exam_type: newExamType,
                 avatar_url: this.profile.avatar_url,
                 updated_at: new Date().toISOString()
             }

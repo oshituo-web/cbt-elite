@@ -564,11 +564,23 @@ export const DashboardComponent = {
           </div>
         </div>
 
-        <!-- Help Guide CTA -->
-        <div class="premium-dashboard-card scale-in" style="margin-top: 0; border: none !important; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%) !important; text-align: center; justify-content: center; align-items: center; gap: 0.75rem;">
-           <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.15rem; margin: 0; color: #ffffff;">Need a headstart?</h3>
-           <p style="font-size: 0.8rem; color: rgba(255,255,255,0.9); margin: 0;">Unleash the full power of CBT Elite.</p>
-           <button id="help-guide-btn" style="margin-top: 0.5rem; height: 40px; background: white; color: #3730A3; border: none; font-weight: 800; border-radius: 14px; padding: 0 1.25rem; cursor: pointer; transition: all 0.2s ease;">Launch Interactive Tour</button>
+        <!-- Help Guide CTA (Compact) -->
+        <div class="premium-dashboard-card scale-in" style="margin-top: 0; padding: 1rem !important; border: none !important; background: linear-gradient(135deg, #5B21B6 0%, #3730A3 100%) !important; text-align: center; justify-content: center; align-items: center; gap: 0.4rem; min-height: auto;">
+           <h3 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.05rem; margin: 0; color: #ffffff;">Need a headstart?</h3>
+           <p style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin: 0;">Learn the core features in 2 minutes.</p>
+           <button id="help-guide-btn" style="margin-top: 0.4rem; height: 36px; background: white; color: #3730A3; border: none; font-weight: 800; border-radius: 10px; padding: 0 1rem; cursor: pointer; font-size: 0.75rem;">Launch Tour</button>
+        </div>
+
+        <!-- 📜 LEGAL DISCLAIMER FOOTER -->
+        <div style="margin-top: 3rem; padding: 2rem 1rem; text-align: center; border-top: 1px solid var(--glass-border); opacity: 0.6;">
+            <p style="font-size: 0.65rem; color: var(--text-secondary); line-height: 1.6; max-width: 400px; margin: 0 auto; font-weight: 600;">
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">LEGAL DISCLAIMER</strong>
+                CBT Elite is an independent educational platform. We are not affiliated with, endorsed by, or connected to JAMB, WAEC, or NECO. All exam names and logos are property of their respective owners and are used here for identification and study purposes only.
+            </p>
+            <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 1rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                <span style="color: var(--accent-primary); cursor: pointer;" onclick="window.navigateTo('privacy')">Privacy Policy</span>
+                <span style="color: var(--accent-primary); cursor: pointer;" onclick="window.navigateTo('terms')">Terms of Use</span>
+            </div>
         </div>
     `;
   },
@@ -2081,7 +2093,8 @@ export const DashboardComponent = {
                     subject_id: subjectObj.id,
                     topic: topic,
                     limit: 10,
-                    randomize: true
+                    randomize: true,
+                    exam_type: this.profile?.preferred_exam_type || 'JAMB'
                 });
 
                 if (error || !questions || questions.length === 0) {
@@ -2138,7 +2151,8 @@ export const DashboardComponent = {
                     subject_id: subjectObj.id,
                     topic: t.topic,
                     limit: t.limit,
-                    randomize: true
+                    randomize: true,
+                    exam_type: this.profile?.preferred_exam_type || 'JAMB'
                 });
                 if (q) allQuestions = [...allQuestions, ...q];
             }
@@ -2149,7 +2163,8 @@ export const DashboardComponent = {
             const { data: mq } = await supabase
                 .from('questions')
                 .select('*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*)')
-                .in('id', dailyMission.mistakes);
+                .in('id', dailyMission.mistakes)
+                .eq('exam_type', this.profile?.preferred_exam_type || 'JAMB');
             if (mq) allQuestions = [...allQuestions, ...DataService._formatQuestions(mq)];
         }
 
@@ -2172,9 +2187,10 @@ export const DashboardComponent = {
     try {
         const { data: cards } = await supabase
             .from('flashcards')
-            .select('*, questions(*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*))')
+            .select('*, questions!inner(*, subjects(subject_name), question_answers(*), question_explanations(explanation), question_groups(*))')
             .eq('user_id', this.profile.id)
             .eq('status', 'active')
+            .eq('questions.exam_type', this.profile?.preferred_exam_type || 'JAMB')
             .lte('next_review_at', new Date().toISOString())
             .limit(10);
 

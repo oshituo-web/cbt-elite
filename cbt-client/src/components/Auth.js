@@ -69,7 +69,18 @@ export const AuthComponent = {
               <button type="submit" class="btn-primary" style="height: 56px; font-size: 1.05rem; font-weight: 900; font-family: 'Outfit'; box-shadow: var(--shadow-lg); border-radius: 14px;">Login to Elite</button>
               
               <button type="button" id="toggle-auth" style="background: none; color: var(--text-primary); font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; border: none; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; font-family: 'Outfit';">Don't have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span></button>
+              
+              <p id="auth-legal-notice" style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; line-height: 1.5; font-weight: 600; font-family: 'Outfit'; opacity: 0.7; display: none;">
+                By signing up, you agree to our <a href="/terms.html" target="_blank" style="color: var(--primary); text-decoration: underline;">Terms of Use</a> and <a href="/privacy.html" target="_blank" style="color: var(--primary); text-decoration: underline;">Privacy Policy</a>.
+              </p>
             </form>
+          </div>
+          
+          <!-- 📜 LEGAL DISCLAIMER (AUTH) -->
+          <div style="margin-top: 1.5rem; text-align: center; opacity: 0.5; width: 100%; max-width: 440px;">
+             <p style="font-size: 0.6rem; color: var(--text-secondary); line-height: 1.4; font-weight: 600;">
+                CBT Elite is an independent platform. We are not affiliated with JAMB, WAEC, or NECO. All trademarks belong to their respective owners.
+             </p>
           </div>
         </div>
       </div>
@@ -78,6 +89,7 @@ export const AuthComponent = {
     let isSignUp = false
     const form = document.getElementById('auth-form')
     const toggleBtn = document.getElementById('toggle-auth')
+    const legalNotice = document.getElementById('auth-legal-notice')
     const errorDiv = document.getElementById('auth-error')
     const successDiv = document.getElementById('auth-success')
     const googleBtn = document.getElementById('google-signin')
@@ -113,6 +125,7 @@ export const AuthComponent = {
       toggleBtn.innerHTML = isSignUp ? 'Already have an account? <span style="color: var(--primary); font-weight: 900;">Login</span>' : 'Don\'t have an account? <span style="color: var(--primary); font-weight: 900;">Sign Up</span>'
       
       forgotLink.style.display = isSignUp ? 'none' : 'block'
+      legalNotice.style.display = isSignUp ? 'block' : 'none'
       
       errorDiv.style.display = 'none'
       successDiv.style.display = 'none'

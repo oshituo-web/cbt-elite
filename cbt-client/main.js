@@ -270,7 +270,10 @@ function toggleMoreDrawer() {
     const isActive = drawer.classList.toggle('active');
     overlay.classList.toggle('active');
     
-    if (!isActive) {
+    if (isActive) {
+      // 🛡️ FIX: Ensure icons are rendered when drawer opens
+      if (window.lucide) window.lucide.createIcons({ root: drawer });
+    } else {
       document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(item => {
         if (item.dataset.view === 'more') {
           item.classList.remove('active');
@@ -461,6 +464,11 @@ async function initApp() {
 
         updateHeaderProfile(profile);
         handleInitialRoute(profile);
+
+        // 🛡️ COMPLIANCE: Check for missing consent (Existing Users)
+        if (!profile.privacy_policy_accepted_at) {
+            setTimeout(() => showConsentModal(profile), 1500);
+        }
     }
 
   } catch (globalError) {
@@ -1025,6 +1033,11 @@ function hideAll(isExam = false, forceHideLayout = false) {
     if (el) el.style.display = 'none';
   });
 
+  // 🛡️ FIX: Explicitly ensure more-drawer and news-drawer containers are not cleared if we want them to remain visible
+  // Note: they are handled by .active classes, but hideAll shouldn't interfere with their display properties.
+  const moreDrawer = document.getElementById('more-drawer');
+  if (moreDrawer && !isExam) moreDrawer.style.display = 'flex';
+
   const gl = document.getElementById('global-loader');
   if (gl) gl.style.display = 'none';
 
@@ -1162,6 +1175,87 @@ async function syncOfflineData() {
 
 initApp();
 
+function showConsentModal(profile) {
+  const existing = document.getElementById('consent-modal');
+  if (existing) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'consent-modal';
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'display:flex; z-index:20000; background:rgba(15, 23, 42, 0.9); backdrop-filter:blur(8px);';
+
+  modal.innerHTML = `
+    <div class="modal-content glass scale-in" style="width: min(480px, 92vw); padding: 2.5rem; text-align: center; border-radius: 24px;">
+      <div style="width: 64px; height: 64px; background: rgba(37, 99, 235, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <i data-lucide="shield-check" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
+      </div>
+      <h2 style="font-family: 'Outfit'; font-weight: 900; font-size: 1.75rem; color: var(--text-primary); margin-bottom: 0.75rem;">Privacy Update</h2>
+      <p style="color: var(--text-secondary); font-weight: 600; line-height: 1.6; margin-bottom: 2rem;">We've updated our Privacy Policy and Terms of Use to better protect your data. Please review and accept them to continue using CBT Elite.</p>
+      
+      <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--glass-border); margin-bottom: 2rem; text-align: left;">
+        <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+          <input type="checkbox" id="modal-consent-check" style="width: 20px; height: 20px; margin-top: 0.2rem; cursor: pointer; accent-color: var(--accent-primary);">
+          <label for="modal-consent-check" style="font-size: 0.85rem; color: var(--text-primary); font-weight: 700; line-height: 1.5; cursor: pointer;">
+            I agree to the <a href="/terms.html" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">Terms of Use</a> and <a href="/privacy.html" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">Privacy Policy</a>.
+          </label>
+        </div>
+      </div>
+
+      <button id="accept-consent-btn" class="btn-primary" disabled style="width: 100%; height: 56px; font-weight: 900; font-family: 'Outfit'; border-radius: 14px;">I Accept & Continue</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  if (window.lucide) window.lucide.createIcons({ root: modal });
+
+  const check = modal.querySelector('#modal-consent-check');
+  const btn = modal.querySelector('#accept-consent-btn');
+
+  check.onchange = () => {
+    btn.disabled = !check.checked;
+  };
+
+  btn.onclick = async () => {
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    const now = new Date().toISOString();
+    if (!profile || !profile.id) {
+      alert('Error: User session not found. Please log out and log back in.');
+      btn.disabled = false;
+      btn.textContent = 'I Accept & Continue';
+      return;
+    }
+
+    const { error } = await AuthService.updateProfile({
+      id: profile.id,
+      privacy_policy_accepted_at: now,
+      terms_of_use_accepted_at: now
+    });
+
+    if (error) {
+      console.error('Consent Save Error:', error);
+      alert(`Error saving consent: ${error.message || 'Unknown error'}. Please ensure you ran the SQL migration and try again.`);
+      btn.disabled = false;
+      btn.textContent = 'I Accept & Continue';
+    } else {
+      profile.privacy_policy_accepted_at = now;
+      profile.terms_of_use_accepted_at = now;
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => modal.remove(), 300);
+      
+      // Trigger a success toast or notification
+      NotificationService.add({ 
+        type: 'system', 
+        title: 'Privacy Update', 
+        message: 'Privacy Policy accepted. Thank you!', 
+        action: 'dashboard' 
+      });
+    }
+  };
+}
+
 function showAboutModal() {
   const existing = document.getElementById('about-modal');
   if (existing) existing.remove();
@@ -1229,8 +1323,8 @@ function showAboutModal() {
         <div style="border-top: 1px solid var(--glass-border); padding-top: 1.5rem; margin-bottom: 1.25rem;">
           <h3 style="color: var(--accent-primary); font-family: 'Outfit'; font-weight: 800; margin-bottom: 0.75rem; font-size: 1rem;">📜 Legal</h3>
           <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-            <a href="/terms" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Terms of Use</a>
-            <a href="/privacy" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Privacy Policy</a>
+            <a href="/terms.html" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Terms of Use</a>
+            <a href="/privacy.html" target="_blank" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Privacy Policy</a>
             <a href="mailto:cbtellite@gmail.com" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-decoration: none; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); padding: 0.4rem 0.9rem; border-radius: 20px;">Contact Support</a>
           </div>
         </div>

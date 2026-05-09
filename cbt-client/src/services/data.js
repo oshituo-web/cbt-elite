@@ -152,7 +152,11 @@ export const DataService = {
     if (filters.subject_id) query = query.eq('subject_id', filters.subject_id)
     if (filters.exam_id) query = query.eq('exam_id', filters.exam_id)
     if (filters.topic) query = query.eq('topic', filters.topic)
-    if (filters.exam_type) query = query.eq('exam_type', filters.exam_type)
+    
+    // 🔥 STRICT ENFORCEMENT: Determine final exam type context
+    const finalExamType = filters.exam_type || this.profile?.preferred_exam_type || 'JAMB';
+    query = query.eq('exam_type', finalExamType)
+
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
     if (filters.is_past_question !== undefined) query = query.eq('is_past_question', filters.is_past_question)
     
@@ -193,7 +197,7 @@ export const DataService = {
         const { data: randomIds, error: idError } = await supabase.rpc('get_random_question_ids', {
           p_subject_id: filters.subject_id || null,
           p_exam_id: filters.exam_id || null,
-          p_exam_type: filters.exam_type || null,
+          p_exam_type: finalExamType,
           p_topic: filters.topic || null,
           p_question_type: filters.question_type || 'objective',
           p_limit: filters.limit || 20,

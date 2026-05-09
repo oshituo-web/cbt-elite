@@ -2365,24 +2365,36 @@ body.light-mode .option-btn .option-holder {
   .glass.card { padding: 0.75rem !important; } 
   div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
 }
-/* News side-drawer refined (matches id="news-drawer") */
-.news-drawer {
-  position: fixed;
-  top: 0;
-  right: -100% !important; /* Force hidden state */
-  width: min(450px, 95vw);
-  height: 100vh;
-  background: var(--bg-color);
-  box-shadow: -10px 0 50px rgba(0,0,0,0.5);
-  z-index: 10010 !important; /* Above everything including more-drawer */
-  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--glass-border);
+/* 📢 Refined Drawer System (News & More) */
+.news-drawer, .more-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  left: 100% !important; /* Start off-screen to the right */
+  width: min(450px, 85vw) !important;
+  height: 100vh !important;
+  z-index: 20001 !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  visibility: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--bg-color) !important;
+  box-shadow: -10px 0 50px rgba(0,0,0,0.5) !important;
+  border-left: 1px solid var(--glass-border) !important;
 }
 
-.news-drawer.active {
-  right: 0 !important; /* Force visible state */
+.news-drawer.active, .more-drawer.active {
+  transform: translateX(-100%) !important;
+}
+
+.news-drawer .drawer-content, .more-drawer .drawer-content {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  padding: 1.5rem !important;
+  padding-bottom: 120px !important; /* Space for logout and safe area */
+  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-overlay {
@@ -2858,35 +2870,41 @@ body.light-mode .option-btn .option-holder {
   overflow-y: auto;
 }
 
+/* Mobile-only Utility */
+@media (max-width: 900px) {
+  .mobile-only-flex {
+    display: flex !important;
+  }
+}
+
 /* Mobile specific overrides for persistent peek bottom sheet */
 @media (max-width: 900px) {
   .exam-content-wrapper {
     grid-template-columns: 1fr;
   }
 
-  /* The exam-main needs bottom padding so content isn't hidden behind the peek */
+  /* The exam-main no longer needs extra bottom padding for the peek */
   .exam-main {
-    padding: 1.5rem;
-    padding-bottom: calc(1.5rem + 64px) !important;
+    padding: 1.25rem;
+    padding-bottom: 2rem !important;
   }
 
   .exam-sidebar {
     position: fixed;
     bottom: 0;
-    /* Peek: translateY(calc(100% - 64px)) always shows 64px handle */
-    transform: translateY(calc(100% - 64px));
+    /* Hidden by default on mobile */
+    transform: translateY(100%);
     left: 0;
     right: 0;
     width: 100%;
-    height: 75vh;
+    height: 80vh;
     z-index: 10000;
     border-left: none;
-    border-top: 2px solid var(--accent-primary);
-    border-radius: 28px 28px 0 0;
+    border-top: 3px solid var(--accent-primary);
+    border-radius: 32px 32px 0 0;
     transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.35);
-    /* Top padding: handle (30px) + label (34px) */
-    padding: 3.5rem 1.5rem 1.5rem;
+    box-shadow: 0 -12px 48px rgba(0,0,0,0.4);
+    padding: 2rem 1.5rem 1.5rem;
     visibility: visible;
     pointer-events: auto;
   }
@@ -2895,36 +2913,18 @@ body.light-mode .option-btn .option-holder {
   .exam-sidebar::before {
     content: '';
     position: absolute;
-    top: 10px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    width: 44px;
-    height: 5px;
+    width: 48px;
+    height: 6px;
     background: var(--glass-border);
     border-radius: 10px;
   }
 
-  /* Peek label shown when collapsed */
+  /* Remove the 'Question Map' label peek */
   .exam-sidebar::after {
-    content: '📋 Question Map';
-    position: absolute;
-    top: 22px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.75rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    font-family: 'Outfit', sans-serif;
-    transition: opacity 0.2s ease;
-  }
-
-  /* When fully open, fade out the after-label */
-  .exam-sidebar.drawer-open::after {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
 
   .exam-sidebar.drawer-open {
@@ -2937,8 +2937,8 @@ body.light-mode .option-btn .option-holder {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
     z-index: 9999;
     opacity: 0;
     pointer-events: none;

@@ -212,12 +212,15 @@ export class Exam {
                 <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.65rem !important; padding: 0.2rem 0.6rem; min-width: 80px; text-align: center;">...</span>
               </div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: auto; height: auto;">
-                  <i data-lucide="calculator" style="width: 16px; height: 16px; color: var(--text-secondary);"></i>
+                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: auto; height: auto; background: none; flex-shrink: 0; border: none;">
+                  <i data-lucide="calculator" stroke-width="2.5" style="width: 28px; height: 28px; color: var(--text-secondary);"></i>
                 </button>
-                <div id="timer" class="timer-mini" style="color: #10B981; font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); font-family: 'Monaco', monospace; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 60px; text-align: center;">00:00</div>
-                <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.2rem;">
-                  <i data-lucide="bot" style="width: 16px; height: 16px;"></i>
+                <button id="toggle-map-mobile" class="header-icon-btn mobile-only-flex" title="Question Map" style="padding: 0; width: auto; height: auto; background: none; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 0.25rem;">
+                  <i data-lucide="layout-grid" stroke-width="2.5" style="width: 28px; height: 28px; color: var(--accent-primary);"></i>
+                </button>
+                <div id="timer" class="timer-mini" style="color: #10B981; font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); font-family: 'Monaco', monospace; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 60px; text-align: center; flex-shrink: 0;">00:00</div>
+                <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.25rem; background: none; border: none; flex-shrink: 0;">
+                  <i data-lucide="bot" stroke-width="2.5" style="width: 28px; height: 28px;"></i>
                 </button>
               </div>
             </div>
@@ -274,6 +277,12 @@ export class Exam {
 
           <!-- Sidebar Navigation -->
           <div class="drawer-overlay" id="exam-drawer-overlay"></div>
+          
+          <!-- 📱 Swipe Trigger Handle (Mobile Only) -->
+          <div id="exam-map-swipe-trigger" class="mobile-only-flex" style="position: fixed; bottom: 0; left: 0; right: 0; height: 20px; z-index: 9998; cursor: ns-resize; justify-content: center; align-items: center;">
+             <div style="width: 40px; height: 4px; background: var(--glass-border); border-radius: 2px; opacity: 0.5;"></div>
+          </div>
+
           <div class="exam-sidebar glass" id="exam-sidebar">
             <div style="font-weight: 900; margin-bottom: 1.5rem; font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary); font-family: 'Outfit';">Question Map</div>
             <div id="question-grid"></div>
@@ -506,17 +515,17 @@ export class Exam {
       }
     }
 
+    const toggleMapBtn = document.getElementById('toggle-map-mobile')
     const sidebar = document.getElementById('exam-sidebar')
     const overlay = document.getElementById('exam-drawer-overlay')
 
     if (sidebar && overlay) {
-      // Open when tap on the peek handle area (top 64px when collapsed)
-      sidebar.addEventListener('click', (e) => {
-        if (!sidebar.classList.contains('drawer-open')) {
+      if (toggleMapBtn) {
+        toggleMapBtn.onclick = () => {
           sidebar.classList.add('drawer-open')
           overlay.classList.add('drawer-open')
         }
-      })
+      }
 
       // Close via overlay tap
       overlay.onclick = () => {
@@ -524,9 +533,37 @@ export class Exam {
         overlay.classList.remove('drawer-open')
       }
 
-      // Touch swipe: swipe up = open, swipe down = close
+      // 📱 Robust Swipe Logic
       let touchStartY = 0
       let touchStartX = 0
+      
+      const openDrawer = () => {
+        sidebar.classList.add('drawer-open')
+        overlay.classList.add('drawer-open')
+      }
+      
+      const closeDrawer = () => {
+        sidebar.classList.remove('drawer-open')
+        overlay.classList.remove('drawer-open')
+      }
+
+      // 1. Listen on the handle for "Swipe Up"
+      const handle = document.getElementById('exam-map-swipe-trigger')
+      if (handle) {
+        handle.addEventListener('touchstart', (e) => {
+          touchStartY = e.touches[0].clientY
+        }, { passive: true })
+        
+        handle.addEventListener('touchend', (e) => {
+          const deltaY = touchStartY - e.changedTouches[0].clientY
+          if (deltaY > 30) openDrawer()
+        }, { passive: true })
+        
+        // Also open on simple tap of handle
+        handle.onclick = openDrawer
+      }
+
+      // 2. Listen on sidebar for "Swipe Down"
       sidebar.addEventListener('touchstart', (e) => {
         touchStartY = e.touches[0].clientY
         touchStartX = e.touches[0].clientX
@@ -535,16 +572,11 @@ export class Exam {
       sidebar.addEventListener('touchend', (e) => {
         const deltaY = touchStartY - e.changedTouches[0].clientY
         const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX)
-        // Only register vertical swipes (deltaX < 50 avoids horizontal scroll conflicts)
+        
+        // Only register vertical swipes if not scrolling sideways
         if (deltaX < 50) {
-          if (deltaY > 40 && !sidebar.classList.contains('drawer-open')) {
-            // Swipe up → open
-            sidebar.classList.add('drawer-open')
-            overlay.classList.add('drawer-open')
-          } else if (deltaY < -40 && sidebar.classList.contains('drawer-open')) {
-            // Swipe down → close
-            sidebar.classList.remove('drawer-open')
-            overlay.classList.remove('drawer-open')
+          if (deltaY < -50 && sidebar.classList.contains('drawer-open')) {
+            closeDrawer()
           }
         }
       }, { passive: true })

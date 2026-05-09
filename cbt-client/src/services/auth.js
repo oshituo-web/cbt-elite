@@ -112,6 +112,17 @@ export const AuthService = {
   },
 
   async updateProfile(profile) {
+    if (!profile.id) return { data: null, error: { message: "Profile ID required for update" } };
+    
+    const { data, error } = await supabase
+      .from('users')
+      .update(profile)
+      .eq('id', profile.id)
+      .select()
+    return { data, error }
+  },
+
+  async upsertProfile(profile) {
     const { data, error } = await supabase
       .from('users')
       .upsert(profile)
@@ -137,11 +148,13 @@ export const AuthService = {
       is_activated: false,
       ai_credits: 0,
       elite_coins: 0,
-      streak_count: 0
+      streak_count: 0,
+      privacy_policy_accepted_at: new Date().toISOString(),
+      terms_of_use_accepted_at: new Date().toISOString()
     };
 
     console.log(`[Auth] Attempting auto-registration for user ID: ${user.id}`);
-    const { data, error } = await this.updateProfile(profileData);
+    const { data, error } = await this.upsertProfile(profileData);
     
     if (error) {
       console.error("[Auth] Auto-registration FAILED details:", {

@@ -106,7 +106,7 @@ export const PracticeDashboardComponent = {
             </div>
           </div>
 
-          <button id="p-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--primary); font-weight: 900; letter-spacing: 0.05em;">BLAST!</button>
+          <button id="p-start-btn" class="btn-dominant" style="margin-top: 1.5rem; width: 100%; height: 50px; background: var(--primary); font-weight: 900; letter-spacing: 0.05em;">START PRACTICE</button>
           
           <div class="mobile-only" style="height: 80px; display: none;"></div>
         </div>
@@ -209,7 +209,7 @@ export const PracticeDashboardComponent = {
         }
 
         if (!SubscriptionService.canStartSession(this.profile, 'practice', systemConfig)) {
-          startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
+          startBtn.innerHTML = 'START PRACTICE'; startBtn.disabled = false
           return ModalService.alert("Limit Reached", "Daily practice limit reached. Upgrade to Premium for unlimited access!", 'error')
         }
 
@@ -221,12 +221,12 @@ export const PracticeDashboardComponent = {
           this.onStartPractice(questions, 'practice', subject, selectedPracticeType, { questionSource: selectedSource })
         } else {
           ModalService.alert("No Questions", `No questions found for ${selectedPracticeType} ${subject}.`, 'info');
-          startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
+          startBtn.innerHTML = 'START PRACTICE'; startBtn.disabled = false
         }
       } catch (err) {
         console.error("Practice Load Failed:", err);
         ModalService.alert("Load Failed", `Error loading questions: ${err.message || 'Connection timeout'}. Please check your internet and try again.`, 'error');
-        startBtn.innerHTML = 'Start Session'; startBtn.disabled = false
+        startBtn.innerHTML = 'START PRACTICE'; startBtn.disabled = false
       }
     }
 
