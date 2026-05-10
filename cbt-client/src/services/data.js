@@ -153,19 +153,22 @@ export const DataService = {
     if (filters.exam_id) query = query.eq('exam_id', filters.exam_id)
     if (filters.topic) query = query.eq('topic', filters.topic)
     
-    // 🔥 STRICT ENFORCEMENT: Determine final exam type context
+    // Determine the exam type for filtering and randomization
     const finalExamType = filters.exam_type || this.profile?.preferred_exam_type || 'JAMB';
-    query = query.eq('exam_type', finalExamType)
 
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
+    
+    // 🔥 ENFORCEMENT: Filter by exam type unless explicitly told not to (e.g. for Admin Repository)
+    if (filters.exam_type) {
+        query = query.eq('exam_type', filters.exam_type)
+    } else if (filters.require_exam_type !== false) {
+        query = query.eq('exam_type', finalExamType)
+    }
     if (filters.is_past_question !== undefined) query = query.eq('is_past_question', filters.is_past_question)
     
     // 🔥 DUAL SYSTEM: Strict source filtering
-    if (filters.question_source === 'past') {
-      query = query.eq('is_past_question', true)
-    } else if (filters.question_source === 'ai') {
-      query = query.eq('is_past_question', false)
-    }
+    if (filters.question_source === 'past') query = query.eq('is_past_question', true)
+    if (filters.question_source === 'ai') query = query.eq('is_past_question', false)
 
     if (filters.exam_year) query = query.eq('exam_year', filters.exam_year)
     // 🛡️ FIX WARN-02: Validate search term length to prevent full-table scans.
@@ -618,7 +621,7 @@ export const DataService = {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('daily_questions_count, streak_count, last_daily_reset_date, elite_coins, streak_freeze_count, league_tier, has_seen_tour, username, has_league_insurance, last_ai_score_prediction, total_questions_answered')
+            .select('daily_questions_count, streak_count, last_daily_reset_date, elite_coins, streak_freeze_count, league_tier, has_seen_tour, username, has_league_insurance, last_ai_score_prediction, total_questions_answered, eliminate_2_uses')
             .eq('id', userId)
             .single()
         
@@ -854,6 +857,13 @@ export const DataService = {
         p_user_id: userId,
         p_item_id: itemId,
         p_cost: price
+    })
+  },
+
+  async usePowerUp(userId, powerUpType) {
+    return await supabase.rpc('use_power_up', {
+        p_user_id: userId,
+        p_power_up_type: powerUpType
     })
   },
 

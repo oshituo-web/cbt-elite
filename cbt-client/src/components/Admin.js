@@ -637,7 +637,7 @@ export const AdminComponent = {
         }
 
         // Trigger Data Loads
-        if (target === 'questions') this.loadQuestions()
+        if (target === 'questions') this.loadQuestions({ require_exam_type: false })
         else if (target === 'syllabus') this.loadSyllabus()
         else if (target === 'users') this.loadUsers()
         else if (target === 'reports') this.loadReports()
@@ -1144,7 +1144,7 @@ export const AdminComponent = {
     const counter = document.getElementById('question-count-display')
     list.innerHTML = 'Loading questions...'
     
-    const { data: questions, count, error } = await DataService.getQuestions({ ...filters, offset, limit: 20 })
+    const { data: questions, count, error } = await DataService.getQuestions({ require_exam_type: false, ...filters, offset, limit: 20 })
     
     if (error) {
       list.innerHTML = `<div style="color: var(--error);">Failed to load questions: ${error.message || error}</div>`

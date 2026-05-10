@@ -45,3 +45,12 @@ Thumbs.db
 # Build outputs
 cbt-client/dev-dist/
 cbt-client/dist/
+# Scratch and test files
+cbt-client/scratch/
+cbt-client/scratch_*.js
+cbt-client/scratch_*.cjs
+cbt-client/test_*.js
+cbt-client/test_multiplayer.js
+cbt-client/scratch.js
+cbt-client/*.log
+cbt-client/*.txt

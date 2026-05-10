@@ -964,16 +964,11 @@ async function showAnalytics(profile) {
 async function showChallengeDashboard(profile) {
   currentProfile = profile;
   hideAll();
-  // Ensure the challenge container exists
-  let container = document.getElementById('challenge-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'challenge-container';
-    document.getElementById('app')?.appendChild(container) || document.body.appendChild(container);
+  const container = document.getElementById('challenge-container');
+  if (container) {
+    container.style.display = 'block';
+    container.innerHTML = '<div class="loader-spinner" style="margin: 4rem auto;"></div>';
   }
-  container.style.display = 'block';
-  // Temporarily repurpose dashboard-container since ChallengeDashboard uses it
-  document.getElementById('dashboard-container').style.display = 'block';
   const { ChallengeDashboard } = await import('./src/components/ChallengeDashboard');
   ChallengeDashboard.render(profile, () => window.navigateTo('dashboard', profile));
 }
@@ -1025,7 +1020,7 @@ function hideAll(isExam = false, forceHideLayout = false) {
     'auth-container', 'dashboard-container', 'exam-container', 
     'admin-container', 'settings-container', 'news-article-container',
     'practice-container', 'exams-container', 'analytics-container',
-    'profile-container'
+    'profile-container', 'challenge-container'
   ];
   
   containers.forEach(id => {

@@ -788,6 +788,11 @@ body.dark-mode #help-guide-btn {
   align-items: center;
 }
 
+.main-content-area > div {
+  width: 100%;
+  max-width: 1200px;
+}
+
 /* Desk Nav Visibility Control (Desktop Priority) */
 @media (min-width: 1024px) {
   .app-sidebar {
@@ -2365,16 +2370,16 @@ body.light-mode .option-btn .option-holder {
   .glass.card { padding: 0.75rem !important; } 
   div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
 }
-/* 📢 Refined Drawer System (News & More) */
-.news-drawer, .more-drawer {
+/* 📢 Refined Drawer System (Standardized Sidebar Fly-out) */
+.news-drawer {
   position: fixed !important;
   top: 0 !important;
-  left: 100% !important; /* Start off-screen to the right */
+  left: 100% !important; 
   width: min(450px, 85vw) !important;
   height: 100vh !important;
   z-index: 20001 !important;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  visibility: visible !important;
+  visibility: hidden; /* Changed to hidden by default */
   display: flex !important;
   flex-direction: column !important;
   background: var(--bg-color) !important;
@@ -2382,18 +2387,19 @@ body.light-mode .option-btn .option-holder {
   border-left: 1px solid var(--glass-border) !important;
 }
 
-.news-drawer.active, .more-drawer.active {
+.news-drawer.active {
+  visibility: visible;
   transform: translateX(-100%) !important;
 }
 
-.news-drawer .drawer-content, .more-drawer .drawer-content {
+.news-drawer .drawer-content {
   flex: 1 !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 0.75rem !important;
   padding: 1.5rem !important;
-  padding-bottom: 120px !important; /* Space for logout and safe area */
+  padding-bottom: 120px !important; 
   -webkit-overflow-scrolling: touch;
 }
 

@@ -131,6 +131,12 @@ export const EliteStoreComponent = {
 
                     if (itemId === 'streak_freeze') {
                         profile.streak_freeze_count = (profile.streak_freeze_count || 0) + 1;
+                    } else if (itemId === 'power_up_bundle') {
+                        profile.eliminate_2_uses = (profile.eliminate_2_uses || 0) + 5;
+                    } else if (itemId === 'league_insurance') {
+                        profile.has_league_insurance = true;
+                    } else if (itemId === 'score_prediction') {
+                        profile.last_ai_score_prediction = { purchased: true };
                     }
                     
                     profile.elite_coins -= price;

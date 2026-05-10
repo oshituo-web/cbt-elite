@@ -728,9 +728,12 @@ export class Exam {
     if (!this.isReviewMode && !isMockExam && optionsContainer) {
         const powerUpsDiv = document.createElement('div');
         powerUpsDiv.style = "margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; gap: 0.75rem;";
+        const uses = this.session.profile.eliminate_2_uses || 0;
+        const btnText = uses > 0 ? `ELIMINATE 2 (${uses} left)` : `ELIMINATE 2 (-50 <i data-lucide="coins" style="width: 10px;"></i>)`;
+        
         powerUpsDiv.innerHTML = `
             <button id="eliminate-2-btn" class="glass-btn" style="padding: 0.6rem 1rem; font-size: 0.7rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary);">
-                <i data-lucide="zap" style="width: 14px; fill: var(--accent-primary);"></i> ELIMINATE 2 (-50 <i data-lucide="coins" style="width: 10px;"></i>)
+                <i data-lucide="zap" style="width: 14px; fill: var(--accent-primary);"></i> ${btnText}
             </button>
         `;
         optionsContainer.appendChild(powerUpsDiv);
@@ -738,14 +741,20 @@ export class Exam {
 
         const eliminateBtn = document.getElementById('eliminate-2-btn');
         eliminateBtn.onclick = async () => {
-            if ((this.session.profile.elite_coins || 0) < 50) {
-                ModalService.showToast("Not enough Elite Coins!", "error");
+            const hasUses = (this.session.profile.eliminate_2_uses || 0) > 0;
+            if (!hasUses && (this.session.profile.elite_coins || 0) < 50) {
+                ModalService.showToast("Not enough uses or coins! Visit the Store.", "error");
                 return;
             }
 
-            // Deduct coins locally and on server
-            this.session.profile.elite_coins -= 50;
-            await DataService.purchaseEliteItem(this.session.profile.id, 'eliminate_2_use', 50);
+            // Deduct uses or coins locally and on server
+            if (hasUses) {
+                this.session.profile.eliminate_2_uses -= 1;
+                await DataService.usePowerUp(this.session.profile.id, 'eliminate_2');
+            } else {
+                this.session.profile.elite_coins -= 50;
+                await DataService.purchaseEliteItem(this.session.profile.id, 'eliminate_2_use', 50);
+            }
 
             // Find incorrect options that are NOT current choice
             const optionBtns = Array.from(optionsContainer.querySelectorAll('button.option-btn'));

@@ -142,7 +142,7 @@ export const ProfileComponent = {
         reader.readAsDataURL(file)
 
         // 📤 Upload to Storage
-        ModalService.toast('Uploading avatar...', 'info')
+        ModalService.showToast('Uploading avatar...', 'info')
         try {
             const fileName = `avatars/${this.profile.id}_${Date.now()}.png`
             const { data, error } = await DataService.supabase.storage
@@ -162,7 +162,7 @@ export const ProfileComponent = {
                 .getPublicUrl(fileName)
             
             this.profile.avatar_url = publicUrl
-            ModalService.toast('Avatar uploaded successfully!', 'success')
+            ModalService.showToast('Avatar uploaded successfully!', 'success')
         } catch (err) {
             console.error("Avatar upload error:", err)
             ModalService.alert("Upload Failed", err.message, 'error')
@@ -202,7 +202,7 @@ export const ProfileComponent = {
             
             if (error) throw error
 
-            ModalService.toast('Profile updated!', 'success')
+            ModalService.showToast('Profile updated!', 'success')
             
             // Update local state and header
             Object.assign(this.profile, updates)

@@ -1,5 +1,6 @@
 import { MultiplayerService } from '../services/multiplayerService'
 import { ModalService } from '../services/ModalService'
+import { DataService } from '../services/data'
 
 export const ChallengeDashboard = {
     _room: null,
@@ -15,8 +16,19 @@ export const ChallengeDashboard = {
         this._profile = profile;
         this._onBack = onBack;
 
-        const container = document.getElementById('dashboard-container');
+        const container = document.getElementById('challenge-container');
         container.style.display = 'block';
+
+        let subjectsList = '';
+        try {
+            const { data: subjects } = await DataService.getSubjects();
+            if (subjects && subjects.length > 0) {
+                subjectsList = subjects.map(s => `<option value="${s.subject_name}">${s.subject_name}</option>`).join('');
+            }
+        } catch (e) {
+            console.error("Failed to load subjects", e);
+        }
+
         container.innerHTML = `
         <style>
             .challenge-wrapper {
@@ -111,14 +123,7 @@ export const ChallengeDashboard = {
                         <div>
                             <label style="font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Subject</label>
                             <select id="create-subject" class="glass-select" style="width: 100%; height: 44px;">
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="English">English</option>
-                                <option value="Physics">Physics</option>
-                                <option value="Chemistry">Chemistry</option>
-                                <option value="Biology">Biology</option>
-                                <option value="Economics">Economics</option>
-                                <option value="Government">Government</option>
-                                <option value="Literature">Literature</option>
+                                ${subjectsList || '<option value="Mathematics">Mathematics</option><option value="English">English</option>'}
                             </select>
                         </div>
                         <div>
@@ -126,6 +131,7 @@ export const ChallengeDashboard = {
                             <select id="create-exam-type" class="glass-select" style="width: 100%; height: 44px;">
                                 <option value="JAMB">JAMB</option>
                                 <option value="WAEC">WAEC</option>
+                                <option value="NECO">NECO</option>
                             </select>
                         </div>
                     </div>
@@ -328,7 +334,7 @@ export const ChallengeDashboard = {
         const gameArea = document.getElementById('challenge-game-area');
         gameArea.style.display = 'block';
         gameArea.innerHTML = `
-            <div id="challenge-leaderboard-bar" class="glass" style="padding: 1rem 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            <div id="challenge-leaderboard-bar" class="glass" style="padding: 1rem 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; max-height: 250px; overflow-y: auto;"></div>
             <div id="challenge-question-card" class="glass card" style="padding: 2rem; border-radius: 20px;"></div>
         `;
 

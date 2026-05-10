@@ -14,15 +14,19 @@ export const MultiplayerService = {
      */
     async createRoom(hostProfile, subject, examType = 'JAMB', questionCount = 20) {
         // 1. Fetch questions for the room
-        const { data: questions } = await DataService.getPracticeQuestions(
+        let { data: questions } = await DataService.getPracticeQuestions(
             subject, '', questionCount, examType, 'past'
         );
-        if (!questions || questions.length < 5) {
+        questions = questions || [];
+
+        if (questions.length < 5) {
             const { data: aiQuestions } = await DataService.getPracticeQuestions(
                 subject, '', questionCount, examType, 'ai'
             );
-            if (!aiQuestions || aiQuestions.length < 5) throw new Error("Not enough questions found for this subject.");
-            questions.push(...(aiQuestions || []));
+            if (aiQuestions && aiQuestions.length > 0) {
+                questions.push(...aiQuestions);
+            }
+            if (questions.length < 5) throw new Error("Not enough questions found for this subject.");
         }
 
         // 2. Generate a unique room code

@@ -122,11 +122,12 @@ export const TopicDeepDiveComponent = {
     
     focusBtn.onclick = () => {
       closeModal();
-      // Logic handled in Results.js, but we can also trigger here if needed
-      // For consistency, we'll let the button in Results handle the question fetch
-      // But we can trigger a generic "Auto Focus" event here
-      const trigger = document.getElementById('auto-focus-btn');
-      if (trigger) trigger.click();
+      if (typeof onStartFocus === 'function') {
+          onStartFocus();
+      } else {
+          const trigger = document.getElementById('auto-focus-btn');
+          if (trigger) trigger.click();
+      }
     };
 
     window.onclick = (e) => {

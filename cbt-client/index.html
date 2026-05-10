@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.gstatic.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.paystack.co https://generativelanguage.googleapis.com https://api.paystack.co wss://*.supabase.co; worker-src 'self' blob:; frame-ancestors 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.gstatic.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.paystack.co https://generativelanguage.googleapis.com https://api.paystack.co wss://*.supabase.co; worker-src 'self' blob:;">
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/pwa-icon.svg" />
   <link rel="apple-touch-icon" href="/pwa-icon.svg" />
@@ -147,68 +147,71 @@
       <div id="challenge-container" style="display: none;"></div>
     </main>
 
-    <!-- 🚀 Exam & Fixed Layouts (Outside main-view to prevent contain: paint bugs) -->
-    <div id="exam-container" style="display: none; width: 100vw; margin: 0; padding: 0;"></div>
-
-    <div id="elite-modals-container">
-      <!-- Weekly Recap, Onboarding, and Special Alerts render here -->
-    </div>
-
-    <!-- 📢 System Drawers (News & Alerts) -->
-    <div id="news-drawer" class="news-drawer glass card">
-      <div class="drawer-header">
-        <h3>Exam News & Updates</h3>
-        <button id="close-news-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
-      </div>
-      <div id="news-drawer-content" class="drawer-content">
-        <!-- News items render here via DataService -->
-      </div>
-    </div>
-
-    <div id="more-drawer" class="news-drawer more-drawer glass card">
-      <div class="drawer-header">
-        <h3 style="font-family: 'Outfit'; font-weight: 900;">Elite Menu</h3>
-        <button id="close-more-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
-      </div>
-      <div class="drawer-content">
-        <button class="more-menu-item" data-view="profile">
-          <i data-lucide="user-circle"></i>
-          <span>My Profile</span>
-        </button>
-        <button class="more-menu-item" data-view="settings">
-          <i data-lucide="settings"></i>
-          <span>Settings</span>
-        </button>
-        <div class="menu-divider"></div>
-        <button class="more-menu-item" id="more-news-btn">
-          <i data-lucide="megaphone"></i>
-          <span>Exam News</span>
-        </button>
-        <button class="more-menu-item" id="more-help-btn">
-          <i data-lucide="help-circle"></i>
-          <span>Help Guide</span>
-        </button>
-        <div class="menu-divider"></div>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
-          <button class="more-menu-item" id="more-about-btn">
-            <i data-lucide="info"></i>
-            <span>About Us</span>
-          </button>
-          <button class="more-menu-item" id="more-contact-btn">
-            <i data-lucide="mail"></i>
-            <span>Contact Support</span>
-          </button>
-          <div class="menu-divider"></div>
-          <button class="more-menu-item logout" id="more-logout-btn">
-            <i data-lucide="log-out"></i>
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    </main>
   </div>
+
+  <!-- 🚀 Exam & Fixed Layouts (Outside #app to prevent flex-squeeze) -->
+  <div id="exam-container" style="display: none; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 10000; margin: 0; padding: 0; background: var(--bg-color);"></div>
+
+  <div id="elite-modals-container" style="position: fixed; z-index: 11000;">
+    <!-- Weekly Recap, Onboarding, and Special Alerts render here -->
+  </div>
+
+  <!-- 📢 System Drawers (News & Alerts) - MOVED OUTSIDE FOR FLEX ISOLATION -->
+  <div id="news-drawer" class="news-drawer glass card">
+    <div class="drawer-header">
+      <h3>Exam News & Updates</h3>
+      <button id="close-news-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
+    </div>
+    <div id="news-drawer-content" class="drawer-content">
+      <!-- News items render here via DataService -->
+    </div>
+  </div>
+
+  <div id="more-drawer" class="news-drawer more-drawer glass card">
+    <div class="drawer-header">
+      <h3 style="font-family: 'Outfit'; font-weight: 900;">Elite Menu</h3>
+      <button id="close-more-drawer" class="header-icon-btn"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer-content">
+      <button class="more-menu-item" data-view="profile">
+        <i data-lucide="user-circle"></i>
+        <span>My Profile</span>
+      </button>
+      <button class="more-menu-item" data-view="settings">
+        <i data-lucide="settings"></i>
+        <span>Settings</span>
+      </button>
+      <div class="menu-divider"></div>
+      <button class="more-menu-item" id="more-news-btn">
+        <i data-lucide="megaphone"></i>
+        <span>Exam News</span>
+      </button>
+      <button class="more-menu-item" id="more-help-btn">
+        <i data-lucide="help-circle"></i>
+        <span>Help Guide</span>
+      </button>
+      <div class="menu-divider"></div>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+        <button class="more-menu-item" id="more-about-btn">
+          <i data-lucide="info"></i>
+          <span>About Us</span>
+        </button>
+        <button class="more-menu-item" id="more-contact-btn">
+          <i data-lucide="mail"></i>
+          <span>Contact Support</span>
+        </button>
+        <div class="menu-divider"></div>
+        <button class="more-menu-item logout" id="more-logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
   <div id="auth-container" style="display: none;"></div>
   <script type="module" src="/main.js?v=14"></script>
 </body>
