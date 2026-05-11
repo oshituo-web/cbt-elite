@@ -208,14 +208,14 @@ export class Exam {
                 <button id="exam-back-btn" class="header-icon-btn" title="Go Back" style="padding: 0; width: 24px; height: 24px;">
                   <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
                 </button>
-                <span id="source-label" style="font-size: 0.65rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;">...</span>
-                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.65rem !important; padding: 0.2rem 0.6rem; min-width: 80px; text-align: center;">...</span>
+                <span id="source-label" style="font-size: 0.62rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 4px; flex-shrink: 0;">...</span>
+                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.62rem !important; padding: 0.2rem 0.6rem; min-width: 70px; text-align: center;">...</span>
               </div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: auto; height: auto; background: none; flex-shrink: 0; border: none;">
-                  <i data-lucide="calculator" stroke-width="2.5" style="width: 28px; height: 28px; color: var(--text-secondary);"></i>
+                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: 36px; height: 36px; background: rgba(255,255,255,0.06); border-radius: 10px; flex-shrink: 0; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;">
+                  <i data-lucide="calculator" stroke-width="2.5" style="width: 20px; height: 20px; color: var(--text-primary);"></i>
                 </button>
-                <button id="toggle-map-mobile" class="header-icon-btn mobile-only-flex" title="Question Map" style="padding: 0; width: auto; height: auto; background: none; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 0.25rem;">
+                <button id="toggle-map-mobile" class="header-icon-btn" title="Question Map" style="padding: 0; width: 36px; height: 36px; background: rgba(37,99,235,0.12); border-radius: 10px; flex-shrink: 0; border: 1px solid rgba(37,99,235,0.3); display: flex; align-items: center; justify-content: center; margin-left: 0.1rem;">
                   <i data-lucide="layout-grid" stroke-width="2.5" style="width: 28px; height: 28px; color: var(--accent-primary);"></i>
                 </button>
                 <div id="timer" class="timer-mini" style="color: #10B981; font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); font-family: 'Monaco', monospace; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 60px; text-align: center; flex-shrink: 0;">00:00</div>
@@ -378,16 +378,19 @@ export class Exam {
     this.updateUI()
     this.attachListeners(onFinish, onBack)
     
-    // Set Source Label
+    // Set Source Label — styled badge
     const sourceLabel = document.getElementById('source-label');
     if (sourceLabel) {
         if (this.questionSource === 'past') {
-            sourceLabel.textContent = 'Past Questions';
-            sourceLabel.style.color = 'var(--accent-secondary)';
+            sourceLabel.textContent = '📜 Past Q';
+            sourceLabel.style.color = '#ffffff';
+            sourceLabel.style.background = 'rgba(124, 58, 237, 0.75)'; // purple
+            sourceLabel.style.border = '1px solid rgba(124,58,237,0.4)';
         } else {
-            sourceLabel.textContent = 'Elite AI';
-            sourceLabel.style.color = 'var(--accent-primary)';
-            sourceLabel.style.fontSize = '0.55rem';
+            sourceLabel.textContent = '⚡ Elite AI';
+            sourceLabel.style.color = '#ffffff';
+            sourceLabel.style.background = 'rgba(37, 99, 235, 0.75)'; // blue
+            sourceLabel.style.border = '1px solid rgba(37,99,235,0.4)';
         }
     }
 
@@ -423,21 +426,23 @@ export class Exam {
     }
 
     document.getElementById('next-btn').onclick = async () => {
-      if (this.examType === 'JAMB' && !this.isReviewMode) {
+      // Subject-switch confirmation ONLY in full JAMB exam/mock mode — never in practice
+      if (this.examType === 'JAMB' && this.mode === 'exam' && !this.isReviewMode) {
         const currentQ = this.session.getCurrentQuestion();
         const nextQ = this.session.questions[this.session.currentIndex + 1];
-        if (nextQ && nextQ.subject !== (currentQ.subject || this.activeJambSubject)) {
-          const confirmed = await ModalService.confirm("Switch Subject?", `End of ${currentQ.subject || 'current subject'}. Switch to ${nextQ.subject}?`);
+        if (nextQ && nextQ.subject && currentQ.subject && nextQ.subject !== currentQ.subject) {
+          const confirmed = await ModalService.confirm("Switch Subject?", `End of ${currentQ.subject}. Switch to ${nextQ.subject}?`);
           if (!confirmed) return;
         }
       }
       if (this.session.next()) this.updateUI()
     }
     document.getElementById('prev-btn').onclick = async () => {
-      if (this.examType === 'JAMB' && !this.isReviewMode) {
+      // Subject-switch confirmation ONLY in full JAMB exam/mock mode — never in practice
+      if (this.examType === 'JAMB' && this.mode === 'exam' && !this.isReviewMode) {
         const currentQ = this.session.getCurrentQuestion();
         const prevQ = this.session.questions[this.session.currentIndex - 1];
-        if (prevQ && prevQ.subject !== (currentQ.subject || this.activeJambSubject)) {
+        if (prevQ && prevQ.subject && currentQ.subject && prevQ.subject !== currentQ.subject) {
           const confirmed = await ModalService.confirm("Go Back?", `Return to ${prevQ.subject}?`);
           if (!confirmed) return;
         }
@@ -725,10 +730,10 @@ export class Exam {
     // 🔥 ELITE POWER-UPS: Eliminate 2 (Only in Practice Mode)
     const optionsContainer = document.getElementById('options-container');
     const isMockExam = this.mode === 'exam' || this.mode === 'mock';
-    if (!this.isReviewMode && !isMockExam && optionsContainer) {
+    if (!this.isReviewMode && !isMockExam && optionsContainer && this.profile) {
         const powerUpsDiv = document.createElement('div');
         powerUpsDiv.style = "margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; gap: 0.75rem;";
-        const uses = this.session.profile.eliminate_2_uses || 0;
+        const uses = this.profile.eliminate_2_uses || 0;
         const btnText = uses > 0 ? `ELIMINATE 2 (${uses} left)` : `ELIMINATE 2 (-50 <i data-lucide="coins" style="width: 10px;"></i>)`;
         
         powerUpsDiv.innerHTML = `
@@ -741,19 +746,19 @@ export class Exam {
 
         const eliminateBtn = document.getElementById('eliminate-2-btn');
         eliminateBtn.onclick = async () => {
-            const hasUses = (this.session.profile.eliminate_2_uses || 0) > 0;
-            if (!hasUses && (this.session.profile.elite_coins || 0) < 50) {
+            const hasUses = (this.profile.eliminate_2_uses || 0) > 0;
+            if (!hasUses && (this.profile.elite_coins || 0) < 50) {
                 ModalService.showToast("Not enough uses or coins! Visit the Store.", "error");
                 return;
             }
 
             // Deduct uses or coins locally and on server
             if (hasUses) {
-                this.session.profile.eliminate_2_uses -= 1;
-                await DataService.usePowerUp(this.session.profile.id, 'eliminate_2');
+                this.profile.eliminate_2_uses -= 1;
+                await DataService.usePowerUp(this.profile.id, 'eliminate_2');
             } else {
-                this.session.profile.elite_coins -= 50;
-                await DataService.purchaseEliteItem(this.session.profile.id, 'eliminate_2_use', 50);
+                this.profile.elite_coins -= 50;
+                await DataService.purchaseEliteItem(this.profile.id, 'eliminate_2_use', 50);
             }
 
             // Find incorrect options that are NOT current choice
@@ -833,11 +838,15 @@ export class Exam {
             this.updateUI()
             this.renderSidebar()
 
-            // Auto-Advance Logic
+            // Auto-Advance Logic — respects the global setting from Settings page (all modes)
             if (localStorage.getItem('auto_advance') !== 'false' && !this.isReviewMode) {
+              const indexAtClick = this.session.currentIndex;
               setTimeout(() => {
-                if (this.session.next()) this.updateUI();
-              }, 600); // Slight delay so they see the selected state
+                // Only advance if user hasn't manually navigated already
+                if (this.session.currentIndex === indexAtClick && this.session.next()) {
+                  this.updateUI();
+                }
+              }, 700);
             }
           }
         })

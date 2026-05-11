@@ -332,20 +332,26 @@ export const AdminComponent = {
             </div>
 
             <!-- Quick Stats & Filters -->
-            <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem; border-radius: 16px; display: flex; gap: 2rem; align-items: center; border-left: 4px solid var(--accent-primary);">
+            <div class="glass card" style="padding: 1.5rem; margin-bottom: 2rem; border-radius: 16px; display: flex; gap: 2rem; align-items: center; border-left: 4px solid var(--accent-primary); flex-wrap: wrap;">
                <div style="display: flex; align-items: center; gap: 0.75rem;">
                   <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
                   <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary);">Online Now: <span id="users-online-count">0</span></span>
                </div>
-               <div style="height: 20px; width: 1px; background: var(--glass-border);"></div>
+               <div style="height: 20px; width: 1px; background: var(--glass-border);" class="mobile-hide"></div>
                <div style="display: flex; align-items: center; gap: 1rem;">
                   <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Filter:</label>
                   <select id="user-filter-status" class="glass-select" style="height: 38px; font-size: 0.8rem; padding: 0 1rem;">
                      <option value="all">All Users</option>
-                     <option value="active">Active (Last 24h)</option>
-                     <option value="inactive">Inactive (> 7 days)</option>
+                     <option value="active">Active (Last 7 Days)</option>
+                     <option value="inactive">Inactive (> 30 Days)</option>
+                     <option value="zero">Zero Activity (New)</option>
                      <option value="premium">Premium Only</option>
                   </select>
+               </div>
+               <div style="margin-left: auto; display: flex; gap: 0.75rem;">
+                 <button id="copy-filtered-emails" class="btn-secondary" style="height: 38px; padding: 0 1.25rem; font-size: 0.75rem; font-weight: 800; border-radius: 10px; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                    <i data-lucide="copy" style="width: 14px; margin-right: 0.5rem;"></i> COPY EMAILS
+                 </button>
                </div>
             </div>
 
@@ -1463,8 +1469,8 @@ export const AdminComponent = {
     
     const now = new Date()
     const onlineThreshold = 5 * 60 * 1000 // 5 minutes
-    const inactiveThreshold = 7 * 24 * 60 * 60 * 1000 // 7 days
-    const activeThreshold = 24 * 60 * 60 * 1000 // 24 hours
+    const inactiveThreshold = 30 * 24 * 60 * 60 * 1000 // 30 days
+    const activeThreshold = 7 * 24 * 60 * 60 * 1000 // 7 days
 
     const render = (filteredUsers) => {
       if (!filteredUsers || filteredUsers.length === 0) {
@@ -1501,9 +1507,14 @@ export const AdminComponent = {
                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${u.email}</div>
                  </div>
               </div>
-              <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
-                 <i data-lucide="settings" style="width: 12px;"></i> EDIT
-              </button>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn-secondary edit-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem;">
+                   <i data-lucide="settings" style="width: 12px;"></i> EDIT
+                </button>
+                <button class="btn-secondary delete-user-btn" data-id="${u.id}" style="height: 32px; padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.7rem; font-weight: 800; gap: 0.4rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                   <i data-lucide="trash-2" style="width: 12px;"></i> DELETE
+                </button>
+              </div>
             </div>
 
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -1532,6 +1543,33 @@ export const AdminComponent = {
         `;
       }).join('')
 
+      document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id')
+          const user = users.find(u => u.id === id)
+          if (!user) return
+
+          const confirmed = await ModalService.confirm(
+            "Delete User Account?",
+            `Are you sure you want to permanently delete <strong>${user.username || user.email}</strong>? This will remove all their progress, coins, and settings. This action cannot be undone.`
+          )
+          if (!confirmed) return
+
+          btn.disabled = true
+          btn.innerHTML = 'Deleting...'
+          const { error } = await DataService.deleteUser(id)
+          if (error) {
+            ModalService.alert('Delete Failed', error.message, 'error')
+            btn.innerHTML = '<i data-lucide="trash-2" style="width: 12px;"></i> DELETE'
+            btn.disabled = false
+          } else {
+            await DataService.logAdminAction(this._adminProfile.email, 'Delete User', user.email, 'Account purged')
+            ModalService.showToast('User deleted successfully', 'success')
+            this.loadUsers()
+          }
+        }
+      })
+
       document.querySelectorAll('.edit-user-btn').forEach(btn => {
         btn.onclick = () => {
           const id = btn.getAttribute('data-id')
@@ -1551,11 +1589,33 @@ export const AdminComponent = {
       let filtered = [...users]
       if (val === 'active') filtered = users.filter(u => u.last_active_at && (now - new Date(u.last_active_at)) < activeThreshold)
       else if (val === 'inactive') filtered = users.filter(u => !u.last_active_at || (now - new Date(u.last_active_at)) > inactiveThreshold)
+      else if (val === 'zero') filtered = users.filter(u => (u.total_questions_answered || 0) === 0)
       else if (val === 'premium') filtered = users.filter(u => SubscriptionService.resolveUserTier(u) === 'premium')
       render(filtered)
     }
 
     if (filterSelect) filterSelect.onchange = applyFilter
+    
+    const copyBtn = document.getElementById('copy-filtered-emails')
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            const val = filterSelect.value
+            let filtered = [...users]
+            if (val === 'active') filtered = users.filter(u => u.last_active_at && (now - new Date(u.last_active_at)) < activeThreshold)
+            else if (val === 'inactive') filtered = users.filter(u => !u.last_active_at || (now - new Date(u.last_active_at)) > inactiveThreshold)
+            else if (val === 'premium') filtered = users.filter(u => SubscriptionService.resolveUserTier(u) === 'premium')
+            
+            const emails = filtered.map(u => u.email).filter(e => e).join(', ')
+            if (!emails) return ModalService.showToast('No emails to copy.', 'info')
+            
+            navigator.clipboard.writeText(emails).then(() => {
+                ModalService.showToast(`📋 ${filtered.length} emails copied to clipboard!`, 'success')
+            }).catch(err => {
+                ModalService.alert('Copy Failed', 'Could not copy to clipboard. Please select and copy manually.', 'error')
+            })
+        }
+    }
+
     applyFilter()
 
     if (bulkBtn) bulkBtn.onclick = () => this.openBulkReminderModal(users)
@@ -1563,7 +1623,7 @@ export const AdminComponent = {
 
   openBulkReminderModal(users) {
     const now = new Date()
-    const inactiveThreshold = 7 * 24 * 60 * 60 * 1000
+    const inactiveThreshold = 30 * 24 * 60 * 60 * 1000 // 30 days
     const inactiveUsers = users.filter(u => !u.last_active_at || (now - new Date(u.last_active_at)) > inactiveThreshold)
 
     const modalHtml = `
@@ -1586,7 +1646,7 @@ export const AdminComponent = {
                    <i data-lucide="alert-circle" style="width: 16px;"></i>
                    Inactive Students Detected
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;"><strong>${inactiveUsers.length} users</strong> have not logged any activity on the platform in over 7 days.</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;"><strong>${inactiveUsers.length} users</strong> have not logged any activity on the platform in over 30 days.</div>
              </div>
 
              <div style="margin-bottom: 2.5rem;">

@@ -4,7 +4,7 @@ const { GoogleGenAI, Type } = require('@google/genai');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const TOTAL_QUESTIONS_TO_GENERATE = 100;
+const TOTAL_QUESTIONS_TO_GENERATE = 500;
 const BATCH_SIZE = 15;
 const CONCURRENCY_LIMIT = 1;
 
@@ -81,9 +81,14 @@ async function withDBRetry(operation, maxRetries = 3) {
 }
 
 async function loadKnowledgeBase() {
-    const { data: exams } = await supabase.from('exams').select('id, exam_name');
-    const { data: subjects } = await supabase.from('subjects').select('id, subject_name');
+    const { data: exams, error: e1 } = await supabase.from('exams').select('id, exam_name');
+    const { data: subjects, error: e2 } = await supabase.from('subjects').select('id, subject_name');
     
+    if (e1 || e2 || !exams || !subjects) {
+        console.error("Error loading exams or subjects:", e1 || e2);
+        throw new Error("Failed to load metadata from database.");
+    }
+
     exams.forEach(e => examMap[e.exam_name.trim().toUpperCase()] = e.id);
     subjects.forEach(s => {
         subjectMap[s.subject_name.trim().toUpperCase()] = s.id;
@@ -138,20 +143,21 @@ async function saveToDatabase(items) {
 
         if (insertedQs.length === 0) continue;
 
-        // Phase 2: Insert Answers (Normalized)
+        // Phase 2: Insert Answers (Normalized into question_answers)
         const ansInserts = [];
         insertedQs.forEach((insQ, idx) => {
             const orig = validOriginals[idx];
-            ['A', 'B', 'C', 'D'].forEach(letter => {
-                ansInserts.push({ 
-                    question_id: insQ.id, 
-                    option_letter: letter, 
-                    option_text: orig[`option_${letter.toLowerCase()}`], 
-                    is_correct: orig.correct_option === letter 
-                });
+            ansInserts.push({
+                question_id: insQ.id,
+                option_a: orig.option_a,
+                option_b: orig.option_b,
+                option_c: orig.option_c,
+                option_d: orig.option_d,
+                correct_option: orig.correct_option.toUpperCase(),
+                explanation: orig.explanation || ""
             });
             
-            // Insert explanation into partitioned table
+            // Insert explanation into partitioned table (optional, since it's also in question_answers)
             if (orig.explanation) {
                 supabase.from('question_explanations')
                     .upsert({ question_id: insQ.id, explanation: orig.explanation })
@@ -159,7 +165,7 @@ async function saveToDatabase(items) {
             }
         });
         
-        await withDBRetry(() => supabase.from('answers').insert(ansInserts));
+        await withDBRetry(() => supabase.from('question_answers').insert(ansInserts));
         successCount += insertedQs.length;
     }
     return successCount;
@@ -174,13 +180,31 @@ Requirements:
 3. Explanations must be clear and pedagogically sound.
 4. Ensure curriculum accuracy for ${exam}.
 Return JSON list.`;
-    try {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: generationSchema } });
-        return JSON.parse(response.text);
-    } catch (e) { 
-        console.error(`[AI Error]:`, e.message || e);
-        return { rateLimit: true }; 
+
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
+    
+    for (const modelName of models) {
+        try {
+            console.log(`[AI] Requesting from ${modelName}...`);
+            const response = await ai.models.generateContent({ 
+                model: modelName, 
+                contents: prompt, 
+                config: { 
+                    responseMimeType: 'application/json', 
+                    responseSchema: generationSchema 
+                } 
+            });
+            return JSON.parse(response.text);
+        } catch (e) { 
+            const msg = e.message || "";
+            if (msg.includes('429') || msg.includes('Quota') || msg.includes('RESOURCE_EXHAUSTED')) {
+                console.warn(`[AI Warning] ${modelName} rate limited, trying next...`);
+                continue;
+            }
+            console.error(`[AI Error] ${modelName}:`, msg);
+        }
     }
+    return { rateLimit: true }; // All models failed
 }
 
 async function turboCharge() {
@@ -226,17 +250,32 @@ async function turboCharge() {
         const items = await requestAI(combo.exam, combo.subject, combo.topic, "General");
         
         if (items.rateLimit) {
-             console.log(`[GENERATOR] Rate limited! Sleeping for 30s...`);
-             await delay(30000);
+             console.log(`[GENERATOR] All models rate limited! Sleeping for 2 minutes...`);
+             await delay(120000); // 2 min cooldown before retry
         } else if (items && items.length > 0) {
              console.log(`[GENERATOR] Success! Received payload. Saving to DB...`);
              const saved = await saveToDatabase(items);
              console.log(`[GENERATOR] Saved ${saved} questions.`);
+             await delay(3000); // Small delay between successful batches
         } else {
              console.log(`[GENERATOR] Received empty payload.`);
         }
     }
-    console.log("[GENERATOR] Run complete.");
+    console.log("[GENERATOR] Pass complete. Waiting 90s before next scan...");
+    await delay(90000);
 }
 
-turboCharge().catch(console.error);
+// 🔁 Continuous loop — keeps running until all WAEC topics are fully covered
+async function runContinuous() {
+    console.log("[GENERATOR] Starting continuous WAEC topic backfill loop...");
+    while (true) {
+        try {
+            await turboCharge();
+        } catch (err) {
+            console.error("[GENERATOR] Critical error, restarting in 60s:", err.message);
+            await delay(60000);
+        }
+    }
+}
+
+runContinuous();

@@ -125,8 +125,9 @@ export class ExamSessionManager {
     let correct = 0
     this.questions.forEach((q, i) => {
       if (q.question_type !== 'theory') {
-        const correctAnswer = q.answers?.find(a => a.is_correct)
-        if (this.userAnswers[i] && this.userAnswers[i] === correctAnswer?.id) {
+        const correctAnswer = q.answers?.find(a => a.is_correct);
+        // Only mark correct if a correct answer exists AND it matches the user's non-null answer
+        if (correctAnswer && this.userAnswers[i] && this.userAnswers[i] === correctAnswer.id) {
           correct++
         }
       }

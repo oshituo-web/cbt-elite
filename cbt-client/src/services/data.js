@@ -241,11 +241,11 @@ export const DataService = {
         
         if (isPremium && userId) {
             const seenPayload = questionIds.map(qid => ({ user_id: userId, question_id: qid }));
-            supabase.from('user_seen_questions').insert(seenPayload).then(({ error }) => {
-                if (error && error.code !== '23505') {
-                    console.error("Error recording seen questions:", error);
-                }
-            });
+            supabase.from('user_seen_questions')
+                .upsert(seenPayload, { onConflict: 'user_id,question_id', ignoreDuplicates: true })
+                .then(({ error }) => {
+                    if (error) console.warn("Error recording seen questions:", error.message);
+                });
         }
     }
 
@@ -1136,6 +1136,10 @@ export const DataService = {
 
   async updateUser(userId, updates) {
     return await supabase.from('users').update(updates).eq('id', userId)
+  },
+
+  async deleteUser(userId) {
+    return await supabase.from('users').delete().eq('id', userId)
   },
 
   async updateUserRole(email, role) {

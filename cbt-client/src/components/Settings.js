@@ -221,7 +221,7 @@ export const SettingsComponent = {
       const root = document.documentElement
       const map = { small: '14px', medium: '16px', large: '18px' }
       root.style.setProperty('--base-font-size', map[size])
-      ModalService.toast?.(`Text size set to ${size}`) || console.log('Font size set:', size)
+      ModalService.showToast?.(`Text size set to ${size}`) || console.log('Font size set:', size)
     })
 
     // ── Push Notifications ────────────────────────────────────
