@@ -481,7 +481,7 @@ body::before {
   justify-content: center;
   gap: 0.25rem;
   padding: 0 0.4rem !important;
-  height: 28px !important;
+  height: 20px !important;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 800;
@@ -491,8 +491,8 @@ body::before {
 
 #header-streak i {
   flex-shrink: 0;
-  width: 14px !important;
-  height: 7px !important;
+  width: 18px !important;
+  height: 4px !important;
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -1683,7 +1683,7 @@ body.light-mode .q-grid-item.answered {
   #toggle-calc .lucide,
   #mobile-map-toggle .lucide {
     width: 28px !important;
-    height: 28px !important;
+    height: 20px !important;
   }
 
   #toggle-calc,
@@ -3781,4 +3781,15 @@ button { min-height: clamp(40px, 6vw, 52px) !important; padding: clamp(8px, 2.5v
 .btn-premium-amber:hover {
     box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45) !important;
     transform: translateY(-2px);
+}
+
+/* Collapsible Bottom Map State */
+#exam-bottom-map.collapsed {
+  transform: translateY(calc(100% - 52px)) !important;
+}
+
+#map-chevron {
+  display: block;
+  color: var(--accent-primary);
+  stroke-width: 3;
 }

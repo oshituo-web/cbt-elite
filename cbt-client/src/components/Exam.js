@@ -209,17 +209,14 @@ export class Exam {
                   <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
                 </button>
                 <span id="source-label" style="font-size: 0.62rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 4px; flex-shrink: 0;">...</span>
-                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.62rem !important; padding: 0.2rem 0.6rem; min-width: 70px; text-align: center;">...</span>
+                <span id="display-exam-type" class="badge-exam" style="margin: 0; font-size: 0.62rem !important; padding: 0.2rem 0.6rem; min-width: 110px; text-align: center; white-space: nowrap;">...</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: 36px; height: 36px; background: rgba(255,255,255,0.06); border-radius: 10px; flex-shrink: 0; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;">
-                  <i data-lucide="calculator" stroke-width="2.5" style="width: 20px; height: 20px; color: var(--text-primary);"></i>
-                </button>
-                <button id="toggle-map-mobile" class="header-icon-btn" title="Question Map" style="padding: 0; width: 36px; height: 36px; background: rgba(37,99,235,0.12); border-radius: 10px; flex-shrink: 0; border: 1px solid rgba(37,99,235,0.3); display: flex; align-items: center; justify-content: center; margin-left: 0.1rem;">
-                  <i data-lucide="layout-grid" stroke-width="2.5" style="width: 28px; height: 28px; color: var(--accent-primary);"></i>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <button id="toggle-calc" class="header-icon-btn" title="Open Calculator" style="padding: 0; width: 34px; height: 34px; background: rgba(255,255,255,0.06); border-radius: 8px; flex-shrink: 0; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;">
+                  <i data-lucide="calculator" stroke-width="2.5" style="width: 18px; height: 18px; color: var(--text-primary);"></i>
                 </button>
                 <div id="timer" class="timer-mini" style="color: #10B981; font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); font-family: 'Monaco', monospace; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); min-width: 60px; text-align: center; flex-shrink: 0;">00:00</div>
-                <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.25rem; background: none; border: none; flex-shrink: 0;">
+                <button id="toggle-tutor" class="header-icon-btn" title="AI Tutor" style="color: #f59e0b; display: ${this.isReviewMode ? 'flex' : 'none'}; padding: 0; width: auto; height: auto; margin-left: 0.1rem; background: none; border: none; flex-shrink: 0;">
                   <i data-lucide="bot" stroke-width="2.5" style="width: 28px; height: 28px;"></i>
                 </button>
               </div>
@@ -261,28 +258,26 @@ export class Exam {
               <div id="explanation-container" class="glass card scale-in" style="margin-top: 3.5rem; padding: 2.5rem; display: none; border-left: 6px solid var(--primary); background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);"></div>
             </div>
 
-            <div class="exam-footer" style="margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div class="exam-footer" style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
               <div style="display: flex; gap: 1rem;">
                 <button id="prev-btn" class="btn-secondary" style="height: 54px; padding: 0 1.5rem; font-weight: 800;">PREVIOUS</button>
                 <button id="next-btn" class="btn-primary" style="height: 54px; padding: 0 2rem; font-weight: 900; min-width: 160px;">NEXT QUESTION <i data-lucide="chevron-right" style="width: 18px; margin-left: 0.5rem;"></i></button>
               </div>
               
-              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.75rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT ISSUE</button>
-                <button id="toggle-bookmark" class="btn-secondary" style="height: 44px; border-radius: var(--radius-md); font-weight: 800; padding: 0 1rem;">💾 SAVE</button>
-                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 44px; padding: 0 1.25rem; white-space: nowrap;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 48px; padding: 0 2rem; background: var(--accent-secondary); font-weight: 900; white-space: nowrap;">FINISH EXAM</button>'}
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <button id="report-btn" class="btn-secondary" style="border: none; color: var(--error); font-size: 0.75rem; font-weight: 800; background: transparent; opacity: 0.7;">REPORT</button>
+                <button id="toggle-bookmark" class="btn-secondary" style="height: 44px; border-radius: var(--radius-md); font-weight: 800; padding: 0 0.75rem; font-size: 0.75rem;">💾 SAVE</button>
+                ${this.isReviewMode ? '<button id="exam-exit-review" class="btn-primary" style="height: 44px; padding: 0 1rem; white-space: nowrap;">EXIT REVIEW</button>' : '<button id="finish-btn" class="btn-primary" style="height: 48px; padding: 0 1.25rem; background: var(--accent-secondary); font-weight: 900; white-space: nowrap;">FINISH EXAM</button>'}
+                <button id="toggle-map-footer" class="btn-secondary" title="View Question Map" style="height: 44px; width: 44px; border-radius: 12px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.2);">
+                  <i data-lucide="layout-grid" style="width: 20px; height: 20px; color: var(--accent-primary);"></i>
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Sidebar Navigation -->
+          <!-- Sidebar Navigation (Restored) -->
           <div class="drawer-overlay" id="exam-drawer-overlay"></div>
           
-          <!-- 📱 Swipe Trigger Handle (Mobile Only) -->
-          <div id="exam-map-swipe-trigger" class="mobile-only-flex" style="position: fixed; bottom: 0; left: 0; right: 0; height: 20px; z-index: 9998; cursor: ns-resize; justify-content: center; align-items: center;">
-             <div style="width: 40px; height: 4px; background: var(--glass-border); border-radius: 2px; opacity: 0.5;"></div>
-          </div>
-
           <div class="exam-sidebar glass" id="exam-sidebar">
             <div style="font-weight: 900; margin-bottom: 1.5rem; font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary); font-family: 'Outfit';">Question Map</div>
             <div id="question-grid"></div>
@@ -520,7 +515,7 @@ export class Exam {
       }
     }
 
-    const toggleMapBtn = document.getElementById('toggle-map-mobile')
+    const toggleMapBtn = document.getElementById('toggle-map-footer')
     const sidebar = document.getElementById('exam-sidebar')
     const overlay = document.getElementById('exam-drawer-overlay')
 
@@ -537,54 +532,6 @@ export class Exam {
         sidebar.classList.remove('drawer-open')
         overlay.classList.remove('drawer-open')
       }
-
-      // 📱 Robust Swipe Logic
-      let touchStartY = 0
-      let touchStartX = 0
-      
-      const openDrawer = () => {
-        sidebar.classList.add('drawer-open')
-        overlay.classList.add('drawer-open')
-      }
-      
-      const closeDrawer = () => {
-        sidebar.classList.remove('drawer-open')
-        overlay.classList.remove('drawer-open')
-      }
-
-      // 1. Listen on the handle for "Swipe Up"
-      const handle = document.getElementById('exam-map-swipe-trigger')
-      if (handle) {
-        handle.addEventListener('touchstart', (e) => {
-          touchStartY = e.touches[0].clientY
-        }, { passive: true })
-        
-        handle.addEventListener('touchend', (e) => {
-          const deltaY = touchStartY - e.changedTouches[0].clientY
-          if (deltaY > 30) openDrawer()
-        }, { passive: true })
-        
-        // Also open on simple tap of handle
-        handle.onclick = openDrawer
-      }
-
-      // 2. Listen on sidebar for "Swipe Down"
-      sidebar.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY
-        touchStartX = e.touches[0].clientX
-      }, { passive: true })
-
-      sidebar.addEventListener('touchend', (e) => {
-        const deltaY = touchStartY - e.changedTouches[0].clientY
-        const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX)
-        
-        // Only register vertical swipes if not scrolling sideways
-        if (deltaX < 50) {
-          if (deltaY < -50 && sidebar.classList.contains('drawer-open')) {
-            closeDrawer()
-          }
-        }
-      }, { passive: true })
     }
 
 

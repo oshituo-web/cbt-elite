@@ -92,12 +92,19 @@ export const PracticeDashboardComponent = {
             </button>
           </div>
           
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
             <div>
               <label for="p-subject" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Select Subject</label>
               <select id="p-subject" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;"></select>
             </div>
             
+            <div id="p-year-container" style="display: none;">
+              <label for="p-year" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Choose Year</label>
+              <select id="p-year" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
+                <option value="">All Years</option>
+              </select>
+            </div>
+
             <div>
               <label for="p-topic" style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 700;">Filter by Topic (Optional)</label>
               <select id="p-topic" class="glass-select" style="width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--glass-border); background: var(--card-bg); color: var(--text-primary); padding: 0 0.75rem;">
@@ -151,8 +158,17 @@ export const PracticeDashboardComponent = {
     }
     updateToggleUI();
 
-    aiToggle.onclick = () => { selectedSource = 'ai'; updateToggleUI(); }
-    pastToggle.onclick = () => { selectedSource = 'past'; updateToggleUI(); }
+    aiToggle.onclick = () => { 
+        selectedSource = 'ai'; 
+        updateToggleUI(); 
+        document.getElementById('p-year-container').style.display = 'none';
+    }
+    pastToggle.onclick = () => { 
+        selectedSource = 'past'; 
+        updateToggleUI(); 
+        document.getElementById('p-year-container').style.display = 'block';
+        pSub.dispatchEvent(new Event('change'));
+    }
 
     practiceContainer.querySelectorAll('.practice-tier').forEach(tier => {
       tier.onclick = async () => {
@@ -173,12 +189,24 @@ export const PracticeDashboardComponent = {
     if (closeBtn) closeBtn.onclick = () => configSection.style.display = 'none'
 
     pSub.onchange = async () => {
-      pTopic.innerHTML = '<option value="">Loading topics...</option>'
+      const subjectName = pSub.value;
       const { data: subjects } = await DataService.getSubjects()
-      const match = subjects.find(s => s.subject_name === pSub.value)
+      const match = subjects.find(s => s.subject_name === subjectName)
+      
       if (match) {
+        // Load Topics
+        pTopic.innerHTML = '<option value="">Loading topics...</option>'
         const { data: topics } = await DataService.getTopics(match.id)
         pTopic.innerHTML = '<option value="">All Topics</option>' + topics.map(t => `<option value="${t}">${t}</option>`).join('')
+
+        // Load Years (WITHOUT filter for practice)
+        if (selectedSource === 'past') {
+            const pYearSelect = document.getElementById('p-year');
+            pYearSelect.innerHTML = '<option value="">Loading years...</option>';
+            const { data: years } = await DataService.getArchiveYears(selectedPracticeType, match.id, 0); // minCount = 0
+            pYearSelect.innerHTML = '<option value="">All Years</option>' + 
+                years.map(y => `<option value="${y}">${y}</option>`).join('');
+        }
       }
     }
 
@@ -214,7 +242,8 @@ export const PracticeDashboardComponent = {
         }
 
         startBtn.innerHTML = 'Finding Questions...'; 
-        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType, selectedSource)
+        const year = document.getElementById('p-year')?.value;
+        const { data: questions } = await DataService.getPracticeQuestions(subject, topic, limit, selectedPracticeType, selectedSource, year)
         
         if (questions && questions.length > 0) {
           // Pass the selected practice type backwards to be accessible in session metadata

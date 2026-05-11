@@ -70,7 +70,7 @@ export const DataService = {
   /**
    * Fetches unique years available in the Past Questions Archive.
    */
-  async getArchiveYears(examType, subjectId) {
+  async getArchiveYears(examType, subjectId, minCount = 0) {
     let query = supabase
       .from('questions')
       .select('exam_year')
@@ -83,8 +83,21 @@ export const DataService = {
     const { data, error } = await query;
     if (error) return { data: [], error };
 
-    const uniqueYears = [...new Set(data.map(q => q.exam_year).filter(Boolean))].sort((a, b) => b - a);
-    return { data: uniqueYears, error: null };
+    // Group by year and count
+    const yearCounts = data.reduce((acc, q) => {
+        if (q.exam_year) {
+            acc[q.exam_year] = (acc[q.exam_year] || 0) + 1;
+        }
+        return acc;
+    }, {});
+
+    // Filter by minimum threshold
+    const filteredYears = Object.entries(yearCounts)
+        .filter(([year, count]) => count >= minCount)
+        .map(([year]) => parseInt(year))
+        .sort((a, b) => b - a);
+
+    return { data: filteredYears, error: null };
   },
 
   // --- QUESTIONS ---
@@ -787,7 +800,7 @@ export const DataService = {
     return await supabase.rpc('secure_deduct_credit', { p_user_id: userId, p_action: action })
   },
 
-  async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '', questionSource = 'ai') {
+  async getPracticeQuestions(subjectName, topic = '', limit = 25, examType = '', questionSource = 'ai', examYear = '') {
     let subjectId = undefined;
     let examId = undefined;
 
@@ -839,7 +852,8 @@ export const DataService = {
             limit: limit,
             randomize: true,
             exam_type: examType || undefined,
-            question_source: questionSource
+            question_source: questionSource,
+            exam_year: examYear ? parseInt(examYear) : undefined
         })
     } catch (err) {
         console.error("DataService.getPracticeQuestions Fatal Error:", err);

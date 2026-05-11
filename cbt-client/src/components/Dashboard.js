@@ -1186,7 +1186,7 @@ export const DashboardComponent = {
             yearSection.style.pointerEvents = 'auto';
             
             yearsGrid.innerHTML = '<div style="font-size: 0.7rem; color: var(--text-secondary);">Loading years...</div>';
-            const { data: years } = await DataService.getArchiveYears(selectedExam, selectedSubject);
+            const { data: years } = await DataService.getArchiveYears(selectedExam, selectedSubject, 25);
             
             if (years && years.length > 0) {
                 yearsGrid.innerHTML = `
@@ -1210,7 +1210,7 @@ export const DashboardComponent = {
                     };
                 });
             } else {
-                yearsGrid.innerHTML = '<div style="grid-column: 1/-1; padding: 1rem; background: rgba(239, 68, 68, 0.05); color: #ef4444; font-size: 0.75rem; font-weight: 700; text-align: center; border-radius: 12px;">No past questions found for this combination.</div>';
+                yearsGrid.innerHTML = '<div style="grid-column: 1/-1; font-size: 0.7rem; color: var(--warning); font-weight: 800; text-align: center; padding: 1rem; background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1.5px dashed rgba(245, 158, 11, 0.3);">No papers ready for this subject yet. We are currently backfilling our archive!</div>';
             }
         };
 
